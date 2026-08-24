@@ -71,3 +71,8 @@ python3 -m http.server 8000
 - Responsive con menú hamburguesa en móvil.
 - Accesibilidad: skip link, `aria-*` en menú y formulario, foco visible,
   y respeto a `prefers-reduced-motion`.
+
+## Bóveda de Obsidian
+
+La carpeta `vault/` contiene una bóveda de Obsidian sincronizada por Git.
+Ver [vault/README.md](vault/README.md) para la configuración.

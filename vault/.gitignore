@@ -1,0 +1,10 @@
+# Estado local de Obsidian: no debe viajar entre dispositivos
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+.obsidian/plugins/*/data.json
+.trash/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

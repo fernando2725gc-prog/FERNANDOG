@@ -199,6 +199,89 @@ const Graficos = (function () {
     return '<div class="dona-wrap">' + svg + leyenda + "</div>";
   }
 
+
+  /* ------------------------------------------------- Pareto de mermas */
+
+  /* Barras ordenadas de mayor a menor mas la curva de porcentaje acumulado.
+     Sirve para ver que pocas causas explican la mayor parte de la merma. */
+  function pareto(datos, opciones) {
+    const o = opciones || {};
+    if (!datos.length) return vacio();
+
+    const filas = datos.slice(0, o.limite || 9);
+    const W = 720, H = 300;
+    const m = { t: 18, r: 46, b: 92, l: 58 };
+    const iw = W - m.l - m.r;
+    const ih = H - m.t - m.b;
+
+    const max = escalaBonita(Math.max.apply(null, filas.map(function (d) { return d.kg; })));
+    const ancho = iw / filas.length;
+    const y = function (v) { return m.t + ih - (v / max) * ih; };
+    const yAcum = function (p) { return m.t + ih - p * ih; };
+
+    let svg = '<svg viewBox="0 0 ' + W + " " + H + '" class="chart" role="img" ' +
+      'aria-label="' + esc(o.titulo || "Pareto de causas") + '" preserveAspectRatio="xMidYMid meet">';
+
+    /* Rejilla: kilogramos a la izquierda, porcentaje acumulado a la derecha */
+    for (let g = 0; g <= 4; g += 1) {
+      const yy = y((max / 4) * g);
+      svg += '<line x1="' + m.l + '" y1="' + yy + '" x2="' + (W - m.r) + '" y2="' + yy +
+        '" class="chart-grid"/>';
+      svg += '<text x="' + (m.l - 8) + '" y="' + (yy + 4) + '" class="chart-tick chart-tick-y">' +
+        fmt((max / 4) * g) + "</text>";
+      svg += '<text x="' + (W - m.r + 8) + '" y="' + (yy + 4) + '" class="chart-tick">' +
+        (g * 25) + "%</text>";
+    }
+
+    filas.forEach(function (d, i) {
+      const x = m.l + i * ancho;
+      const bw = ancho * 0.62;
+      const bx = x + (ancho - bw) / 2;
+      const by = y(d.kg);
+      const color = d.tipo === "Campo" ? PALETA[0]
+        : d.tipo === "Transporte" ? PALETA[1] : PALETA[2];
+
+      svg += '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + bw.toFixed(1) +
+        '" height="' + (m.t + ih - by).toFixed(1) + '" rx="3" fill="' + color + '">' +
+        "<title>" + esc(d.nombre) + " (" + esc(d.tipo) + "): " + fmt(d.kg) + " kg · " +
+        (d.porcentaje * 100).toFixed(1) + "% de la merma</title></rect>";
+
+      /* Etiqueta girada: los nombres de causa no caben en horizontal */
+      svg += '<text transform="translate(' + (x + ancho / 2).toFixed(1) + "," + (m.t + ih + 10) +
+        ') rotate(-38)" class="chart-tick" text-anchor="end">' +
+        esc(d.nombre.length > 22 ? d.nombre.slice(0, 21) + "…" : d.nombre) + "</text>";
+    });
+
+    /* Curva acumulada */
+    const linea = filas.map(function (d, i) {
+      return (i === 0 ? "M" : "L") + (m.l + i * ancho + ancho / 2).toFixed(1) + " " +
+        yAcum(d.acumulado).toFixed(1);
+    }).join(" ");
+    svg += '<path d="' + linea + '" fill="none" stroke="' + PALETA[4] +
+      '" stroke-width="2" stroke-dasharray="4 3"/>';
+    filas.forEach(function (d, i) {
+      svg += '<circle cx="' + (m.l + i * ancho + ancho / 2).toFixed(1) + '" cy="' +
+        yAcum(d.acumulado).toFixed(1) + '" r="3.5" fill="' + PALETA[4] + '">' +
+        "<title>Acumulado: " + (d.acumulado * 100).toFixed(1) + "%</title></circle>";
+    });
+
+    /* Referencia del 80%: la frontera clasica del analisis de Pareto */
+    svg += '<line x1="' + m.l + '" y1="' + yAcum(0.8).toFixed(1) + '" x2="' + (W - m.r) +
+      '" y2="' + yAcum(0.8).toFixed(1) + '" stroke="' + PALETA[4] +
+      '" stroke-width="1" stroke-dasharray="2 4" opacity="0.55"/>';
+
+    svg += "</svg>";
+
+    let leyenda = '<ul class="leyenda">';
+    [["Campo", PALETA[0]], ["Transporte", PALETA[1]], ["Proceso", PALETA[2]]].forEach(function (t) {
+      leyenda += '<li><span class="punto" style="background:' + t[1] + '"></span>' + t[0] + "</li>";
+    });
+    leyenda += '<li><span class="punto punto-linea" style="background:' + PALETA[4] +
+      '"></span>% acumulado</li></ul>';
+
+    return svg + leyenda;
+  }
+
   /* ------------------------------------- barra de cumplimiento vs meta */
 
   function medidor(valor, meta, etiqueta) {
@@ -218,6 +301,7 @@ const Graficos = (function () {
     lineas: lineas,
     barras: barras,
     dona: dona,
+    pareto: pareto,
     medidor: medidor,
     vacio: vacio
   };

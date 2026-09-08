@@ -43,6 +43,11 @@
 
 * { box-sizing: border-box; }
 
+/* Las reglas de este archivo (por ejemplo .campo { display: flex }) tienen
+   mas prioridad que el display:none que el navegador aplica al atributo
+   [hidden]. Sin esto, un elemento marcado como oculto se seguiria viendo. */
+[hidden] { display: none !important; }
+
 body {
   margin: 0;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
@@ -464,6 +469,162 @@ textarea { resize: vertical; }
   .cab-acciones .btn { flex: 1; }
   .filtros { flex-direction: column; align-items: stretch; }
   .kpi-valor { font-size: 1.3rem; }
+}
+
+
+/* ============================ selector de rol ========================= */
+
+.login-intro { color: var(--texto-tenue); font-size: .9rem; margin-bottom: 1rem; }
+
+.roles { border: 0; padding: 0; margin: 0 0 1rem; display: grid; gap: .5rem; }
+.roles legend {
+  font-size: .78rem; font-weight: 600; color: var(--texto-tenue);
+  padding: 0; margin-bottom: .4rem;
+}
+.rol-tarjeta { display: block; cursor: pointer; }
+/* Oculto a la vista pero sigue existiendo para el teclado y el lector de
+   pantalla: conserva un tamano de 1px en vez de colapsar a cero. */
+.rol-tarjeta input {
+  position: absolute; width: 1px; height: 1px; margin: -1px;
+  padding: 0; border: 0; overflow: hidden; white-space: nowrap;
+  clip: rect(0 0 0 0); clip-path: inset(50%);
+}
+.rol-cuerpo {
+  display: flex; align-items: flex-start; gap: .7rem;
+  border: 1px solid var(--borde); border-radius: 10px; padding: .7rem .85rem;
+  transition: border-color .15s, background .15s;
+}
+.rol-tarjeta:hover .rol-cuerpo { border-color: var(--verde); }
+.rol-tarjeta input:checked + .rol-cuerpo {
+  border-color: var(--verde); background: var(--verde-suave); box-shadow: inset 0 0 0 1px var(--verde);
+}
+.rol-tarjeta input:focus-visible + .rol-cuerpo { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+.rol-icono { font-size: 1.35rem; line-height: 1.2; }
+.rol-cuerpo strong { display: block; font-size: .95rem; }
+.rol-cuerpo small { display: block; color: var(--texto-tenue); font-size: .78rem; line-height: 1.35; }
+
+/* ========================= embudo del ciclo de vida =================== */
+
+.embudo { display: flex; align-items: stretch; gap: .5rem; flex-wrap: wrap; }
+.embudo-paso {
+  flex: 1 1 150px; background: var(--superficie-2); border: 1px solid var(--borde);
+  border-radius: 10px; padding: .7rem .85rem; display: flex; flex-direction: column; gap: .1rem;
+}
+.embudo-num { font-size: 1.6rem; font-weight: 700; line-height: 1.1; color: var(--verde); }
+.embudo-nombre { font-weight: 650; font-size: .9rem; }
+.embudo-ayuda { font-size: .75rem; color: var(--texto-tenue); line-height: 1.35; }
+.embudo-flecha { display: grid; place-items: center; color: var(--texto-tenue); font-size: 1.2rem; }
+.embudo-rechazo {
+  margin: .8rem 0 0; font-size: .84rem; color: var(--rojo);
+  background: rgba(178, 58, 46, .08); padding: .5rem .8rem; border-radius: 7px;
+}
+
+.panel-destacado { border-left: 4px solid var(--verde); }
+.panel-sub { margin-bottom: .8rem; }
+
+/* ============================ filas de merma ========================== */
+
+.mermas-filas { display: grid; gap: .45rem; margin: .5rem 0; }
+.merma-fila { display: grid; grid-template-columns: 1fr 110px auto; gap: .4rem; align-items: center; }
+.merma-fila select, .merma-fila input { width: 100%; }
+.btn-sm { font-size: .82rem; padding: .35rem .7rem; }
+
+.balance {
+  margin-top: .6rem; padding: .55rem .8rem; border-radius: 7px; font-size: .86rem;
+  background: var(--superficie-2); border: 1px solid var(--borde);
+}
+.balance-ok { background: rgba(18, 104, 77, .12); border-color: var(--verde); color: var(--verde); }
+.balance-pendiente { background: rgba(181, 118, 17, .12); border-color: var(--ambar); color: var(--ambar); }
+
+.btn-mini-accion { border-color: var(--verde); color: var(--verde); font-weight: 650; }
+.btn-mini-accion:hover { background: var(--verde); color: #fff; }
+
+/* =============================== ficha del lote ======================= */
+
+.ficha-mini {
+  display: grid; gap: .5rem; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  background: var(--verde-suave); border-radius: 9px; padding: .7rem .85rem; margin-bottom: .3rem;
+}
+.ficha-mini span { display: block; font-size: .72rem; color: var(--texto-tenue); }
+.ficha-mini strong { font-size: .92rem; }
+
+.ficha-linea { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
+.ficha-hito {
+  flex: 1 1 120px; text-align: center; padding: .6rem .4rem;
+  border: 1px solid var(--borde); border-radius: 9px; background: var(--superficie-2);
+  opacity: .5;
+}
+.ficha-hito.hito-hecho { opacity: 1; border-color: var(--verde); background: var(--verde-suave); }
+.hito-punto {
+  display: grid; place-items: center; width: 24px; height: 24px; margin: 0 auto .3rem;
+  border-radius: 50%; background: var(--texto-tenue); color: var(--fondo);
+  font-size: .78rem; font-weight: 700;
+}
+.hito-hecho .hito-punto { background: var(--verde); color: #fff; }
+.ficha-hito strong { display: block; font-size: .84rem; }
+.ficha-hito small { display: block; font-size: .72rem; color: var(--texto-tenue); line-height: 1.35; }
+
+.ficha-bloques { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+.ficha-bloques section {
+  border: 1px solid var(--borde); border-radius: 9px; padding: .8rem .9rem; background: var(--superficie-2);
+}
+.ficha-bloques h4 {
+  margin: 0 0 .5rem; font-size: .76rem; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--texto-tenue);
+}
+.ficha-bloques dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: .25rem .7rem; font-size: .86rem; }
+.ficha-bloques dt { color: var(--texto-tenue); }
+.ficha-bloques dd { margin: 0; text-align: right; }
+.ficha-notas { grid-column: 1 / -1; }
+.ficha-notas p { font-size: .85rem; margin: 0 0 .4rem; }
+
+/* Las causas ocupan el ancho completo y se reparten en varias columnas:
+   son la parte mas util de la ficha y no deben quedar en una tira estrecha. */
+.ficha-mermas { grid-column: 1 / -1; }
+.lista-mermas {
+  list-style: none; margin: 0; padding: 0; font-size: .84rem;
+  display: grid; gap: .35rem .9rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.lista-mermas li { display: grid; grid-template-columns: 1fr 60px auto; gap: .5rem; align-items: center; }
+.barra-mini { display: block; height: 6px; border-radius: 999px; background: var(--borde); overflow: hidden; }
+.barra-mini span { display: block; height: 100%; background: var(--verde); }
+
+.modal-ancho { width: min(880px, 100%); }
+.modal-cuerpo-libre { display: block; }
+.modal-pie-fijo { border-top: 1px solid var(--borde); padding: 1rem 1.2rem; }
+
+.hoja-grafico { margin-bottom: 1.2rem; }
+.nota-info {
+  margin-top: 1rem; padding: .8rem 1rem; font-size: .84rem;
+  background: var(--verde-suave); border-left: 3px solid var(--verde); border-radius: 6px;
+}
+
+.punto-linea { height: 3px; border-radius: 2px; }
+
+.estado-anunciado { color: var(--ambar); }
+.estado-procesado { color: var(--azul); }
+.estado-cerrado { color: var(--verde); }
+.estado-rechazado { color: var(--rojo); }
+
+@media (max-width: 560px) {
+  .merma-fila { grid-template-columns: 1fr 80px auto; }
+  .embudo-flecha { display: none; }
+  .ficha-bloques dl { grid-template-columns: 1fr; }
+  .ficha-bloques dd { text-align: left; font-weight: 600; }
+}
+
+/* Al imprimir una ficha solo debe salir la ficha, no la pantalla de fondo. */
+@media print {
+  body.imprimiendo-ficha .capa { display: none !important; }
+  body.imprimiendo-ficha .modal-capa {
+    position: static; background: none; padding: 0; display: block; overflow: visible;
+  }
+  body.imprimiendo-ficha .modal {
+    display: block; box-shadow: none; max-height: none; width: 100%; border-radius: 0;
+  }
+  body.imprimiendo-ficha .modal-x, body.imprimiendo-ficha .modal-pie { display: none !important; }
+  .ficha-hito, .ficha-bloques section, .embudo-paso { break-inside: avoid; }
 }
 
 /* ================================ impresión =========================== */

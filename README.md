@@ -11,15 +11,20 @@ Este repositorio contiene dos proyectos independientes:
 
 ## AgroRegistro (proyecto de tesis)
 
-Aplicación web que centraliza en un solo repositorio de información los envíos de cada
-proveedor, la producción del salón y los indicadores y reportes que se derivan de ambos.
+Aplicación web que centraliza en un solo repositorio de información el recorrido completo
+de la fruta: el proveedor **anuncia** el envío, recepción lo **pesa**, producción registra
+**lo exportable y las mermas con su causa**, y supervisión **cierra el lote** y emite los
+reportes e indicadores.
+
+Cuatro roles: 🚜 Proveedor · ⚖️ Recepción · 🏭 Producción · 📋 Supervisión.
 
 ```bash
 python3 -m http.server 8000
 # Abrir http://localhost:8000/app/
 ```
 
-Cuentas de demostración: `admin/admin123`, `proveedor/prov123`, `produccion/prod123`.
+Se entra eligiendo rol y escribiendo el nombre. Para recorrer el ciclo completo:
+`Marta Cedeño` → `Diego Andrade` → `Carlos Mendoza` → `Ing. Andrea Quiroz`.
 
 La documentación completa — parámetros registrados, fórmulas de cada indicador, roles,
 modelo de datos y limitaciones — está en **[`app/README.md`](app/README.md)**.

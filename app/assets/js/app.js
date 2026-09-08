@@ -488,16 +488,38 @@
     });
     const blob = new Blob(["﻿" + lineas.join("\r\n")], { type: "text/csv;charset=utf-8;" });
     descargar(blob, nombre + "_" + DB.hoy() + ".csv");
-    aviso("Archivo CSV generado.");
+  }
+
+  /* Cuando la app corre dentro del visor de Claude, los enlaces de descarga
+     no hacen nada: hay que pedir el guardado por su API. Se resuelve una vez
+     al arrancar y, si no esta disponible, se usa el enlace de siempre. */
+  let guardadoDelVisor = null;
+
+  function prepararGuardado() {
+    if (typeof window.claude === "undefined" || !window.claude ||
+        typeof window.claude.use !== "function") return;
+    window.claude.use("downloads")
+      .then(function (d) { guardadoDelVisor = d; })
+      .catch(function () { guardadoDelVisor = null; });
   }
 
   function descargar(blob, nombreArchivo) {
+    if (guardadoDelVisor) {
+      guardadoDelVisor.save({ filename: nombreArchivo, data: blob })
+        .then(function () { aviso("Archivo guardado."); })
+        .catch(function (e) {
+          if (e && e.code === "declined") return;      // el usuario dijo que no
+          aviso("No se pudo guardar el archivo.", "error");
+        });
+      return;
+    }
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = nombreArchivo;
     document.body.appendChild(a);
     a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    aviso("Archivo descargado.");
   }
 
   /* ================================ vistas ============================= */
@@ -1888,7 +1910,6 @@
       btnExp.addEventListener("click", function () {
         descargar(new Blob([DB.exportar()], { type: "application/json" }),
           "agroregistro_respaldo_" + DB.hoy() + ".json");
-        aviso("Respaldo descargado.");
       });
     }
 
@@ -1924,9 +1945,18 @@
 
   /* =============================== arranque ============================ */
 
-  document.addEventListener("DOMContentLoaded", function () {
+  function arrancar() {
+    prepararGuardado();
     DB.load();
     restaurarSesion();
     render();
-  });
+  }
+
+  /* Si el script se evalua cuando el DOM ya esta listo, DOMContentLoaded no
+     volvera a dispararse: hay que arrancar de inmediato. */
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", arrancar);
+  } else {
+    arrancar();
+  }
 })();

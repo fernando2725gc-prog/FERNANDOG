@@ -48,9 +48,14 @@
    [hidden]. Sin esto, un elemento marcado como oculto se seguiria viendo. */
 [hidden] { display: none !important; }
 
+:root {
+  --fuente: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fuente-datos: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  font-family: var(--fuente);
   font-size: 15px;
   line-height: 1.5;
   color: var(--texto);
@@ -64,7 +69,9 @@ h1, h2, h3 { margin: 0 0 .35em; line-height: 1.25; font-weight: 650; }
 h1 { font-size: 1.5rem; }
 h2 { font-size: 1.05rem; }
 p { margin: 0 0 .6em; }
-code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .86em; }
+code { font-family: var(--fuente-datos); font-size: .86em; letter-spacing: -.01em; }
+.kpi-valor, .embudo-num, .hoja-kpis strong { font-family: var(--fuente-datos); font-variant-numeric: tabular-nums; }
+.kpi-etiqueta { font-family: var(--fuente); }
 
 .salto {
   position: absolute; left: -999px; top: 0; z-index: 100;

@@ -634,6 +634,50 @@ textarea { resize: vertical; }
   .ficha-hito, .ficha-bloques section, .embudo-paso { break-inside: avoid; }
 }
 
+
+/* =========================== estado de sincronia ====================== */
+
+.sincro {
+  display: flex; align-items: center; gap: .4rem;
+  margin: 0 0 .2rem; font-size: .8rem; font-weight: 600;
+}
+.sincro-punto { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+.sincro-on { color: var(--verde); }
+.sincro-on .sincro-punto { background: var(--verde); box-shadow: 0 0 0 3px rgba(18, 104, 77, .18); }
+.sincro-off { color: var(--texto-tenue); }
+.sincro-off .sincro-punto { background: var(--texto-tenue); }
+.sincro-ayuda { font-size: .72rem; line-height: 1.35; margin-bottom: .5rem; }
+
+/* ======================== captura desde el celular ==================== */
+
+/* iOS hace zoom sobre cualquier campo con letra menor de 16px al enfocarlo,
+   y despues deja la pagina descuadrada. Con 16px no ocurre. */
+@media (max-width: 900px) {
+  input, select, textarea { font-size: 16px; padding: .6rem .7rem; }
+
+  /* Objetivos tactiles comodos con guantes o a contraluz en el patio. */
+  .btn { min-height: 44px; padding: .7rem 1.1rem; }
+  .btn-mini { min-height: 38px; padding: .45rem .7rem; margin-bottom: .2rem; }
+  .nav-item { min-height: 46px; }
+  .chip { min-height: 38px; }
+  .rol-cuerpo { padding: .85rem 1rem; }
+
+  /* Una fila de merma por linea: en 390px las tres columnas no caben. */
+  .merma-fila { grid-template-columns: 1fr auto; grid-template-areas: "causa causa" "kg quitar"; }
+  .merma-fila select { grid-area: causa; }
+  .merma-fila .merma-kg { grid-area: kg; width: 100%; }
+  .merma-fila .merma-quitar { grid-area: quitar; }
+
+  /* El modal ocupa la pantalla: es una pantalla de captura, no una ventana. */
+  .modal-capa { padding: 0; align-items: stretch; }
+  .modal { max-height: 100vh; border-radius: 0; width: 100%; }
+  .modal-pie { position: sticky; bottom: 0; background: var(--superficie); }
+  .modal-pie .btn { flex: 1; }
+
+  /* El aviso no debe tapar el boton de guardar. */
+  .avisos { bottom: auto; top: .8rem; right: .8rem; left: .8rem; max-width: none; }
+}
+
 /* ================================ impresión =========================== */
 
 @media print {

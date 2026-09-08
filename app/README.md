@@ -194,7 +194,28 @@ Para probar el flujo completo, entra sucesivamente como:
 
 ## 9. Dónde se guardan los datos
 
-Esta versión persiste todo en el **`localStorage` del navegador**, bajo la clave
+La aplicación funciona en **dos modos**, y elige sola el que corresponda. El pie del
+menú lateral indica siempre en cuál está.
+
+### Modo compartido
+
+Cuando se abre desde la versión publicada del sistema, los datos viven en un almacén
+central: **varios dispositivos trabajan sobre la misma información al mismo tiempo**.
+El proveedor anuncia el lote desde su celular y recepción lo ve aparecer en su cola sin
+recargar nada. Es el modo con el que se hacen las pruebas de funcionamiento reales.
+
+- Un documento por lote, producción, proveedor y usuario; la bitácora va agregada y
+  podada a 200 movimientos, porque es un flujo que crece sin límite.
+- Las suscripciones traen los cambios de los demás en vivo; el repintado se agrupa cada
+  200 ms para no redibujar una vez por cada mensaje.
+- El formulario abierto no se interrumpe cuando llega un cambio ajeno.
+- La primera apertura siembra un histórico corto (18 días) para que la app no arranque
+  vacía y quede sitio para los datos de prueba.
+
+### Modo local
+
+Al abrir los archivos directamente (`app/index.html` o un servidor propio), no hay
+almacén central y todo se guarda en el **`localStorage` del navegador**, bajo la clave
 `agroreg.db.v2`. Eso significa:
 
 - Los datos sobreviven al cerrar el navegador, **en ese mismo equipo**.
@@ -202,8 +223,9 @@ Esta versión persiste todo en el **`localStorage` del navegador**, bajo la clav
 - Desde *Datos del sistema* se puede **exportar todo a un archivo JSON** (útil como anexo
   de la tesis o como respaldo) y **restaurarlo** en otro equipo.
 
-Es adecuado para la demostración y la defensa del trabajo. Para el uso real en la empresa
-—con recepción, producción y supervisión trabajando a la vez— hace falta un backend.
+Sirve para trabajar sin conexión y para desarrollar. Para el uso real en la empresa hace
+falta un backend propio (sección 10): el modo compartido resuelve las pruebas, pero
+depende de la plataforma donde está publicado el prototipo.
 
 ## 10. Migrar a un backend real
 
@@ -270,10 +292,12 @@ Declararlas explícitamente es parte del trabajo académico:
    los permisos se verifiquen en el backend, no solo en el navegador.
 2. **Los permisos por rol se aplican en el cliente.** Sirven para guiar el proceso, no para
    contener a un usuario malintencionado.
-3. **Datos locales por equipo.** Ver sección 9. Hoy los cuatro roles no pueden trabajar
-   simultáneamente desde máquinas distintas.
-4. **Sin concurrencia ni bloqueo de registros.** Dos personas podrían pesar el mismo lote
-   si compartieran datos.
+3. **En modo local, datos por equipo.** Ver sección 9. En modo compartido sí trabajan
+   los cuatro roles a la vez desde dispositivos distintos.
+4. **Sin bloqueo de registros.** Las escrituras son «gana el último»: si dos personas
+   pesan el mismo lote a la vez, queda el valor del que guardó después. En la práctica
+   cada rol trabaja sobre lotes distintos, pero un sistema definitivo debería bloquear
+   el registro mientras alguien lo edita.
 5. **Los datos de demostración son simulados**, generados con un algoritmo de semilla fija
    para que las capturas del documento de tesis sean reproducibles. Incluyen sesgos de peso
    distintos por proveedor y repartos de merma coherentes con la calidad y el transporte,
@@ -288,10 +312,24 @@ con `role="alert"`, selector de rol con radios ocultos a la vista pero accesible
 teclado y lector de pantalla, menú móvil con `aria-expanded`, y respeto a
 `prefers-reduced-motion` y al tema oscuro del sistema.
 
+Para la captura desde el celular: campos de 16 px (por debajo, iOS hace zoom al enfocar y
+descuadra la página), `inputmode` numérico en las cantidades, objetivos táctiles de 44 px,
+formularios a pantalla completa con el botón de guardar fijo abajo, y las filas de merma
+reorganizadas a una por línea.
+
 ## 13. Pruebas
 
 `app/` no tiene framework de pruebas, pero el flujo completo se validó en Chromium con
-Playwright: 28 comprobaciones que cubren el acceso por rol, el aislamiento del proveedor,
-el anuncio de un envío, el pesaje con cálculo de diferencia, el balance de materia de la
-merma (incluidos los casos que deben fallar), el cierre del lote, la bitácora, los cinco
-reportes, la exportación CSV, la persistencia tras recargar y el diseño móvil a 390 px.
+Playwright, en dos suites:
+
+**Un dispositivo (26 comprobaciones).** Acceso por rol, aislamiento del proveedor, anuncio
+de un envío, pesaje con cálculo de diferencia, balance de materia de la merma —incluidos
+los casos que *deben* fallar—, cierre del lote, bitácora, los cinco reportes, exportación
+CSV, persistencia tras recargar y diseño móvil a 390 px con menú hamburguesa.
+
+**Dos dispositivos (6 comprobaciones).** Con un almacén simulado que respeta el contrato
+de la plataforma: conexión y sembrado, captura desde un viewport de celular con teclado
+numérico y letra de 16 px, un lote enviado desde el móvil apareciendo en la cola de
+recepción de otro dispositivo, un pesaje hecho en el escritorio llegando al móvil **sin
+recargar**, y persistencia tras recargar el móvil. Ejecutada tres veces seguidas para
+descartar intermitencias en la sincronización.

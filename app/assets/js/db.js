@@ -92,8 +92,12 @@ const DB = (function () {
 
   /* ---------------------------------------------------------------- semilla */
 
-  function semilla() {
+  /* `dias` acota el historial generado. El modo compartido usa una semilla
+     corta: la idea es dejar sitio para los datos de prueba reales, no llenar
+     la base con ruido. */
+  function semilla(dias) {
     const r = rng(20260908);
+    const historial = dias || 80;
 
     const frutas = [
       { id: "fr_mango", nombre: "Mango Tommy", unidad: "kg", metaExportable: 0.62, precioRef: 0.85 },
@@ -139,7 +143,7 @@ const DB = (function () {
     const lotes = [];
     let folio = 0;
 
-    for (let d = 80; d >= 0; d -= 1) {
+    for (let d = historial; d >= 0; d -= 1) {
       const fecha = diasAtras(d);
       if (new Date(fecha + "T12:00:00").getDay() === 0) continue;   // sin envíos el domingo
 
@@ -290,7 +294,7 @@ const DB = (function () {
     });
 
     return {
-      version: 2,
+      version: 3,
       creadoEn: new Date().toISOString(),
       frutas: frutas,
       productos: productos,
@@ -300,6 +304,124 @@ const DB = (function () {
       producciones: producciones,
       bitacora: []
     };
+  }
+
+  /* ------------------------------------------------- almacen compartido */
+
+  /* Colecciones que viajan como un documento por registro. La bitacora no:
+     es un flujo que crece sin limite, asi que se guarda agregada en un solo
+     documento y se poda, como recomienda el contrato del almacen. */
+  const COLECCIONES = ["proveedores", "usuarios", "lotes", "producciones"];
+
+  let remoto = null;                 // namespace del almacen, o null
+  let modo = "local";                // "local" | "compartido"
+  const suscripciones = [];
+
+  function esCompartido() { return modo === "compartido"; }
+  function modoActual() { return modo; }
+
+  /* Conecta con el almacen del visor. Si no esta disponible, la app sigue
+     funcionando contra localStorage sin que el resto del codigo se entere. */
+  async function conectar(alCambiar) {
+    if (typeof window === "undefined" || !window.claude ||
+        typeof window.claude.use !== "function") return modo;
+
+    let almacen;
+    try {
+      almacen = await window.claude.use("db");
+    } catch (e) {
+      return modo;
+    }
+    if (!almacen) return modo;
+
+    remoto = almacen;
+
+    try {
+      const paginas = await Promise.all(
+        COLECCIONES.map(function (c) { return remoto.collection(c).get(); })
+      );
+      const bitacoraDoc = await remoto.doc("sistema/bitacora").get();
+
+      const vacio = paginas.every(function (p) { return p.empty; });
+      if (vacio) {
+        await sembrarRemoto();
+      } else {
+        const db = load();
+        COLECCIONES.forEach(function (c, i) {
+          db[c] = paginas[i].docs.map(function (d) { return d.data(); });
+        });
+        db.bitacora = bitacoraDoc.exists ? (bitacoraDoc.data().entradas || []) : [];
+      }
+
+      modo = "compartido";
+      escuchar(alCambiar);
+    } catch (e) {
+      remoto = null;                 // se sigue trabajando en local
+      console.warn("No se pudo conectar el almacen compartido:", e);
+    }
+    return modo;
+  }
+
+  /* Primera apertura: se carga una semilla corta para que la app no arranque
+     vacia y se pueda ver como funciona antes de meter datos propios. */
+  async function sembrarRemoto() {
+    const datos = semilla(18);
+    cache = datos;
+
+    const escrituras = [];
+    COLECCIONES.forEach(function (c) {
+      datos[c].forEach(function (reg) {
+        escrituras.push(remoto.collection(c).doc(reg.id).set(reg));
+      });
+    });
+    escrituras.push(remoto.doc("sistema/bitacora").set({ entradas: [] }));
+    await Promise.all(escrituras);
+  }
+
+  function escuchar(alCambiar) {
+    COLECCIONES.forEach(function (c) {
+      suscripciones.push(remoto.collection(c).onSnapshot(function (snap) {
+        load()[c] = snap.docs.map(function (d) { return d.data(); });
+        if (alCambiar) alCambiar(c);
+      }, function (err) {
+        console.warn("Suscripcion interrumpida en " + c + ":", err.code);
+      }));
+    });
+
+    suscripciones.push(remoto.doc("sistema/bitacora").onSnapshot(function (snap) {
+      load().bitacora = snap.exists ? (snap.data().entradas || []) : [];
+      if (alCambiar) alCambiar("bitacora");
+    }, function (err) {
+      console.warn("Suscripcion interrumpida en bitacora:", err.code);
+    }));
+  }
+
+  /* Las escrituras remotas no bloquean la interfaz: la vista ya se actualizo
+     con el cache local y la suscripcion confirmara el resultado. */
+  function empujar(coleccion, registro) {
+    if (!remoto) return;
+    remoto.collection(coleccion).doc(registro.id).set(registro)
+      .catch(function (e) { avisarFallo(e); });
+  }
+
+  function empujarBorrado(coleccion, id) {
+    if (!remoto) return;
+    remoto.collection(coleccion).doc(id).delete()
+      .catch(function (e) { avisarFallo(e); });
+  }
+
+  function empujarBitacora(entradas) {
+    if (!remoto) return;
+    remoto.doc("sistema/bitacora").set({ entradas: entradas })
+      .catch(function (e) { avisarFallo(e); });
+  }
+
+  let alFallar = null;
+  function alFallarEscritura(fn) { alFallar = fn; }
+  function avisarFallo(e) {
+    const codigo = e && e.code ? e.code : "desconocido";
+    console.warn("Escritura rechazada por el almacen:", codigo, e);
+    if (alFallar) alFallar(codigo);
   }
 
   /* ------------------------------------------------------- persistencia */
@@ -323,6 +445,7 @@ const DB = (function () {
   }
 
   function save() {
+    if (esCompartido()) return;      // la fuente de verdad es el almacen
     try {
       localStorage.setItem(KEY, JSON.stringify(cache));
     } catch (e) {
@@ -331,8 +454,24 @@ const DB = (function () {
   }
 
   function reset() {
+    if (esCompartido()) return resetRemoto();
     cache = semilla();
     save();
+    return Promise.resolve(cache);
+  }
+
+  /* Borra lo que haya en el almacen compartido y vuelve a sembrarlo. */
+  async function resetRemoto() {
+    const paginas = await Promise.all(
+      COLECCIONES.map(function (c) { return remoto.collection(c).get(); })
+    );
+    await Promise.all(paginas.reduce(function (acc, pagina, i) {
+      pagina.docs.forEach(function (d) {
+        acc.push(remoto.collection(COLECCIONES[i]).doc(d.id).delete());
+      });
+      return acc;
+    }, []));
+    await sembrarRemoto();
     return cache;
   }
 
@@ -365,6 +504,7 @@ const DB = (function () {
     if (!registro.id) registro.id = uid(coleccion.slice(0, 2));
     db[coleccion].push(registro);
     save();
+    empujar(coleccion, registro);
     return registro;
   }
 
@@ -374,6 +514,7 @@ const DB = (function () {
     if (i === -1) return null;
     db[coleccion][i] = Object.assign({}, db[coleccion][i], cambios);
     save();
+    empujar(coleccion, db[coleccion][i]);
     return db[coleccion][i];
   }
 
@@ -383,6 +524,7 @@ const DB = (function () {
     if (i === -1) return false;
     db[coleccion].splice(i, 1);
     save();
+    empujarBorrado(coleccion, id);
     return true;
   }
 
@@ -408,8 +550,9 @@ const DB = (function () {
       accion: accion,
       detalle: detalle
     });
-    db.bitacora = db.bitacora.slice(0, 400);
+    db.bitacora = db.bitacora.slice(0, 200);
     save();
+    empujarBitacora(db.bitacora);
   }
 
   return {
@@ -424,6 +567,10 @@ const DB = (function () {
     load: load,
     save: save,
     reset: reset,
+    conectar: conectar,
+    esCompartido: esCompartido,
+    modoActual: modoActual,
+    alFallarEscritura: alFallarEscritura,
     importar: importar,
     exportar: exportar,
     all: all,

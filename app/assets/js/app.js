@@ -374,7 +374,11 @@
       control = '<label class="check"><input type="checkbox" ' + base +
         (c.valor ? " checked" : "") + "> " + esc(c.textoCheck || "") + "</label>";
     } else {
-      control = '<input type="' + (c.tipo || "text") + '" ' + base +
+      /* En el movil, inputmode saca el teclado numerico directamente: pesar
+         un lote no puede obligar a cambiar de teclado en cada campo. */
+      const modo = c.tipo === "number" ? ' inputmode="decimal"'
+        : c.tipo === "tel" ? ' inputmode="tel"' : "";
+      control = '<input type="' + (c.tipo || "text") + '"' + modo + " " + base +
         ' value="' + esc(c.valor === undefined || c.valor === null ? "" : c.valor) + '"' +
         (c.min !== undefined ? ' min="' + c.min + '"' : "") +
         (c.max !== undefined ? ' max="' + c.max + '"' : "") +
@@ -1582,11 +1586,20 @@
       '<button class="btn btn-peligro" id="btnReiniciar">Reiniciar con datos de demostración</button>' +
       "</div></section>";
 
-    html += '<section class="panel"><h2>Dónde se guardan los datos</h2>' +
-      "<p>Esta versión almacena todo en el <code>localStorage</code> del navegador: los datos " +
-      "persisten entre sesiones en este equipo, pero no se comparten entre computadoras. " +
-      "Para el despliegue real en la empresa debe conectarse un backend; el procedimiento " +
-      "está documentado en <code>app/README.md</code>.</p></section>";
+    html += '<section class="panel"><h2>Dónde se guardan los datos</h2>';
+    if (DB.esCompartido()) {
+      html += "<p><strong>Modo compartido.</strong> Los datos viven en el almacén del " +
+        "sistema, no en este navegador: lo que registra el proveedor desde su celular lo " +
+        "ve recepción en el suyo al instante. Puedes abrir la misma dirección en varios " +
+        "dispositivos a la vez para probarlo.</p>" +
+        "<p>Los cambios llegan solos; no hace falta recargar.</p>";
+    } else {
+      html += "<p><strong>Modo local.</strong> Todo se guarda en el <code>localStorage</code> " +
+        "de este navegador: persiste entre sesiones en este equipo, pero no se comparte " +
+        "con otras computadoras ni celulares.</p>" +
+        "<p>Para probar entre dispositivos, abre la versión publicada del sistema.</p>";
+    }
+    html += "</section>";
 
     return html;
   }
@@ -1692,7 +1705,16 @@
         '" data-ir="' + m.id + '"' + (m.id === vistaActual ? ' aria-current="page"' : "") + ">" +
         '<span aria-hidden="true">' + m.icono + "</span>" + esc(m.texto) + "</button>";
     });
-    html += "</nav><div class='lateral-pie'><p class='tenue'>v2.0 · prototipo de tesis</p></div></aside>";
+    const compartido = DB.esCompartido();
+    html += "</nav><div class='lateral-pie'>" +
+      '<p class="sincro sincro-' + (compartido ? "on" : "off") + '">' +
+      '<span class="sincro-punto" aria-hidden="true"></span>' +
+      (compartido ? "Datos compartidos" : "Solo este equipo") + "</p>" +
+      '<p class="tenue sincro-ayuda">' +
+      (compartido
+        ? "Lo que registres aquí lo ven al instante los demás dispositivos."
+        : "Los datos se guardan solo en este navegador.") + "</p>" +
+      "<p class='tenue'>v3.0 · prototipo de tesis</p></div></aside>";
 
     html += '<div class="principal">';
     html += '<header class="barra"><button class="menu-btn" id="btnMenu" aria-label="Abrir menú" aria-expanded="false">☰</button>' +
@@ -1935,21 +1957,58 @@
     const btnReset = $("#btnReiniciar");
     if (btnReset) {
       btnReset.addEventListener("click", function () {
-        if (!confirm("Se borrarán todos los registros actuales y se cargarán los datos de demostración. ¿Continuar?")) return;
-        DB.reset();
-        aviso("Sistema reiniciado con datos de demostración.");
-        render();
+        const compartido = DB.esCompartido();
+        if (!confirm("Se borrarán todos los registros" +
+            (compartido ? " para todos los dispositivos conectados" : "") +
+            " y se cargarán los datos de demostración. ¿Continuar?")) return;
+        btnReset.disabled = true;
+        btnReset.textContent = "Reiniciando…";
+        Promise.resolve(DB.reset()).then(function () {
+          aviso("Sistema reiniciado con datos de demostración.");
+          render();
+        }).catch(function () {
+          aviso("No se pudo reiniciar el almacén compartido.", "error");
+          btnReset.disabled = false;
+          btnReset.textContent = "Reiniciar con datos de demostración";
+        });
       });
     }
   }
 
   /* =============================== arranque ============================ */
 
+  /* Repintado tras un cambio llegado de otro dispositivo. Se agrupa: varias
+     suscripciones pueden entregar a la vez y no hace falta un render por cada
+     una. El modal vive fuera de #app, asi que un repintado no interrumpe a
+     quien este llenando un formulario. */
+  let repintadoPendiente = null;
+
+  function repintarPorSincronizacion() {
+    if (repintadoPendiente) return;
+    repintadoPendiente = setTimeout(function () {
+      repintadoPendiente = null;
+      render();
+    }, 200);
+  }
+
   function arrancar() {
     prepararGuardado();
     DB.load();
     restaurarSesion();
     render();
+
+    DB.alFallarEscritura(function (codigo) {
+      aviso(codigo === "quota_exceeded"
+        ? "El almacén compartido está lleno. Reinicia los datos desde Datos del sistema."
+        : "No se pudo guardar el cambio en el almacén compartido.", "error");
+    });
+
+    DB.conectar(repintarPorSincronizacion).then(function (m) {
+      render();
+      if (m === "compartido") {
+        aviso("Conectado. Los datos se comparten con los demás dispositivos.");
+      }
+    });
   }
 
   /* Si el script se evalua cuando el DOM ya esta listo, DOMContentLoaded no

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AgroRegistro — Sistema de registro y control de producción frutícola</title>
+<meta name="description" content="Aplicación web para el registro centralizado de envíos de proveedores, producción e indicadores de gestión." />
+<meta name="theme-color" content="#12684d" />
+<link rel="stylesheet" href="assets/css/app.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍍</text></svg>" />
+</head>
+<body>
+
+<a class="salto" href="#contenido">Saltar al contenido</a>
+
+<!-- La interfaz completa se dibuja desde app.js -->
+<div id="app" aria-live="polite"></div>
+
+<!-- Mensajes emergentes de confirmación y error -->
+<div id="avisos" class="avisos" aria-live="polite"></div>
+
+<noscript>
+  <p class="noscript">Esta aplicación necesita JavaScript activado para funcionar.</p>
+</noscript>
+
+<script src="assets/js/db.js"></script>
+<script src="assets/js/indicadores.js"></script>
+<script src="assets/js/graficos.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

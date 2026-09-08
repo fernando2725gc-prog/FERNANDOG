@@ -1,3 +1,31 @@
+# Repositorio FERNANDOG
+
+Este repositorio contiene dos proyectos independientes:
+
+| Carpeta | Proyecto |
+|---|---|
+| [`app/`](app/) | **AgroRegistro** — Sistema de registro y control de producción frutícola (proyecto de tesis) |
+| raíz (`index.html`) | Landing page de la Clínica Dental Sonrisa Imperial |
+
+---
+
+## AgroRegistro (proyecto de tesis)
+
+Aplicación web que centraliza en un solo repositorio de información los envíos de cada
+proveedor, la producción del salón y los indicadores y reportes que se derivan de ambos.
+
+```bash
+python3 -m http.server 8000
+# Abrir http://localhost:8000/app/
+```
+
+Cuentas de demostración: `admin/admin123`, `proveedor/prov123`, `produccion/prod123`.
+
+La documentación completa — parámetros registrados, fórmulas de cada indicador, roles,
+modelo de datos y limitaciones — está en **[`app/README.md`](app/README.md)**.
+
+---
+
 # Sonrisa Imperial — Landing page
 
 Landing page de una página para la **Clínica Dental Sonrisa Imperial**, enfocada en un

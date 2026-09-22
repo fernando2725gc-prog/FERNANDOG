@@ -153,7 +153,24 @@ Los reportes impresos llevan la leyenda al pie.
 - Los **destinos del descarte** son una jerarquía de valorización razonable, no la de FLP.
   Edítalos en *Parámetros*.
 
-## 7. Cómo ejecutarlo
+## 7. Versión publicada
+
+Las dos aplicaciones se publican en **una sola dirección con dos puertas**:
+
+```
+<dirección>            portada, elige aplicación
+<dirección>#/proveedor Portal del Proveedor
+<dirección>#/planta    Sistema de Planta
+```
+
+Comparten dirección a propósito: el almacén de datos pertenece a la página, así que
+publicarlas por separado les daría dos repositorios distintos y dejarían de consolidarse.
+En el repositorio siguen siendo dos aplicaciones independientes (`proveedor/` e
+`interno/`) que podrían desplegarse en dominios distintos contra un backend común; por eso
+cada una expone `iniciar()` en vez de arrancar sola, y los enlaces entre ellas se resuelven
+con `UI.rutaOtraApp()`.
+
+## 8. Cómo ejecutarlo
 
 ```bash
 python3 -m http.server 8000
@@ -170,7 +187,7 @@ Recorrido completo de la demostración:
    cierre del lote y publicación del reporte.
 5. Vuelve al **portal**: el proveedor ya ve el resultado de su lote.
 
-## 8. Dónde se guardan los datos
+## 9. Dónde se guardan los datos
 
 **Modo compartido** (versión publicada): las dos aplicaciones escriben en el mismo
 almacén; los cambios llegan en vivo sin recargar. Un documento por lote, producción,
@@ -181,7 +198,7 @@ bitácora agregada y podada a 200 movimientos.
 `flp.db.v4`. Persiste en ese equipo pero no se comparte. El pie del menú indica siempre
 en qué modo está.
 
-## 9. Migrar a un backend real
+## 10. Migrar a un backend real
 
 Todo el acceso a datos pasa por `core/db.js`. Modelo relacional sugerido:
 
@@ -211,7 +228,7 @@ La restricción del balance de masa
 (`Σ merma_detalle.kg = (cajas_procesadas − cajas_exportables) × peso_caja_kg`)
 debe replicarse en el servidor: la validación del navegador no basta.
 
-## 10. Limitaciones conocidas
+## 11. Limitaciones conocidas
 
 1. **No hay autenticación.** Se entra eligiendo rol y escribiendo un nombre. Cómodo para
    planta, pero cualquiera puede declararse de cualquier rol. Producción requiere
@@ -226,9 +243,10 @@ debe replicarse en el servidor: la validación del navegador no basta.
 5. **Confidencialidad.** La empresa está bajo acuerdo de confidencialidad: cuidado con
    dónde se publica una versión que lleve su nombre y sus parámetros reales.
 
-## 11. Pruebas
+## 12. Pruebas
 
-Validado en Chromium con Playwright: **22 comprobaciones** que recorren las dos
+Dos suites en Chromium con Playwright. **22 comprobaciones** sobre las aplicaciones
+separadas que recorren las dos
 aplicaciones contra un mismo almacén compartido — portada, aislamiento del proveedor,
 anuncio en cajas, pesaje con contraste de cajas y kg, propagación en vivo al celular sin
 recargar, tasa y eficiencia contra el estudio de tiempos, balance de masa (incluidos los
@@ -236,6 +254,6 @@ casos que *deben* fallar), Pareto por causa raíz, planificador con takt time y 
 de sobrecarga, catálogos editables con M/E/S, cierre del lote y reporte al proveedor sin
 exponerle causas internas de planta.
 
-```bash
-node scratchpad/dosapps.js     # requiere Playwright y el servidor en :8199
-```
+Y **8 comprobaciones** sobre el paquete publicado: las dos puertas, el almacén compartido
+activo, un envío anunciado desde el celular apareciendo en la cola de la planta, el pesaje
+llegando en vivo al portal, y la navegación entre puertas.

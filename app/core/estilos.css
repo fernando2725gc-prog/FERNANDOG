@@ -768,7 +768,9 @@ textarea { resize: vertical; }
   background: var(--verde-suave); border-radius: var(--radio); padding: 1.2rem 1.4rem;
 }
 .portada-nota h3 { font-size: .95rem; margin-bottom: .4rem; }
-.portada-nota p { margin: 0; font-size: .88rem; color: var(--texto-tenue); }
+.portada-nota p { margin: 0 0 .5rem; font-size: .88rem; color: var(--texto-tenue); }
+.portada-nota p:last-child { margin-bottom: 0; }
+.portada-prueba { color: var(--texto) !important; }
 
 /* ============================== acceso ================================ */
 

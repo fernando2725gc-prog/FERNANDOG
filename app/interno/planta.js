@@ -1673,7 +1673,7 @@
       html += "</ul></div>";
     }
 
-    html += '<p class="acceso-pie">¿Eres proveedor? <a href="../proveedor/">Entra al portal</a></p>';
+    html += '<p class="acceso-pie">¿Eres proveedor? <a ' + UI.rutaOtraApp("proveedor") + '>Entra al portal</a></p>';
     html += "</div></div>";
     return html;
   }
@@ -2090,7 +2090,7 @@
     }, 200);
   }
 
-  UI.alArrancar(function () {
+  function iniciar() {
     UI.prepararGuardado();
     DB.load();
     restaurar();
@@ -2106,5 +2106,9 @@
       render();
       if (m === "compartido") UI.aviso("Conectado con el portal del proveedor.");
     });
-  });
+  }
+
+  /* Se expone en vez de arrancar sola: la página propia la inicia, y el
+     paquete de las dos aplicaciones decide cuál montar. */
+  window.PlantaFLP = { iniciar: function () { UI.alArrancar(iniciar); } };
 })();

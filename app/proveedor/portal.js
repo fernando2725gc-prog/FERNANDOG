@@ -524,7 +524,7 @@
     }
 
     html += '<p class="acceso-pie">¿Trabajas en la planta? ' +
-      '<a href="../interno/">Entra al sistema interno</a></p>';
+      '<a ' + UI.rutaOtraApp("interno") + '>Entra al sistema interno</a></p>';
     html += "</div></div>";
     return html;
   }
@@ -640,7 +640,7 @@
     }, 200);
   }
 
-  UI.alArrancar(function () {
+  function iniciar() {
     UI.prepararGuardado();
     DB.load();
     restaurar();
@@ -651,5 +651,9 @@
     });
 
     DB.conectar(repintarPorSincronizacion).then(function () { render(); });
-  });
+  }
+
+  /* Se expone en vez de arrancar sola: la página propia la inicia, y el
+     paquete de las dos aplicaciones decide cuál montar. */
+  window.PortalProveedor = { iniciar: function () { UI.alArrancar(iniciar); } };
 })();

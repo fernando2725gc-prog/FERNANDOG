@@ -431,6 +431,14 @@ const UI = (function () {
     try { sessionStorage.removeItem(clave); } catch (e) { /* noop */ }
   }
 
+  /* Enlace a la otra aplicación. Cambia según el despliegue: carpetas
+     separadas en el repositorio, o rutas con # dentro de un solo paquete. */
+  function rutaOtraApp(cual) {
+    const rutas = (typeof window !== "undefined" && window.FLP_RUTAS) || null;
+    if (rutas && rutas[cual]) return 'href="' + rutas[cual] + '"';
+    return 'href="../' + cual + '/"';
+  }
+
   /* Arranca cuando el DOM esté listo, incluso si ya lo estaba. */
   function alArrancar(fn) {
     if (document.readyState === "loading") {
@@ -447,6 +455,7 @@ const UI = (function () {
     abrirFormulario: abrirFormulario, leerRepetible: leerRepetible,
     prepararGuardado: prepararGuardado, descargar: descargar, descargarCSV: descargarCSV,
     guardarSesion: guardarSesion, leerSesion: leerSesion, borrarSesion: borrarSesion,
+    rutaOtraApp: rutaOtraApp,
     alArrancar: alArrancar
   };
 })();

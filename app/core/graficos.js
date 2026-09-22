@@ -7,7 +7,9 @@
 const Graficos = (function () {
   "use strict";
 
-  const PALETA = ["#1f7a5a", "#c98a1b", "#3b6ea5", "#9c5aa8", "#a8503b", "#4a8a8a"];
+  /* Los tres primeros colores son los de las lineas de producto: pitahaya
+     roja, tomate de arbol y granadilla. El resto completa la escala. */
+  const PALETA = ["#c0246b", "#c85a1e", "#b8860b", "#2f6f8f", "#5b8c3a", "#7a5ba8"];
 
   function esc(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -238,8 +240,7 @@ const Graficos = (function () {
       const bw = ancho * 0.62;
       const bx = x + (ancho - bw) / 2;
       const by = y(d.kg);
-      const color = d.tipo === "Campo" ? PALETA[0]
-        : d.tipo === "Transporte" ? PALETA[1] : PALETA[2];
+      const color = o.color ? o.color(d) : PALETA[i % PALETA.length];
 
       svg += '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + bw.toFixed(1) +
         '" height="' + (m.t + ih - by).toFixed(1) + '" rx="3" fill="' + color + '">' +
@@ -247,9 +248,10 @@ const Graficos = (function () {
         (d.porcentaje * 100).toFixed(1) + "% de la merma</title></rect>";
 
       /* Etiqueta girada: los nombres de causa no caben en horizontal */
+      const eje = o.ejeX ? o.ejeX(d) : d.nombre;
       svg += '<text transform="translate(' + (x + ancho / 2).toFixed(1) + "," + (m.t + ih + 10) +
         ') rotate(-38)" class="chart-tick" text-anchor="end">' +
-        esc(d.nombre.length > 22 ? d.nombre.slice(0, 21) + "…" : d.nombre) + "</text>";
+        esc(eje.length > 22 ? eje.slice(0, 21) + "…" : eje) + "</text>";
     });
 
     /* Curva acumulada */
@@ -257,26 +259,26 @@ const Graficos = (function () {
       return (i === 0 ? "M" : "L") + (m.l + i * ancho + ancho / 2).toFixed(1) + " " +
         yAcum(d.acumulado).toFixed(1);
     }).join(" ");
-    svg += '<path d="' + linea + '" fill="none" stroke="' + PALETA[4] +
+    svg += '<path d="' + linea + '" fill="none" stroke="' + PALETA[3] +
       '" stroke-width="2" stroke-dasharray="4 3"/>';
     filas.forEach(function (d, i) {
       svg += '<circle cx="' + (m.l + i * ancho + ancho / 2).toFixed(1) + '" cy="' +
-        yAcum(d.acumulado).toFixed(1) + '" r="3.5" fill="' + PALETA[4] + '">' +
+        yAcum(d.acumulado).toFixed(1) + '" r="3.5" fill="' + PALETA[3] + '">' +
         "<title>Acumulado: " + (d.acumulado * 100).toFixed(1) + "%</title></circle>";
     });
 
     /* Referencia del 80%: la frontera clasica del analisis de Pareto */
     svg += '<line x1="' + m.l + '" y1="' + yAcum(0.8).toFixed(1) + '" x2="' + (W - m.r) +
-      '" y2="' + yAcum(0.8).toFixed(1) + '" stroke="' + PALETA[4] +
+      '" y2="' + yAcum(0.8).toFixed(1) + '" stroke="' + PALETA[3] +
       '" stroke-width="1" stroke-dasharray="2 4" opacity="0.55"/>';
 
     svg += "</svg>";
 
     let leyenda = '<ul class="leyenda">';
-    [["Campo", PALETA[0]], ["Transporte", PALETA[1]], ["Proceso", PALETA[2]]].forEach(function (t) {
-      leyenda += '<li><span class="punto" style="background:' + t[1] + '"></span>' + t[0] + "</li>";
+    (o.leyenda || []).forEach(function (t) {
+      leyenda += '<li><span class="punto" style="background:' + t[1] + '"></span>' + esc(t[0]) + "</li>";
     });
-    leyenda += '<li><span class="punto punto-linea" style="background:' + PALETA[4] +
+    leyenda += '<li><span class="punto punto-linea" style="background:' + PALETA[3] +
       '"></span>% acumulado</li></ul>';
 
     return svg + leyenda;
@@ -284,7 +286,7 @@ const Graficos = (function () {
 
   /* ------------------------------------- barra de cumplimiento vs meta */
 
-  function medidor(valor, meta, etiqueta) {
+  function medidor(valor, meta, etiqueta, pie) {
     const pct = meta > 0 ? Math.min(valor / meta, 1.35) : 0;
     const ancho = Math.min(pct, 1) * 100;
     const estado = pct >= 1 ? "ok" : pct >= 0.9 ? "alerta" : "bajo";
@@ -293,7 +295,8 @@ const Graficos = (function () {
       (valor * 100).toFixed(1) + "%</strong></div>" +
       '<div class="medidor-pista"><div class="medidor-barra" style="width:' + ancho.toFixed(1) + '%"></div>' +
       '<div class="medidor-meta" style="left:' + Math.min(100, 100).toFixed(1) + '%"></div></div>' +
-      '<div class="medidor-pie">Meta ponderada: ' + (meta * 100).toFixed(1) + "%</div></div>";
+      '<div class="medidor-pie">' +
+      (pie || "Meta ponderada: " + (meta * 100).toFixed(1) + "%") + "</div></div>";
   }
 
   return {

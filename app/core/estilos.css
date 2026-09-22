@@ -4,19 +4,27 @@
    ========================================================================= */
 
 :root {
-  --verde: #12684d;
-  --verde-claro: #1f8a67;
-  --verde-suave: #e6f2ed;
-  --ambar: #b57611;
+  --verde: #14313f;          /* tinta principal: pizarra fria */
+  --verde-claro: #1d4756;
+  --verde-suave: #e4ecef;
+  --ambar: #a8720f;
   --rojo: #b23a2e;
-  --azul: #2f6295;
+  --azul: #2f6f8f;
 
-  --fondo: #f4f6f5;
+  /* Las tres lineas de producto, tomadas del color de la propia fruta. */
+  --linea-1: #c0246b;        /* pitahaya roja */
+  --linea-2: #c85a1e;        /* tomate de arbol */
+  --linea-3: #b8860b;        /* granadilla */
+  --bien: #2f7a56;
+  --regular: #a8720f;
+  --mal: #b23a2e;
+
+  --fondo: #f2f5f6;
   --superficie: #ffffff;
-  --superficie-2: #fafbfa;
-  --borde: #dde3e0;
-  --texto: #16211d;
-  --texto-tenue: #5c6b65;
+  --superficie-2: #f9fbfb;
+  --borde: #dce3e6;
+  --texto: #14202a;
+  --texto-tenue: #5a6b75;
   --sombra: 0 1px 2px rgba(16, 34, 28, .06), 0 8px 24px rgba(16, 34, 28, .06);
   --radio: 10px;
   --lateral-ancho: 246px;
@@ -24,17 +32,24 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --verde: #35a37c;
-    --verde-claro: #47b78e;
-    --verde-suave: #16332a;
+    --verde: #7fb2c4;
+    --verde-claro: #9ac8d8;
+    --verde-suave: #1a2c35;
     --ambar: #d9a13f;
     --rojo: #e0705f;
     --azul: #6ba3dc;
 
-    --fondo: #101512;
-    --superficie: #18201c;
-    --superficie-2: #1d2622;
-    --borde: #2c3833;
+    --linea-1: #e8639a;
+    --linea-2: #e5884b;
+    --linea-3: #d9ab3c;
+    --bien: #59b087;
+    --regular: #d9a13f;
+    --mal: #e0705f;
+
+    --fondo: #0f1417;
+    --superficie: #171e22;
+    --superficie-2: #1c2529;
+    --borde: #2a363c;
     --texto: #e8efeb;
     --texto-tenue: #9aaaa3;
     --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
@@ -678,6 +693,227 @@ textarea { resize: vertical; }
   .avisos { bottom: auto; top: .8rem; right: .8rem; left: .8rem; max-width: none; }
 }
 
+
+/* ========================= tonos de los indicadores =================== */
+
+.kpi-bien { border-left-color: var(--bien); }
+.kpi-regular { border-left-color: var(--regular); }
+.kpi-mal { border-left-color: var(--mal); }
+.kpi-linea1 { border-left-color: var(--linea-1); }
+.kpi-linea2 { border-left-color: var(--linea-2); }
+.kpi-linea3 { border-left-color: var(--linea-3); }
+
+.panel-bien { border-left: 4px solid var(--bien); }
+.panel-regular { border-left: 4px solid var(--regular); }
+.panel-mal { border-left: 4px solid var(--mal); }
+
+.seccion-titulo {
+  margin: 1.8rem 0 .8rem; font-size: .8rem; text-transform: uppercase;
+  letter-spacing: .09em; color: var(--texto-tenue); font-weight: 700;
+  padding-bottom: .4rem; border-bottom: 1px solid var(--borde);
+}
+
+/* ===================== origen del dato (M / E / S) ==================== */
+
+/* El estandar de rigor del TIC exige declarar de donde sale cada numero.
+   La insignia va pegada al valor, no en una columna aparte. */
+.origen {
+  display: inline-block; font-family: var(--fuente-datos); font-size: .62em;
+  font-weight: 700; line-height: 1; padding: .18em .34em; border-radius: 3px;
+  vertical-align: super; text-decoration: none; cursor: help;
+  border: 1px solid currentColor; opacity: .75;
+}
+.origen-M { color: var(--bien); }
+.origen-E { color: var(--regular); }
+.origen-S { color: var(--azul); }
+
+/* ====================== linea de producto ============================= */
+
+.linea-tag { display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap; }
+.linea-punto {
+  width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto;
+  background: var(--linea, var(--texto-tenue));
+}
+
+/* ============================== portada =============================== */
+
+.portada-body { display: grid; place-items: center; min-height: 100vh; padding: 2rem 1.2rem; }
+.portada { width: min(900px, 100%); display: flex; flex-direction: column; gap: 1.8rem; }
+.portada-cab { text-align: center; }
+.portada-eyebrow {
+  font-family: var(--fuente-datos); font-size: .74rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--texto-tenue); margin-bottom: .5rem;
+}
+.portada-cab h1 { font-size: clamp(1.9rem, 5vw, 2.6rem); margin-bottom: .4rem; }
+.portada-sub { color: var(--texto-tenue); max-width: 46ch; margin: 0 auto; }
+
+.portada-apps { display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
+.portada-app {
+  display: flex; flex-direction: column; gap: .5rem; text-decoration: none; color: inherit;
+  background: var(--superficie); border: 1px solid var(--borde); border-top: 4px solid var(--texto-tenue);
+  border-radius: var(--radio); padding: 1.5rem; box-shadow: var(--sombra);
+  transition: transform .15s, border-color .15s, box-shadow .15s;
+}
+.portada-app:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(20, 32, 42, .14); }
+.portada-app-ext { border-top-color: var(--linea-1); }
+.portada-app-int { border-top-color: var(--azul); }
+.portada-icono { font-size: 2.2rem; line-height: 1; }
+.portada-app h2 { margin: 0; font-size: 1.2rem; }
+.portada-app p { color: var(--texto-tenue); font-size: .9rem; margin: 0; flex: 1; }
+.portada-cta { font-weight: 650; font-size: .9rem; color: var(--verde); margin-top: .4rem; }
+.portada-app-ext .portada-cta { color: var(--linea-1); }
+.portada-app-int .portada-cta { color: var(--azul); }
+
+.portada-nota {
+  background: var(--verde-suave); border-radius: var(--radio); padding: 1.2rem 1.4rem;
+}
+.portada-nota h3 { font-size: .95rem; margin-bottom: .4rem; }
+.portada-nota p { margin: 0; font-size: .88rem; color: var(--texto-tenue); }
+
+/* ============================== acceso ================================ */
+
+.acceso-capa { min-height: 100vh; display: grid; place-items: center; padding: 1.5rem; }
+.acceso-proveedor { background: linear-gradient(160deg, #c0246b 0%, #6d1340 100%); }
+.acceso-interno { background: linear-gradient(160deg, #1d4756 0%, #0d2029 100%); }
+.acceso-caja {
+  width: min(420px, 100%); background: var(--superficie); color: var(--texto);
+  border-radius: 14px; padding: 1.8rem; box-shadow: 0 20px 50px rgba(0, 0, 0, .3);
+}
+.acceso-marca { display: flex; align-items: center; gap: .7rem; margin-bottom: 1rem; }
+.acceso-marca .logo { font-size: 2rem; line-height: 1; }
+.acceso-marca strong { display: block; font-size: 1.1rem; }
+.acceso-marca small { display: block; color: var(--texto-tenue); font-size: .78rem; }
+.acceso-intro { color: var(--texto-tenue); font-size: .9rem; margin-bottom: 1.2rem; }
+.acceso-demo {
+  margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid var(--borde);
+  font-size: .84rem; color: var(--texto-tenue);
+}
+.acceso-demo ul { margin: .4rem 0 0; padding: 0; list-style: none; }
+.acceso-demo li { margin-bottom: .3rem; }
+.acceso-pie {
+  margin: 1rem 0 0; padding-top: .9rem; border-top: 1px solid var(--borde);
+  font-size: .82rem; color: var(--texto-tenue); text-align: center;
+}
+.acceso-pie a { color: var(--verde); font-weight: 600; }
+.btn-grande { min-height: 50px; font-size: 1rem; }
+
+/* ====================== portal del proveedor ========================== */
+
+/* El portal es una app de celular: barra inferior, tarjetas grandes y una
+   sola accion principal siempre visible. */
+.portal { display: flex; flex-direction: column; min-height: 100vh; }
+.portal-barra {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: .7rem 1rem; background: var(--superficie);
+  border-bottom: 1px solid var(--borde); position: sticky; top: 0; z-index: 20;
+}
+.portal-marca { display: flex; align-items: center; gap: .6rem; min-width: 0; }
+.portal-marca span { font-size: 1.4rem; }
+.portal-marca strong { display: block; font-size: .92rem; }
+.portal-marca small { display: block; color: var(--texto-tenue); font-size: .75rem; }
+.portal main { flex: 1; padding: 1rem; padding-bottom: 5.5rem; max-width: 860px; width: 100%; margin: 0 auto; }
+
+.portal-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 30;
+  display: flex; background: var(--superficie); border-top: 1px solid var(--borde);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.portal-nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: .15rem;
+  font: inherit; font-size: .72rem; padding: .6rem .3rem; min-height: 56px;
+  background: transparent; border: 0; color: var(--texto-tenue); cursor: pointer;
+}
+.portal-nav-item span { font-size: 1.25rem; line-height: 1; }
+.portal-nav-item.activo { color: var(--linea-1); font-weight: 650; }
+
+.portal-saludo { margin-bottom: 1.2rem; }
+.portal-saludo h1 { font-size: 1.5rem; margin-bottom: .1rem; }
+.portal-saludo .sub { margin-bottom: .9rem; }
+.kpis-portal { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+
+.pila { display: grid; gap: .7rem; }
+.lote-tarjeta {
+  background: var(--superficie-2); border: 1px solid var(--borde);
+  border-radius: 11px; padding: .85rem 1rem; cursor: pointer;
+  transition: border-color .15s, transform .1s;
+}
+.lote-tarjeta:hover, .lote-tarjeta:focus-visible { border-color: var(--linea-1); transform: translateY(-2px); }
+.lote-cab { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin-bottom: .45rem; }
+.lote-codigo { font-family: var(--fuente-datos); font-size: .8rem; color: var(--texto-tenue); }
+.lote-cuerpo { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; font-size: .9rem; margin-bottom: .6rem; }
+.lote-cuerpo strong { font-size: 1.05rem; }
+.lote-dato { margin: .5rem 0 0; font-size: .85rem; }
+.lote-rechazo {
+  margin: .4rem 0 0; font-size: .84rem; color: var(--mal);
+  background: rgba(178, 58, 46, .08); padding: .45rem .7rem; border-radius: 7px;
+}
+
+/* Recorrido del lote: el proveedor ve donde esta su fruta. */
+.pasos { display: flex; list-style: none; margin: 0; padding: 0; gap: 0; }
+.paso { flex: 1; display: flex; flex-direction: column; align-items: center; gap: .25rem; position: relative; }
+.paso::before {
+  content: ""; position: absolute; top: 5px; left: -50%; width: 100%; height: 2px;
+  background: var(--borde);
+}
+.paso:first-child::before { display: none; }
+.paso-hecho::before { background: var(--linea-1); }
+.paso-punto {
+  width: 12px; height: 12px; border-radius: 50%; background: var(--borde);
+  position: relative; z-index: 1;
+}
+.paso-hecho .paso-punto { background: var(--linea-1); }
+.paso-texto { font-size: .68rem; color: var(--texto-tenue); }
+.paso-hecho .paso-texto { color: var(--texto); font-weight: 600; }
+
+/* ========================= planificador diario ======================== */
+
+.demanda { display: grid; gap: .6rem; }
+.demanda-fila {
+  display: grid; grid-template-columns: 1fr 120px auto; gap: .7rem; align-items: center;
+  background: var(--superficie-2); border: 1px solid var(--borde);
+  border-left: 4px solid var(--linea); border-radius: 9px; padding: .6rem .8rem;
+}
+.demanda-fila label { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; font-weight: 600; }
+.demanda-fila label small {
+  display: block; width: 100%; font-weight: 400; font-size: .74rem; color: var(--texto-tenue);
+}
+.demanda-disp { font-size: .76rem; color: var(--texto-tenue); white-space: nowrap; }
+
+.barra-ancha { width: 70px; display: inline-block; vertical-align: middle; }
+
+/* ============================ repetibles ============================== */
+
+.rep-filas { display: grid; gap: .45rem; margin: .5rem 0; }
+.rep-fila { display: grid; grid-template-columns: 1.4fr 90px 1.4fr auto; gap: .4rem; align-items: center; }
+.rep-fila select, .rep-fila input { width: 100%; min-width: 0; }
+
+/* ============================== avisos varios ========================= */
+
+.aviso-inline {
+  background: rgba(168, 114, 15, .12); border-left: 3px solid var(--regular);
+  border-radius: 7px; padding: .6rem .85rem; font-size: .86rem; margin-bottom: .9rem;
+}
+.nav-contador {
+  margin-left: auto; background: var(--linea-1); color: #fff; font-size: .7rem;
+  font-weight: 700; min-width: 20px; height: 20px; border-radius: 999px;
+  display: grid; place-items: center; padding: 0 .35rem;
+}
+.hoja-empresa {
+  font-family: var(--fuente-datos); font-size: .72rem; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--texto-tenue); margin-bottom: .3rem;
+}
+.hoja-origenes { margin-top: .4rem; }
+
+@media (max-width: 700px) {
+  .demanda-fila { grid-template-columns: 1fr 100px; }
+  .demanda-disp { grid-column: 1 / -1; }
+  .rep-fila { grid-template-columns: 1fr 80px; grid-template-areas: "causa causa" "kg quitar" "destino destino"; }
+  .rep-fila select:nth-of-type(1) { grid-area: causa; }
+  .rep-fila input { grid-area: kg; }
+  .rep-fila select:nth-of-type(2) { grid-area: destino; }
+  .rep-fila .rep-quitar { grid-area: quitar; }
+}
+
 /* ================================ impresión =========================== */
 
 @media print {
@@ -687,6 +923,7 @@ textarea { resize: vertical; }
   }
   body { background: #fff; font-size: 11pt; }
   .lateral, .barra, .filtros, .atajos, .selector-reporte, .cab-acciones,
+  .portal-nav, .portal-barra, .demanda,
   .avisos, .salto, .modal-capa { display: none !important; }
   .capa, .principal { display: block; }
   main { padding: 0; max-width: none; }

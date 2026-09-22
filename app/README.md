@@ -1,335 +1,241 @@
-# AgroRegistro — Sistema de registro y control de producción frutícola
+# Sistema FLP — dos aplicaciones conectadas
 
-Aplicación web que centraliza en **un solo repositorio de información** los datos que
-hoy la empresa maneja dispersos: lo que cada **proveedor** anuncia, lo que **recepción**
-pesa en la báscula, lo que el **salón de producción** procesa, y los **indicadores** y
-**reportes** que **supervisión** usa para cerrar cada lote.
+Sistema de trazabilidad, control de pérdidas y economía circular para
+**F.L.P. Latinoamerican Perishables del Ecuador S.A.**, sobre las tres líneas del
+alcance del TIC: **pitahaya roja, tomate de árbol y granadilla**.
 
-Prototipo desarrollado como parte del proyecto de tesis.
+Unidad de flujo estándar: **caja de 11 kg**.
 
 ---
 
-## 1. Problema que resuelve
+## 1. Por qué son dos aplicaciones
 
-| Situación actual | Con la aplicación |
-|---|---|
-| El proveedor avisa por teléfono o WhatsApp | Anuncia el envío en el sistema y queda con folio, lote y fecha |
-| Nadie contrasta lo declarado con lo que llega | Recepción pesa en báscula y el sistema calcula la **diferencia de peso** |
-| Producción anota en cuadernos o Excel suelto | Cada lote procesado se registra contra la recepción que lo originó |
-| La merma es un número suelto | Se reparte **por causa**, y cada causa dice si el problema es del campo, del transporte o de la planta |
-| No se sabe el rendimiento real por fruta ni proveedor | La tasa de exportable se calcula sola y se compara contra la meta técnica |
-| Los reportes se arman a mano cada mes | Se generan al instante, con filtros, y se exportan a Excel o PDF |
-| No hay trazabilidad de quién registró qué | Ficha de lote con línea de tiempo + bitácora con usuario, acción y hora |
+El proveedor y la planta no son el mismo usuario ni tienen el mismo problema. Meterlos
+en una sola aplicación obliga a esconder la mitad de la pantalla a cada uno.
 
-## 2. Los cuatro roles
-
-| Rol | Qué hace |
-|---|---|
-| 🚜 **Proveedor** | Anuncia los envíos de fruta y recibe el reporte de cada lote |
-| ⚖️ **Recepción** | Confirma y pesa la fruta que llega a planta |
-| 🏭 **Producción** | Registra lo procesado, lo exportable y las mermas con su causa |
-| 📋 **Supervisión** | Cierra lotes, envía reportes y ve los indicadores |
-
-Supervisión es el único rol transversal: además de cerrar el ciclo, administra el padrón
-de proveedores, los usuarios, la bitácora y los respaldos.
-
-El aislamiento del proveedor se aplica en la **capa de datos** (`filtrosEfectivos()` en
-`app.js`), no en la interfaz: aunque manipule el formulario de filtros, un usuario con rol
-Proveedor no obtiene lotes de otro proveedor.
-
-## 3. Ciclo de vida del lote
-
-Cada estado lo abre un rol distinto, de modo que el sistema refleja el recorrido físico de
-la fruta por la planta en lugar de dejar todos los campos abiertos siempre.
-
-```
-   PROVEEDOR          RECEPCIÓN          PRODUCCIÓN         SUPERVISIÓN
-       │                  │                   │                   │
-   ┌───▼────┐        ┌────▼─────┐       ┌─────▼─────┐       ┌─────▼─────┐
-   │Anunciado│──────▶│ Recibido │──────▶│ Procesado │──────▶│  Cerrado  │
-   └────────┘        └────┬─────┘       └───────────┘       └───────────┘
-   folio, lote,           │             kg procesados,      ya no admite
-   kg anunciados,         │             kg exportables,     cambios; se
-   calidad declarada,     │             mermas por causa    envía el reporte
-   precio acordado        │                                 al proveedor
-                     ┌────▼──────┐
-                     │ Rechazado │  la fruta no cumplió los mínimos
-                     └───────────┘
-```
-
-**Reglas de negocio que el sistema hace cumplir:**
-
-- Solo se puede pesar un lote que esté *Anunciado*.
-- La fecha de llegada no puede ser anterior a la del envío ni futura.
-- Solo se puede procesar un lote *Recibido*; los kg procesados nunca superan los pesados.
-- Lo exportable nunca supera lo procesado.
-- **Balance de materia:** la suma de las mermas por causa debe cuadrar con
-  `procesado − exportable` (tolerancia de 0,5 % o 1 kg). No se puede guardar sin cuadrar.
-- No se admiten dos filas con la misma causa de merma.
-- Un lote *Cerrado* no admite cambios de ningún rol. Supervisión puede reabrirlo, y la
-  reapertura queda registrada en la bitácora.
-
-## 4. Parámetros que registra el sistema
-
-### Proveedor
-`código` · `razón social` · `RUC/documento` · `contacto` · `teléfono` · `correo` ·
-`zona/provincia` · `activo` · `fecha de alta`
-
-### Lote — anuncio (lo llena el proveedor)
-`folio` · `código de lote` · `fecha de envío` · `proveedor` · `fruta` ·
-`kg anunciados` · `calidad declarada` · `precio acordado por kg` · `transporte` ·
-`observaciones` · `usuario que anunció`
-
-### Lote — recepción (lo llena recepción)
-`fecha de llegada` · **`kg pesados en báscula`** · `calidad verificada en planta` ·
-`observaciones de recepción` · `usuario que pesó`
-
-> La calidad verificada puede ser peor que la declarada; la tabla lo marca con `↓`.
-
-### Producción (lo llena el salón)
-`folio` · `fecha` · `lote de origen` · `producto obtenido` · `turno` ·
-`kg ingresados a proceso` · **`kg exportables`** · **`mermas: [{causa, kg}]`** ·
-`horas-hombre` · `responsable de línea` · `observaciones` · `usuario que registró`
-
-### Cierre (lo hace supervisión)
-`fecha de cierre` · `usuario que cerró` · `reporte enviado` · `fecha del reporte`
-
-### Catálogos
-- **Frutas**: nombre, unidad, `meta de exportable` (parámetro técnico contra el que se mide
-  el desempeño real), precio de referencia.
-- **Productos**: empaque en fresco, pulpa congelada, trozo IQF, fruta deshidratada.
-- **Calidades**: A (factor 1,00), B (0,88), C (0,74) — el factor ajusta el exportable
-  esperado según la calidad de la materia prima.
-- **Causas de merma**, clasificadas por origen:
-
-  | Origen | Causas |
-  |---|---|
-  | **Campo** | Maduración excesiva · Plaga o enfermedad · Calibre fuera de norma |
-  | **Transporte** | Daño mecánico / golpes · Deterioro en transporte |
-  | **Proceso** | Pérdida de pelado y corte · Deshidratación · Pérdida por paro de línea · Otras |
-
-  Clasificarlas así permite responder la pregunta que importa: **¿de quién es el problema?**
-
-## 5. Indicadores y sus fórmulas
-
-Implementados en `assets/js/indicadores.js`.
-
-| Indicador | Fórmula | Para qué sirve |
+| | Portal del Proveedor | Sistema de Planta |
 |---|---|---|
-| Fruta recibida | `Σ kg pesados` | Volumen real de abastecimiento |
-| **Diferencia de peso** | `(Σ pesado − Σ anunciado) ÷ Σ anunciado` | Fiabilidad de lo que declara el proveedor |
-| Exactitud de peso | `1 − \|diferencia\| ÷ anunciado` | Ranking de proveedores por exactitud |
-| Fruta procesada | `Σ kg procesados` | Carga real de la planta |
-| Producto exportable | `Σ kg exportables` | Salida vendible |
-| **Tasa de exportable** | `kg exportables ÷ kg procesados` | Eficiencia de transformación (el KPI comercial) |
-| **Meta ponderada** | `Σ (meta_fruta × kg procesados) ÷ Σ kg procesados` | Meta ajustada a la mezcla realmente procesada |
-| Cumplimiento de meta | `tasa exportable ÷ meta ponderada` | Semáforo de desempeño |
-| **Merma** | `Σ mermas ÷ kg procesados` | Pérdida en proceso |
-| Merma por causa | `Σ kg de cada causa`, ordenado + % acumulado | Pareto: qué atacar primero |
-| Tasa de rechazo | `lotes rechazados ÷ lotes` | Calidad del abastecimiento |
-| Tasa de procesamiento | `kg procesados ÷ kg recibidos` | Cuánto de lo recibido ya se procesó |
-| Valor de compra | `Σ (kg pesados × precio)` | Desembolso a proveedores — se liquida sobre el peso **real** |
-| Costo por kg exportable | `valor compra ÷ kg exportables` | Costo unitario de lo que sí se vende |
-| Productividad | `kg procesados ÷ horas-hombre` | Eficiencia de la mano de obra |
-| **Ciclo del lote** | `promedio(fecha cierre − fecha anuncio)` | Cuánto tarda el proceso completo |
-| Brecha por fruta | `tasa exportable − meta` | Dónde se pierde producto |
+| **Quién** | Fincas y cooperativas | Recepción, Producción, Supervisor |
+| **Dónde** | Celular, en la finca | Escritorio y tablet, en planta |
+| **Qué hace** | Anuncia envíos, sigue sus lotes | Pesa, procesa, planifica, cierra |
+| **Qué ve** | **Solo sus propios lotes** | Todo |
+| **Navegación** | Barra inferior, 3 secciones | Menú lateral, 11 secciones |
 
-Dos decisiones de cálculo que conviene poder defender:
+**Comparten un único repositorio de datos.** Lo que un proveedor anuncia aparece al
+instante en la cola de recepción; lo que la planta registra vuelve al proveedor como
+reporte de su lote. Un dato se captura una sola vez, por quien lo conoce de primera mano.
 
-- **La meta es ponderada, no un promedio simple.** Si en el período se procesó mucho
-  maracuyá (meta 45 %) y poco aguacate (meta 72 %), la meta del período debe parecerse a la
-  del maracuyá. Un promedio simple castigaría injustamente a la planta.
-- **La diferencia de peso solo considera lotes efectivamente pesados.** Un lote aún en
-  tránsito no tiene diferencia que medir, e incluirlo ensuciaría el indicador.
+### Aislamiento entre proveedores
 
-## 6. Reportes
+En el portal, **toda** lectura pasa por `misLotes()`, que filtra por el proveedor de la
+sesión. No hay ninguna consulta sin ese filtro, así que un proveedor no puede ver lotes
+de otro ni manipulando la interfaz.
 
-Cinco reportes, todos con filtro por rango de fechas, proveedor, fruta, calidad y estado:
+Además, en la ficha de su lote el proveedor ve **solo las causas de merma de origen
+«Campo»** — las que dependen de él. Las causas internas de planta (CR7 layout, CR8
+sopleteado) no se le atribuyen ni se le muestran.
 
-1. **Consolidado por proveedor** — lotes, kg anunciados vs. pesados, diferencia de peso,
-   % calidad A, % rechazo, precio promedio, **valor a liquidar** y tasa de exportable
-   obtenida. Es el documento que sustenta el pago.
-2. **Rendimiento por fruta** — tasa real contra meta, con la brecha.
-3. **Análisis de mermas (Pareto)** — kg y % por causa, con % acumulado y gráfico.
-4. **Detalle de lotes** — trazabilidad línea por línea.
-5. **Detalle de producción** — línea por línea del salón.
-
-Además, cada lote tiene su **ficha de trazabilidad**: línea de tiempo con los cuatro hitos
-(quién y cuándo), peso y calidad, resultado del proceso y desglose de la merma. Esa misma
-ficha es lo que recibe el proveedor al cerrarse el lote, y se puede imprimir por separado.
-
-Todo se **exporta a CSV** (separador `;` y BOM UTF-8, para que Excel en español lo abra
-correctamente) o se **imprime a PDF** con la hoja de estilos de impresión.
-
-## 7. Estructura del código
+## 2. Estructura
 
 ```
 app/
-├── index.html                  Contenedor; la interfaz se dibuja desde JS
-├── README.md                   Este documento
-└── assets/
-    ├── css/app.css             Tema por tokens (claro/oscuro), responsive e impresión
-    └── js/
-        ├── db.js               Persistencia, CRUD, catálogos, bitácora y datos de demo
-        ├── indicadores.js      Filtrado y cálculo de todos los indicadores
-        ├── graficos.js         Gráficos SVG hechos a mano (líneas, barras, dona, Pareto)
-        └── app.js              Sesión, permisos, ciclo del lote, formularios y reportes
+├── index.html              Portada: elige aplicación
+├── core/                   Núcleo compartido por las dos apps
+│   ├── db.js               Datos, catálogos, almacén compartido
+│   ├── indicadores.js      Pérdidas, economía circular y proceso
+│   ├── graficos.js         SVG a mano: líneas, barras, dona, Pareto, medidor
+│   ├── ui.js               Formato, tablas, formularios, exportación
+│   └── estilos.css         Sistema visual, claro/oscuro, impresión
+├── proveedor/              Aplicación externa
+│   ├── index.html
+│   └── portal.js
+└── interno/                Aplicación interna
+    ├── index.html
+    └── planta.js
 ```
 
-Sin dependencias, sin build, sin conexión a internet: se abre y funciona.
+Sin dependencias, sin build, sin conexión a internet.
 
-## 8. Cómo ejecutarla
+## 3. El ciclo del lote
+
+```
+  PROVEEDOR          RECEPCIÓN         PRODUCCIÓN          SUPERVISOR
+  (portal ext.)      (sistema interno) (sistema interno)   (sistema interno)
+      │                    │                  │                   │
+  Anunciado ──────▶   Recibido ───────▶  Procesado ──────▶    Cerrado
+  cajas, línea,       cuenta cajas,      cajas exportables,  revisa y publica
+  calidad             pesa en báscula,   mermas por causa    el reporte al
+  declarada           verifica calidad   raíz + destino,     proveedor
+                           │             tiempo real
+                      Rechazado
+```
+
+**Reglas que el sistema hace cumplir:** la fecha de llegada no puede ser anterior al
+envío; no se procesa más de lo recibido; lo exportable no supera lo procesado; el
+**balance de masa** de las mermas debe cuadrar con `(procesado − exportable) × 11 kg`;
+un lote cerrado no admite cambios.
+
+## 4. Indicadores
+
+Tres familias, en `core/indicadores.js`.
+
+### Pérdidas
+| Indicador | Fórmula |
+|---|---|
+| Diferencia al declarar | `(cajas pesadas − cajas anunciadas) ÷ anunciadas` |
+| Tasa de exportable | `cajas exportables ÷ cajas procesadas` |
+| Meta ponderada | `Σ (meta_línea × cajas procesadas) ÷ Σ cajas procesadas` |
+| Merma | `Σ mermas ÷ kg procesados` |
+| Pérdida económica | `cajas perdidas × precio promedio por caja` |
+| Pareto por causa raíz | kg y valor por CR, con % acumulado |
+| Índice de variabilidad | `\|dif. peso\| + tasa rechazo + brecha de rendimiento` — la **CR6** hecha número |
+
+### Economía circular
+| Indicador | Fórmula |
+|---|---|
+| Tasa de valorización | `kg con destino distinto de relleno ÷ kg merma` |
+| Valor recuperado | `Σ (kg × valor del destino)` |
+| A relleno sanitario | `kg merma − kg valorizado` |
+
+### Proceso
+| Indicador | Fórmula |
+|---|---|
+| Eficiencia de tiempo | `tiempo estándar ÷ tiempo real` |
+| Minutos por caja | `minutos reales ÷ cajas procesadas` |
+| Productividad | `cajas procesadas ÷ horas-hombre` |
+| Ciclo del lote | `promedio(fecha cierre − fecha anuncio)` |
+
+## 5. Planificación diaria
+
+El módulo que se demuestra en la defensa. Entradas: fecha, horas de turno, operarios y
+eficiencia; y las cajas comprometidas por línea.
+
+```
+minutos netos por operario = horas × 60 × (1 − suplementos OIT) × eficiencia
+capacidad total            = minutos netos × operarios
+tiempo requerido           = Σ (cajas × tiempo estándar de la línea)
+carga                      = tiempo requerido ÷ capacidad total
+takt time                  = minutos de turno ÷ cajas comprometidas
+operarios necesarios       = tiempo requerido ÷ minutos netos por operario
+```
+
+Avisa si el plan no cabe en el turno, cuántos operarios faltan, y si falta materia prima
+en cámara para alguna línea. El plan se guarda y se exporta a CSV.
+
+## 6. Datos del TIC ya cargados
+
+| Dato | Valor | Origen |
+|---|---|---|
+| Tiempo estándar pitahaya roja | 24,28 min/caja | **M** medido |
+| Tiempo estándar tomate de árbol | 26,93 min/caja | **M** medido |
+| Tiempo estándar granadilla | 29,76 min/caja | **M** medido |
+| Peso de caja | 11 kg | **M** medido |
+| Suplementos OIT | 13 % | **S** secundaria |
+| CR5 | Mermas sin segregar | del diagnóstico |
+| CR6 | Variabilidad de proveedor | del diagnóstico |
+| CR7 | Layout de planta | del diagnóstico |
+| CR8 | Subutilización del área de sopleteado | del diagnóstico |
+
+### Estándar de rigor M / E / S
+
+Cada parámetro declara su origen con una insignia junto al valor:
+**M** medido en planta · **E** estimado, pendiente de confirmar · **S** fuente secundaria.
+Los reportes impresos llevan la leyenda al pie.
+
+### ⚠️ Lo que falta confirmar
+
+- **CR1, CR2, CR3 y CR4 no están nombradas.** El documento del TIC solo nombra CR5 a CR8.
+  El sistema las muestra como «Por definir» y se editan desde *Parámetros*. **No inventé
+  nombres para ellas.**
+- **Metas de exportable, precios por caja y valores de los destinos están marcados como
+  estimados (E).** Son valores de trabajo para que el sistema calcule; hay que
+  reemplazarlos por los reales de la empresa.
+- Los **destinos del descarte** son una jerarquía de valorización razonable, no la de FLP.
+  Edítalos en *Parámetros*.
+
+## 7. Cómo ejecutarlo
 
 ```bash
-# Desde la raíz del repositorio
 python3 -m http.server 8000
-# Abrir http://localhost:8000/app/
+# http://localhost:8000/app/
 ```
 
-También funciona abriendo `app/index.html` directamente en el navegador.
+Recorrido completo de la demostración:
 
-Para probar el flujo completo, entra sucesivamente como:
-`Marta Cedeño` (proveedor) → `Diego Andrade` (recepción) → `Carlos Mendoza` (producción)
-→ `Ing. Andrea Quiroz` (supervisión). La pantalla de acceso los ofrece con un clic.
+1. **Portal** (`Marta Cedeño`) → anuncia un envío en cajas.
+2. **Planta / Recepción** (`Diego Andrade`) → el lote aparece en la cola; pesa y verifica.
+3. **Planta / Producción** (`Carlos Mendoza`) → registra exportable y reparte la merma por
+   causa raíz y destino; el balance de masa no deja guardar si no cuadra.
+4. **Planta / Supervisor** (`Ing. Andrea Quiroz`) → indicadores, planificación diaria,
+   cierre del lote y publicación del reporte.
+5. Vuelve al **portal**: el proveedor ya ve el resultado de su lote.
 
-## 9. Dónde se guardan los datos
+## 8. Dónde se guardan los datos
 
-La aplicación funciona en **dos modos**, y elige sola el que corresponda. El pie del
-menú lateral indica siempre en cuál está.
+**Modo compartido** (versión publicada): las dos aplicaciones escriben en el mismo
+almacén; los cambios llegan en vivo sin recargar. Un documento por lote, producción,
+proveedor, usuario y plan; catálogos y parámetros en un documento de configuración;
+bitácora agregada y podada a 200 movimientos.
 
-### Modo compartido
+**Modo local** (archivos abiertos directamente): `localStorage` del navegador, clave
+`flp.db.v4`. Persiste en ese equipo pero no se comparte. El pie del menú indica siempre
+en qué modo está.
 
-Cuando se abre desde la versión publicada del sistema, los datos viven en un almacén
-central: **varios dispositivos trabajan sobre la misma información al mismo tiempo**.
-El proveedor anuncia el lote desde su celular y recepción lo ve aparecer en su cola sin
-recargar nada. Es el modo con el que se hacen las pruebas de funcionamiento reales.
+## 9. Migrar a un backend real
 
-- Un documento por lote, producción, proveedor y usuario; la bitácora va agregada y
-  podada a 200 movimientos, porque es un flujo que crece sin límite.
-- Las suscripciones traen los cambios de los demás en vivo; el repintado se agrupa cada
-  200 ms para no redibujar una vez por cada mensaje.
-- El formulario abierto no se interrumpe cuando llega un cambio ajeno.
-- La primera apertura siembra un histórico corto (18 días) para que la app no arranque
-  vacía y quede sitio para los datos de prueba.
-
-### Modo local
-
-Al abrir los archivos directamente (`app/index.html` o un servidor propio), no hay
-almacén central y todo se guarda en el **`localStorage` del navegador**, bajo la clave
-`agroreg.db.v2`. Eso significa:
-
-- Los datos sobreviven al cerrar el navegador, **en ese mismo equipo**.
-- **No se comparten entre computadoras** — cada máquina tiene su propia copia.
-- Desde *Datos del sistema* se puede **exportar todo a un archivo JSON** (útil como anexo
-  de la tesis o como respaldo) y **restaurarlo** en otro equipo.
-
-Sirve para trabajar sin conexión y para desarrollar. Para el uso real en la empresa hace
-falta un backend propio (sección 10): el modo compartido resuelve las pruebas, pero
-depende de la plataforma donde está publicado el prototipo.
-
-## 10. Migrar a un backend real
-
-Todo el acceso a datos pasa por `db.js`. La migración se concentra ahí:
-
-```js
-// Hoy — db.js
-function load()  { return JSON.parse(localStorage.getItem(KEY)); }
-function save()  { localStorage.setItem(KEY, JSON.stringify(cache)); }
-
-// Con backend — mismas firmas, pero asíncronas
-async function insert(coleccion, registro) {
-  const res = await fetch(`/api/${coleccion}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-    body: JSON.stringify(registro)
-  });
-  return res.json();
-}
-```
-
-Las vistas de `app.js` tendrían que pasar a `async/await` donde hoy llaman a `DB.*` de
-forma síncrona.
-
-Modelo relacional sugerido:
+Todo el acceso a datos pasa por `core/db.js`. Modelo relacional sugerido:
 
 ```sql
-proveedores  (id, codigo, nombre, documento, contacto, telefono, email, zona,
-              activo, fecha_alta)
-usuarios     (id, nombre, clave_hash, rol, proveedor_id FK, activo, fecha_alta)
-frutas       (id, nombre, unidad, meta_exportable, precio_ref)
-productos    (id, nombre)
-causas_merma (id, nombre, tipo)                      -- Campo | Transporte | Proceso
+proveedores  (id, codigo, nombre, documento, contacto, telefono, email, zona, activo)
+usuarios     (id, nombre, clave_hash, rol, proveedor_id FK, activo)
+lineas       (id, codigo, nombre, tiempo_estandar_min, origen_tiempo, peso_caja_kg,
+              meta_exportable, precio_caja, color, activa)
+causas_raiz  (id, codigo, nombre, origen, definida, principal, descripcion)
+destinos     (id, nombre, nivel, valoriza, valor_kg)
 
-lotes        (id, folio, codigo_lote, fecha, proveedor_id FK, fruta_id FK,
-              cantidad_anunciada_kg, calidad_declarada, precio_unitario, transporte,
-              observaciones_proveedor, anunciado_por FK, creado_en,
-              fecha_recepcion, cantidad_recibida_kg, calidad_verificada,
-              observaciones_recepcion, recibido_por FK,
-              estado, fecha_cierre, cerrado_por FK, reporte_enviado, fecha_reporte)
+lotes        (id, folio, codigo_lote, fecha, proveedor_id FK, linea_id FK,
+              cajas_anunciadas, kg_anunciados, calidad_declarada, precio_caja,
+              transporte, anunciado_por FK,
+              fecha_recepcion, cajas_recibidas, kg_recibidos, calidad_verificada,
+              recibido_por FK, estado, fecha_cierre, cerrado_por FK, reporte_enviado)
 
-producciones (id, folio, fecha, lote_id FK, producto_id FK, turno,
-              kg_procesados, kg_exportable, horas_hombre, operador,
-              observaciones, registrado_por FK, creado_en)
+producciones (id, folio, fecha, lote_id FK, linea_id FK, turno, cajas_procesadas,
+              cajas_exportables, operarios, tiempo_real_min, operador, registrado_por FK)
 
-merma_detalle(id, produccion_id FK, causa_id FK, kg)  -- 1:N con producciones
+merma_detalle(id, produccion_id FK, causa_id FK, destino_id FK, kg)
+planes       (id, fecha, horas_turno, operarios, eficiencia, registrado_por FK)
 bitacora     (id, fecha, usuario_id FK, accion, detalle)
 ```
 
-Nota: en el prototipo las mermas viven como arreglo dentro de `producciones`; en SQL
-corresponden a la tabla `merma_detalle`. La restricción del balance de materia
-(`Σ merma_detalle.kg = kg_procesados − kg_exportable`) debe replicarse en el servidor:
-la validación del navegador no basta.
+La restricción del balance de masa
+(`Σ merma_detalle.kg = (cajas_procesadas − cajas_exportables) × peso_caja_kg`)
+debe replicarse en el servidor: la validación del navegador no basta.
 
-## 11. Limitaciones conocidas
+## 10. Limitaciones conocidas
 
-Declararlas explícitamente es parte del trabajo académico:
+1. **No hay autenticación.** Se entra eligiendo rol y escribiendo un nombre. Cómodo para
+   planta, pero cualquiera puede declararse de cualquier rol. Producción requiere
+   autenticación en servidor con hash (bcrypt/Argon2).
+2. **Los permisos se aplican en el cliente.** Guían el proceso; no contienen a un usuario
+   malintencionado. El aislamiento entre proveedores está en la capa de datos, pero
+   también del lado del navegador.
+3. **Escrituras «gana el último».** Sin bloqueo de registros: si dos personas pesan el
+   mismo lote a la vez, queda el valor del que guardó después.
+4. **Los datos de demostración son simulados**, con semilla fija para que las capturas del
+   documento sean reproducibles. Reemplazar por datos reales antes de concluir nada.
+5. **Confidencialidad.** La empresa está bajo acuerdo de confidencialidad: cuidado con
+   dónde se publica una versión que lleve su nombre y sus parámetros reales.
 
-1. **No hay autenticación.** Se entra eligiendo un rol y escribiendo un nombre, sin
-   contraseña. Es cómodo para el uso en planta —donde la gente comparte terminales y
-   escribir contraseñas con guantes es inviable— pero significa que **cualquiera puede
-   declararse de cualquier rol**. Para un despliegue real hace falta autenticación en el
-   servidor (usuario y contraseña con hash bcrypt/Argon2, o credencial corporativa) y que
-   los permisos se verifiquen en el backend, no solo en el navegador.
-2. **Los permisos por rol se aplican en el cliente.** Sirven para guiar el proceso, no para
-   contener a un usuario malintencionado.
-3. **En modo local, datos por equipo.** Ver sección 9. En modo compartido sí trabajan
-   los cuatro roles a la vez desde dispositivos distintos.
-4. **Sin bloqueo de registros.** Las escrituras son «gana el último»: si dos personas
-   pesan el mismo lote a la vez, queda el valor del que guardó después. En la práctica
-   cada rol trabaja sobre lotes distintos, pero un sistema definitivo debería bloquear
-   el registro mientras alguien lo edita.
-5. **Los datos de demostración son simulados**, generados con un algoritmo de semilla fija
-   para que las capturas del documento de tesis sean reproducibles. Incluyen sesgos de peso
-   distintos por proveedor y repartos de merma coherentes con la calidad y el transporte,
-   pero **deben reemplazarse por datos reales de la empresa** antes de sacar cualquier
-   conclusión.
+## 11. Pruebas
 
-## 12. Accesibilidad
+Validado en Chromium con Playwright: **22 comprobaciones** que recorren las dos
+aplicaciones contra un mismo almacén compartido — portada, aislamiento del proveedor,
+anuncio en cajas, pesaje con contraste de cajas y kg, propagación en vivo al celular sin
+recargar, tasa y eficiencia contra el estudio de tiempos, balance de masa (incluidos los
+casos que *deben* fallar), Pareto por causa raíz, planificador con takt time y detección
+de sobrecarga, catálogos editables con M/E/S, cierre del lote y reporte al proveedor sin
+exponerle causas internas de planta.
 
-Enlace de salto al contenido, foco visible, `aria-live` en los avisos, `role="dialog"` con
-cierre por `Escape` en los formularios, etiquetas asociadas a cada campo, errores anunciados
-con `role="alert"`, selector de rol con radios ocultos a la vista pero accesibles por
-teclado y lector de pantalla, menú móvil con `aria-expanded`, y respeto a
-`prefers-reduced-motion` y al tema oscuro del sistema.
-
-Para la captura desde el celular: campos de 16 px (por debajo, iOS hace zoom al enfocar y
-descuadra la página), `inputmode` numérico en las cantidades, objetivos táctiles de 44 px,
-formularios a pantalla completa con el botón de guardar fijo abajo, y las filas de merma
-reorganizadas a una por línea.
-
-## 13. Pruebas
-
-`app/` no tiene framework de pruebas, pero el flujo completo se validó en Chromium con
-Playwright, en dos suites:
-
-**Un dispositivo (26 comprobaciones).** Acceso por rol, aislamiento del proveedor, anuncio
-de un envío, pesaje con cálculo de diferencia, balance de materia de la merma —incluidos
-los casos que *deben* fallar—, cierre del lote, bitácora, los cinco reportes, exportación
-CSV, persistencia tras recargar y diseño móvil a 390 px con menú hamburguesa.
-
-**Dos dispositivos (6 comprobaciones).** Con un almacén simulado que respeta el contrato
-de la plataforma: conexión y sembrado, captura desde un viewport de celular con teclado
-numérico y letra de 16 px, un lote enviado desde el móvil apareciendo en la cola de
-recepción de otro dispositivo, un pesaje hecho en el escritorio llegando al móvil **sin
-recargar**, y persistencia tras recargar el móvil. Ejecutada tres veces seguidas para
-descartar intermitencias en la sincronización.
+```bash
+node scratchpad/dosapps.js     # requiere Playwright y el servidor en :8199
+```

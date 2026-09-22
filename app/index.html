@@ -3,32 +3,49 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>AgroRegistro — Sistema de registro y control de producción frutícola</title>
-<meta name="description" content="Aplicación web para el registro centralizado de envíos de proveedores, producción e indicadores de gestión." />
-<meta name="theme-color" content="#12684d" />
+<meta name="theme-color" content="#14313f" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="assets/css/app.css" />
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍍</text></svg>" />
+<title>Sistema FLP</title>
+<meta name="description" content="Dos aplicaciones conectadas: el portal del proveedor y el sistema de planta." />
+<link rel="stylesheet" href="core/estilos.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍃</text></svg>" />
 </head>
-<body>
+<body class="portada-body">
+<main class="portada">
+  <header class="portada-cab">
+    <p class="portada-eyebrow">F.L.P. Latinoamerican Perishables del Ecuador S.A.</p>
+    <h1>Sistema FLP</h1>
+    <p class="portada-sub">Trazabilidad, control de pérdidas y economía circular en las
+      líneas de pitahaya roja, tomate de árbol y granadilla.</p>
+  </header>
 
-<a class="salto" href="#contenido">Saltar al contenido</a>
+  <div class="portada-apps">
+    <a class="portada-app portada-app-ext" href="proveedor/">
+      <span class="portada-icono" aria-hidden="true">🚜</span>
+      <h2>Portal del Proveedor</h2>
+      <p>Para las fincas y cooperativas. Anuncian sus envíos desde el celular y
+         siguen el resultado de cada lote.</p>
+      <span class="portada-cta">Entrar al portal &rarr;</span>
+    </a>
 
-<!-- La interfaz completa se dibuja desde app.js -->
-<div id="app" aria-live="polite"></div>
+    <a class="portada-app portada-app-int" href="interno/">
+      <span class="portada-icono" aria-hidden="true">🏭</span>
+      <h2>Sistema de Planta</h2>
+      <p>Uso interno. Recepción pesa, Producción registra pérdidas por causa raíz
+         y Supervisión planifica el día y cierra los lotes.</p>
+      <span class="portada-cta">Entrar al sistema &rarr;</span>
+    </a>
+  </div>
 
-<!-- Mensajes emergentes de confirmación y error -->
-<div id="avisos" class="avisos" aria-live="polite"></div>
-
-<noscript>
-  <p class="noscript">Esta aplicación necesita JavaScript activado para funcionar.</p>
-</noscript>
-
-<script src="assets/js/db.js"></script>
-<script src="assets/js/indicadores.js"></script>
-<script src="assets/js/graficos.js"></script>
-<script src="assets/js/app.js"></script>
+  <section class="portada-nota">
+    <h3>Las dos aplicaciones comparten un solo repositorio</h3>
+    <p>Lo que un proveedor anuncia en el portal aparece al instante en la cola de
+       recepción de la planta. Todo lo que la planta registra sobre ese lote vuelve
+       al proveedor como reporte. Un solo dato, capturado una sola vez, por quien
+       lo conoce de primera mano.</p>
+  </section>
+</main>
 </body>
 </html>

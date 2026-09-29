@@ -327,7 +327,7 @@
 
     const campos = [
       { nombre: "lineaId", etiqueta: "¿Qué producto envías?", tipo: "select", requerido: true,
-        vacio: "Selecciona…",
+        vacio: "Selecciona…", ayuda: "Al elegirlo se precarga el peso nominal de su caja.",
         opciones: lineas.map(function (l) { return { valor: l.id, texto: l.nombre }; }) },
       { nombre: "fecha", etiqueta: "Fecha del envío", tipo: "date", valor: DB.hoy(),
         requerido: true, ancho: "mitad",
@@ -335,6 +335,20 @@
       { nombre: "cajasAnunciadas", etiqueta: "¿Cuántas cajas envías?", tipo: "number",
         requerido: true, min: 1, max: 5000, paso: "1", ancho: "mitad",
         ayuda: "Cajas de " + DB.PESO_CAJA_KG + " kg. Recepción las contará y pesará al llegar." },
+      { nombre: "pesoCajaDeclarado", etiqueta: "Peso estimado por caja (kg)", tipo: "number",
+        requerido: true, min: 1, max: 60, paso: "0.1", ancho: "mitad",
+        ayuda: "El peso nominal es " + DB.PESO_CAJA_KG + " kg. Ajústalo si tus cajas " +
+          "van más llenas o más livianas: la planta pesará en báscula y comparará.",
+        validar: function (v, d) {
+          const l = DB.linea(d.lineaId);
+          if (!l) return null;
+          const min = l.pesoCajaKg * 0.6, max = l.pesoCajaKg * 1.5;
+          if (v < min || v > max) {
+            return "Un peso de " + nf(v, 1) + " kg por caja se aleja mucho del nominal (" +
+              nf(l.pesoCajaKg, 1) + " kg). Si es correcto, avísale a la planta en las observaciones.";
+          }
+          return null;
+        } },
       { nombre: "calidadDeclarada", etiqueta: "Calidad que declaras", tipo: "select",
         requerido: true, ancho: "mitad", valor: "A",
         opciones: DB.CALIDADES.map(function (c) { return { valor: c.id, texto: c.nombre }; }) },
@@ -357,7 +371,8 @@
         proveedorId: usuario.proveedorId,
         lineaId: d.lineaId,
         cajasAnunciadas: Number(d.cajasAnunciadas),
-        kgAnunciados: Math.round(Number(d.cajasAnunciadas) * linea.pesoCajaKg),
+        pesoCajaDeclarado: Number(d.pesoCajaDeclarado),
+        kgAnunciados: Math.round(Number(d.cajasAnunciadas) * Number(d.pesoCajaDeclarado)),
         calidadDeclarada: d.calidadDeclarada,
         precioCaja: linea.precioCaja,
         transporte: d.transporte || "Propio",
@@ -379,13 +394,25 @@
       aceptar: "Anunciar envío",
       nota: "La planta verá tu envío al instante y lo pesará cuando llegue.",
       alCambiar: function (d, form) {
+        const linea = DB.linea(d.lineaId);
+        const campoPeso = $("#campo_pesoCajaDeclarado", form);
+
+        /* Al elegir la línea se sugiere su peso nominal, pero solo si el
+           proveedor todavía no escribió el suyo. */
+        if (linea && campoPeso && !campoPeso.value) campoPeso.value = linea.pesoCajaKg;
+
         const out = $("#resumenCalc", form);
         if (!out) return;
-        const linea = DB.linea(d.lineaId);
         const c = Number(d.cajasAnunciadas) || 0;
+        const peso = Number(d.pesoCajaDeclarado) || (linea ? linea.pesoCajaKg : 0);
         if (!linea || !c) { out.textContent = "—"; return; }
-        out.innerHTML = nf(c * linea.pesoCajaKg) + " kg · " +
-          '<span class="tenue">aprox.</span> ' + money(c * linea.precioCaja);
+        const kg = c * peso;
+        const nominal = c * linea.pesoCajaKg;
+        out.innerHTML = nf(kg) + " kg · " + '<span class="tenue">aprox.</span> ' +
+          money(c * linea.precioCaja) +
+          (Math.abs(kg - nominal) > nominal * 0.02
+            ? '<br><small class="tenue">' + (kg > nominal ? "+" : "") + nf(kg - nominal) +
+              " kg respecto al peso nominal</small>" : "");
       }
     });
   }
@@ -417,13 +444,20 @@
       "<dt>Lote</dt><dd><code>" + esc(l.codigoLote) + "</code></dd>" +
       "<dt>Producto</dt><dd>" + esc(f.linea ? f.linea.nombre : "—") + "</dd>" +
       "<dt>Cajas anunciadas</dt><dd>" + nf(l.cajasAnunciadas) + "</dd>" +
+      "<dt>Peso que declaraste</dt><dd>" + nf(l.pesoCajaDeclarado || 0, 1) + " kg/caja · " +
+      nf(l.kgAnunciados || 0) + " kg</dd>" +
       "<dt>Calidad declarada</dt><dd>" + esc(l.calidadDeclarada) + "</dd>" +
       "<dt>Transporte</dt><dd>" + esc(l.transporte) + "</dd></dl></section>";
 
     if (l.cajasRecibidas !== null && l.estado !== "Rechazado") {
       cuerpo += "<section><h4>Lo que recibió la planta</h4><dl>" +
         "<dt>Cajas pesadas</dt><dd><strong>" + nf(l.cajasRecibidas) + "</strong></dd>" +
-        "<dt>Peso real</dt><dd>" + nf(l.kgRecibidos) + " kg</dd>" +
+        "<dt>Peso real</dt><dd>" + nf(l.kgRecibidos) + " kg · " +
+        nf(f.pesoCajaReal || 0, 1) + " kg/caja</dd>" +
+        "<dt>Diferencia de peso</dt><dd>" + (f.tasaDiferenciaKg === null ? "—" :
+          '<span class="etq ' + (Math.abs(f.tasaDiferenciaKg) <= 0.02 ? "etq-ok" : "etq-bajo") + '">' +
+          (f.diferenciaKg > 0 ? "+" : "") + nf(f.diferenciaKg) + " kg · " +
+          UI.pctFirmado(f.tasaDiferenciaKg) + "</span>") + "</dd>" +
         "<dt>Diferencia</dt><dd>" + (f.diferenciaCajas === null ? "—" :
           '<span class="etq ' + (Math.abs(f.tasaDiferencia) <= 0.01 ? "etq-ok" : "etq-bajo") + '">' +
           (f.diferenciaCajas > 0 ? "+" : "") + nf(f.diferenciaCajas) + " cajas · " +
@@ -510,6 +544,7 @@
       '<div class="campo"><label for="nombre">Tu nombre</label>' +
       '<input type="text" id="nombre" name="nombre" autocomplete="name" placeholder="Nombre y apellido" required></div>' +
       '<p class="form-error" id="accesoError" role="alert" hidden></p>' +
+      estadoConexionHTML() +
       '<button type="submit" class="btn btn-primario btn-ancho btn-grande">Entrar</button></form>';
 
     const demo = DB.all("usuarios").filter(function (u) { return u.rol === "proveedor"; }).slice(0, 3);
@@ -535,6 +570,7 @@
     const app = $("#app");
 
     if (!usuario) {
+      UI.soltarFormulario();
       app.innerHTML = vistaAcceso();
       enlazarAcceso();
       return;
@@ -568,6 +604,7 @@
     });
     html += "</nav></div>";
 
+    UI.soltarFormulario();
     app.innerHTML = html;
     enlazar();
   }
@@ -575,6 +612,7 @@
   function enlazarAcceso() {
     const form = $("#formAcceso");
     const error = $("#accesoError");
+    UI.vigilarFormulario(form);
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -631,13 +669,30 @@
       /* La sesión se vuelve a comprobar aquí: pudo cerrarse entre que se
          programó el repintado y el momento en que dispara. */
       if (!usuario) return;
-      const activo = document.activeElement;
-      if (activo && /^(INPUT|SELECT|TEXTAREA)$/.test(activo.tagName)) {
-        activo.addEventListener("blur", repintarPorSincronizacion, { once: true });
-        return;
-      }
-      render();
+      UI.repintarSiSeguro(render, repintarPorSincronizacion);
     }, 200);
+  }
+
+  /* La pantalla de acceso avisa de que está conectando: sin esto, la espera
+     parece que la aplicación no responde. */
+  let conectado = false;
+
+  function marcarConectado() {
+    conectado = true;
+    const el = UI.$("#estadoConexion");
+    if (el) {
+      el.className = "conexion conexion-ok";
+      el.innerHTML = '<span class="conexion-punto" aria-hidden="true"></span>' +
+        (DB.esCompartido() ? "Conectado al sistema" : "Modo local, sin conexión compartida");
+    }
+  }
+
+  function estadoConexionHTML() {
+    return '<p class="conexion' + (conectado ? " conexion-ok" : "") + '" id="estadoConexion">' +
+      '<span class="conexion-punto" aria-hidden="true"></span>' +
+      (conectado
+        ? (DB.esCompartido() ? "Conectado al sistema" : "Modo local, sin conexión compartida")
+        : "Conectando con el sistema…") + "</p>";
   }
 
   function iniciar() {
@@ -650,7 +705,12 @@
       UI.aviso("No se pudo enviar el cambio. Revisa tu conexión.", "error");
     });
 
-    DB.conectar(repintarPorSincronizacion).then(function () { render(); });
+    /* Al conectar cambian los datos, pero si la persona ya está llenando el
+       acceso NO se repinta: seria borrarle lo escrito justo antes de entrar. */
+    DB.conectar(repintarPorSincronizacion).then(function () {
+      marcarConectado();
+      UI.repintarSiSeguro(render, function () { UI.repintarSiSeguro(render); });
+    });
   }
 
   /* Se expone en vez de arrancar sola: la página propia la inicia, y el

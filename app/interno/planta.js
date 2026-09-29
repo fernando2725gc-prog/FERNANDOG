@@ -188,6 +188,9 @@
     html += UI.kpi("Diferencia al declarar", pctFirmado(k.tasaDiferenciaCajas),
       nf(k.diferenciaCajas) + " cajas entre lo anunciado y lo pesado",
       Math.abs(k.tasaDiferenciaCajas) <= 0.01 ? "bien" : Math.abs(k.tasaDiferenciaCajas) <= 0.03 ? "regular" : "mal");
+    html += UI.kpi("Diferencia de peso", pctFirmado(k.tasaDiferenciaKg),
+      nf(k.diferenciaKg) + " kg entre lo declarado y la báscula",
+      Math.abs(k.tasaDiferenciaKg) <= 0.02 ? "bien" : Math.abs(k.tasaDiferenciaKg) <= 0.05 ? "regular" : "mal");
     html += UI.kpi("Cajas exportables", nf(k.cajasExportables),
       pct(k.tasaExportable) + " de lo procesado", "bien");
     html += UI.kpi("Tasa de exportable", pct(k.tasaExportable),
@@ -510,7 +513,9 @@
         ayuda: "El proveedor anunció " + nf(l.cajasAnunciadas) + "." },
       { nombre: "kgRecibidos", etiqueta: "Peso real en báscula (kg)", tipo: "number", requerido: true,
         min: 0, max: 200000, paso: "0.1", ancho: "mitad",
-        ayuda: "Lo que marca la báscula, no lo que dice la guía." },
+        valor: l.kgAnunciados || "",
+        ayuda: "El proveedor declaró " + nf(l.kgAnunciados || 0) + " kg (" +
+          nf(l.pesoCajaDeclarado || 0, 1) + " kg/caja). Corrige con lo que marque la báscula." },
       { nombre: "calidadVerificada", etiqueta: "Calidad verificada", tipo: "select", requerido: true,
         ancho: "mitad", valor: l.calidadDeclarada,
         opciones: DB.CALIDADES.map(function (c) { return { valor: c.id, texto: c.nombre }; }),
@@ -547,10 +552,20 @@
         const dif = c - l.cajasAnunciadas;
         const tasa = dif / l.cajasAnunciadas;
         const kgCaja = kg > 0 ? kg / c : 0;
-        out.innerHTML = (dif >= 0 ? "+" : "") + nf(dif) + " cajas (" + pctFirmado(tasa) + ")" +
-          (kgCaja > 0 ? ' <span class="tenue">· ' + nf(kgCaja, 2) + " kg/caja, nominal " +
-            nf(linea.pesoCajaKg) + "</span>" : "");
-        out.className = Math.abs(tasa) <= 0.01 ? "ok" : Math.abs(tasa) <= 0.03 ? "" : "bajo";
+        const difKg = kg - (l.kgAnunciados || 0);
+        const tasaKg = l.kgAnunciados ? difKg / l.kgAnunciados : 0;
+
+        /* Dos contrastes distintos: pueden venir todas las cajas y aun así
+           pesar menos, si el proveedor las llenó por debajo de lo declarado. */
+        out.innerHTML =
+          "<strong>" + (dif >= 0 ? "+" : "") + nf(dif) + " cajas</strong> (" + pctFirmado(tasa) + ")" +
+          (kg > 0
+            ? '<br><strong>' + (difKg >= 0 ? "+" : "") + nf(difKg) + " kg</strong> (" +
+              pctFirmado(tasaKg) + ') <span class="tenue">· ' + nf(kgCaja, 2) +
+              " kg/caja contra " + nf(l.pesoCajaDeclarado || linea.pesoCajaKg, 1) +
+              " declarados</span>" : "");
+        const peor = Math.max(Math.abs(tasa), Math.abs(tasaKg));
+        out.className = peor <= 0.01 ? "ok" : peor <= 0.03 ? "" : "bajo";
       }
     });
   }
@@ -931,6 +946,9 @@
       "<div><span>Proveedor</span><strong>" + esc(Indicadores.nombreProveedor(l.proveedorId)) + "</strong></div>" +
       "<div><span>Línea</span><strong>" + esc(Indicadores.nombreLinea(l.lineaId)) + "</strong></div>" +
       "<div><span>Anunciadas</span><strong>" + nf(l.cajasAnunciadas) + " cajas</strong></div>" +
+      "<div><span>Peso declarado</span><strong>" + nf(l.pesoCajaDeclarado || 0, 1) +
+      " kg/caja</strong></div>" +
+      "<div><span>Total declarado</span><strong>" + nf(l.kgAnunciados || 0) + " kg</strong></div>" +
       (l.cajasRecibidas !== null
         ? "<div><span>Pesadas</span><strong>" + nf(l.cajasRecibidas) + " cajas</strong></div>" : "") +
       "</div>";
@@ -965,7 +983,14 @@
       "<dt>Anunciadas</dt><dd>" + nf(l.cajasAnunciadas) + " (calidad " + esc(l.calidadDeclarada) + ")</dd>" +
       "<dt>Pesadas</dt><dd>" + (l.cajasRecibidas === null ? "—" :
         nf(l.cajasRecibidas) + " (calidad " + esc(l.calidadVerificada) + ")") + "</dd>" +
-      "<dt>Peso real</dt><dd>" + (l.kgRecibidos === null ? "—" : nf(l.kgRecibidos) + " kg") + "</dd>" +
+      "<dt>Peso declarado</dt><dd>" + nf(l.pesoCajaDeclarado || 0, 1) + " kg/caja · " +
+      nf(l.kgAnunciados || 0) + " kg</dd>" +
+      "<dt>Peso real</dt><dd>" + (l.kgRecibidos === null ? "—" :
+        nf(l.kgRecibidos) + " kg · " + nf(f.pesoCajaReal || 0, 2) + " kg/caja") + "</dd>" +
+      "<dt>Dif. de peso</dt><dd>" + (f.tasaDiferenciaKg === null ? "—" :
+        '<span class="etq ' + (Math.abs(f.tasaDiferenciaKg) <= 0.02 ? "etq-ok" : "etq-bajo") + '">' +
+        (f.diferenciaKg >= 0 ? "+" : "") + nf(f.diferenciaKg) + " kg · " +
+        pctFirmado(f.tasaDiferenciaKg) + "</span>") + "</dd>" +
       "<dt>Diferencia</dt><dd>" + (f.diferenciaCajas === null ? "—" :
         '<span class="etq ' + (Math.abs(f.tasaDiferencia) <= 0.01 ? "etq-ok" : "etq-bajo") + '">' +
         (f.diferenciaCajas >= 0 ? "+" : "") + nf(f.diferenciaCajas) + " · " +
@@ -1103,6 +1128,12 @@
           const clase = Math.abs(m.tasaDiferencia) <= 0.01 ? "etq-ok" : "etq-bajo";
           return '<span class="etq ' + clase + '">' + pctFirmado(m.tasaDiferencia) + "</span>"; },
           csv: function (m) { return (m.tasaDiferencia * 100).toFixed(2); } },
+        { titulo: "Dif. peso", num: true, valor: function (m) {
+          const clase = Math.abs(m.tasaDiferenciaKg) <= 0.02 ? "etq-ok" : "etq-bajo";
+          return '<span class="etq ' + clase + '">' + pctFirmado(m.tasaDiferenciaKg) + "</span>"; },
+          csv: function (m) { return (m.tasaDiferenciaKg * 100).toFixed(2); } },
+        { titulo: "kg/caja real", num: true, valor: function (m) { return nf(m.pesoCajaReal, 2); },
+          csv: function (m) { return m.pesoCajaReal.toFixed(2); } },
         { titulo: "% Calidad A", num: true, valor: function (m) { return pct(m.pctCalidadA); },
           csv: function (m) { return (m.pctCalidadA * 100).toFixed(2); } },
         { titulo: "% Rechazo", num: true, valor: function (m) { return pct(m.tasaRechazo); },
@@ -1657,6 +1688,7 @@
       '<div class="campo"><label for="nombre">Tu nombre</label>' +
       '<input type="text" id="nombre" name="nombre" autocomplete="name" placeholder="Nombre y apellido" required></div>' +
       '<p class="form-error" id="accesoError" role="alert" hidden></p>' +
+      estadoConexionHTML() +
       '<button type="submit" class="btn btn-primario btn-ancho btn-grande">Entrar</button></form>';
 
     const demo = DB.all("usuarios").filter(function (u) {
@@ -1684,6 +1716,7 @@
     const app = $("#app");
 
     if (!usuario) {
+      UI.soltarFormulario();
       app.innerHTML = vistaAcceso();
       enlazarAcceso();
       return;
@@ -1737,6 +1770,7 @@
     else if (vista === "datos") html += vistaDatos();
     html += "</main></div></div>";
 
+    UI.soltarFormulario();
     app.innerHTML = html;
     enlazar();
   }
@@ -1793,6 +1827,7 @@
   function enlazarAcceso() {
     const form = $("#formAcceso");
     const error = $("#accesoError");
+    UI.vigilarFormulario(form);
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       const rol = form.querySelector("input[name=rol]:checked").value;
@@ -2081,13 +2116,30 @@
       /* La sesión se vuelve a comprobar aquí: pudo cerrarse entre que se
          programó el repintado y el momento en que dispara. */
       if (!usuario) return;
-      const activo = document.activeElement;
-      if (activo && /^(INPUT|SELECT|TEXTAREA)$/.test(activo.tagName)) {
-        activo.addEventListener("blur", repintarPorSincronizacion, { once: true });
-        return;
-      }
-      render();
+      UI.repintarSiSeguro(render, repintarPorSincronizacion);
     }, 200);
+  }
+
+  /* La pantalla de acceso avisa de que está conectando: sin esto, la espera
+     parece que la aplicación no responde. */
+  let conectado = false;
+
+  function marcarConectado() {
+    conectado = true;
+    const el = UI.$("#estadoConexion");
+    if (el) {
+      el.className = "conexion conexion-ok";
+      el.innerHTML = '<span class="conexion-punto" aria-hidden="true"></span>' +
+        (DB.esCompartido() ? "Conectado al sistema" : "Modo local, sin conexión compartida");
+    }
+  }
+
+  function estadoConexionHTML() {
+    return '<p class="conexion' + (conectado ? " conexion-ok" : "") + '" id="estadoConexion">' +
+      '<span class="conexion-punto" aria-hidden="true"></span>' +
+      (conectado
+        ? (DB.esCompartido() ? "Conectado al sistema" : "Modo local, sin conexión compartida")
+        : "Conectando con el sistema…") + "</p>";
   }
 
   function iniciar() {
@@ -2102,9 +2154,12 @@
         : "No se pudo guardar el cambio.", "error");
     });
 
+    /* Al conectar cambian los datos, pero si la persona ya está llenando el
+       acceso NO se repinta: seria borrarle lo escrito justo antes de entrar. */
     DB.conectar(repintarPorSincronizacion).then(function (m) {
-      render();
-      if (m === "compartido") UI.aviso("Conectado con el portal del proveedor.");
+      marcarConectado();
+      UI.repintarSiSeguro(render, function () { UI.repintarSiSeguro(render); });
+      if (m === "compartido" && usuario) UI.aviso("Conectado con el portal del proveedor.");
     });
   }
 

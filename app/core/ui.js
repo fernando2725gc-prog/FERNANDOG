@@ -431,6 +431,39 @@ const UI = (function () {
     try { sessionStorage.removeItem(clave); } catch (e) { /* noop */ }
   }
 
+  /* ------------------------------------------- formularios en uso */
+
+  /* Un repintado que llega solo —porque terminó la conexión o porque otro
+     dispositivo cambió algo— no puede reconstruir la pantalla encima de
+     alguien que está llenando un formulario: le borraría lo escrito. Aquí
+     se marca cuándo hay un formulario empezado. */
+  let formEnUso = false;
+
+  function vigilarFormulario(form) {
+    if (!form) return;
+    const marcar = function () { formEnUso = true; };
+    form.addEventListener("input", marcar);
+    form.addEventListener("change", marcar);
+  }
+
+  function formularioEnUso() { return formEnUso; }
+
+  /* Un repintado pedido por la propia persona sí puede seguir adelante. */
+  function soltarFormulario() { formEnUso = false; }
+
+  /* Decide si es seguro repintar ahora. Si no lo es, vuelve a intentarlo
+     cuando el campo suelte el foco. Devuelve si repintó. */
+  function repintarSiSeguro(repintar, reintentar) {
+    const activo = document.activeElement;
+    if (activo && /^(INPUT|SELECT|TEXTAREA)$/.test(activo.tagName)) {
+      if (reintentar) activo.addEventListener("blur", reintentar, { once: true });
+      return false;
+    }
+    if (formEnUso) return false;
+    repintar();
+    return true;
+  }
+
   /* Enlace a la otra aplicación. Cambia según el despliegue: carpetas
      separadas en el repositorio, o rutas con # dentro de un solo paquete. */
   function rutaOtraApp(cual) {
@@ -455,6 +488,10 @@ const UI = (function () {
     abrirFormulario: abrirFormulario, leerRepetible: leerRepetible,
     prepararGuardado: prepararGuardado, descargar: descargar, descargarCSV: descargarCSV,
     guardarSesion: guardarSesion, leerSesion: leerSesion, borrarSesion: borrarSesion,
+    vigilarFormulario: vigilarFormulario,
+    formularioEnUso: formularioEnUso,
+    soltarFormulario: soltarFormulario,
+    repintarSiSeguro: repintarSiSeguro,
     rutaOtraApp: rutaOtraApp,
     alArrancar: alArrancar
   };

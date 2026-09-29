@@ -95,6 +95,7 @@ const Indicadores = (function () {
     const cajasAnunPesadas = suma(pesados, "cajasAnunciadas");
     const cajasRecibidas = suma(pesados, "cajasRecibidas");
     const kgRecibidos = suma(pesados, "kgRecibidos");
+    const kgAnunPesados = suma(pesados, "kgAnunciados");
 
     const cajasProcesadas = suma(prod, "cajasProcesadas");
     const kgProcesados = suma(prod, "kgProcesados");
@@ -149,6 +150,11 @@ const Indicadores = (function () {
       kgRecibidos: kgRecibidos,
       diferenciaCajas: diferenciaCajas,
       tasaDiferenciaCajas: cajasAnunPesadas > 0 ? diferenciaCajas / cajasAnunPesadas : 0,
+      /* Dos diferencias distintas: pueden llegar todas las cajas y aun asi
+         pesar menos, si vienen incompletas. */
+      kgAnunciados: kgAnunPesados,
+      diferenciaKg: kgRecibidos - kgAnunPesados,
+      tasaDiferenciaKg: kgAnunPesados > 0 ? (kgRecibidos - kgAnunPesados) / kgAnunPesados : 0,
       cajasProcesadas: cajasProcesadas,
       kgProcesados: kgProcesados,
       cajasExportables: cajasExportables,
@@ -206,7 +212,7 @@ const Indicadores = (function () {
         mapa[l.proveedorId] = {
           proveedorId: l.proveedorId, nombre: nombreProveedor(l.proveedorId),
           lotes: 0, rechazados: 0, cajasAnunciadas: 0, cajasAnunPesadas: 0,
-          cajasRecibidas: 0, valor: 0, calidadA: 0,
+          cajasRecibidas: 0, kgAnunPesados: 0, kgRecibidos: 0, valor: 0, calidadA: 0,
           cajasProcesadas: 0, cajasExportables: 0, kgMerma: 0
         };
       }
@@ -217,6 +223,8 @@ const Indicadores = (function () {
       if (l.cajasRecibidas === null) return;
       m.cajasAnunPesadas += Number(l.cajasAnunciadas) || 0;
       m.cajasRecibidas += Number(l.cajasRecibidas) || 0;
+      m.kgAnunPesados += Number(l.kgAnunciados) || 0;
+      m.kgRecibidos += Number(l.kgRecibidos) || 0;
       m.valor += (Number(l.cajasRecibidas) || 0) * (Number(l.precioCaja) || 0);
       if (l.calidadVerificada === "A") m.calidadA += Number(l.cajasRecibidas) || 0;
     });
@@ -237,6 +245,9 @@ const Indicadores = (function () {
       m.precioPromedio = m.cajasRecibidas > 0 ? m.valor / m.cajasRecibidas : 0;
       m.diferenciaCajas = m.cajasRecibidas - m.cajasAnunPesadas;
       m.tasaDiferencia = m.cajasAnunPesadas > 0 ? m.diferenciaCajas / m.cajasAnunPesadas : 0;
+      m.tasaDiferenciaKg = m.kgAnunPesados > 0
+        ? (m.kgRecibidos - m.kgAnunPesados) / m.kgAnunPesados : 0;
+      m.pesoCajaReal = m.cajasRecibidas > 0 ? m.kgRecibidos / m.cajasRecibidas : 0;
       m.tasaRechazo = m.lotes > 0 ? m.rechazados / m.lotes : 0;
       /* Indice de variabilidad: es la CR6 hecha numero. Combina lo que el
          proveedor falla al declarar, lo que le rechazan y lo que rinde. */
@@ -496,6 +507,7 @@ const Indicadores = (function () {
     const linea = DB.linea(lote.lineaId);
 
     const dif = lote.cajasRecibidas === null ? null : lote.cajasRecibidas - lote.cajasAnunciadas;
+    const difKg = lote.kgRecibidos === null ? null : lote.kgRecibidos - (lote.kgAnunciados || 0);
     const kgMerma = prod ? totalMerma(prod) : 0;
 
     return {
@@ -505,6 +517,9 @@ const Indicadores = (function () {
       proveedor: DB.get("proveedores", lote.proveedorId),
       diferenciaCajas: dif,
       tasaDiferencia: dif === null || !lote.cajasAnunciadas ? null : dif / lote.cajasAnunciadas,
+      diferenciaKg: difKg,
+      tasaDiferenciaKg: difKg === null || !lote.kgAnunciados ? null : difKg / lote.kgAnunciados,
+      pesoCajaReal: lote.cajasRecibidas ? lote.kgRecibidos / lote.cajasRecibidas : null,
       valor: (lote.cajasRecibidas || 0) * (lote.precioCaja || 0),
       kgMerma: kgMerma,
       kgValorizado: prod ? mermaValorizada(prod) : 0,

@@ -246,7 +246,10 @@ const DB = (function () {
           proveedorId: pv.id,
           lineaId: linea.id,
           cajasAnunciadas: cajas,
-          kgAnunciados: Math.round(cajas * linea.pesoCajaKg),
+          /* El proveedor declara cuánto pesa su caja: no todas vienen al
+             peso nominal, y esa diferencia es parte de la CR6. */
+          pesoCajaDeclarado: Number((linea.pesoCajaKg * (0.97 + r() * 0.06)).toFixed(2)),
+          kgAnunciados: 0,
           calidadDeclarada: calidad,
           precioCaja: Number((linea.precioCaja * (0.92 + r() * 0.18)).toFixed(2)),
           transporte: r() < 0.5 ? "Propio" : "Contratado",
@@ -267,6 +270,8 @@ const DB = (function () {
           reporteEnviado: false,
           fechaReporte: null
         };
+
+        lote.kgAnunciados = Math.round(cajas * lote.pesoCajaDeclarado);
 
         if (d > 1) {
           if (r() < 0.03) {

@@ -70,6 +70,11 @@ Sin dependencias, sin build, sin conexión a internet.
                       Rechazado
 ```
 
+El proveedor declara **cuántas cajas** envía y **cuánto pesa estimada cada una**; el peso
+nominal de la línea se precarga pero se puede ajustar, porque no todas las cajas van
+igual de llenas. Recepción cuenta cajas y pesa en báscula, así que quedan **dos contrastes
+independientes**: pueden llegar todas las cajas y aun así pesar menos de lo declarado.
+
 **Reglas que el sistema hace cumplir:** la fecha de llegada no puede ser anterior al
 envío; no se procesa más de lo recibido; lo exportable no supera lo procesado; el
 **balance de masa** de las mermas debe cuadrar con `(procesado − exportable) × 11 kg`;
@@ -82,7 +87,9 @@ Tres familias, en `core/indicadores.js`.
 ### Pérdidas
 | Indicador | Fórmula |
 |---|---|
-| Diferencia al declarar | `(cajas pesadas − cajas anunciadas) ÷ anunciadas` |
+| Diferencia en cajas | `(cajas pesadas − cajas anunciadas) ÷ anunciadas` |
+| Diferencia en peso | `(kg en báscula − kg declarados) ÷ kg declarados` |
+| kg por caja real | `kg en báscula ÷ cajas contadas` |
 | Tasa de exportable | `cajas exportables ÷ cajas procesadas` |
 | Meta ponderada | `Σ (meta_línea × cajas procesadas) ÷ Σ cajas procesadas` |
 | Merma | `Σ mermas ÷ kg procesados` |

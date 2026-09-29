@@ -889,6 +889,24 @@ textarea { resize: vertical; }
 .rep-fila { display: grid; grid-template-columns: 1.4fr 90px 1.4fr auto; gap: .4rem; align-items: center; }
 .rep-fila select, .rep-fila input { width: 100%; min-width: 0; }
 
+/* ===================== estado de conexión en el acceso ================ */
+
+.conexion {
+  display: flex; align-items: center; gap: .45rem; margin: .8rem 0 0;
+  font-size: .8rem; color: var(--texto-tenue);
+}
+.conexion-punto {
+  width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto;
+  background: var(--regular); animation: latido 1.4s ease-in-out infinite;
+}
+.conexion-ok { color: var(--bien); }
+.conexion-ok .conexion-punto { background: var(--bien); animation: none; }
+
+@keyframes latido {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .3; }
+}
+
 /* ============================== avisos varios ========================= */
 
 .aviso-inline {

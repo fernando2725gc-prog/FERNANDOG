@@ -13,8 +13,8 @@
 const DB = (function () {
   "use strict";
 
-  const KEY = "flp.db.v4";
-  const ESQUEMA = 4;
+  const KEY = "flp.db.v5";
+  const ESQUEMA = 5;
 
   /* ---------------------------------------------------------------- utils */
 
@@ -185,15 +185,56 @@ const DB = (function () {
     ];
   }
 
+  /* Cuentas de la demostración. La credencial se calcula al sembrar, no se
+     guarda escrita: ver sembrarCredenciales(). */
+  const CLAVES_DEMO = {
+    us_01: "pitahaya2026", us_02: "granadilla2026",
+    us_03: "4521", us_04: "7734", us_05: "8890",
+    us_06: "supervision2026"
+  };
+
   function usuariosBase() {
     return [
-      { id: "us_01", nombre: "Marta Cedeño", rol: "proveedor", proveedorId: "pv_01", activo: true },
-      { id: "us_02", nombre: "Luis Vera", rol: "proveedor", proveedorId: "pv_02", activo: true },
-      { id: "us_03", nombre: "Diego Andrade", rol: "recepcion", proveedorId: null, activo: true },
-      { id: "us_04", nombre: "Carlos Mendoza", rol: "produccion", proveedorId: null, activo: true },
-      { id: "us_05", nombre: "Sofía Palma", rol: "produccion", proveedorId: null, activo: true },
-      { id: "us_06", nombre: "Ing. Andrea Quiroz", rol: "supervisor", proveedorId: null, activo: true }
+      { id: "us_01", nombre: "Marta Cedeño", usuario: "PRV-001", rol: "proveedor", proveedorId: "pv_01", activo: true, debeCambiar: false },
+      { id: "us_02", nombre: "Luis Vera", usuario: "PRV-002", rol: "proveedor", proveedorId: "pv_02", activo: true, debeCambiar: false },
+      { id: "us_03", nombre: "Diego Andrade", usuario: "dandrade", rol: "recepcion", proveedorId: null, activo: true, debeCambiar: false },
+      { id: "us_04", nombre: "Carlos Mendoza", usuario: "cmendoza", rol: "produccion", proveedorId: null, activo: true, debeCambiar: false },
+      { id: "us_05", nombre: "Sofía Palma", usuario: "spalma", rol: "produccion", proveedorId: null, activo: true, debeCambiar: false },
+      { id: "us_06", nombre: "Ing. Andrea Quiroz", usuario: "aquiroz", rol: "supervisor", proveedorId: null, activo: true, debeCambiar: false }
     ];
+  }
+
+  /* Deriva las credenciales de la demostración al arrancar. Es asíncrono, así
+     que hasta que termina esos usuarios no pueden entrar: la interfaz lo
+     refleja con el estado de conexión. */
+  async function sembrarCredenciales() {
+    const db = load();
+    const pendientes = db.usuarios.filter(function (u) {
+      return CLAVES_DEMO[u.id] && !u.credencial;
+    });
+    if (!pendientes.length) return;
+    await Promise.all(pendientes.map(async function (u) {
+      u.credencial = await Auth.crearCredencial(CLAVES_DEMO[u.id]);
+    }));
+    save();
+    if (esCompartido()) pendientes.forEach(function (u) { empujar("usuarios", u); });
+  }
+
+  /* Busca por nombre de acceso o por código de proveedor, sin distinguir
+     mayúsculas: en el campo se escribe como venga. */
+  function buscarPorAcceso(texto) {
+    const t = String(texto || "").trim().toLowerCase();
+    if (!t) return null;
+    return all("usuarios").find(function (u) {
+      return String(u.usuario || "").toLowerCase() === t;
+    }) || null;
+  }
+
+  function accesoLibre(usuario, exceptoId) {
+    const t = String(usuario || "").trim().toLowerCase();
+    return !all("usuarios").some(function (u) {
+      return u.id !== exceptoId && String(u.usuario || "").toLowerCase() === t;
+    });
   }
 
   /* Parámetros de planta que alimentan el planificador diario. */
@@ -714,6 +755,9 @@ const DB = (function () {
     causa: causa,
     destino: destino,
     linea: linea,
+    sembrarCredenciales: sembrarCredenciales,
+    buscarPorAcceso: buscarPorAcceso,
+    accesoLibre: accesoLibre,
     registrarBitacora: registrarBitacora,
     conectar: conectar,
     esCompartido: esCompartido,

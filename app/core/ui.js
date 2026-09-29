@@ -419,6 +419,41 @@ const UI = (function () {
 
   /* ------------------------------------------------------------- sesión */
 
+  /* La sesión puede vivir solo en la pestaña (por defecto) o recordarse en
+     el dispositivo. En el celular del proveedor, recordarla es la
+     diferencia entre usar la aplicación y abandonarla. */
+  const DIAS_RECUERDO = 30;
+
+  function abrirSesion(clave, usuarioId, recordar) {
+    const dato = JSON.stringify({
+      id: usuarioId,
+      expira: Date.now() + DIAS_RECUERDO * 86400000
+    });
+    try {
+      sessionStorage.setItem(clave, dato);
+      if (recordar) localStorage.setItem(clave, dato);
+      else localStorage.removeItem(clave);
+    } catch (e) { /* modo privado */ }
+  }
+
+  function sesionAbierta(clave) {
+    for (const almacen of ["sessionStorage", "localStorage"]) {
+      try {
+        const raw = window[almacen].getItem(clave);
+        if (!raw) continue;
+        const d = JSON.parse(raw);
+        if (d && d.id && (!d.expira || d.expira > Date.now())) return d.id;
+        window[almacen].removeItem(clave);
+      } catch (e) { /* noop */ }
+    }
+    return null;
+  }
+
+  function cerrarSesion(clave) {
+    try { sessionStorage.removeItem(clave); localStorage.removeItem(clave); }
+    catch (e) { /* noop */ }
+  }
+
   function guardarSesion(clave, valor) {
     try { sessionStorage.setItem(clave, valor); } catch (e) { /* modo privado */ }
   }
@@ -487,6 +522,9 @@ const UI = (function () {
     etiquetaLinea: etiquetaLinea,
     abrirFormulario: abrirFormulario, leerRepetible: leerRepetible,
     prepararGuardado: prepararGuardado, descargar: descargar, descargarCSV: descargarCSV,
+    abrirSesion: abrirSesion,
+    sesionAbierta: sesionAbierta,
+    cerrarSesion: cerrarSesion,
     guardarSesion: guardarSesion, leerSesion: leerSesion, borrarSesion: borrarSesion,
     vigilarFormulario: vigilarFormulario,
     formularioEnUso: formularioEnUso,

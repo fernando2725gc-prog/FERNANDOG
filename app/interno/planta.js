@@ -39,27 +39,42 @@
 
   /* ============================== sesión ============================== */
 
-  function entrar(rol, nombre) {
-    const limpio = String(nombre).trim();
-    if (ROLES_INTERNOS.indexOf(rol) === -1) return { error: "Selecciona tu rol." };
-    if (limpio.length < 3) return { error: "Escribe tu nombre y apellido." };
+  async function entrar(acceso, clave, recordar) {
+    const login = String(acceso).trim();
+    if (!login) return { error: "Escribe tu usuario." };
+    if (!clave) return { error: "Escribe tu contraseña o PIN." };
 
-    let u = DB.all("usuarios").find(function (x) {
-      return x.rol === rol && x.nombre.toLowerCase() === limpio.toLowerCase();
-    });
-    if (!u) {
-      u = DB.insert("usuarios", {
-        nombre: limpio, rol: rol, proveedorId: null, activo: true, fechaAlta: DB.hoy()
-      });
-      DB.registrarBitacora(u.id, "Alta de usuario interno", limpio + " · " + rol);
-    } else if (!u.activo) {
-      return { error: "Tu usuario está inactivo. Habla con Supervisión." };
+    const espera = Auth.bloqueo(login);
+    if (espera > 0) {
+      return { error: "Demasiados intentos fallidos. Espera " + espera + " segundos." };
     }
 
+    const u = DB.buscarPorAcceso(login);
+    const generico = "Usuario o contraseña incorrectos.";
+
+    if (!u || ROLES_INTERNOS.indexOf(u.rol) === -1) {
+      const espera = Auth.anotarFallo(login);
+      return { error: espera > 0
+        ? "Demasiados intentos fallidos. Espera " + espera + " segundos."
+        : generico };
+    }
+    if (!u.credencial) {
+      return { error: "Esa cuenta aún no tiene contraseña. Pídesela a Supervisión." };
+    }
+    if (!(await Auth.verificar(clave, u.credencial))) {
+      const espera = Auth.anotarFallo(login);
+      return { error: espera > 0
+        ? "Demasiados intentos fallidos. Espera " + espera + " segundos."
+        : generico };
+    }
+    if (!u.activo) return { error: "Tu usuario está inactivo. Habla con Supervisión." };
+
+    Auth.limpiarFallos(login);
     usuario = u;
-    UI.guardarSesion(SESION, u.id);
-    DB.registrarBitacora(u.id, "Inicio de sesión", u.nombre + " · " + rol);
-    return { ok: true };
+    DB.update("usuarios", u.id, { ultimoAcceso: new Date().toISOString() });
+    UI.abrirSesion(SESION, u.id, recordar);
+    DB.registrarBitacora(u.id, "Inicio de sesión", u.nombre + " · " + u.rol);
+    return { ok: true, debeCambiar: !!u.debeCambiar };
   }
 
   function salir() {
@@ -67,15 +82,15 @@
     usuario = null;
     if (repintado) { clearTimeout(repintado); repintado = null; }
     vista = "panel";
-    UI.borrarSesion(SESION);
+    UI.cerrarSesion(SESION);
     render();
   }
 
   function restaurar() {
-    const id = UI.leerSesion(SESION);
+    const id = UI.sesionAbierta(SESION);
     if (!id) return;
     const u = DB.get("usuarios", id);
-    if (u && ROLES_INTERNOS.indexOf(u.rol) !== -1) usuario = u;
+    if (u && ROLES_INTERNOS.indexOf(u.rol) !== -1 && u.activo) usuario = u;
   }
 
   /* ============================== navegación ========================== */
@@ -1539,13 +1554,25 @@
         if (!m) return '<span class="tenue">—</span>';
         const clase = m.indiceVariabilidad < 0.06 ? "etq-ok" : m.indiceVariabilidad < 0.14 ? "etq-B" : "etq-bajo";
         return '<span class="etq ' + clase + '">' + nf(m.indiceVariabilidad, 3) + "</span>"; } },
+      { titulo: "Acceso al portal", valor: function (p) {
+        const acc = DB.all("usuarios").find(function (u) {
+          return u.rol === "proveedor" && u.proveedorId === p.id;
+        });
+        if (!acc) return '<span class="etq etq-bajo">Sin acceso</span>';
+        return "<code>" + esc(acc.usuario) + "</code>" +
+          (acc.debeCambiar ? ' <span class="etq etq-B">temporal</span>' : ""); } },
       { titulo: "Estado", valor: function (p) {
         return '<span class="estado estado-' + (p.activo ? "recibido" : "inactivo") + '">' +
           (p.activo ? "Activo" : "Inactivo") + "</span>"; } },
       { titulo: "", valor: function (p) {
-        return '<button class="btn-mini" data-editar-prov="' + esc(p.id) + '">Editar</button>' +
-          '<button class="btn-mini" data-toggle-prov="' + esc(p.id) + '">' +
-          (p.activo ? "Desactivar" : "Activar") + "</button>"; } }
+        const acc = DB.all("usuarios").find(function (u) {
+          return u.rol === "proveedor" && u.proveedorId === p.id;
+        });
+        let b = '<button class="btn-mini" data-editar-prov="' + esc(p.id) + '">Editar</button>';
+        if (acc) b += '<button class="btn-mini" data-clave-usr="' + esc(acc.id) + '">Nueva clave</button>';
+        b += '<button class="btn-mini" data-toggle-prov="' + esc(p.id) + '">' +
+          (p.activo ? "Desactivar" : "Activar") + "</button>";
+        return b; } }
     ], DB.all("proveedores"), {});
 
     html += '<p class="nota-info">El <strong>índice de variabilidad</strong> combina la ' +
@@ -1573,24 +1600,108 @@
         DB.update("proveedores", p.id, d);
         DB.registrarBitacora(usuario.id, "Edición de proveedor", d.nombre);
         UI.aviso("Proveedor actualizado.");
+        render();
       } else {
+        /* El alta crea a la vez el proveedor y su acceso al portal, con una
+           clave temporal que se entrega una sola vez. */
         const n = DB.all("proveedores").length + 1;
-        DB.insert("proveedores", Object.assign({
-          codigo: "PRV-" + String(n).padStart(3, "0"), fechaAlta: DB.hoy()
+        const codigo = "PRV-" + String(n).padStart(3, "0");
+        const prov = DB.insert("proveedores", Object.assign({
+          codigo: codigo, fechaAlta: DB.hoy()
         }, d));
-        DB.registrarBitacora(usuario.id, "Alta de proveedor", d.nombre);
-        UI.aviso("Proveedor registrado. Ya puede entrar al portal.");
+        const temporal = Auth.claveTemporal("proveedor");
+
+        Auth.crearCredencial(temporal).then(function (cred) {
+          DB.insert("usuarios", {
+            nombre: d.contacto, usuario: codigo, rol: "proveedor",
+            proveedorId: prov.id, activo: true, credencial: cred,
+            debeCambiar: true, fechaAlta: DB.hoy(), creadoPor: usuario.id
+          });
+          DB.registrarBitacora(usuario.id, "Alta de proveedor",
+            d.nombre + " · acceso " + codigo);
+          mostrarCredencial(prov.nombre, codigo, temporal, "proveedor");
+          render();
+        });
       }
+    });
+  }
+
+  /* La clave temporal se enseña una sola vez, para dictarla o imprimirla.
+     Después solo queda su hash, así que no hay forma de recuperarla. */
+  function mostrarCredencial(titular, acceso, clave, rol) {
+    const pol = Auth.politica(rol);
+    abrirPanel("Acceso creado", '<div class="credencial">' +
+      "<p>Entrega estos datos a <strong>" + esc(titular) + "</strong>. " +
+      "Esta es la <strong>única vez</strong> que se muestran: el sistema guarda " +
+      "solo una huella de la clave, no la clave.</p>" +
+      '<dl class="credencial-datos">' +
+      "<dt>Usuario</dt><dd><code>" + esc(acceso) + "</code></dd>" +
+      "<dt>" + esc(pol.nombre) + " temporal</dt><dd><code>" + esc(clave) + "</code></dd>" +
+      "</dl>" +
+      '<p class="credencial-nota">Al entrar por primera vez deberá cambiarla ' +
+      "obligatoriamente.</p></div>", true);
+  }
+
+  function formUsuarioInterno() {
+    UI.abrirFormulario("Nuevo usuario interno", [
+      { nombre: "nombre", etiqueta: "Nombre completo", tipo: "text", requerido: true },
+      { nombre: "usuario", etiqueta: "Usuario de acceso", tipo: "text", requerido: true,
+        ancho: "mitad", ayuda: "Corto y sin espacios, como «dandrade».",
+        validar: function (v) {
+          if (!/^[a-z0-9._-]{3,20}$/i.test(v)) return "Entre 3 y 20 caracteres, sin espacios.";
+          return DB.accesoLibre(v) ? null : "Ese usuario ya está en uso.";
+        } },
+      { nombre: "rol", etiqueta: "Rol", tipo: "select", requerido: true, ancho: "mitad",
+        vacio: "Selecciona…",
+        opciones: DB.ROLES.filter(function (r) { return ROLES_INTERNOS.indexOf(r.id) !== -1; })
+          .map(function (r) { return { valor: r.id, texto: r.nombre }; }),
+        ayuda: "Recepción y Producción reciben un PIN; Supervisión, una contraseña." }
+    ], function (d) {
+      const temporal = Auth.claveTemporal(d.rol);
+      Auth.crearCredencial(temporal).then(function (cred) {
+        DB.insert("usuarios", {
+          nombre: d.nombre, usuario: d.usuario.toLowerCase(), rol: d.rol,
+          proveedorId: null, activo: true, credencial: cred, debeCambiar: true,
+          fechaAlta: DB.hoy(), creadoPor: usuario.id
+        });
+        DB.registrarBitacora(usuario.id, "Alta de usuario interno",
+          d.nombre + " · " + d.rol);
+        mostrarCredencial(d.nombre, d.usuario.toLowerCase(), temporal, d.rol);
+        render();
+      });
+    }, { aceptar: "Crear usuario" });
+  }
+
+  function restablecerClave(usuarioId) {
+    const u = DB.get("usuarios", usuarioId);
+    if (!u) return;
+    if (!confirm("¿Generar una clave temporal nueva para " + u.nombre +
+      "? La anterior dejará de servir.")) return;
+    const temporal = Auth.claveTemporal(u.rol);
+    Auth.crearCredencial(temporal).then(function (cred) {
+      DB.update("usuarios", u.id, { credencial: cred, debeCambiar: true });
+      DB.registrarBitacora(usuario.id, "Restablecimiento de clave", u.nombre);
+      mostrarCredencial(u.nombre, u.usuario, temporal, u.rol);
       render();
     });
   }
 
   function vistaUsuarios() {
     let html = '<div class="vista-cab"><div><h1>Usuarios</h1>' +
-      '<p class="sub">Quién entra a cada aplicación y con qué rol.</p></div></div>';
+      '<p class="sub">Quién entra a cada aplicación, con qué rol y con qué acceso.</p></div>' +
+      '<button class="btn btn-primario" id="btnNuevoUsuario">+ Nuevo usuario interno</button></div>';
 
     html += UI.tabla([
       { titulo: "Nombre", valor: function (u) { return "<strong>" + esc(u.nombre) + "</strong>"; } },
+      { titulo: "Usuario", valor: function (u) {
+        return u.usuario ? "<code>" + esc(u.usuario) + "</code>" : '<span class="tenue">—</span>'; } },
+      { titulo: "Acceso", valor: function (u) {
+        if (!u.credencial) return '<span class="etq etq-bajo">Sin clave</span>';
+        if (u.debeCambiar) return '<span class="etq etq-B">Clave temporal</span>';
+        return '<span class="etq etq-ok">Activa</span>'; } },
+      { titulo: "Último ingreso", valor: function (u) {
+        return u.ultimoAcceso ? UI.fechaCorta(u.ultimoAcceso.slice(0, 10))
+          : '<span class="tenue">nunca</span>'; } },
       { titulo: "Aplicación", valor: function (u) {
         return u.rol === "proveedor"
           ? '<span class="etq etq-rol">Portal externo</span>'
@@ -1604,14 +1715,22 @@
         return '<span class="estado estado-' + (u.activo ? "recibido" : "inactivo") + '">' +
           (u.activo ? "Activo" : "Inactivo") + "</span>"; } },
       { titulo: "", valor: function (u) {
-        if (u.id === usuario.id) return '<span class="tenue">Sesión actual</span>';
-        return '<button class="btn-mini" data-toggle-usr="' + esc(u.id) + '">' +
-          (u.activo ? "Desactivar" : "Activar") + "</button>"; } }
+        let b = '<button class="btn-mini" data-clave-usr="' + esc(u.id) + '">Restablecer clave</button>';
+        if (u.id === usuario.id) return b + ' <span class="tenue">Sesión actual</span>';
+        b += '<button class="btn-mini" data-toggle-usr="' + esc(u.id) + '">' +
+          (u.activo ? "Desactivar" : "Activar") + "</button>";
+        return b; } }
     ], DB.all("usuarios"), {});
 
-    html += '<p class="nota-seguridad">⚠️ Prototipo académico: se entra eligiendo rol y ' +
-      "escribiendo el nombre, sin contraseña. Antes de un uso real hace falta autenticación " +
-      "en el servidor. Ver <code>app/README.md</code>.</p>";
+    html += '<p class="nota-info"><strong>Cómo se guardan las claves.</strong> No se guardan: ' +
+      "se guarda el resultado de derivarlas con PBKDF2-SHA256 y una sal distinta por persona, " +
+      "así que desde el almacén no se puede llegar a la clave. Por eso una clave olvidada se " +
+      "<em>restablece</em>, nunca se consulta.</p>";
+    html += '<p class="nota-seguridad">⚠️ Límite del prototipo: la comprobación ocurre en el ' +
+      "navegador, no en un servidor. Quien pueda leer el almacén ve los hashes y podría " +
+      "intentar adivinarlos sin conexión. Es suficiente para que nadie entre haciéndose pasar " +
+      "por otro en planta, pero un despliegue real debe verificar la clave en el servidor. " +
+      "Ver <code>app/README.md</code> §11.</p>";
     return html;
   }
 
@@ -1674,40 +1793,53 @@
       '<div class="acceso-marca"><span class="logo" aria-hidden="true">🏭</span>' +
       "<div><strong>" + esc(DB.EMPRESA.sistema) + "</strong><small>" +
       esc(DB.EMPRESA.descripcion) + "</small></div></div>" +
-      '<p class="acceso-intro">Sistema interno de planta. Elige tu rol para empezar.</p>' +
-      '<form id="formAcceso" novalidate><fieldset class="roles"><legend>¿Cuál es tu rol?</legend>';
-
-    DB.ROLES.filter(function (r) { return ROLES_INTERNOS.indexOf(r.id) !== -1; })
-      .forEach(function (r, i) {
-        html += '<label class="rol-tarjeta"><input type="radio" name="rol" value="' + esc(r.id) + '"' +
-          (i === 0 ? " checked" : "") + '><span class="rol-cuerpo">' +
-          '<span class="rol-icono" aria-hidden="true">' + r.icono + "</span>" +
-          "<span><strong>" + esc(r.nombre) + "</strong><small>" + esc(r.lema) + "</small></span></span></label>";
-      });
-    html += "</fieldset>" +
-      '<div class="campo"><label for="nombre">Tu nombre</label>' +
-      '<input type="text" id="nombre" name="nombre" autocomplete="name" placeholder="Nombre y apellido" required></div>' +
+      '<p class="acceso-intro">Sistema interno de planta.</p>' +
+      '<form id="formAcceso" novalidate>' +
+      '<div class="campo"><label for="acceso">Usuario</label>' +
+      '<input type="text" id="acceso" name="acceso" autocomplete="username" ' +
+      'placeholder="tu usuario" autocapitalize="none" spellcheck="false" required></div>' +
+      '<div class="campo"><label for="clave">Contraseña o PIN</label>' +
+      '<div class="campo-clave">' +
+      '<input type="password" id="clave" name="clave" autocomplete="current-password" required>' +
+      '<button type="button" class="ver-clave" id="verClave" aria-label="Mostrar">👁</button>' +
+      "</div></div>" +
+      '<label class="check check-recordar"><input type="checkbox" id="recordar"> ' +
+      "Mantener la sesión en este equipo</label>" +
       '<p class="form-error" id="accesoError" role="alert" hidden></p>' +
       estadoConexionHTML() +
-      '<button type="submit" class="btn btn-primario btn-ancho btn-grande">Entrar</button></form>';
+      '<button type="submit" class="btn btn-primario btn-ancho btn-grande" id="btnEntrar">Entrar</button>' +
+      "</form>";
 
-    const demo = DB.all("usuarios").filter(function (u) {
-      return ROLES_INTERNOS.indexOf(u.rol) !== -1;
-    }).slice(0, 4);
-    if (demo.length) {
-      html += '<div class="acceso-demo"><p>Personas de la demostración:</p><ul>';
-      demo.forEach(function (u) {
-        const r = DB.ROLES.find(function (x) { return x.id === u.rol; });
-        html += '<li><button type="button" class="demo" data-nombre="' + esc(u.nombre) +
-          '" data-rol="' + esc(u.rol) + '">' + esc(u.nombre) + "</button> — " +
-          esc(r ? r.nombre : u.rol) + "</li>";
-      });
-      html += "</ul></div>";
-    }
-
-    html += '<p class="acceso-pie">¿Eres proveedor? <a ' + UI.rutaOtraApp("proveedor") + '>Entra al portal</a></p>';
-    html += "</div></div>";
+    html += '<p class="acceso-ayuda">Recepción y Producción entran con PIN; Supervisión, ' +
+      "con contraseña. Si la olvidaste, Supervisión puede regenerarla.</p>";
+    html += '<p class="acceso-pie">¿Eres proveedor? <a ' + UI.rutaOtraApp("proveedor") +
+      ">Entra al portal</a></p></div></div>";
     return html;
+  }
+
+  function formCambiarClave(obligatorio) {
+    const pol = Auth.politica(usuario.rol);
+    UI.abrirFormulario(obligatorio ? "Crea tu " + pol.nombre.toLowerCase() : "Cambiar " + pol.nombre.toLowerCase(), [
+      { tipo: "html", contenido: '<p class="modal-nota">' + (obligatorio
+        ? "Estás usando la clave temporal que te dio Supervisión. Crea la tuya para continuar."
+        : "Elige una clave nueva para tu acceso.") + "</p>" },
+      { nombre: "nueva", etiqueta: pol.nombre + " nueva",
+        tipo: pol.tipo === "pin" ? "number" : "password", requerido: true, ayuda: pol.ayuda,
+        validar: function (v) { return Auth.revisar(v, usuario.rol); } },
+      { nombre: "repetir", etiqueta: "Repítela",
+        tipo: pol.tipo === "pin" ? "number" : "password", requerido: true,
+        validar: function (v, d) {
+          return String(v) === String(d.nueva) ? null : "Las dos no coinciden.";
+        } }
+    ], function (d) {
+      Auth.crearCredencial(String(d.nueva)).then(function (cred) {
+        DB.update("usuarios", usuario.id, { credencial: cred, debeCambiar: false });
+        usuario = DB.get("usuarios", usuario.id);
+        DB.registrarBitacora(usuario.id, "Cambio de clave", usuario.nombre);
+        UI.aviso(pol.nombre + " actualizada.");
+        render();
+      });
+    }, { aceptar: "Guardar" });
   }
 
   /* =============================== render ============================= */
@@ -1754,6 +1886,7 @@
       '<div class="barra-usuario"><div class="avatar" aria-hidden="true">' +
       esc(rol ? rol.icono : "·") + "</div><div><strong>" + esc(usuario.nombre) + "</strong>" +
       "<small>" + esc(rol ? rol.nombre : usuario.rol) + "</small></div>" +
+      '<button class="btn btn-plano" id="btnClave" title="Cambiar mi clave">🔑</button>' +
       '<button class="btn btn-plano" id="btnSalir">Salir</button></div></header>';
 
     html += '<main id="contenido" tabindex="-1">';
@@ -1827,20 +1960,37 @@
   function enlazarAcceso() {
     const form = $("#formAcceso");
     const error = $("#accesoError");
+    const boton = $("#btnEntrar");
     UI.vigilarFormulario(form);
+
+    const ver = $("#verClave");
+    if (ver) {
+      ver.addEventListener("click", function () {
+        const campo = $("#clave");
+        campo.type = campo.type === "password" ? "text" : "password";
+        campo.focus();
+      });
+    }
+
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      const rol = form.querySelector("input[name=rol]:checked").value;
-      const r = entrar(rol, form.nombre.value);
-      if (r.error) { error.textContent = r.error; error.hidden = false; return; }
-      render();
-      UI.aviso("Bienvenido, " + usuario.nombre + ".");
-    });
-    $$(".demo").forEach(function (b) {
-      b.addEventListener("click", function () {
-        form.querySelector('input[name=rol][value="' + b.dataset.rol + '"]').checked = true;
-        form.nombre.value = b.dataset.nombre;
-        form.querySelector("button[type=submit]").focus();
+      error.hidden = true;
+      boton.disabled = true;
+      boton.textContent = "Comprobando…";
+
+      entrar(form.acceso.value, form.clave.value, $("#recordar").checked).then(function (r) {
+        if (r.error) {
+          error.textContent = r.error;
+          error.hidden = false;
+          boton.disabled = false;
+          boton.textContent = "Entrar";
+          $("#clave").value = "";
+          $("#clave").focus();
+          return;
+        }
+        render();
+        UI.aviso("Bienvenido, " + usuario.nombre + ".");
+        if (r.debeCambiar) formCambiarClave(true);
       });
     });
   }
@@ -1862,6 +2012,8 @@
     }
     const btnSalir = $("#btnSalir");
     if (btnSalir) btnSalir.addEventListener("click", salir);
+    const btnClave = $("#btnClave");
+    if (btnClave) btnClave.addEventListener("click", function () { formCambiarClave(false); });
 
     /* --- filtros --- */
     const ff = $("#formFiltros");
@@ -2009,6 +2161,13 @@
         render();
       });
     });
+    const btnNuevoUsr = $("#btnNuevoUsuario");
+    if (btnNuevoUsr) btnNuevoUsr.addEventListener("click", formUsuarioInterno);
+
+    $$("[data-clave-usr]").forEach(function (b) {
+      b.addEventListener("click", function () { restablecerClave(b.dataset.claveUsr); });
+    });
+
     $$("[data-toggle-usr]").forEach(function (b) {
       b.addEventListener("click", function () {
         const u = DB.get("usuarios", b.dataset.toggleUsr);
@@ -2157,9 +2316,15 @@
     /* Al conectar cambian los datos, pero si la persona ya está llenando el
        acceso NO se repinta: seria borrarle lo escrito justo antes de entrar. */
     DB.conectar(repintarPorSincronizacion).then(function (m) {
+      return DB.sembrarCredenciales().then(function () { return m; });
+    }).then(function (m) {
       marcarConectado();
       UI.repintarSiSeguro(render, function () { UI.repintarSiSeguro(render); });
       if (m === "compartido" && usuario) UI.aviso("Conectado con el portal del proveedor.");
+    }).catch(function (e) {
+      console.warn("Fallo al preparar el acceso:", e);
+      marcarConectado();
+      UI.repintarSiSeguro(render);
     });
   }
 

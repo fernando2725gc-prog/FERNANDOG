@@ -23,31 +23,46 @@
 
   /* ============================== sesión ============================== */
 
-  function entrar(proveedorId, nombre) {
-    const limpio = String(nombre).trim();
-    if (!proveedorId) return { error: "Selecciona tu finca o empresa." };
-    if (limpio.length < 3) return { error: "Escribe tu nombre y apellido." };
+  async function entrar(acceso, clave, recordar) {
+    const codigo = String(acceso).trim();
+    if (!codigo) return { error: "Escribe tu código de proveedor." };
+    if (!clave) return { error: "Escribe tu contraseña." };
 
-    let u = DB.all("usuarios").find(function (x) {
-      return x.rol === "proveedor" && x.proveedorId === proveedorId &&
-        x.nombre.toLowerCase() === limpio.toLowerCase();
-    });
-
-    if (!u) {
-      u = DB.insert("usuarios", {
-        nombre: limpio, rol: "proveedor", proveedorId: proveedorId,
-        activo: true, fechaAlta: DB.hoy()
-      });
-      DB.registrarBitacora(u.id, "Alta de proveedor en portal",
-        limpio + " · " + Indicadores.nombreProveedor(proveedorId));
-    } else if (!u.activo) {
-      return { error: "Tu usuario está inactivo. Comunícate con la planta." };
+    const espera = Auth.bloqueo(codigo);
+    if (espera > 0) {
+      return { error: "Demasiados intentos fallidos. Espera " + espera + " segundos." };
     }
 
+    const u = DB.buscarPorAcceso(codigo);
+    /* El mismo mensaje para código inexistente y contraseña equivocada: si
+       se distinguieran, se podría averiguar qué códigos existen. */
+    const generico = "Código o contraseña incorrectos.";
+
+    if (!u || u.rol !== "proveedor") {
+      const espera = Auth.anotarFallo(codigo);
+      return { error: espera > 0
+        ? "Demasiados intentos fallidos. Espera " + espera + " segundos."
+        : generico };
+    }
+    if (!u.credencial) {
+      return { error: "Tu cuenta todavía no tiene contraseña. Pídela en la planta." };
+    }
+
+    const vale = await Auth.verificar(clave, u.credencial);
+    if (!vale) {
+      const espera = Auth.anotarFallo(codigo);
+      return { error: espera > 0
+        ? "Demasiados intentos fallidos. Espera " + espera + " segundos."
+        : generico };
+    }
+    if (!u.activo) return { error: "Tu acceso está desactivado. Comunícate con la planta." };
+
+    Auth.limpiarFallos(codigo);
     usuario = u;
-    UI.guardarSesion(SESION, u.id);
+    DB.update("usuarios", u.id, { ultimoAcceso: new Date().toISOString() });
+    UI.abrirSesion(SESION, u.id, recordar);
     DB.registrarBitacora(u.id, "Ingreso al portal", u.nombre);
-    return { ok: true };
+    return { ok: true, debeCambiar: !!u.debeCambiar };
   }
 
   function salir() {
@@ -55,15 +70,15 @@
     usuario = null;
     if (repintado) { clearTimeout(repintado); repintado = null; }
     vista = "inicio";
-    UI.borrarSesion(SESION);
+    UI.cerrarSesion(SESION);
     render();
   }
 
   function restaurar() {
-    const id = UI.leerSesion(SESION);
+    const id = UI.sesionAbierta(SESION);
     if (!id) return;
     const u = DB.get("usuarios", id);
-    if (u && u.rol === "proveedor") usuario = u;
+    if (u && u.rol === "proveedor" && u.activo) usuario = u;
   }
 
   /* ========================= lectura aislada ========================== */
@@ -533,35 +548,53 @@
       '<div class="acceso-marca"><span class="logo" aria-hidden="true">🚜</span>' +
       "<div><strong>Portal del Proveedor</strong><small>" + esc(DB.EMPRESA.nombre) +
       "</small></div></div>" +
-      '<p class="acceso-intro">Anuncia tus envíos y sigue el resultado de cada lote.</p>' +
+      '<p class="acceso-intro">Entra con el código que te dio la planta.</p>' +
       '<form id="formAcceso" novalidate>' +
-      '<div class="campo"><label for="prov">Tu finca o empresa</label>' +
-      '<select id="prov" name="proveedorId" required><option value="">Selecciona…</option>';
-    DB.all("proveedores").filter(function (p) { return p.activo; }).forEach(function (p) {
-      html += '<option value="' + esc(p.id) + '">' + esc(p.nombre) + "</option>";
-    });
-    html += "</select></div>" +
-      '<div class="campo"><label for="nombre">Tu nombre</label>' +
-      '<input type="text" id="nombre" name="nombre" autocomplete="name" placeholder="Nombre y apellido" required></div>' +
+      '<div class="campo"><label for="acceso">Código de proveedor</label>' +
+      '<input type="text" id="acceso" name="acceso" autocomplete="username" ' +
+      'placeholder="PRV-001" autocapitalize="characters" spellcheck="false" required></div>' +
+      '<div class="campo"><label for="clave">Contraseña</label>' +
+      '<div class="campo-clave">' +
+      '<input type="password" id="clave" name="clave" autocomplete="current-password" required>' +
+      '<button type="button" class="ver-clave" id="verClave" aria-label="Mostrar la contraseña">👁</button>' +
+      "</div></div>" +
+      '<label class="check check-recordar"><input type="checkbox" id="recordar" checked> ' +
+      "No cerrar sesión en este teléfono</label>" +
       '<p class="form-error" id="accesoError" role="alert" hidden></p>' +
       estadoConexionHTML() +
-      '<button type="submit" class="btn btn-primario btn-ancho btn-grande">Entrar</button></form>';
+      '<button type="submit" class="btn btn-primario btn-ancho btn-grande" id="btnEntrar">Entrar</button>' +
+      "</form>";
 
-    const demo = DB.all("usuarios").filter(function (u) { return u.rol === "proveedor"; }).slice(0, 3);
-    if (demo.length) {
-      html += '<div class="acceso-demo"><p>Cuentas de demostración:</p><ul>';
-      demo.forEach(function (u) {
-        html += '<li><button type="button" class="demo" data-nombre="' + esc(u.nombre) +
-          '" data-prov="' + esc(u.proveedorId) + '">' + esc(u.nombre) + "</button> — " +
-          esc(Indicadores.nombreProveedor(u.proveedorId)) + "</li>";
-      });
-      html += "</ul></div>";
-    }
-
+    html += '<p class="acceso-ayuda">¿Olvidaste tu contraseña? La planta puede generarte ' +
+      "una nueva desde el sistema interno.</p>";
     html += '<p class="acceso-pie">¿Trabajas en la planta? ' +
-      '<a ' + UI.rutaOtraApp("interno") + '>Entra al sistema interno</a></p>';
+      '<a ' + UI.rutaOtraApp("interno") + ">Entra al sistema interno</a></p>";
     html += "</div></div>";
     return html;
+  }
+
+  /* Al entrar con una contraseña temporal hay que cambiarla antes de seguir:
+     la que entregó la planta la conocen dos personas. */
+  function formCambiarClave(obligatorio) {
+    const pol = Auth.politica("proveedor");
+    UI.abrirFormulario(obligatorio ? "Crea tu contraseña" : "Cambiar contraseña", [
+      { tipo: "html", contenido: '<p class="modal-nota">' + (obligatorio
+        ? "Estás usando la contraseña temporal que te dio la planta. Crea la tuya para continuar."
+        : "Elige una contraseña nueva para este acceso.") + "</p>" },
+      { nombre: "nueva", etiqueta: pol.nombre + " nueva", tipo: "password", requerido: true,
+        ayuda: pol.ayuda,
+        validar: function (v) { return Auth.revisar(v, "proveedor"); } },
+      { nombre: "repetir", etiqueta: "Repítela", tipo: "password", requerido: true,
+        validar: function (v, d) { return v === d.nueva ? null : "Las dos no coinciden."; } }
+    ], function (d) {
+      Auth.crearCredencial(d.nueva).then(function (cred) {
+        DB.update("usuarios", usuario.id, { credencial: cred, debeCambiar: false });
+        usuario = DB.get("usuarios", usuario.id);
+        DB.registrarBitacora(usuario.id, "Cambio de contraseña", usuario.nombre);
+        UI.aviso("Contraseña actualizada.");
+        render();
+      });
+    }, { aceptar: "Guardar contraseña" });
   }
 
   /* =============================== render ============================= */
@@ -587,7 +620,9 @@
       '<div class="portal-marca"><span aria-hidden="true">🚜</span>' +
       "<div><strong>Portal del Proveedor</strong><small>" + esc(miProveedor().nombre) +
       "</small></div></div>" +
-      '<button class="btn btn-plano btn-sm" id="btnSalir">Salir</button></header>';
+      '<div class="portal-acciones">' +
+      '<button class="btn btn-plano btn-sm" id="btnClave" title="Cambiar contraseña">🔑</button>' +
+      '<button class="btn btn-plano btn-sm" id="btnSalir">Salir</button></div></header>';
 
     html += '<main id="contenido" tabindex="-1">';
     if (vista === "inicio") html += vistaInicio();
@@ -612,22 +647,41 @@
   function enlazarAcceso() {
     const form = $("#formAcceso");
     const error = $("#accesoError");
+    const boton = $("#btnEntrar");
     UI.vigilarFormulario(form);
+
+    const ver = $("#verClave");
+    if (ver) {
+      ver.addEventListener("click", function () {
+        const campo = $("#clave");
+        const oculto = campo.type === "password";
+        campo.type = oculto ? "text" : "password";
+        ver.setAttribute("aria-label", oculto ? "Ocultar la contraseña" : "Mostrar la contraseña");
+        campo.focus();
+      });
+    }
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      const r = entrar(form.proveedorId.value, form.nombre.value);
-      if (r.error) { error.textContent = r.error; error.hidden = false; return; }
-      render();
-      UI.aviso("Bienvenido, " + usuario.nombre + ".");
-    });
+      error.hidden = true;
+      boton.disabled = true;
+      boton.textContent = "Comprobando…";
 
-    $$(".demo").forEach(function (b) {
-      b.addEventListener("click", function () {
-        form.proveedorId.value = b.dataset.prov;
-        form.nombre.value = b.dataset.nombre;
-        form.querySelector("button[type=submit]").focus();
-      });
+      entrar(form.acceso.value, form.clave.value, $("#recordar").checked)
+        .then(function (r) {
+          if (r.error) {
+            error.textContent = r.error;
+            error.hidden = false;
+            boton.disabled = false;
+            boton.textContent = "Entrar";
+            $("#clave").value = "";
+            $("#clave").focus();
+            return;
+          }
+          render();
+          UI.aviso("Bienvenido, " + usuario.nombre + ".");
+          if (r.debeCambiar) formCambiarClave(true);
+        });
     });
   }
 
@@ -651,6 +705,9 @@
 
     const salirBtn = $("#btnSalir");
     if (salirBtn) salirBtn.addEventListener("click", salir);
+
+    const claveBtn = $("#btnClave");
+    if (claveBtn) claveBtn.addEventListener("click", function () { formCambiarClave(false); });
   }
 
   /* ============================== arranque ============================ */
@@ -708,8 +765,14 @@
     /* Al conectar cambian los datos, pero si la persona ya está llenando el
        acceso NO se repinta: seria borrarle lo escrito justo antes de entrar. */
     DB.conectar(repintarPorSincronizacion).then(function () {
+      return DB.sembrarCredenciales();
+    }).then(function () {
       marcarConectado();
       UI.repintarSiSeguro(render, function () { UI.repintarSiSeguro(render); });
+    }).catch(function (e) {
+      console.warn("Fallo al preparar el acceso:", e);
+      marcarConectado();
+      UI.repintarSiSeguro(render);
     });
   }
 

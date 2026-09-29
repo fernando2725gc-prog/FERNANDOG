@@ -35,7 +35,36 @@ Además, en la ficha de su lote el proveedor ve **solo las causas de merma de or
 «Campo»** — las que dependen de él. Las causas internas de planta (CR7 layout, CR8
 sopleteado) no se le atribuyen ni se le muestran.
 
-## 2. Estructura
+## 2. Acceso y credenciales
+
+Cada persona tiene su propia cuenta. **Las contraseñas no se guardan**: se guarda el
+resultado de derivarlas con **PBKDF2-SHA256**, 150 000 iteraciones y una sal distinta por
+persona, así que dos cuentas con la misma contraseña producen hashes distintos y desde el
+almacén no se puede llegar a la clave. Por eso una clave olvidada se **restablece**, nunca
+se consulta.
+
+| Rol | Entra con | Política | Por qué |
+|---|---|---|---|
+| Proveedor | Código `PRV-00X` + contraseña | 6+ caracteres | El código va impreso en su papelería |
+| Recepción | Usuario + **PIN** | 4-8 dígitos | Terminal compartido, con guantes |
+| Producción | Usuario + **PIN** | 4-8 dígitos | Ídem |
+| Supervisor | Usuario + contraseña | 8+ caracteres | Edita parámetros y cierra lotes |
+
+**Alta de un proveedor.** Supervisión lo registra y el sistema crea a la vez su acceso al
+portal con una **clave temporal** que se muestra **una sola vez**, para dictarla por
+teléfono o imprimirla (sin caracteres confundibles: ni `O`/`0` ni `l`/`1`). Al entrar por
+primera vez el proveedor **debe cambiarla**.
+
+**Practicidad.** El portal ofrece *no cerrar sesión en este teléfono* (30 días), porque
+teclear una contraseña en cada envío haría que el proveedor abandone la aplicación. El
+sistema interno lo ofrece desmarcado, porque sus terminales son compartidos. Tras 5
+intentos fallidos la cuenta espera un minuto.
+
+**Lo que el sistema NO revela:** el mensaje de error es el mismo para un código que no
+existe y para una contraseña equivocada. Si se distinguieran, se podría averiguar qué
+códigos de proveedor existen.
+
+## 3. Estructura
 
 ```
 app/
@@ -56,7 +85,7 @@ app/
 
 Sin dependencias, sin build, sin conexión a internet.
 
-## 3. El ciclo del lote
+## 4. El ciclo del lote
 
 ```
   PROVEEDOR          RECEPCIÓN         PRODUCCIÓN          SUPERVISOR
@@ -80,7 +109,7 @@ envío; no se procesa más de lo recibido; lo exportable no supera lo procesado;
 **balance de masa** de las mermas debe cuadrar con `(procesado − exportable) × 11 kg`;
 un lote cerrado no admite cambios.
 
-## 4. Indicadores
+## 5. Indicadores
 
 Tres familias, en `core/indicadores.js`.
 
@@ -112,7 +141,7 @@ Tres familias, en `core/indicadores.js`.
 | Productividad | `cajas procesadas ÷ horas-hombre` |
 | Ciclo del lote | `promedio(fecha cierre − fecha anuncio)` |
 
-## 5. Planificación diaria
+## 6. Planificación diaria
 
 El módulo que se demuestra en la defensa. Entradas: fecha, horas de turno, operarios y
 eficiencia; y las cajas comprometidas por línea.
@@ -129,7 +158,7 @@ operarios necesarios       = tiempo requerido ÷ minutos netos por operario
 Avisa si el plan no cabe en el turno, cuántos operarios faltan, y si falta materia prima
 en cámara para alguna línea. El plan se guarda y se exporta a CSV.
 
-## 6. Datos del TIC ya cargados
+## 7. Datos del TIC ya cargados
 
 | Dato | Valor | Origen |
 |---|---|---|
@@ -160,7 +189,7 @@ Los reportes impresos llevan la leyenda al pie.
 - Los **destinos del descarte** son una jerarquía de valorización razonable, no la de FLP.
   Edítalos en *Parámetros*.
 
-## 7. Versión publicada
+## 8. Versión publicada
 
 Las dos aplicaciones se publican en **una sola dirección con dos puertas**:
 
@@ -177,7 +206,7 @@ En el repositorio siguen siendo dos aplicaciones independientes (`proveedor/` e
 cada una expone `iniciar()` en vez de arrancar sola, y los enlaces entre ellas se resuelven
 con `UI.rutaOtraApp()`.
 
-## 8. Cómo ejecutarlo
+## 9. Cómo ejecutarlo
 
 ```bash
 python3 -m http.server 8000
@@ -186,15 +215,27 @@ python3 -m http.server 8000
 
 Recorrido completo de la demostración:
 
-1. **Portal** (`Marta Cedeño`) → anuncia un envío en cajas.
-2. **Planta / Recepción** (`Diego Andrade`) → el lote aparece en la cola; pesa y verifica.
-3. **Planta / Producción** (`Carlos Mendoza`) → registra exportable y reparte la merma por
+Cuentas de la demostración:
+
+| Aplicación | Usuario | Clave | Quién es |
+|---|---|---|---|
+| Portal | `PRV-001` | `pitahaya2026` | Marta Cedeño — Finca La Esperanza |
+| Portal | `PRV-002` | `granadilla2026` | Luis Vera — Agrícola El Progreso |
+| Planta | `dandrade` | `4521` | Diego Andrade — Recepción |
+| Planta | `cmendoza` | `7734` | Carlos Mendoza — Producción |
+| Planta | `aquiroz` | `supervision2026` | Ing. Andrea Quiroz — Supervisor |
+
+Recorrido:
+
+1. **Portal** (`PRV-001`) → anuncia un envío en cajas, con su peso estimado.
+2. **Planta / Recepción** (`dandrade`) → el lote aparece en la cola; cuenta y pesa.
+3. **Planta / Producción** (`cmendoza`) → registra exportable y reparte la merma por
    causa raíz y destino; el balance de masa no deja guardar si no cuadra.
-4. **Planta / Supervisor** (`Ing. Andrea Quiroz`) → indicadores, planificación diaria,
-   cierre del lote y publicación del reporte.
+4. **Planta / Supervisor** (`aquiroz`) → indicadores, planificación diaria, cierre del
+   lote, y alta de un proveedor nuevo con su acceso.
 5. Vuelve al **portal**: el proveedor ya ve el resultado de su lote.
 
-## 9. Dónde se guardan los datos
+## 10. Dónde se guardan los datos
 
 **Modo compartido** (versión publicada): las dos aplicaciones escriben en el mismo
 almacén; los cambios llegan en vivo sin recargar. Un documento por lote, producción,
@@ -205,7 +246,7 @@ bitácora agregada y podada a 200 movimientos.
 `flp.db.v4`. Persiste en ese equipo pero no se comparte. El pie del menú indica siempre
 en qué modo está.
 
-## 10. Migrar a un backend real
+## 11. Migrar a un backend real
 
 Todo el acceso a datos pasa por `core/db.js`. Modelo relacional sugerido:
 
@@ -235,22 +276,26 @@ La restricción del balance de masa
 (`Σ merma_detalle.kg = (cajas_procesadas − cajas_exportables) × peso_caja_kg`)
 debe replicarse en el servidor: la validación del navegador no basta.
 
-## 11. Limitaciones conocidas
+## 12. Limitaciones conocidas
 
-1. **No hay autenticación.** Se entra eligiendo rol y escribiendo un nombre. Cómodo para
-   planta, pero cualquiera puede declararse de cualquier rol. Producción requiere
-   autenticación en servidor con hash (bcrypt/Argon2).
+1. **La contraseña se comprueba en el navegador, no en un servidor.** El hash es real
+   (PBKDF2-SHA256, sal por persona), pero quien pueda leer el almacén ve los hashes y
+   podría intentar adivinarlos sin conexión. Basta para que nadie entre haciéndose pasar
+   por otro en planta —que es el problema práctico— pero un despliegue real debe verificar
+   la contraseña en el servidor y no exponer nunca los hashes al cliente.
 2. **Los permisos se aplican en el cliente.** Guían el proceso; no contienen a un usuario
    malintencionado. El aislamiento entre proveedores está en la capa de datos, pero
    también del lado del navegador.
-3. **Escrituras «gana el último».** Sin bloqueo de registros: si dos personas pesan el
+3. **Sin recuperación automática de contraseña.** No hay correo ni SMS: la restablece
+   Supervisión. Es una decisión, no un olvido — en planta es más fiable que un enlace.
+4. **Escrituras «gana el último».** Sin bloqueo de registros: si dos personas pesan el
    mismo lote a la vez, queda el valor del que guardó después.
-4. **Los datos de demostración son simulados**, con semilla fija para que las capturas del
+5. **Los datos de demostración son simulados**, con semilla fija para que las capturas del
    documento sean reproducibles. Reemplazar por datos reales antes de concluir nada.
-5. **Confidencialidad.** La empresa está bajo acuerdo de confidencialidad: cuidado con
+6. **Confidencialidad.** La empresa está bajo acuerdo de confidencialidad: cuidado con
    dónde se publica una versión que lleve su nombre y sus parámetros reales.
 
-## 12. Pruebas
+## 13. Pruebas
 
 Dos suites en Chromium con Playwright. **22 comprobaciones** sobre las aplicaciones
 separadas que recorren las dos
@@ -260,6 +305,12 @@ recargar, tasa y eficiencia contra el estudio de tiempos, balance de masa (inclu
 casos que *deben* fallar), Pareto por causa raíz, planificador con takt time y detección
 de sobrecarga, catálogos editables con M/E/S, cierre del lote y reporte al proveedor sin
 exponerle causas internas de planta.
+
+**16 comprobaciones de autenticación**: que la contraseña no quede escrita en el almacén,
+que dos cuentas con la misma clave den hashes distintos, que rechace la clave equivocada,
+que no revele si un código existe, que un proveedor no entre con credencial de planta, que
+frene la adivinación, que la sesión se recuerde, que Supervisión pueda crear un acceso y
+entregarlo una sola vez, y que la clave temporal deje de servir en cuanto se cambia.
 
 Y **8 comprobaciones** sobre el paquete publicado: las dos puertas, el almacén compartido
 activo, un envío anunciado desde el celular apareciendo en la cola de la planta, el pesaje

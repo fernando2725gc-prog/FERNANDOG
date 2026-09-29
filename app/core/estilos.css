@@ -889,6 +889,42 @@ textarea { resize: vertical; }
 .rep-fila { display: grid; grid-template-columns: 1.4fr 90px 1.4fr auto; gap: .4rem; align-items: center; }
 .rep-fila select, .rep-fila input { width: 100%; min-width: 0; }
 
+/* ============================ credenciales ============================ */
+
+.campo-clave { display: flex; gap: .4rem; align-items: stretch; }
+.campo-clave input { flex: 1; min-width: 0; }
+.ver-clave {
+  flex: 0 0 auto; width: 46px; font-size: 1.05rem; cursor: pointer;
+  background: var(--superficie-2); border: 1px solid var(--borde);
+  border-radius: 7px; color: var(--texto-tenue);
+}
+.ver-clave:hover { border-color: var(--verde); color: var(--verde); }
+.check-recordar { margin: .2rem 0 .3rem; font-size: .86rem; }
+.acceso-ayuda {
+  margin: 1rem 0 0; font-size: .8rem; color: var(--texto-tenue); line-height: 1.45;
+}
+
+/* La clave temporal se enseña una sola vez: tiene que poder dictarse por
+   teléfono e imprimirse sin ambigüedad. */
+.credencial { padding: .3rem 0; }
+.credencial-datos {
+  display: grid; grid-template-columns: auto 1fr; gap: .6rem 1rem;
+  background: var(--verde-suave); border-radius: 10px;
+  padding: 1rem 1.2rem; margin: 1rem 0; align-items: center;
+}
+.credencial-datos dt { color: var(--texto-tenue); font-size: .82rem; }
+.credencial-datos dd { margin: 0; }
+.credencial-datos code {
+  font-size: 1.3rem; font-weight: 600; letter-spacing: .06em;
+  user-select: all; word-break: break-all;
+}
+.credencial-nota {
+  font-size: .84rem; color: var(--texto-tenue);
+  border-left: 3px solid var(--regular); padding-left: .7rem;
+}
+
+.portal-acciones { display: flex; gap: .35rem; align-items: center; }
+
 /* ===================== estado de conexión en el acceso ================ */
 
 .conexion {

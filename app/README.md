@@ -67,6 +67,13 @@ proveedor vuelve a elegir una nueva por el mismo camino. Tampoco ahí se dicta n
 Los **usuarios internos** sí reciben una clave temporal de un solo uso, porque Supervisión
 se los crea en persona dentro de la planta.
 
+**Cómo entrar sin saber nada.** La propia pantalla de acceso ofrece las cuentas de
+prueba: se despliega *«¿Estás probando el sistema?»*, se pulsa una y el formulario queda
+relleno. Cada cuenta se **verifica contra su credencial guardada** antes de ofrecerse, así
+que en cuanto alguien cambia una clave esa cuenta desaparece de la lista sola — y en un
+despliegue con usuarios reales la lista sale vacía. Rellenar no es entrar: la contraseña
+viaja igual por la comprobación, y borrarla antes de pulsar Entrar deja fuera.
+
 **Practicidad.** El portal ofrece *no cerrar sesión en este teléfono* (30 días), porque
 teclear una contraseña en cada envío haría que el proveedor abandone la aplicación. El
 sistema interno lo ofrece desmarcado, porque sus terminales son compartidos. Tras 5
@@ -322,6 +329,10 @@ recargar, tasa y eficiencia contra el estudio de tiempos, balance de masa (inclu
 casos que *deben* fallar), Pareto por causa raíz, planificador con takt time y detección
 de sobrecarga, catálogos editables con M/E/S, cierre del lote y reporte al proveedor sin
 exponerle causas internas de planta.
+
+**7 comprobaciones de primera entrada**: que la pantalla ofrezca cuentas, que al pulsarlas
+quede listo el formulario, que se entre sin conocimiento previo, que la planta no ofrezca
+cuentas de proveedor y que una cuenta con la clave cambiada deje de ofrecerse.
 
 **18 comprobaciones de autenticación**: que la contraseña no quede escrita en el almacén,
 que dos cuentas con la misma clave den hashes distintos, que rechace la clave equivocada,

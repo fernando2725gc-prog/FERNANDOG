@@ -564,7 +564,7 @@
       '<p class="form-error" id="accesoError" role="alert" hidden></p>' +
       estadoConexionHTML() +
       '<button type="submit" class="btn btn-primario btn-ancho btn-grande" id="btnEntrar">Entrar</button>' +
-      "</form>";
+      "</form>" + demoHTML();
 
     html += '<p class="acceso-ayuda">¿Es tu primera vez? ' +
       '<button type="button" class="enlace" id="btnActivar">Activa tu cuenta aquí</button>' +
@@ -707,6 +707,14 @@
     const activar = $("#btnActivar");
     if (activar) activar.addEventListener("click", formActivar);
 
+    $$(".demo").forEach(function (b) {
+      b.addEventListener("click", function () {
+        $("#acceso").value = b.dataset.usr;
+        $("#clave").value = b.dataset.clave;
+        $("#btnEntrar").focus();
+      });
+    });
+
     const ver = $("#verClave");
     if (ver) {
       ver.addEventListener("click", function () {
@@ -787,6 +795,26 @@
     }, 200);
   }
 
+
+  /* Las cuentas de prueba se enseñan DENTRO de la aplicación. Tenerlas solo
+     en la documentación deja a quien abre la app sin saber qué escribir. */
+  let demo = [];
+
+  function demoHTML() {
+    if (!demo.length) return "";
+    let h = '<details class="demo-cuentas"><summary>¿Estás probando el sistema? ' +
+      "Cuentas de demostración</summary><ul>";
+    demo.forEach(function (c) {
+      h += '<li><button type="button" class="demo" data-usr="' + esc(c.usuario) +
+        '" data-clave="' + esc(c.clave) + '">' + esc(c.usuario) + "</button>" +
+        '<span><strong>' + esc(c.nombre) + "</strong>" +
+        (c.detalle ? " · " + esc(c.detalle) : "") + "</span></li>";
+    });
+    h += "</ul><p>Al pulsar una se rellena el formulario. Desaparecen solas " +
+      "en cuanto se cambian sus claves.</p></details>";
+    return h;
+  }
+
   /* La pantalla de acceso avisa de que está conectando: sin esto, la espera
      parece que la aplicación no responde. */
   let conectado = false;
@@ -824,6 +852,9 @@
     DB.conectar(repintarPorSincronizacion).then(function () {
       return DB.sembrarCredenciales();
     }).then(function () {
+      return DB.cuentasDemo(["proveedor"]);
+    }).then(function (lista) {
+      demo = lista;
       marcarConectado();
       UI.repintarSiSeguro(render, function () { UI.repintarSiSeguro(render); });
     }).catch(function (e) {

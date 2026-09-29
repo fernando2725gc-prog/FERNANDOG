@@ -1853,7 +1853,7 @@
       '<p class="form-error" id="accesoError" role="alert" hidden></p>' +
       estadoConexionHTML() +
       '<button type="submit" class="btn btn-primario btn-ancho btn-grande" id="btnEntrar">Entrar</button>' +
-      "</form>";
+      "</form>" + demoHTML();
 
     html += '<p class="acceso-ayuda">Recepción y Producción entran con PIN; Supervisión, ' +
       "con contraseña. Si la olvidaste, Supervisión puede regenerarla.</p>";
@@ -2008,6 +2008,14 @@
     const error = $("#accesoError");
     const boton = $("#btnEntrar");
     UI.vigilarFormulario(form);
+
+    $$(".demo").forEach(function (b) {
+      b.addEventListener("click", function () {
+        $("#acceso").value = b.dataset.usr;
+        $("#clave").value = b.dataset.clave;
+        $("#btnEntrar").focus();
+      });
+    });
 
     const ver = $("#verClave");
     if (ver) {
@@ -2333,6 +2341,26 @@
     }, 200);
   }
 
+
+  /* Las cuentas de prueba se enseñan DENTRO de la aplicación. Tenerlas solo
+     en la documentación deja a quien abre la app sin saber qué escribir. */
+  let demo = [];
+
+  function demoHTML() {
+    if (!demo.length) return "";
+    let h = '<details class="demo-cuentas"><summary>¿Estás probando el sistema? ' +
+      "Cuentas de demostración</summary><ul>";
+    demo.forEach(function (c) {
+      h += '<li><button type="button" class="demo" data-usr="' + esc(c.usuario) +
+        '" data-clave="' + esc(c.clave) + '">' + esc(c.usuario) + "</button>" +
+        '<span><strong>' + esc(c.nombre) + "</strong>" +
+        (c.detalle ? " · " + esc(c.detalle) : "") + "</span></li>";
+    });
+    h += "</ul><p>Al pulsar una se rellena el formulario. Desaparecen solas " +
+      "en cuanto se cambian sus claves.</p></details>";
+    return h;
+  }
+
   /* La pantalla de acceso avisa de que está conectando: sin esto, la espera
      parece que la aplicación no responde. */
   let conectado = false;
@@ -2370,7 +2398,9 @@
     /* Al conectar cambian los datos, pero si la persona ya está llenando el
        acceso NO se repinta: seria borrarle lo escrito justo antes de entrar. */
     DB.conectar(repintarPorSincronizacion).then(function (m) {
-      return DB.sembrarCredenciales().then(function () { return m; });
+      return DB.sembrarCredenciales()
+        .then(function () { return DB.cuentasDemo(ROLES_INTERNOS); })
+        .then(function (lista) { demo = lista; return m; });
     }).then(function (m) {
       marcarConectado();
       UI.repintarSiSeguro(render, function () { UI.repintarSiSeguro(render); });

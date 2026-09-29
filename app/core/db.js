@@ -230,6 +230,25 @@ const DB = (function () {
     });
   }
 
+  /* Cuentas de la demostración que TODAVÍA tienen su clave original. Se
+     comprueba de verdad contra la credencial guardada: si alguien la cambió,
+     esa cuenta deja de aparecer en vez de mostrar una clave que ya no sirve.
+     En un despliegue con usuarios reales la lista sale vacía sola. */
+  async function cuentasDemo(rolesPermitidos) {
+    const candidatos = all("usuarios").filter(function (u) {
+      return CLAVES_DEMO[u.id] && u.credencial && u.activo &&
+        (!rolesPermitidos || rolesPermitidos.indexOf(u.rol) !== -1);
+    });
+    const validas = await Promise.all(candidatos.map(async function (u) {
+      const sirve = await Auth.verificar(CLAVES_DEMO[u.id], u.credencial);
+      return sirve ? {
+        nombre: u.nombre, usuario: u.usuario, clave: CLAVES_DEMO[u.id], rol: u.rol,
+        detalle: u.proveedorId ? (get("proveedores", u.proveedorId) || {}).nombre : null
+      } : null;
+    }));
+    return validas.filter(Boolean);
+  }
+
   /* Busca por nombre de acceso o por código de proveedor, sin distinguir
      mayúsculas: en el campo se escribe como venga. */
   function buscarPorAcceso(texto) {
@@ -786,6 +805,7 @@ const DB = (function () {
     destino: destino,
     linea: linea,
     sembrarCredenciales: sembrarCredenciales,
+    cuentasDemo: cuentasDemo,
     buscarPorAcceso: buscarPorAcceso,
     comprobarActivacion: comprobarActivacion,
     accesoLibre: accesoLibre,

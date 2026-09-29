@@ -934,6 +934,34 @@ textarea { resize: vertical; }
 .enlace:hover { color: var(--verde-claro); }
 .acceso-proveedor ~ * .enlace, .acceso-caja .enlace { color: var(--linea-1); }
 
+/* ===================== cuentas de demostración ======================== */
+
+.demo-cuentas {
+  margin-top: 1.1rem; padding-top: .9rem; border-top: 1px solid var(--borde);
+  font-size: .84rem;
+}
+.demo-cuentas summary {
+  cursor: pointer; color: var(--texto-tenue); font-weight: 600;
+  list-style: none; padding: .3rem 0;
+}
+.demo-cuentas summary::-webkit-details-marker { display: none; }
+.demo-cuentas summary::before { content: "▸ "; display: inline-block; transition: transform .15s; }
+.demo-cuentas[open] summary::before { content: "▾ "; }
+.demo-cuentas summary:hover { color: var(--texto); }
+.demo-cuentas ul { list-style: none; margin: .6rem 0 .5rem; padding: 0; display: grid; gap: .45rem; }
+.demo-cuentas li { display: flex; align-items: center; gap: .6rem; }
+.demo-cuentas li span { color: var(--texto-tenue); font-size: .8rem; min-width: 0; }
+.demo-cuentas li strong { color: var(--texto); font-weight: 600; }
+.demo-cuentas p { margin: 0; font-size: .76rem; color: var(--texto-tenue); line-height: 1.45; }
+.demo {
+  font: inherit; font-family: var(--fuente-datos); font-size: .82rem; font-weight: 600;
+  background: var(--verde-suave); color: var(--verde); border: 1px solid transparent;
+  border-radius: 6px; padding: .3rem .55rem; cursor: pointer; white-space: nowrap; flex: 0 0 auto;
+}
+.demo:hover { border-color: var(--verde); }
+.acceso-proveedor .demo { background: rgba(192, 36, 107, .12); color: var(--linea-1); }
+.acceso-proveedor .demo:hover { border-color: var(--linea-1); }
+
 /* ===================== estado de conexión en el acceso ================ */
 
 .conexion {

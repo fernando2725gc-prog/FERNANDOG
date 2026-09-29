@@ -30,6 +30,13 @@ const DB = (function () {
     return d.toISOString().slice(0, 10);
   }
 
+  /* El almacén entrega los documentos congelados y compartidos entre
+     entregas. Todo lo que entra al cache se copia: si no, cualquier
+     escritura posterior fallaría por intentar mutar algo inmutable. */
+  function copiar(x) {
+    return x === null || x === undefined ? x : JSON.parse(JSON.stringify(x));
+  }
+
   function sumarDias(fecha, n) {
     const d = new Date(fecha + "T12:00:00");
     d.setDate(d.getDate() + n);
@@ -213,11 +220,14 @@ const DB = (function () {
       return CLAVES_DEMO[u.id] && !u.credencial;
     });
     if (!pendientes.length) return;
-    await Promise.all(pendientes.map(async function (u) {
-      u.credencial = await Auth.crearCredencial(CLAVES_DEMO[u.id]);
+    const credenciales = await Promise.all(pendientes.map(function (u) {
+      return Auth.crearCredencial(CLAVES_DEMO[u.id]);
     }));
-    save();
-    if (esCompartido()) pendientes.forEach(function (u) { empujar("usuarios", u); });
+    /* update() reemplaza el registro por una copia nueva, así que funciona
+       igual venga el original del almacén o de la semilla local. */
+    pendientes.forEach(function (u, i) {
+      update("usuarios", u.id, { credencial: credenciales[i] });
+    });
   }
 
   /* Busca por nombre de acceso o por código de proveedor, sin distinguir
@@ -228,6 +238,26 @@ const DB = (function () {
     return all("usuarios").find(function (u) {
       return String(u.usuario || "").toLowerCase() === t;
     }) || null;
+  }
+
+  /* Activación por el propio proveedor: se identifica con su código y su
+     documento, que es lo que la planta registró y él conoce de memoria.
+     Devuelve el usuario si todo cuadra, o el motivo por el que no. */
+  function comprobarActivacion(codigo, documento) {
+    const u = buscarPorAcceso(codigo);
+    if (!u || u.rol !== "proveedor") return { error: "no-coincide" };
+    if (u.credencial) return { error: "ya-activa" };
+
+    const prov = get("proveedores", u.proveedorId);
+    if (!prov) return { error: "no-coincide" };
+    if (!prov.activo) return { error: "inactivo" };
+
+    /* Se comparan solo los dígitos: da igual si escribe guiones o espacios. */
+    const limpia = function (x) { return String(x || "").replace(/\D/g, ""); };
+    if (!limpia(documento) || limpia(documento) !== limpia(prov.documento)) {
+      return { error: "no-coincide" };
+    }
+    return { usuario: u, proveedor: prov };
   }
 
   function accesoLibre(usuario, exceptoId) {
@@ -501,13 +531,13 @@ const DB = (function () {
 
         const db = load();
         COLECCIONES.forEach(function (c, i) {
-          db[c] = paginas[i].docs.map(function (d) { return d.data(); });
+          db[c] = paginas[i].docs.map(function (d) { return copiar(d.data()); });
         });
         if (cfg.exists) {
-          const datos = cfg.data();
+          const datos = copiar(cfg.data());
           CONFIG.forEach(function (k) { if (datos[k]) db[k] = datos[k]; });
         }
-        db.bitacora = bit.exists ? (bit.data().entradas || []) : [];
+        db.bitacora = bit.exists ? copiar(bit.data().entradas || []) : [];
       }
 
       modo = "compartido";
@@ -557,21 +587,21 @@ const DB = (function () {
   function escuchar(alCambiar) {
     COLECCIONES.forEach(function (c) {
       suscripciones.push(remoto.collection(c).onSnapshot(function (snap) {
-        load()[c] = snap.docs.map(function (d) { return d.data(); });
+        load()[c] = snap.docs.map(function (d) { return copiar(d.data()); });
         if (alCambiar) alCambiar(c);
       }, function (err) { console.warn("Suscripción interrumpida en " + c + ":", err.code); }));
     });
 
     suscripciones.push(remoto.doc("sistema/config").onSnapshot(function (snap) {
       if (!snap.exists) return;
-      const datos = snap.data();
+      const datos = copiar(snap.data());
       const db = load();
       CONFIG.forEach(function (k) { if (datos[k]) db[k] = datos[k]; });
       if (alCambiar) alCambiar("config");
     }, function (err) { console.warn("Suscripción interrumpida en config:", err.code); }));
 
     suscripciones.push(remoto.doc("sistema/bitacora").onSnapshot(function (snap) {
-      load().bitacora = snap.exists ? (snap.data().entradas || []) : [];
+      load().bitacora = snap.exists ? copiar(snap.data().entradas || []) : [];
       if (alCambiar) alCambiar("bitacora");
     }, function (err) { console.warn("Suscripción interrumpida en bitácora:", err.code); }));
   }
@@ -664,6 +694,7 @@ const DB = (function () {
   function insert(coleccion, registro) {
     const db = load();
     if (!registro.id) registro.id = uid(coleccion.slice(0, 2));
+    registro = copiar(registro);
     db[coleccion].push(registro);
     save();
     empujar(coleccion, registro);
@@ -694,7 +725,7 @@ const DB = (function () {
 
   function guardarParametros(cambios) {
     const db = load();
-    db.parametros = Object.assign({}, db.parametros, cambios);
+    db.parametros = Object.assign({}, copiar(db.parametros), cambios);
     save();
     empujarConfig();
     return db.parametros;
@@ -714,14 +745,13 @@ const DB = (function () {
 
   function registrarBitacora(usuarioId, accion, detalle) {
     const db = load();
-    db.bitacora.unshift({
+    db.bitacora = [{
       id: uid("bt"),
       fecha: new Date().toISOString(),
       usuarioId: usuarioId,
       accion: accion,
       detalle: detalle
-    });
-    db.bitacora = db.bitacora.slice(0, 200);
+    }].concat(db.bitacora).slice(0, 200);
     save();
     empujarBitacora(db.bitacora);
   }
@@ -757,6 +787,7 @@ const DB = (function () {
     linea: linea,
     sembrarCredenciales: sembrarCredenciales,
     buscarPorAcceso: buscarPorAcceso,
+    comprobarActivacion: comprobarActivacion,
     accesoLibre: accesoLibre,
     registrarBitacora: registrarBitacora,
     conectar: conectar,

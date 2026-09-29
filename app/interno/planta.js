@@ -1559,8 +1559,10 @@
           return u.rol === "proveedor" && u.proveedorId === p.id;
         });
         if (!acc) return '<span class="etq etq-bajo">Sin acceso</span>';
-        return "<code>" + esc(acc.usuario) + "</code>" +
-          (acc.debeCambiar ? ' <span class="etq etq-B">temporal</span>' : ""); } },
+        return "<code>" + esc(acc.usuario) + "</code> " +
+          (acc.credencial
+            ? '<span class="etq etq-ok">activa</span>'
+            : '<span class="etq etq-B">sin activar</span>'); } },
       { titulo: "Estado", valor: function (p) {
         return '<span class="estado estado-' + (p.activo ? "recibido" : "inactivo") + '">' +
           (p.activo ? "Activo" : "Inactivo") + "</span>"; } },
@@ -1569,7 +1571,12 @@
           return u.rol === "proveedor" && u.proveedorId === p.id;
         });
         let b = '<button class="btn-mini" data-editar-prov="' + esc(p.id) + '">Editar</button>';
-        if (acc) b += '<button class="btn-mini" data-clave-usr="' + esc(acc.id) + '">Nueva clave</button>';
+        if (acc) {
+          b += '<button class="btn-mini" data-invitar="' + esc(acc.id) + '">Ver acceso</button>';
+          if (acc.credencial) {
+            b += '<button class="btn-mini" data-clave-usr="' + esc(acc.id) + '">Reactivar</button>';
+          }
+        }
         b += '<button class="btn-mini" data-toggle-prov="' + esc(p.id) + '">' +
           (p.activo ? "Desactivar" : "Activar") + "</button>";
         return b; } }
@@ -1602,32 +1609,51 @@
         UI.aviso("Proveedor actualizado.");
         render();
       } else {
-        /* El alta crea a la vez el proveedor y su acceso al portal, con una
-           clave temporal que se entrega una sola vez. */
+        /* El alta crea el proveedor y su código de acceso. No se genera
+           ninguna contraseña: el proveedor la crea él mismo al activar, así
+           no hay claves que dictar ni que se queden circulando. */
         const n = DB.all("proveedores").length + 1;
         const codigo = "PRV-" + String(n).padStart(3, "0");
         const prov = DB.insert("proveedores", Object.assign({
           codigo: codigo, fechaAlta: DB.hoy()
         }, d));
-        const temporal = Auth.claveTemporal("proveedor");
 
-        Auth.crearCredencial(temporal).then(function (cred) {
-          DB.insert("usuarios", {
-            nombre: d.contacto, usuario: codigo, rol: "proveedor",
-            proveedorId: prov.id, activo: true, credencial: cred,
-            debeCambiar: true, fechaAlta: DB.hoy(), creadoPor: usuario.id
-          });
-          DB.registrarBitacora(usuario.id, "Alta de proveedor",
-            d.nombre + " · acceso " + codigo);
-          mostrarCredencial(prov.nombre, codigo, temporal, "proveedor");
-          render();
+        DB.insert("usuarios", {
+          nombre: d.contacto, usuario: codigo, rol: "proveedor",
+          proveedorId: prov.id, activo: true, credencial: null,
+          pendienteActivacion: true, debeCambiar: false,
+          fechaAlta: DB.hoy(), creadoPor: usuario.id
         });
+        DB.registrarBitacora(usuario.id, "Alta de proveedor",
+          d.nombre + " · código " + codigo);
+        mostrarInvitacion(prov, codigo);
+        render();
       }
     });
   }
 
   /* La clave temporal se enseña una sola vez, para dictarla o imprimirla.
      Después solo queda su hash, así que no hay forma de recuperarla. */
+  /* Lo que se entrega al proveedor no es una clave, son instrucciones: su
+     código y con qué identificarse. Puede repetirse cuantas veces haga
+     falta, porque no hay nada secreto que se gaste. */
+  function mostrarInvitacion(prov, codigo) {
+    abrirPanel("Proveedor registrado", '<div class="credencial">' +
+      "<p>Entrega estos datos a <strong>" + esc(prov.nombre) + "</strong>. " +
+      "Él creará su propia contraseña la primera vez que entre — aquí no se " +
+      "genera ninguna.</p>" +
+      '<dl class="credencial-datos">' +
+      "<dt>Código de proveedor</dt><dd><code>" + esc(codigo) + "</code></dd>" +
+      "<dt>Se identifica con</dt><dd><code>" + esc(prov.documento) + "</code>" +
+      '<br><small class="tenue">su RUC o cédula, el mismo que registraste</small></dd>' +
+      "</dl>" +
+      '<p class="credencial-nota">En el portal elige <strong>«Activa tu cuenta ' +
+      "aquí»</strong>, escribe esos dos datos y define su contraseña. " +
+      "Puedes volver a consultar el código cuando quieras: no es secreto.</p></div>", true);
+  }
+
+  /* La clave temporal de un usuario interno sí se enseña una sola vez: se
+     entrega en persona, dentro de la planta. */
   function mostrarCredencial(titular, acceso, clave, rol) {
     const pol = Auth.politica(rol);
     abrirPanel("Acceso creado", '<div class="credencial">' +
@@ -1658,7 +1684,7 @@
         ayuda: "Recepción y Producción reciben un PIN; Supervisión, una contraseña." }
     ], function (d) {
       const temporal = Auth.claveTemporal(d.rol);
-      Auth.crearCredencial(temporal).then(function (cred) {
+      return Auth.crearCredencial(temporal).then(function (cred) {
         DB.insert("usuarios", {
           nombre: d.nombre, usuario: d.usuario.toLowerCase(), rol: d.rol,
           proveedorId: null, activo: true, credencial: cred, debeCambiar: true,
@@ -1675,6 +1701,21 @@
   function restablecerClave(usuarioId) {
     const u = DB.get("usuarios", usuarioId);
     if (!u) return;
+
+    /* Al proveedor no se le inventa una clave: se le permite volver a
+       activarse y elegir la suya. Una clave menos que dictar por teléfono. */
+    if (u.rol === "proveedor") {
+      const prov = DB.get("proveedores", u.proveedorId);
+      if (!confirm("¿Permitir que " + (prov ? prov.nombre : u.nombre) +
+        " vuelva a crear su contraseña? La actual dejará de servir.")) return;
+      DB.update("usuarios", u.id, { credencial: null, pendienteActivacion: true });
+      DB.registrarBitacora(usuario.id, "Reactivación habilitada",
+        (prov ? prov.nombre : u.nombre) + " · " + u.usuario);
+      if (prov) mostrarInvitacion(prov, u.usuario);
+      render();
+      return;
+    }
+
     if (!confirm("¿Generar una clave temporal nueva para " + u.nombre +
       "? La anterior dejará de servir.")) return;
     const temporal = Auth.claveTemporal(u.rol);
@@ -1696,7 +1737,11 @@
       { titulo: "Usuario", valor: function (u) {
         return u.usuario ? "<code>" + esc(u.usuario) + "</code>" : '<span class="tenue">—</span>'; } },
       { titulo: "Acceso", valor: function (u) {
-        if (!u.credencial) return '<span class="etq etq-bajo">Sin clave</span>';
+        if (!u.credencial) {
+          return u.rol === "proveedor"
+            ? '<span class="etq etq-B">Pendiente de activar</span>'
+            : '<span class="etq etq-bajo">Sin clave</span>';
+        }
         if (u.debeCambiar) return '<span class="etq etq-B">Clave temporal</span>';
         return '<span class="etq etq-ok">Activa</span>'; } },
       { titulo: "Último ingreso", valor: function (u) {
@@ -1832,9 +1877,10 @@
           return String(v) === String(d.nueva) ? null : "Las dos no coinciden.";
         } }
     ], function (d) {
-      Auth.crearCredencial(String(d.nueva)).then(function (cred) {
-        DB.update("usuarios", usuario.id, { credencial: cred, debeCambiar: false });
-        usuario = DB.get("usuarios", usuario.id);
+      const id = usuario.id;
+      return Auth.crearCredencial(String(d.nueva)).then(function (cred) {
+        DB.update("usuarios", id, { credencial: cred, debeCambiar: false });
+        if (usuario && usuario.id === id) usuario = DB.get("usuarios", id);
         DB.registrarBitacora(usuario.id, "Cambio de clave", usuario.nombre);
         UI.aviso(pol.nombre + " actualizada.");
         render();
@@ -2163,6 +2209,14 @@
     });
     const btnNuevoUsr = $("#btnNuevoUsuario");
     if (btnNuevoUsr) btnNuevoUsr.addEventListener("click", formUsuarioInterno);
+
+    $$("[data-invitar]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        const u = DB.get("usuarios", b.dataset.invitar);
+        const prov = u ? DB.get("proveedores", u.proveedorId) : null;
+        if (prov) mostrarInvitacion(prov, u.usuario);
+      });
+    });
 
     $$("[data-clave-usr]").forEach(function (b) {
       b.addEventListener("click", function () { restablecerClave(b.dataset.claveUsr); });

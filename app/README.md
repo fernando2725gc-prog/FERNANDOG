@@ -45,15 +45,27 @@ se consulta.
 
 | Rol | Entra con | Política | Por qué |
 |---|---|---|---|
-| Proveedor | Código `PRV-00X` + contraseña | 6+ caracteres | El código va impreso en su papelería |
+| Proveedor | Código `PRV-00X` + **su propia** contraseña | 6+ caracteres | La crea él al activarse; nadie se la dicta |
 | Recepción | Usuario + **PIN** | 4-8 dígitos | Terminal compartido, con guantes |
 | Producción | Usuario + **PIN** | 4-8 dígitos | Ídem |
 | Supervisor | Usuario + contraseña | 8+ caracteres | Edita parámetros y cierra lotes |
 
-**Alta de un proveedor.** Supervisión lo registra y el sistema crea a la vez su acceso al
-portal con una **clave temporal** que se muestra **una sola vez**, para dictarla por
-teléfono o imprimirla (sin caracteres confundibles: ni `O`/`0` ni `l`/`1`). Al entrar por
-primera vez el proveedor **debe cambiarla**.
+**Alta de un proveedor — sin claves que dictar.** Supervisión lo registra y el sistema
+genera su **código** (`PRV-00X`). No se crea ninguna contraseña. El proveedor entra al
+portal, elige *«Activa tu cuenta aquí»*, se identifica con **su código y su RUC o cédula**
+—el mismo con el que lo registraron— y **crea su propia contraseña**. Nadie más la conoce
+en ningún momento.
+
+Esto elimina el paso donde estas cosas se pierden: no hay clave temporal que dictar por
+teléfono, que se anote en un papel o que quede en un WhatsApp. El código no es secreto y
+Supervisión puede volver a consultarlo cuando quiera, porque por sí solo no sirve para
+entrar: hace falta el documento.
+
+**Si olvida la contraseña**, Supervisión habilita la reactivación con un clic y el
+proveedor vuelve a elegir una nueva por el mismo camino. Tampoco ahí se dicta nada.
+
+Los **usuarios internos** sí reciben una clave temporal de un solo uso, porque Supervisión
+se los crea en persona dentro de la planta.
 
 **Practicidad.** El portal ofrece *no cerrar sesión en este teléfono* (30 días), porque
 teclear una contraseña en cada envío haría que el proveedor abandone la aplicación. El
@@ -286,13 +298,18 @@ debe replicarse en el servidor: la validación del navegador no basta.
 2. **Los permisos se aplican en el cliente.** Guían el proceso; no contienen a un usuario
    malintencionado. El aislamiento entre proveedores está en la capa de datos, pero
    también del lado del navegador.
-3. **Sin recuperación automática de contraseña.** No hay correo ni SMS: la restablece
-   Supervisión. Es una decisión, no un olvido — en planta es más fiable que un enlace.
-4. **Escrituras «gana el último».** Sin bloqueo de registros: si dos personas pesan el
+3. **Sin recuperación automática de contraseña.** No hay correo ni SMS: Supervisión
+   habilita la reactivación y el proveedor elige una nueva. Es una decisión, no un olvido
+   — en planta es más fiable que un enlace que nadie abre.
+4. **La identidad se prueba con el documento registrado.** Quien conozca el código y el
+   RUC de un proveedor podría activar su cuenta antes que él. En un despliegue real
+   convendría añadir un segundo factor (un código al teléfono registrado) o que
+   Supervisión confirme la activación.
+5. **Escrituras «gana el último».** Sin bloqueo de registros: si dos personas pesan el
    mismo lote a la vez, queda el valor del que guardó después.
-5. **Los datos de demostración son simulados**, con semilla fija para que las capturas del
+6. **Los datos de demostración son simulados**, con semilla fija para que las capturas del
    documento sean reproducibles. Reemplazar por datos reales antes de concluir nada.
-6. **Confidencialidad.** La empresa está bajo acuerdo de confidencialidad: cuidado con
+7. **Confidencialidad.** La empresa está bajo acuerdo de confidencialidad: cuidado con
    dónde se publica una versión que lleve su nombre y sus parámetros reales.
 
 ## 13. Pruebas
@@ -306,7 +323,7 @@ casos que *deben* fallar), Pareto por causa raíz, planificador con takt time y 
 de sobrecarga, catálogos editables con M/E/S, cierre del lote y reporte al proveedor sin
 exponerle causas internas de planta.
 
-**16 comprobaciones de autenticación**: que la contraseña no quede escrita en el almacén,
+**18 comprobaciones de autenticación**: que la contraseña no quede escrita en el almacén,
 que dos cuentas con la misma clave den hashes distintos, que rechace la clave equivocada,
 que no revele si un código existe, que un proveedor no entre con credencial de planta, que
 frene la adivinación, que la sesión se recuerde, que Supervisión pueda crear un acceso y

@@ -192,6 +192,34 @@ const UI = (function () {
       }
       error.hidden = true;
       const resultado = onSubmit(datos);
+
+      /* Si el guardado es asíncrono —derivar una contraseña, por ejemplo— el
+         formulario NO se cierra hasta que termina. Cerrarlo antes deja la
+         operación en el aire: basta con que la persona salga enseguida para
+         que el cambio se pierda sin avisar. */
+      if (resultado && typeof resultado.then === "function") {
+        const boton = $("button[type=submit]", form);
+        const textoPrevio = boton.textContent;
+        boton.disabled = true;
+        boton.textContent = "Guardando…";
+        resultado.then(function (r) {
+          if (r && r.error) {
+            error.innerHTML = r.error;
+            error.hidden = false;
+            boton.disabled = false;
+            boton.textContent = textoPrevio;
+            return;
+          }
+          cerrar();
+        }).catch(function (e) {
+          error.textContent = "No se pudo guardar: " + (e && e.message ? e.message : "error inesperado");
+          error.hidden = false;
+          boton.disabled = false;
+          boton.textContent = textoPrevio;
+        });
+        return;
+      }
+
       if (resultado && resultado.error) {
         error.innerHTML = resultado.error;
         error.hidden = false;
@@ -486,15 +514,30 @@ const UI = (function () {
   /* Un repintado pedido por la propia persona sí puede seguir adelante. */
   function soltarFormulario() { formEnUso = false; }
 
-  /* Decide si es seguro repintar ahora. Si no lo es, vuelve a intentarlo
-     cuando el campo suelte el foco. Devuelve si repintó. */
+  /* Decide si es seguro repintar ahora. Si no lo es, lo aplaza — pero SIEMPRE
+     deja un reintento en marcha. Esperar solo al `blur` dejaba el cambio sin
+     llegar nunca si la persona no volvía a tocar nada: quien mira la pantalla
+     sin escribir tiene el mismo derecho a ver lo que pasó. */
+  let reintentoPendiente = null;
+
   function repintarSiSeguro(repintar, reintentar) {
+    const volver = function () { repintarSiSeguro(repintar, reintentar); };
+
     const activo = document.activeElement;
-    if (activo && /^(INPUT|SELECT|TEXTAREA)$/.test(activo.tagName)) {
-      if (reintentar) activo.addEventListener("blur", reintentar, { once: true });
+    const enCampo = activo && /^(INPUT|SELECT|TEXTAREA)$/.test(activo.tagName);
+
+    if (enCampo || formEnUso) {
+      if (enCampo) activo.addEventListener("blur", volver, { once: true });
+      if (!reintentoPendiente) {
+        reintentoPendiente = setTimeout(function () {
+          reintentoPendiente = null;
+          volver();
+        }, 2500);
+      }
       return false;
     }
-    if (formEnUso) return false;
+
+    if (reintentoPendiente) { clearTimeout(reintentoPendiente); reintentoPendiente = null; }
     repintar();
     return true;
   }

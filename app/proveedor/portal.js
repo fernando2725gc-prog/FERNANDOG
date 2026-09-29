@@ -45,7 +45,8 @@
         : generico };
     }
     if (!u.credencial) {
-      return { error: "Tu cuenta todavía no tiene contraseña. Pídela en la planta." };
+      return { error: "Tu cuenta aún no está activada. Usa «Activa tu cuenta aquí» " +
+        "para crear tu contraseña." };
     }
 
     const vale = await Auth.verificar(clave, u.credencial);
@@ -565,12 +566,62 @@
       '<button type="submit" class="btn btn-primario btn-ancho btn-grande" id="btnEntrar">Entrar</button>' +
       "</form>";
 
-    html += '<p class="acceso-ayuda">¿Olvidaste tu contraseña? La planta puede generarte ' +
-      "una nueva desde el sistema interno.</p>";
+    html += '<p class="acceso-ayuda">¿Es tu primera vez? ' +
+      '<button type="button" class="enlace" id="btnActivar">Activa tu cuenta aquí</button>' +
+      " — creas tu propia contraseña, nadie te la dicta.<br>" +
+      "¿La olvidaste? Pide en la planta que habiliten la reactivación y vuelve aquí.</p>";
     html += '<p class="acceso-pie">¿Trabajas en la planta? ' +
       '<a ' + UI.rutaOtraApp("interno") + ">Entra al sistema interno</a></p>";
     html += "</div></div>";
     return html;
+  }
+
+  /* Activación: el proveedor elige su propia contraseña la primera vez. La
+     planta solo le dio su código; nadie tuvo que dictarle una clave, que es
+     el paso donde estas cosas se pierden o se filtran. */
+  function formActivar() {
+    UI.abrirFormulario("Activa tu cuenta", [
+      { tipo: "html", contenido: '<p class="modal-nota">Necesitas el <strong>código' +
+        "</strong> que te dio la planta y el <strong>RUC o cédula</strong> con el que " +
+        "te registraron. Después eliges tu contraseña: solo la sabrás tú.</p>" },
+      { nombre: "codigo", etiqueta: "Código de proveedor", tipo: "text", requerido: true,
+        marcador: "PRV-001", ancho: "mitad" },
+      { nombre: "documento", etiqueta: "Tu RUC o cédula", tipo: "text", requerido: true,
+        marcador: "0991234567001", ancho: "mitad",
+        ayuda: "El mismo con el que te registró la planta." },
+      { nombre: "clave", etiqueta: "Crea tu contraseña", tipo: "password", requerido: true,
+        ayuda: Auth.politica("proveedor").ayuda,
+        validar: function (v) { return Auth.revisar(v, "proveedor"); } },
+      { nombre: "repetir", etiqueta: "Repítela", tipo: "password", requerido: true,
+        validar: function (v, d) { return v === d.clave ? null : "Las dos no coinciden."; } }
+    ], function (d) {
+      const r = DB.comprobarActivacion(d.codigo, d.documento);
+
+      if (r.error === "ya-activa") {
+        return { error: "Esa cuenta ya está activa. Entra con tu contraseña, o pide en " +
+          "la planta que habiliten la reactivación." };
+      }
+      if (r.error === "inactivo") {
+        return { error: "Ese proveedor está desactivado. Comunícate con la planta." };
+      }
+      if (r.error) {
+        return { error: "El código y el documento no coinciden con ningún proveedor " +
+          "registrado. Revísalos o consulta con la planta." };
+      }
+
+      return Auth.crearCredencial(d.clave).then(function (cred) {
+        DB.update("usuarios", r.usuario.id, {
+          credencial: cred, debeCambiar: false, pendienteActivacion: false,
+          activadoEn: new Date().toISOString()
+        });
+        usuario = DB.get("usuarios", r.usuario.id);
+        UI.abrirSesion(SESION, usuario.id, true);
+        DB.registrarBitacora(usuario.id, "Activación de cuenta",
+          r.proveedor.nombre + " creó su contraseña");
+        UI.aviso("Cuenta activada. Bienvenido, " + r.proveedor.nombre + ".");
+        render();
+      });
+    }, { aceptar: "Activar y entrar" });
   }
 
   /* Al entrar con una contraseña temporal hay que cambiarla antes de seguir:
@@ -587,9 +638,12 @@
       { nombre: "repetir", etiqueta: "Repítela", tipo: "password", requerido: true,
         validar: function (v, d) { return v === d.nueva ? null : "Las dos no coinciden."; } }
     ], function (d) {
-      Auth.crearCredencial(d.nueva).then(function (cred) {
-        DB.update("usuarios", usuario.id, { credencial: cred, debeCambiar: false });
-        usuario = DB.get("usuarios", usuario.id);
+      /* Se captura el id ahora: para cuando la promesa resuelva, la sesión
+         podría haberse cerrado y `usuario` ya no serviría. */
+      const id = usuario.id;
+      return Auth.crearCredencial(d.nueva).then(function (cred) {
+        DB.update("usuarios", id, { credencial: cred, debeCambiar: false });
+        if (usuario && usuario.id === id) usuario = DB.get("usuarios", id);
         DB.registrarBitacora(usuario.id, "Cambio de contraseña", usuario.nombre);
         UI.aviso("Contraseña actualizada.");
         render();
@@ -649,6 +703,9 @@
     const error = $("#accesoError");
     const boton = $("#btnEntrar");
     UI.vigilarFormulario(form);
+
+    const activar = $("#btnActivar");
+    if (activar) activar.addEventListener("click", formActivar);
 
     const ver = $("#verClave");
     if (ver) {

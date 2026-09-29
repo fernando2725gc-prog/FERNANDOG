@@ -925,6 +925,15 @@ textarea { resize: vertical; }
 
 .portal-acciones { display: flex; gap: .35rem; align-items: center; }
 
+/* Un botón que se lee como enlace: es una acción, no una navegación. */
+.enlace {
+  font: inherit; font-weight: 600; color: var(--verde); background: none;
+  border: 0; padding: 0; cursor: pointer; text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.enlace:hover { color: var(--verde-claro); }
+.acceso-proveedor ~ * .enlace, .acceso-caja .enlace { color: var(--linea-1); }
+
 /* ===================== estado de conexión en el acceso ================ */
 
 .conexion {

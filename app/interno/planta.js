@@ -18,6 +18,8 @@
   let usuario = null;
   let vista = "panel";
   let reporteActual = "proveedor";
+  /* Escenario del simulador de mejora: vive mientras dure la sesión. */
+  let escenario = null;
 
   let filtros = {
     desde: DB.diasAtras(30), hasta: DB.hoy(),
@@ -27,10 +29,11 @@
   const ROLES_INTERNOS = ["recepcion", "produccion", "supervisor"];
 
   const PERMISOS = {
-    recepcion: ["pesar", "rechazar", "ver_lotes"],
-    produccion: ["procesar", "ver_lotes"],
+    recepcion: ["pesar", "rechazar", "ver_lotes", "corregir_pesaje"],
+    produccion: ["procesar", "ver_lotes", "corregir_produccion"],
     supervisor: ["pesar", "rechazar", "procesar", "ver_lotes", "cerrar", "reabrir",
-      "enviar_reporte", "planificar", "administrar"]
+      "enviar_reporte", "planificar", "administrar",
+      "corregir_pesaje", "corregir_produccion"]
   };
 
   function puede(accion) {
@@ -103,6 +106,7 @@
       { id: "produccion", texto: "Producción", icono: "🏭", roles: ["produccion", "supervisor"] },
       { id: "lotes", texto: "Lotes", icono: "📦", roles: "*" },
       { id: "reportes", texto: "Reportes", icono: "📄", roles: "*" },
+      { id: "costeo", texto: "Costeo y mejora", icono: "💵", roles: ["supervisor"] },
       { id: "catalogos", texto: "Parámetros", icono: "⚙️", roles: ["supervisor"] },
       { id: "proveedores", texto: "Proveedores", icono: "🤝", roles: ["supervisor"] },
       { id: "usuarios", texto: "Usuarios", icono: "👥", roles: ["supervisor"] },
@@ -460,6 +464,29 @@
     return html;
   }
 
+  /* Compara antes y después y devuelve el detalle de lo que cambió. Una
+     corrección sin rastro es indistinguible de falsear el dato: por eso se
+     escribe qué valor había y quién lo cambió. */
+  function diferencias(antes, despues, campos) {
+    const cambios = [];
+    Object.keys(campos).forEach(function (k) {
+      const a = antes[k], b = despues[k];
+      if (String(a === null || a === undefined ? "" : a) === String(b)) return;
+      cambios.push({
+        campo: campos[k],
+        antes: a === null || a === undefined || a === "" ? "vacío" : a,
+        despues: b === null || b === undefined || b === "" ? "vacío" : b
+      });
+    });
+    return cambios;
+  }
+
+  function textoCambios(cambios) {
+    return cambios.map(function (c) {
+      return c.campo + ": " + c.antes + " → " + c.despues;
+    }).join(" · ");
+  }
+
   /* ============================= recepción ============================ */
 
   function vistaRecepcion() {
@@ -507,14 +534,21 @@
     return html;
   }
 
-  function formPesar(loteId) {
+  function formPesar(loteId, corregir) {
     const l = DB.get("lotes", loteId);
-    if (!l || l.estado !== "Anunciado") { UI.aviso("Ese lote ya no está pendiente.", "alerta"); return; }
+    if (!l) return;
+    if (!corregir && l.estado !== "Anunciado") {
+      UI.aviso("Ese lote ya no está pendiente.", "alerta"); return;
+    }
+    if (corregir && l.estado === "Cerrado") {
+      UI.aviso("El lote está cerrado. Supervisión debe reabrirlo primero.", "alerta"); return;
+    }
     const linea = DB.linea(l.lineaId);
 
     const campos = [
       { tipo: "html", contenido: fichaMini(l) },
-      { nombre: "fechaRecepcion", etiqueta: "Fecha de llegada", tipo: "date", valor: DB.hoy(),
+      { nombre: "fechaRecepcion", etiqueta: "Fecha de llegada", tipo: "date",
+        valor: corregir ? l.fechaRecepcion : DB.hoy(),
         requerido: true, ancho: "mitad",
         validar: function (v) {
           if (v > DB.hoy()) return "La fecha no puede ser futura.";
@@ -524,23 +558,53 @@
         } },
       { nombre: "cajasRecibidas", etiqueta: "Cajas contadas", tipo: "number", requerido: true,
         min: 0, max: 10000, paso: "1", ancho: "mitad",
-        valor: l.cajasAnunciadas,
+        valor: corregir ? l.cajasRecibidas : l.cajasAnunciadas,
         ayuda: "El proveedor anunció " + nf(l.cajasAnunciadas) + "." },
       { nombre: "kgRecibidos", etiqueta: "Peso real en báscula (kg)", tipo: "number", requerido: true,
         min: 0, max: 200000, paso: "0.1", ancho: "mitad",
-        valor: l.kgAnunciados || "",
+        valor: corregir ? l.kgRecibidos : (l.kgAnunciados || ""),
         ayuda: "El proveedor declaró " + nf(l.kgAnunciados || 0) + " kg (" +
           nf(l.pesoCajaDeclarado || 0, 1) + " kg/caja). Corrige con lo que marque la báscula." },
       { nombre: "calidadVerificada", etiqueta: "Calidad verificada", tipo: "select", requerido: true,
-        ancho: "mitad", valor: l.calidadDeclarada,
+        ancho: "mitad", valor: corregir ? l.calidadVerificada : l.calidadDeclarada,
         opciones: DB.CALIDADES.map(function (c) { return { valor: c.id, texto: c.nombre }; }),
         ayuda: "El proveedor declaró " + l.calidadDeclarada + "." },
       { nombre: "difCalc", etiqueta: "Contraste con lo anunciado", tipo: "calculado" },
       { nombre: "observacionesRecepcion", etiqueta: "Observaciones", tipo: "textarea",
-        marcador: "Temperatura, estado de los envases, novedades del transporte." }
-    ];
+        valor: corregir ? l.observacionesRecepcion : "",
+        marcador: "Temperatura, estado de los envases, novedades del transporte." },
+      { nombre: "motivo", etiqueta: "Motivo de la corrección", tipo: "text",
+        requerido: !!corregir,
+        marcador: "Por qué se corrige: error al teclear, recuento repetido…",
+        ayuda: corregir ? "Queda escrito en la bitácora junto a los valores anteriores." : "" }
+    ].filter(function (c) { return corregir || c.nombre !== "motivo"; });
 
-    UI.abrirFormulario("Pesar lote " + l.codigoLote, campos, function (d) {
+    UI.abrirFormulario((corregir ? "Corregir pesaje de " : "Pesar lote ") + l.codigoLote,
+      campos, function (d) {
+      if (corregir) {
+        const cambios = diferencias(l, d, {
+          fechaRecepcion: "Fecha", cajasRecibidas: "Cajas", kgRecibidos: "Kilogramos",
+          calidadVerificada: "Calidad", observacionesRecepcion: "Observaciones"
+        });
+        if (!cambios.length) return { error: "No cambiaste ningún dato." };
+
+        DB.update("lotes", l.id, {
+          fechaRecepcion: d.fechaRecepcion,
+          cajasRecibidas: Number(d.cajasRecibidas),
+          kgRecibidos: Number(d.kgRecibidos),
+          calidadVerificada: d.calidadVerificada,
+          observacionesRecepcion: d.observacionesRecepcion || "",
+          corregidoPor: usuario.id,
+          fechaCorreccion: new Date().toISOString(),
+          correcciones: (l.correcciones || 0) + 1
+        });
+        DB.registrarBitacora(usuario.id, "Corrección de pesaje",
+          l.codigoLote + " · " + textoCambios(cambios) + " · motivo: " + d.motivo);
+        UI.aviso("Pesaje corregido. El cambio quedó en la bitácora.");
+        render();
+        return;
+      }
+
       DB.update("lotes", l.id, {
         fechaRecepcion: d.fechaRecepcion,
         cajasRecibidas: Number(d.cajasRecibidas),
@@ -704,15 +768,23 @@
     ];
   }
 
-  function formProcesar(loteId) {
+  function formProcesar(loteId, corregir) {
     const l = DB.get("lotes", loteId);
-    if (!l || l.estado !== "Recibido") { UI.aviso("Ese lote no está disponible.", "alerta"); return; }
+    if (!l) return;
+    const prodPrevia = corregir
+      ? DB.all("producciones").find(function (x) { return x.loteId === l.id; }) : null;
+    if (corregir && !prodPrevia) { UI.aviso("Ese lote no tiene producción registrada.", "alerta"); return; }
+    if (corregir && l.estado === "Cerrado") {
+      UI.aviso("El lote está cerrado. Supervisión debe reabrirlo primero.", "alerta"); return;
+    }
+    if (!corregir && l.estado !== "Recibido") { UI.aviso("Ese lote no está disponible.", "alerta"); return; }
     const linea = DB.linea(l.lineaId);
     const tEstandar = l.cajasRecibidas * linea.tiempoEstandarMin;
 
     const campos = [
       { tipo: "html", contenido: fichaMini(l) },
-      { nombre: "fecha", etiqueta: "Fecha de proceso", tipo: "date", valor: DB.hoy(),
+      { nombre: "fecha", etiqueta: "Fecha de proceso", tipo: "date",
+        valor: corregir ? prodPrevia.fecha : DB.hoy(),
         requerido: true, ancho: "mitad",
         validar: function (v) {
           if (v > DB.hoy()) return "La fecha no puede ser futura.";
@@ -720,26 +792,30 @@
             UI.fechaLarga(l.fechaRecepcion) + ").";
           return null;
         } },
-      { nombre: "turno", etiqueta: "Turno", tipo: "select", ancho: "mitad", valor: "Matutino",
+      { nombre: "turno", etiqueta: "Turno", tipo: "select", ancho: "mitad",
+        valor: corregir ? prodPrevia.turno : "Matutino",
         opciones: DB.TURNOS.map(function (t) { return { valor: t, texto: t }; }) },
       { nombre: "cajasProcesadas", etiqueta: "Cajas ingresadas a proceso", tipo: "number",
         requerido: true, min: 1, max: l.cajasRecibidas, paso: "1", ancho: "mitad",
-        valor: l.cajasRecibidas,
+        valor: corregir ? prodPrevia.cajasProcesadas : l.cajasRecibidas,
         ayuda: "El lote trajo " + nf(l.cajasRecibidas) + " cajas." },
       { nombre: "cajasExportables", etiqueta: "Cajas exportables obtenidas", tipo: "number",
         requerido: true, min: 0, paso: "1", ancho: "mitad",
+        valor: corregir ? prodPrevia.cajasExportables : "",
         validar: function (v, d) {
           return Number(d.cajasProcesadas) && v > Number(d.cajasProcesadas)
             ? "Lo exportable no puede superar las cajas ingresadas a proceso." : null;
         } },
       { nombre: "operarios", etiqueta: "Operarios en la línea", tipo: "number", requerido: true,
-        min: 1, max: 100, paso: "1", ancho: "mitad", valor: 4 },
+        min: 1, max: 100, paso: "1", ancho: "mitad",
+        valor: corregir ? prodPrevia.operarios : 4 },
       { nombre: "tiempoRealMin", etiqueta: "Tiempo real de proceso (min)", tipo: "number",
         requerido: true, min: 1, paso: "1", ancho: "mitad",
+        valor: corregir ? prodPrevia.tiempoRealMin : "",
         ayuda: "Estándar para este lote: " + nf(tEstandar, 0) + " min (" +
           nf(linea.tiempoEstandarMin, 2) + " min/caja " + "M)." },
       { nombre: "operador", etiqueta: "Responsable de línea", tipo: "text", requerido: true,
-        valor: usuario.nombre, ancho: "mitad" },
+        valor: corregir ? prodPrevia.operador : usuario.nombre, ancho: "mitad" },
       { nombre: "tasaCalc", etiqueta: "Tasa de exportable", tipo: "calculado", ancho: "mitad" },
       { nombre: "eficienciaCalc", etiqueta: "Eficiencia contra el estándar", tipo: "calculado", ancho: "mitad" },
       { nombre: "mermas", etiqueta: "Reparto de la merma: causa raíz y destino", tipo: "repetible",
@@ -781,10 +857,50 @@
           return null;
         } },
       { nombre: "observaciones", etiqueta: "Observaciones del turno", tipo: "textarea",
-        marcador: "Paradas de línea, novedades, incidencias del lote." }
-    ];
+        valor: corregir ? prodPrevia.observaciones : "",
+        marcador: "Paradas de línea, novedades, incidencias del lote." },
+      { nombre: "motivo", etiqueta: "Motivo de la corrección", tipo: "text",
+        requerido: !!corregir,
+        marcador: "Por qué se corrige: error al teclear, recuento repetido…",
+        ayuda: corregir ? "Queda escrito en la bitácora junto a los valores anteriores." : "" }
+    ].filter(function (c) { return corregir || c.nombre !== "motivo"; });
 
-    UI.abrirFormulario("Procesar lote " + l.codigoLote, campos, function (d) {
+    UI.abrirFormulario((corregir ? "Corregir producción de " : "Procesar lote ") + l.codigoLote,
+      campos, function (d) {
+      if (corregir) {
+        const cambios = diferencias(prodPrevia, d, {
+          fecha: "Fecha", turno: "Turno",
+          cajasProcesadas: "Cajas procesadas", cajasExportables: "Cajas exportables",
+          operarios: "Operarios", tiempoRealMin: "Tiempo real", operador: "Responsable"
+        });
+        const clave = function (lista) {
+          return JSON.stringify((lista || []).map(function (m) {
+            return [m.causaId, m.kg, m.destinoId];
+          }));
+        };
+        const mermaCambio = clave(prodPrevia.mermas) !== clave(d.mermas);
+        if (!cambios.length && !mermaCambio) return { error: "No cambiaste ningún dato." };
+        if (mermaCambio) cambios.push({ campo: "Reparto de merma", antes: "—", despues: "revisado" });
+
+        DB.update("producciones", prodPrevia.id, {
+          fecha: d.fecha, turno: d.turno,
+          cajasProcesadas: Number(d.cajasProcesadas),
+          kgProcesados: Math.round(Number(d.cajasProcesadas) * linea.pesoCajaKg),
+          cajasExportables: Number(d.cajasExportables),
+          kgExportable: Math.round(Number(d.cajasExportables) * linea.pesoCajaKg),
+          mermas: d.mermas, operarios: Number(d.operarios),
+          tiempoRealMin: Number(d.tiempoRealMin), operador: d.operador,
+          observaciones: d.observaciones || "",
+          corregidoPor: usuario.id, fechaCorreccion: new Date().toISOString(),
+          correcciones: (prodPrevia.correcciones || 0) + 1
+        });
+        DB.registrarBitacora(usuario.id, "Corrección de producción",
+          prodPrevia.folio + " · " + textoCambios(cambios) + " · motivo: " + d.motivo);
+        UI.aviso("Producción corregida. El cambio quedó en la bitácora.");
+        render();
+        return;
+      }
+
       const prod = DB.insert("producciones", {
         folio: DB.siguienteFolio("producciones", "PRD"),
         fecha: d.fecha,
@@ -814,7 +930,9 @@
       aceptar: "Registrar producción",
       ancho: true,
       filasIniciales: {
-        mermas: [
+        mermas: corregir ? (prodPrevia.mermas || []).map(function (m) {
+          return { causaId: m.causaId, kg: m.kg, destinoId: m.destinoId };
+        }) : [
           { causaId: "CR5", destinoId: "ds_subproducto" },
           { causaId: "CR6", destinoId: "ds_segunda" },
           { causaId: "CR8", destinoId: "ds_animal" }
@@ -922,6 +1040,13 @@
     if (l.estado === "Recibido" && puede("procesar")) {
       b += '<button class="btn-mini btn-mini-accion" data-procesar="' + esc(l.id) + '">Procesar</button>';
     }
+    if (l.cajasRecibidas !== null && l.estado !== "Cerrado" && l.estado !== "Rechazado" &&
+        puede("corregir_pesaje")) {
+      b += '<button class="btn-mini" data-corregir-pesaje="' + esc(l.id) + '">Corregir pesaje</button>';
+    }
+    if (l.estado === "Procesado" && puede("corregir_produccion")) {
+      b += '<button class="btn-mini" data-corregir-prod="' + esc(l.id) + '">Corregir producción</button>';
+    }
     if (l.estado === "Procesado" && puede("cerrar")) {
       b += '<button class="btn-mini btn-mini-accion" data-cerrar="' + esc(l.id) + '">Cerrar</button>';
     }
@@ -992,7 +1117,11 @@
       "<dt>Proveedor</dt><dd>" + esc(f.proveedor ? f.proveedor.nombre : "—") + "</dd>" +
       "<dt>Línea</dt><dd>" + esc(f.linea ? f.linea.nombre : "—") + "</dd>" +
       "<dt>Transporte</dt><dd>" + esc(l.transporte) + "</dd>" +
-      "<dt>Estado</dt><dd>" + UI.insignia(l.estado) + "</dd></dl></section>";
+      "<dt>Estado</dt><dd>" + UI.insignia(l.estado) + "</dd>" +
+      (l.correcciones
+        ? "<dt>Correcciones</dt><dd>" + nf(l.correcciones) + " · última por " +
+          esc(Indicadores.nombreUsuario(l.corregidoPor)) + "</dd>"
+        : "") + "</dl></section>";
 
     html += "<section><h4>Cajas y calidad</h4><dl>" +
       "<dt>Anunciadas</dt><dd>" + nf(l.cajasAnunciadas) + " (calidad " + esc(l.calidadDeclarada) + ")</dd>" +
@@ -1313,6 +1442,322 @@
       UI.origen("E") + " estimado · " + UI.origen("S") + " fuente secundaria.</p></footer>";
     html += "</section>";
     return html;
+  }
+
+  /* ========================== costeo y simulador ======================
+     Traduce la pérdida a dinero y deja probar escenarios "con mejora".
+     Es la pieza que convierte el diagnóstico en una propuesta defendible:
+     inversión, ahorro anual, payback y VAN.
+     =================================================================== */
+
+  function escenarioPorDefecto() {
+    /* Arranca con las cuatro medidas del diagnóstico activadas: es la
+       propuesta completa, y desde ahí se quita lo que no se quiera. */
+    const e = Indicadores.escenarioDeMedidas(
+      Indicadores.ESCENARIOS.map(function (m) { return m.id; }), filtros);
+    e.medidas = Indicadores.ESCENARIOS.map(function (m) { return m.id; });
+    return e;
+  }
+
+  function vistaCosteo() {
+    if (!escenario) escenario = escenarioPorDefecto();
+    escenario.filtros = filtros;
+    const c = Indicadores.costeo(filtros);
+
+    let html = '<div class="vista-cab"><div><h1>Costeo y mejora</h1>' +
+      '<p class="sub">Cuánto cuesta cada causa raíz al año y qué pasaría si se ataca.</p></div>' +
+      '<div class="cab-acciones">' +
+      '<button class="btn btn-plano" id="btnCsvCosteo">Exportar CSV</button>' +
+      '<button class="btn btn-primario" id="btnImprimir">Imprimir / PDF</button></div></div>';
+
+    html += barraFiltros({});
+
+    if (c.lista.length === 0) {
+      html += '<p class="vacio">Todavía no hay mermas registradas en este período, ' +
+        "así que no hay nada que costear.</p>";
+      return html;
+    }
+
+    /* --- lo que cuesta hoy --- */
+    html += '<section class="panel"><h2>Lo que cuesta hoy</h2>' +
+      '<p class="sub panel-sub">' + nf(c.dias) + " días con registros dentro del filtro. " +
+      "La proyección anual supone que el resto del año se comporta igual que este " +
+      "período " + UI.origen("S") + ".</p>" +
+      '<div class="kpis">' +
+      UI.kpi("Costo del período", money(c.costoTotal), nf(c.kg) + " kg de merma") +
+      UI.kpi("Por día", money(c.costoDiario), "promedio del período") +
+      UI.kpi("Proyección anual", money(c.costoAnual), "×" + nf(c.factorAnual, 1) + " el período", "alerta") +
+      UI.kpi("Causas vitales", nf(c.vitales), "concentran el 80% del dinero") +
+      "</div>";
+
+    /* De dónde sale el número: las tres partes del costo. */
+    html += '<div class="costo-partes">' +
+      '<div><span>Fruta que no se exportó</span><strong>' + money(c.valorFruta) + "</strong>" +
+      "<small>valor de exportación perdido</small></div>" +
+      '<div><span>Recuperado por destino</span><strong>' +
+      (c.valorRecuperado < 0 ? "−" : "") + money(Math.abs(c.valorRecuperado)) + "</strong>" +
+      "<small>" + (c.valorRecuperado < 0
+        ? "se paga por llevar al relleno" : "vuelve por segunda, subproducto o compost") + "</small></div>" +
+      '<div><span>Horas-hombre invertidas</span><strong>' + money(c.costoTransformacion) + "</strong>" +
+      "<small>a " + money(c.costoHoraHombre) + "/hora, ya gastadas</small></div>" +
+      '<div class="costo-partes-total"><span>Costo total</span><strong>' + money(c.costoTotal) + "</strong>" +
+      "<small>" + money(c.costoTotal / (c.kg || 1)) + " por kilo perdido</small></div>" +
+      "</div>";
+
+    if (c.sinClasificar > 0) {
+      html += '<p class="nota-aviso">' + money(c.sinClasificar) + " del costo del período (" +
+        pct(c.sinClasificar / c.costoTotal) + ") está en causas todavía sin definir. " +
+        "Clasificarlas en Parámetros es lo que más rápido mejora esta priorización.</p>";
+    }
+
+    html += '<div class="hoja-grafico">' + Graficos.pareto(c.lista, {
+      titulo: "Pareto económico por causa raíz",
+      valor: function (d) { return d.costoTotal; },
+      unidad: " USD",
+      ejeX: function (d) { return d.codigo; },
+      color: function (d) { return d.vital ? "#c0246b" : d.definida ? "#c85a1e" : "#8b96a3"; },
+      leyenda: [["Vital (80%)", "#c0246b"], ["Secundaria", "#c85a1e"], ["Por definir", "#8b96a3"]]
+    }) + "</div>";
+
+    html += UI.tabla(columnasCosteo(), c.lista, { filaClase: function (x) {
+      return x.vital ? "fila-vital" : "";
+    } }) + "</section>";
+
+    /* --- simulador --- */
+    html += '<section class="panel"><h2>Simulador: ¿y si lo arreglamos?</h2>' +
+      '<p class="sub panel-sub">Activa las medidas del diagnóstico o mueve cada ' +
+      "porcentaje a mano. Todo lo de aquí es un supuesto " + UI.origen("S") +
+      ", no un dato medido.</p>";
+
+    html += '<div class="medidas">';
+    Indicadores.ESCENARIOS.forEach(function (m) {
+      const puesta = escenario.medidas && escenario.medidas.indexOf(m.id) !== -1;
+      html += '<button type="button" class="medida' + (puesta ? " medida-on" : "") +
+        '" data-medida="' + esc(m.id) + '" aria-pressed="' + puesta + '">' +
+        '<span class="medida-marca" aria-hidden="true">' + (puesta ? "✓" : "+") + "</span>" +
+        "<strong>" + esc(m.nombre) + "</strong>" +
+        "<small>" + esc(m.detalle) + "</small>" +
+        '<span class="medida-cifras">' + esc(m.causas.join(", ")) + " · −" + pct(m.reduccion, 0) +
+        " · " + money(m.inversion) + "</span></button>";
+    });
+    html += "</div>";
+
+    html += '<form id="formSim" class="sim-campos">' +
+      '<div class="campo"><label for="sInv">Inversión inicial (USD)</label>' +
+      '<input type="number" id="sInv" name="inversion" min="0" step="50" value="' +
+      Math.round(escenario.inversion) + '"></div>' +
+      '<div class="campo"><label for="sRec">Costo anual que se suma (USD)</label>' +
+      '<input type="number" id="sRec" name="recurrenteAnual" min="0" step="50" value="' +
+      Math.round(escenario.recurrenteAnual) + '"></div>' +
+      '<div class="campo"><label for="sVal">Del residuo que hoy va al relleno, se valoriza</label>' +
+      '<input type="number" id="sVal" name="valorizacion" min="0" max="100" step="5" value="' +
+      Math.round((escenario.valorizacion || 0) * 100) + '"><small class="campo-ayuda">%</small></div>' +
+      "</form>";
+
+    html += '<div class="sim-causas">';
+    c.lista.forEach(function (x) {
+      const r = Math.round((escenario.reducciones[x.causaId] || 0) * 100);
+      html += '<div class="sim-causa' + (x.vital ? " sim-causa-vital" : "") + '">' +
+        '<label for="red_' + esc(x.causaId) + '"><strong>' + esc(x.etiqueta) + "</strong>" +
+        "<small>" + money(x.costoAnual) + " al año</small></label>" +
+        '<input type="range" id="red_' + esc(x.causaId) + '" data-red="' + esc(x.causaId) +
+        '" min="0" max="80" step="5" value="' + r + '">' +
+        '<output id="out_' + esc(x.causaId) + '">−' + r + "%</output></div>";
+    });
+    html += "</div></section>";
+
+    /* El resultado se repinta solo, sin tocar los deslizadores. */
+    html += '<div id="costeoDinamico">' + resultadoSimulacion() + "</div>";
+    return html;
+  }
+
+  function columnasCosteo() {
+    return [
+      { titulo: "Causa raíz", valor: function (x) {
+        return "<strong>" + esc(x.codigo) + "</strong> " + esc(x.nombre) +
+          (x.definida ? "" : ' <span class="insignia-neutra">por definir</span>'); } },
+      { titulo: "Origen", valor: function (x) { return esc(x.origen); } },
+      { titulo: "kg", num: true, valor: function (x) { return nf(x.kg); } },
+      { titulo: "Cajas eq.", num: true, valor: function (x) { return nf(x.cajasEquivalentes); } },
+      { titulo: "Fruta", num: true, valor: function (x) { return money(x.valorFruta); } },
+      { titulo: "Recuperado", num: true, valor: function (x) { return money(x.valorRecuperado); } },
+      { titulo: "Horas-hombre", num: true, valor: function (x) { return money(x.costoTransformacion); } },
+      { titulo: "Costo", num: true, valor: function (x) {
+        return "<strong>" + money(x.costoTotal) + "</strong>"; } },
+      { titulo: "$/kg", num: true, valor: function (x) { return money(x.costoPorKg); } },
+      { titulo: "Anual", num: true, valor: function (x) { return money(x.costoAnual); } },
+      { titulo: "% / acum.", num: true, valor: function (x) {
+        return pct(x.porcentaje) + " <small>" + pct(x.acumulado) + "</small>"; } }
+    ];
+  }
+
+  function resultadoSimulacion() {
+    const s = Indicadores.simular(escenario);
+    const i = s.indicadores;
+
+    let html = '<section class="panel panel-resultado"><h2>Escenario con mejora</h2>';
+
+    html += '<div class="kpis">' +
+      UI.kpi("Ahorro neto al año", money(s.ahorroNeto),
+        s.recurrenteAnual > 0 ? "ya descontados " + money(s.recurrenteAnual) + " de costo anual" : "sobre el costo actual",
+        s.ahorroNeto > 0 ? "ok" : "alerta") +
+      UI.kpi("Inversión", money(s.inversion), "una sola vez") +
+      UI.kpi("Se recupera en", s.paybackMeses === null ? "nunca"
+        : s.paybackMeses === 0 ? "de inmediato" : nf(s.paybackMeses, 1) + " meses",
+        s.paybackMeses === null ? "el ahorro no cubre el costo anual"
+          : "payback simple", s.paybackMeses !== null && s.paybackMeses <= 24 ? "ok" : "alerta") +
+      UI.kpi("VAN a " + s.aniosVan + " años", money(s.van),
+        "descontado al " + pct(s.tasaDescuento, 0) + " anual " + UI.origen("S"),
+        s.van > 0 ? "ok" : "alerta") +
+      "</div>";
+
+    html += '<p class="' + (s.viable ? "nota-ok" : "nota-aviso") + '">' + (s.viable
+      ? "<strong>La propuesta se paga sola.</strong> Con " + money(s.inversion) +
+        " se evitan " + nf(s.kgEvitadosAnual) + " kg de pérdida al año y se recuperan " +
+        money(s.ahorroNeto) + ", equivalentes a " + money(s.ahorroMensual) + " al mes."
+      : "<strong>Así planteada, la propuesta no se sostiene.</strong> Con estos supuestos " +
+        "el ahorro anual (" + money(s.ahorroBruto) + ") no compensa el costo que se suma (" +
+        money(s.recurrenteAnual) + ") ni la inversión. Sube la reducción esperada o baja el costo.") +
+      "</p>";
+
+    /* De dónde viene el ahorro. */
+    html += '<div class="costo-partes">' +
+      '<div><span>Pérdida evitada</span><strong>' + money(s.ahorroCausas) + "</strong>" +
+      "<small>" + nf(s.kgEvitadosAnual) + " kg al año que ya no se pierden</small></div>" +
+      '<div><span>Residuo valorizado</span><strong>' + money(s.ahorroValorizacion) + "</strong>" +
+      "<small>" + nf(s.kgValorizadosAnual) + " kg a " + money(s.valorKgObjetivo) + "/kg · " +
+      esc(s.destinoObjetivo) + "</small></div>" +
+      '<div><span>Costo que se suma</span><strong>−' + money(s.recurrenteAnual) + "</strong>" +
+      "<small>operación de la mejora, cada año</small></div>" +
+      '<div class="costo-partes-total"><span>Ahorro neto anual</span><strong>' +
+      money(s.ahorroNeto) + "</strong><small>" +
+      (s.beneficioCosto === null ? "sin inversión asociada"
+        : nf(s.beneficioCosto, 2) + " USD ganados por USD invertido en " + s.aniosVan + " años") +
+      "</small></div></div>";
+
+    /* Antes y después, causa por causa. */
+    html += UI.tabla([
+      { titulo: "Causa raíz", valor: function (x) { return esc(x.etiqueta); } },
+      { titulo: "Reducción", num: true, valor: function (x) {
+        return x.reduccion > 0 ? "−" + pct(x.reduccion, 0) : "—"; } },
+      { titulo: "Costo hoy", num: true, valor: function (x) { return money(x.costoAnual); } },
+      { titulo: "Con mejora", num: true, valor: function (x) { return money(x.costoAnualConMejora); } },
+      { titulo: "Ahorro", num: true, valor: function (x) {
+        return x.ahorroAnual > 0 ? "<strong>" + money(x.ahorroAnual) + "</strong>" : "—"; } },
+      { titulo: "kg evitados", num: true, valor: function (x) { return nf(x.kgEvitadosAnual); } }
+    ], s.detalle.slice().sort(function (a, b) { return b.ahorroAnual - a.ahorroAnual; }));
+
+    /* Cómo quedarían los indicadores del período. */
+    html += '<h3 class="sub-titulo">Los indicadores, antes y después</h3>' +
+      '<div class="comparativo">' +
+      filaComparativo("Tasa exportable", i.tasaExportable, i.tasaExportableConMejora, true,
+        "meta ponderada " + pct(i.metaExportable)) +
+      filaComparativo("Merma sobre lo procesado", i.tasaMerma, i.tasaMermaConMejora, false, "") +
+      filaComparativo("Descarte aprovechado", i.tasaValorizacion, i.tasaValorizacionConMejora, true, "") +
+      "</div>";
+
+    html += '<p class="nota-info">Recupera ' + nf(i.cajasRecuperadas) +
+      " cajas exportables en el período mostrado. El costo de la fruta, el precio por caja y " +
+      "el costo hora-hombre vienen de Parámetros; las reducciones y la tasa de descuento son " +
+      "supuestos " + UI.origen("S") + " que deben discutirse con la empresa.</p>";
+
+    html += "</section>";
+    return html;
+  }
+
+  function filaComparativo(etiqueta, antes, despues, subirEsBueno, pie) {
+    const dif = despues - antes;
+    const mejora = subirEsBueno ? dif > 0.0005 : dif < -0.0005;
+    return '<div class="comparativo-fila">' +
+      "<span>" + esc(etiqueta) + (pie ? " <small>" + esc(pie) + "</small>" : "") + "</span>" +
+      '<span class="comparativo-antes">' + pct(antes) + "</span>" +
+      '<span class="comparativo-flecha" aria-hidden="true">→</span>' +
+      '<span class="comparativo-despues ' + (mejora ? "mejor" : "igual") + '">' + pct(despues) + "</span>" +
+      '<span class="comparativo-dif">' + (Math.abs(dif) < 0.0005 ? "sin cambio"
+        : (dif > 0 ? "+" : "−") + pct(Math.abs(dif))) + "</span></div>";
+  }
+
+  function refrescarSimulacion() {
+    const cont = $("#costeoDinamico");
+    if (!cont) return;
+    cont.innerHTML = resultadoSimulacion();
+  }
+
+  function enlazarCosteo() {
+    /* Las medidas rearman el escenario completo: reducciones, inversión y
+       costo anual salen de lo que cada medida supone. */
+    $$("[data-medida]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        const id = b.dataset.medida;
+        const puestas = (escenario.medidas || []).slice();
+        const i = puestas.indexOf(id);
+        if (i === -1) puestas.push(id); else puestas.splice(i, 1);
+        escenario = Indicadores.escenarioDeMedidas(puestas, filtros);
+        escenario.medidas = puestas;
+        render();
+      });
+    });
+
+    $$("[data-red]").forEach(function (r) {
+      r.addEventListener("input", function () {
+        const id = r.dataset.red;
+        escenario.reducciones[id] = Number(r.value) / 100;
+        /* Ya no es una de las medidas del catálogo: se ajustó a mano. */
+        escenario.medidas = [];
+        const out = $("#out_" + id);
+        if (out) out.textContent = "−" + r.value + "%";
+        marcarMedidasManuales();
+        refrescarSimulacion();
+      });
+    });
+
+    const form = $("#formSim");
+    if (form) {
+      UI.vigilarFormulario(form);
+      form.addEventListener("input", function () {
+        escenario.inversion = Number($("#sInv").value) || 0;
+        escenario.recurrenteAnual = Number($("#sRec").value) || 0;
+        escenario.valorizacion = Math.max(0, Math.min(100, Number($("#sVal").value) || 0)) / 100;
+        refrescarSimulacion();
+      });
+      form.addEventListener("submit", function (ev) { ev.preventDefault(); });
+    }
+
+    const csv = $("#btnCsvCosteo");
+    if (csv) {
+      csv.addEventListener("click", function () {
+        const c = Indicadores.costeo(filtros);
+        const s = Indicadores.simular(escenario);
+        const porCausa = {};
+        s.detalle.forEach(function (d) { porCausa[d.causaId] = d; });
+        UI.descargarCSV("costeo_causas_" + filtros.desde + "_" + filtros.hasta, [
+          { titulo: "Causa", csv: function (x) { return x.codigo + " " + x.nombre; } },
+          { titulo: "Origen", csv: function (x) { return x.origen; } },
+          { titulo: "kg", csv: function (x) { return x.kg.toFixed(1); } },
+          { titulo: "Valor fruta USD", csv: function (x) { return x.valorFruta.toFixed(2); } },
+          { titulo: "Recuperado USD", csv: function (x) { return x.valorRecuperado.toFixed(2); } },
+          { titulo: "Horas-hombre USD", csv: function (x) { return x.costoTransformacion.toFixed(2); } },
+          { titulo: "Costo periodo USD", csv: function (x) { return x.costoTotal.toFixed(2); } },
+          { titulo: "Costo anual USD", csv: function (x) { return x.costoAnual.toFixed(2); } },
+          { titulo: "% del total", csv: function (x) { return (x.porcentaje * 100).toFixed(1); } },
+          { titulo: "Reduccion simulada %", csv: function (x) {
+            return ((porCausa[x.causaId] ? porCausa[x.causaId].reduccion : 0) * 100).toFixed(0); } },
+          { titulo: "Ahorro anual USD", csv: function (x) {
+            return (porCausa[x.causaId] ? porCausa[x.causaId].ahorroAnual : 0).toFixed(2); } }
+        ], c.lista);
+      });
+    }
+  }
+
+  /* Si se movió un deslizador, las medidas dejan de estar "activas": el
+     escenario ya no es el del catálogo y la pantalla no debe mentir. */
+  function marcarMedidasManuales() {
+    $$("[data-medida]").forEach(function (b) {
+      b.classList.remove("medida-on");
+      b.setAttribute("aria-pressed", "false");
+      const marca = b.querySelector(".medida-marca");
+      if (marca) marca.textContent = "+";
+    });
   }
 
   /* ============================== catálogos =========================== */
@@ -1901,7 +2346,7 @@
     }
 
     const rol = DB.ROLES.find(function (r) { return r.id === usuario.rol; });
-    const compartido = DB.esCompartido();
+    const compartido = DB.esCompartido() && DB.pendientes() === 0;
     const anunciados = DB.all("lotes").filter(function (l) { return l.estado === "Anunciado"; }).length;
 
     let html = '<div class="capa"><aside class="lateral" id="lateral">' +
@@ -1921,7 +2366,8 @@
     html += "</nav><div class='lateral-pie'>" +
       '<p class="sincro sincro-' + (compartido ? "on" : "off") + '">' +
       '<span class="sincro-punto" aria-hidden="true"></span>' +
-      (compartido ? "Datos compartidos" : "Solo este equipo") + "</p>" +
+      (DB.pendientes() > 0 ? DB.pendientes() + " sin enviar"
+        : compartido ? "Datos compartidos" : "Solo este equipo") + "</p>" +
       '<p class="tenue sincro-ayuda">' + (compartido
         ? "Conectado con el portal del proveedor."
         : "Sin conexión con el portal externo.") + "</p>" +
@@ -1936,12 +2382,19 @@
       '<button class="btn btn-plano" id="btnSalir">Salir</button></div></header>';
 
     html += '<main id="contenido" tabindex="-1">';
+    const sinEnviar = DB.pendientes();
+    if (sinEnviar > 0) {
+      html += '<p class="banda-pendiente"><strong>' + sinEnviar +
+        (sinEnviar === 1 ? " registro sin enviar." : " registros sin enviar.") +
+        "</strong> Quedaron guardados aquí y saldrán solos al volver la conexión.</p>";
+    }
     if (vista === "panel") html += vistaPanel();
     else if (vista === "planificador") html += vistaPlanificador();
     else if (vista === "recepcion") html += vistaRecepcion();
     else if (vista === "produccion") html += vistaProduccion();
     else if (vista === "lotes") html += vistaLotes();
     else if (vista === "reportes") html += vistaReportes();
+    else if (vista === "costeo") html += vistaCosteo();
     else if (vista === "catalogos") html += vistaCatalogos();
     else if (vista === "proveedores") html += vistaProveedores();
     else if (vista === "usuarios") html += vistaUsuarios();
@@ -2113,6 +2566,12 @@
     });
     $$("[data-procesar]").forEach(function (b) {
       b.addEventListener("click", function () { formProcesar(b.dataset.procesar); });
+    });
+    $$("[data-corregir-pesaje]").forEach(function (b) {
+      b.addEventListener("click", function () { formPesar(b.dataset.corregirPesaje, true); });
+    });
+    $$("[data-corregir-prod]").forEach(function (b) {
+      b.addEventListener("click", function () { formProcesar(b.dataset.corregirProd, true); });
     });
     $$("[data-cerrar]").forEach(function (b) {
       b.addEventListener("click", function () { cerrarLote(b.dataset.cerrar); });
@@ -2302,6 +2761,8 @@
         lector.readAsText(archivo);
       });
     }
+    if (vista === "costeo") enlazarCosteo();
+
     const btnReset = $("#btnReiniciar");
     if (btnReset) {
       btnReset.addEventListener("click", function () {
@@ -2368,19 +2829,28 @@
   function marcarConectado() {
     conectado = true;
     const el = UI.$("#estadoConexion");
-    if (el) {
-      el.className = "conexion conexion-ok";
-      el.innerHTML = '<span class="conexion-punto" aria-hidden="true"></span>' +
-        (DB.esCompartido() ? "Conectado al sistema" : "Modo local, sin conexión compartida");
+    if (el) el.outerHTML = estadoConexionHTML();
+  }
+
+  function textoConexion() {
+    if (!conectado) return "Conectando con el sistema…";
+    const n = DB.pendientes();
+    const pend = n === 1 ? "1 registro pendiente" : n + " registros pendientes";
+    if (!DB.esCompartido()) {
+      return "Sin conexión" + (n > 0 ? " — " + pend + ", se enviarán al volver" : "");
     }
+    return n > 0 ? pend + " de enviar" : "Conectado al sistema";
+  }
+
+  function claseConexion() {
+    if (!conectado) return "conexion";
+    if (DB.pendientes() > 0) return "conexion conexion-pendiente";
+    return DB.esCompartido() ? "conexion conexion-ok" : "conexion conexion-sinred";
   }
 
   function estadoConexionHTML() {
-    return '<p class="conexion' + (conectado ? " conexion-ok" : "") + '" id="estadoConexion">' +
-      '<span class="conexion-punto" aria-hidden="true"></span>' +
-      (conectado
-        ? (DB.esCompartido() ? "Conectado al sistema" : "Modo local, sin conexión compartida")
-        : "Conectando con el sistema…") + "</p>";
+    return '<p class="' + claseConexion() + '" id="estadoConexion">' +
+      '<span class="conexion-punto" aria-hidden="true"></span>' + textoConexion() + "</p>";
   }
 
   function iniciar() {
@@ -2389,6 +2859,8 @@
     restaurar();
     render();
 
+    DB.vigilarRed();
+    DB.alCambiarCola(function () { UI.repintarSiSeguro(render); });
     DB.alFallarEscritura(function (codigo) {
       UI.aviso(codigo === "quota_exceeded"
         ? "El almacén está lleno. Reinicia los datos desde Datos del sistema."

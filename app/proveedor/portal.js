@@ -194,9 +194,14 @@
     const paso = DB.ESTADOS.find(function (e) { return e.id === l.estado; });
     const orden = paso ? paso.orden : 0;
 
-    let html = '<article class="lote-tarjeta" data-ficha="' + esc(l.id) + '" tabindex="0" role="button">' +
+    const sinEnviar = DB.estaPendiente("lotes", l.id);
+
+    let html = '<article class="lote-tarjeta' + (sinEnviar ? " lote-pendiente" : "") +
+      '" data-ficha="' + esc(l.id) + '" tabindex="0" role="button">' +
       '<div class="lote-cab"><span class="lote-codigo">' + esc(l.codigoLote) + "</span>" +
-      UI.insignia(l.estado) + "</div>" +
+      (sinEnviar
+        ? '<span class="estado estado-pendienteenvio">Pendiente de enviar</span>'
+        : UI.insignia(l.estado)) + "</div>" +
       '<div class="lote-cuerpo">' + UI.etiquetaLinea(l.lineaId) +
       "<strong>" + nf(l.cajasAnunciadas) + " cajas</strong>" +
       '<span class="tenue">' + UI.fechaCorta(l.fecha) + "</span></div>";
@@ -403,7 +408,9 @@
 
       DB.registrarBitacora(usuario.id, "Anuncio de envío",
         lote.codigoLote + " · " + nf(lote.cajasAnunciadas) + " cajas de " + linea.nombre);
-      UI.aviso("Envío " + lote.codigoLote + " anunciado. La planta ya lo ve en su cola.");
+      UI.aviso(DB.estaPendiente("lotes", lote.id)
+        ? "Envío " + lote.codigoLote + " guardado. Se enviará solo cuando vuelva la señal."
+        : "Envío " + lote.codigoLote + " anunciado. La planta ya lo ve en su cola.");
       vista = "inicio";
       render();
     }, {
@@ -679,6 +686,13 @@
       '<button class="btn btn-plano btn-sm" id="btnSalir">Salir</button></div></header>';
 
     html += '<main id="contenido" tabindex="-1">';
+    const sinEnviar = DB.pendientes();
+    if (sinEnviar > 0) {
+      html += '<p class="banda-pendiente"><strong>' + sinEnviar +
+        (sinEnviar === 1 ? " registro sin enviar." : " registros sin enviar.") +
+        "</strong> Están guardados en tu teléfono y saldrán solos cuando " +
+        "vuelva la señal. No hace falta que repitas nada.</p>";
+    }
     if (vista === "inicio") html += vistaInicio();
     else if (vista === "lotes") html += vistaLotes();
     else if (vista === "desempeno") html += vistaDesempeno();
@@ -822,19 +836,28 @@
   function marcarConectado() {
     conectado = true;
     const el = UI.$("#estadoConexion");
-    if (el) {
-      el.className = "conexion conexion-ok";
-      el.innerHTML = '<span class="conexion-punto" aria-hidden="true"></span>' +
-        (DB.esCompartido() ? "Conectado al sistema" : "Modo local, sin conexión compartida");
+    if (el) el.outerHTML = estadoConexionHTML();
+  }
+
+  function textoConexion() {
+    if (!conectado) return "Conectando con el sistema…";
+    const n = DB.pendientes();
+    const pend = n === 1 ? "1 registro pendiente" : n + " registros pendientes";
+    if (!DB.esCompartido()) {
+      return "Sin conexión" + (n > 0 ? " — " + pend + ", se enviarán al volver" : "");
     }
+    return n > 0 ? pend + " de enviar" : "Conectado al sistema";
+  }
+
+  function claseConexion() {
+    if (!conectado) return "conexion";
+    if (DB.pendientes() > 0) return "conexion conexion-pendiente";
+    return DB.esCompartido() ? "conexion conexion-ok" : "conexion conexion-sinred";
   }
 
   function estadoConexionHTML() {
-    return '<p class="conexion' + (conectado ? " conexion-ok" : "") + '" id="estadoConexion">' +
-      '<span class="conexion-punto" aria-hidden="true"></span>' +
-      (conectado
-        ? (DB.esCompartido() ? "Conectado al sistema" : "Modo local, sin conexión compartida")
-        : "Conectando con el sistema…") + "</p>";
+    return '<p class="' + claseConexion() + '" id="estadoConexion">' +
+      '<span class="conexion-punto" aria-hidden="true"></span>' + textoConexion() + "</p>";
   }
 
   function iniciar() {
@@ -843,6 +866,8 @@
     restaurar();
     render();
 
+    DB.vigilarRed();
+    DB.alCambiarCola(function () { UI.repintarSiSeguro(render); });
     DB.alFallarEscritura(function () {
       UI.aviso("No se pudo enviar el cambio. Revisa tu conexión.", "error");
     });

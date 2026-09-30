@@ -518,6 +518,96 @@ const DB = (function () {
   let modo = "local";
   const suscripciones = [];
 
+  /* ------------------------------------------------------ cola sin señal */
+
+  /* Lo que no se pudo enviar queda aquí, en el propio dispositivo, hasta que
+     vuelva la cobertura. Se guarda la REFERENCIA (colección + id), no una
+     copia: así varias ediciones del mismo registro se envían una sola vez,
+     con su último estado, y nunca se manda algo viejo. */
+  const KEY_COLA = "flp.cola.v1";
+  let cola = [];
+  let alCambiarCola = null;
+
+  function cargarCola() {
+    try { cola = JSON.parse(localStorage.getItem(KEY_COLA) || "[]"); }
+    catch (e) { cola = []; }
+  }
+
+  function guardarCola() {
+    try { localStorage.setItem(KEY_COLA, JSON.stringify(cola)); } catch (e) { /* noop */ }
+    if (alCambiarCola) alCambiarCola(cola.length);
+  }
+
+  function encolar(tipo, coleccion, id) {
+    cola = cola.filter(function (x) {
+      return !(x.coleccion === coleccion && x.id === id);
+    });
+    cola.push({ tipo: tipo, coleccion: coleccion, id: id, desde: new Date().toISOString() });
+    guardarCola();
+  }
+
+  function pendientes() { return cola.length; }
+
+  function estaPendiente(coleccion, id) {
+    return cola.some(function (x) { return x.coleccion === coleccion && x.id === id; });
+  }
+
+  function registrosPendientes() {
+    return cola.map(function (x) {
+      if (x.tipo === "delete" || x.tipo === "sistema") return null;
+      return { coleccion: x.coleccion, registro: get(x.coleccion, x.id) };
+    }).filter(function (x) { return x && x.registro; });
+  }
+
+  /* El catálogo y la bitácora no viven en una colección sino en un documento
+     único, así que no salen en registrosPendientes(). Se apartan aparte: si
+     hay un cambio sin enviar, ese es el bueno y lo remoto no debe pisarlo. */
+  function configPendiente() {
+    return estaPendiente("sistema", "config") ? configActual() : null;
+  }
+
+  function bitacoraPendiente() {
+    return estaPendiente("sistema", "bitacora") ? copiar(load().bitacora) : null;
+  }
+
+  /* Envía lo acumulado. Si vuelve a fallar, lo deja en la cola y se
+     reintentará: nada se descarta por no haber podido salir. */
+  async function vaciarCola() {
+    if (!remoto || !cola.length) return;
+    const lote = cola.slice();
+
+    for (let i = 0; i < lote.length; i += 1) {
+      const it = lote[i];
+      try {
+        if (it.tipo === "sistema") {
+          await remoto.doc("sistema/" + it.id).set(it.id === "config"
+            ? configActual() : { entradas: load().bitacora });
+        } else if (it.tipo === "delete") {
+          await remoto.collection(it.coleccion).doc(it.id).delete();
+        } else {
+          const reg = get(it.coleccion, it.id);
+          /* Si el registro ya no existe localmente no hay nada que enviar:
+             se saca de la cola en vez de reintentarlo para siempre. */
+          if (reg) await remoto.collection(it.coleccion).doc(it.id).set(reg);
+        }
+        cola = cola.filter(function (x) {
+          return !(x.coleccion === it.coleccion && x.id === it.id);
+        });
+        guardarCola();
+      } catch (e) {
+        break;                         // sigue sin señal: se reintenta luego
+      }
+    }
+  }
+
+  /* Reintentos: cuando el sistema avisa de que volvió la red, y cada tanto
+     por si el aviso no llega (pasa en móviles). */
+  function vigilarRed() {
+    if (typeof window === "undefined") return;
+    window.addEventListener("online", function () { vaciarCola(); });
+    setInterval(function () { if (cola.length) vaciarCola(); }, 20000);
+  }
+
   function esCompartido() { return modo === "compartido"; }
   function modoActual() { return modo; }
 
@@ -537,10 +627,30 @@ const DB = (function () {
       const esquemaRemoto = meta.exists ? (meta.data().esquema || 0) : 0;
 
       if (esquemaRemoto !== ESQUEMA) {
-        /* El modelo cambió: se descarta lo anterior y se vuelve a sembrar,
-           porque los registros viejos no tienen cajas ni causas raíz. */
+        /* El modelo cambió o el almacén está vacío: se vuelve a sembrar.
+           Pero lo que la persona registró sin señal NO es descartable, así
+           que se aparta y se vuelve a aplicar sobre la semilla nueva. */
+        const sinEnviar = registrosPendientes();
+        const cfgSinEnviar = configPendiente();
+        const bitSinEnviar = bitacoraPendiente();
         await limpiarRemoto();
         await sembrarRemoto();
+
+        const db = load();
+        if (cfgSinEnviar) {
+          CONFIG.forEach(function (k) {
+            if (cfgSinEnviar[k]) db[k] = cfgSinEnviar[k];
+          });
+        }
+        if (bitSinEnviar) db.bitacora = bitSinEnviar;
+        sinEnviar.forEach(function (x) {
+          const lista = db[x.coleccion];
+          if (!lista) return;
+          const i = lista.findIndex(function (r) { return r.id === x.registro.id; });
+          if (i === -1) lista.push(x.registro);
+          else lista[i] = x.registro;
+        });
+        save();
       } else {
         const paginas = await Promise.all(
           COLECCIONES.map(function (c) { return remoto.collection(c).get(); })
@@ -548,18 +658,47 @@ const DB = (function () {
         const cfg = await remoto.doc("sistema/config").get();
         const bit = await remoto.doc("sistema/bitacora").get();
 
+        /* Lo que se registró sin señal todavía no está en el almacén: se
+           aparta ANTES de traer lo remoto, para volver a ponerlo después.
+           Sin esto, conectarse borraría el trabajo hecho sin cobertura. */
+        const sinEnviar = registrosPendientes();
+        const cfgSinEnviar = configPendiente();
+        const bitSinEnviar = bitacoraPendiente();
+
         const db = load();
         COLECCIONES.forEach(function (c, i) {
           db[c] = paginas[i].docs.map(function (d) { return copiar(d.data()); });
+        });
+
+        sinEnviar.forEach(function (x) {
+          const lista = db[x.coleccion];
+          const i = lista.findIndex(function (r) { return r.id === x.registro.id; });
+          if (i === -1) lista.push(x.registro);
+          else lista[i] = x.registro;
         });
         if (cfg.exists) {
           const datos = copiar(cfg.data());
           CONFIG.forEach(function (k) { if (datos[k]) db[k] = datos[k]; });
         }
         db.bitacora = bit.exists ? copiar(bit.data().entradas || []) : [];
+        /* Lo editado sin señal se vuelve a poner encima de lo remoto y se
+           guarda, porque vaciarCola() lee de aquí para enviarlo. */
+        if (cfgSinEnviar) {
+          CONFIG.forEach(function (k) {
+            if (cfgSinEnviar[k]) db[k] = cfgSinEnviar[k];
+          });
+        }
+        if (bitSinEnviar) db.bitacora = bitSinEnviar;
+        save();
       }
 
       modo = "compartido";
+
+      /* Primero se envía lo pendiente y DESPUÉS se escucha. Al revés, el
+         primer snapshot llega con lo que hay en el almacén —sin lo que se
+         registró sin señal— y lo borraría del cache justo antes de poder
+         enviarlo. */
+      await vaciarCola();
       escuchar(alCambiar);
     } catch (e) {
       remoto = null;
@@ -613,6 +752,8 @@ const DB = (function () {
 
     suscripciones.push(remoto.doc("sistema/config").onSnapshot(function (snap) {
       if (!snap.exists) return;
+      /* Si aún hay un cambio local sin enviar, lo remoto está atrasado. */
+      if (estaPendiente("sistema", "config")) return;
       const datos = copiar(snap.data());
       const db = load();
       CONFIG.forEach(function (k) { if (datos[k]) db[k] = datos[k]; });
@@ -620,30 +761,45 @@ const DB = (function () {
     }, function (err) { console.warn("Suscripción interrumpida en config:", err.code); }));
 
     suscripciones.push(remoto.doc("sistema/bitacora").onSnapshot(function (snap) {
+      if (estaPendiente("sistema", "bitacora")) return;
       load().bitacora = snap.exists ? copiar(snap.data().entradas || []) : [];
       if (alCambiar) alCambiar("bitacora");
     }, function (err) { console.warn("Suscripción interrumpida en bitácora:", err.code); }));
   }
 
   function empujar(coleccion, registro) {
-    if (!remoto) return;
     if (CONFIG.indexOf(coleccion) !== -1) { empujarConfig(); return; }
-    remoto.collection(coleccion).doc(registro.id).set(registro).catch(avisarFallo);
+    if (!remoto) { encolar("set", coleccion, registro.id); return; }
+    remoto.collection(coleccion).doc(registro.id).set(registro).catch(function (e) {
+      encolar("set", coleccion, registro.id);
+      avisarFallo(e);
+    });
   }
 
   function empujarBorrado(coleccion, id) {
-    if (!remoto) return;
-    remoto.collection(coleccion).doc(id).delete().catch(avisarFallo);
+    if (!remoto) { encolar("delete", coleccion, id); return; }
+    remoto.collection(coleccion).doc(id).delete().catch(function (e) {
+      encolar("delete", coleccion, id);
+      avisarFallo(e);
+    });
   }
 
+  /* Los documentos de sistema se encolan igual que los registros: un cambio
+     de catálogo hecho sin señal se perdía en silencio. */
   function empujarConfig() {
-    if (!remoto) return;
-    remoto.doc("sistema/config").set(configActual()).catch(avisarFallo);
+    if (!remoto) { encolar("sistema", "sistema", "config"); return; }
+    remoto.doc("sistema/config").set(configActual()).catch(function (e) {
+      encolar("sistema", "sistema", "config");
+      avisarFallo(e);
+    });
   }
 
   function empujarBitacora(entradas) {
-    if (!remoto) return;
-    remoto.doc("sistema/bitacora").set({ entradas: entradas }).catch(avisarFallo);
+    if (!remoto) { encolar("sistema", "sistema", "bitacora"); return; }
+    remoto.doc("sistema/bitacora").set({ entradas: entradas }).catch(function (e) {
+      encolar("sistema", "sistema", "bitacora");
+      avisarFallo(e);
+    });
   }
 
   let alFallar = null;
@@ -660,6 +816,7 @@ const DB = (function () {
 
   function load() {
     if (cache) return cache;
+    cargarCola();
     try {
       const raw = localStorage.getItem(KEY);
       if (raw) {
@@ -681,6 +838,8 @@ const DB = (function () {
   }
 
   function reset() {
+    cola = [];
+    guardarCola();
     if (esCompartido()) {
       return limpiarRemoto().then(sembrarRemoto).then(function () { return cache; });
     }
@@ -811,6 +970,11 @@ const DB = (function () {
     accesoLibre: accesoLibre,
     registrarBitacora: registrarBitacora,
     conectar: conectar,
+    pendientes: pendientes,
+    estaPendiente: estaPendiente,
+    vaciarCola: vaciarCola,
+    vigilarRed: vigilarRed,
+    alCambiarCola: function (fn) { alCambiarCola = fn; },
     esCompartido: esCompartido,
     modoActual: modoActual,
     alFallarEscritura: alFallarEscritura

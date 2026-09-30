@@ -216,7 +216,11 @@ const Graficos = (function () {
     const iw = W - m.l - m.r;
     const ih = H - m.t - m.b;
 
-    const max = escalaBonita(Math.max.apply(null, filas.map(function (d) { return d.kg; })));
+    /* El Pareto sirve para kilos y para dinero: quien llama decide qué mide
+       con o.valor y cómo se lee con o.unidad. */
+    const valorDe = o.valor || function (d) { return d.kg; };
+    const unidad = o.unidad === undefined ? " kg" : o.unidad;
+    const max = escalaBonita(Math.max.apply(null, filas.map(valorDe)));
     const ancho = iw / filas.length;
     const y = function (v) { return m.t + ih - (v / max) * ih; };
     const yAcum = function (p) { return m.t + ih - p * ih; };
@@ -239,13 +243,13 @@ const Graficos = (function () {
       const x = m.l + i * ancho;
       const bw = ancho * 0.62;
       const bx = x + (ancho - bw) / 2;
-      const by = y(d.kg);
+      const by = y(valorDe(d));
       const color = o.color ? o.color(d) : PALETA[i % PALETA.length];
 
       svg += '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + bw.toFixed(1) +
         '" height="' + (m.t + ih - by).toFixed(1) + '" rx="3" fill="' + color + '">' +
-        "<title>" + esc(d.nombre) + " (" + esc(d.tipo) + "): " + fmt(d.kg) + " kg · " +
-        (d.porcentaje * 100).toFixed(1) + "% de la merma</title></rect>";
+        "<title>" + esc(d.nombre) + ": " + fmt(valorDe(d)) + unidad + " · " +
+        (d.porcentaje * 100).toFixed(1) + "% del total</title></rect>";
 
       /* Etiqueta girada: los nombres de causa no caben en horizontal */
       const eje = o.ejeX ? o.ejeX(d) : d.nombre;

@@ -90,7 +90,7 @@ app/
 ├── index.html              Portada: elige aplicación
 ├── core/                   Núcleo compartido por las dos apps
 │   ├── db.js               Datos, catálogos, almacén compartido
-│   ├── indicadores.js      Pérdidas, economía circular y proceso
+│   ├── indicadores.js      Pérdidas, economía circular, proceso, costeo y simulador
 │   ├── graficos.js         SVG a mano: líneas, barras, dona, Pareto, medidor
 │   ├── ui.js               Formato, tablas, formularios, exportación
 │   └── estilos.css         Sistema visual, claro/oscuro, impresión
@@ -100,6 +100,8 @@ app/
 └── interno/                Aplicación interna
     ├── index.html
     └── planta.js
+
+tools/empaquetar.js         Arma dist/sistema-flp.html (el archivo que se publica)
 ```
 
 Sin dependencias, sin build, sin conexión a internet.
@@ -159,6 +161,44 @@ Tres familias, en `core/indicadores.js`.
 | Minutos por caja | `minutos reales ÷ cajas procesadas` |
 | Productividad | `cajas procesadas ÷ horas-hombre` |
 | Ciclo del lote | `promedio(fecha cierre − fecha anuncio)` |
+
+### Costeo por causa raíz
+| Indicador | Fórmula |
+|---|---|
+| Valor de la fruta perdida | `Σ (kg merma × precio de caja ÷ kg por caja)` |
+| Recuperado por destino | `Σ (kg × valor del destino)` — negativo en relleno (−0,02 $/kg) |
+| Horas-hombre hundidas | `Σ (kg ÷ kg por caja × tiempo estándar ÷ 60 × costo hora-hombre)` |
+| Costo de la causa | `fruta − recuperado + horas-hombre` |
+| Proyección anual | `costo del período × 365 ÷ días del período` |
+| Pareto económico | % y % acumulado sobre el costo; las causas hasta el 80% quedan marcadas **vitales** |
+
+Es el puente entre el diagnóstico y la decisión: mientras la pérdida se mide en kilos nadie
+la prioriza; medida en dólares al año, sí. La proyección anual es un supuesto (**S**) y la
+pantalla lo dice.
+
+### Simulador de escenario «con mejora»
+Se elige cuánto se cree que baja cada causa y cuánto costaría lograrlo:
+
+```
+ahorro por causa   = costo anual de la causa × reducción supuesta
+ahorro por valorizar = kg que aún irían a relleno × fracción valorizada
+                       × (valor del destino objetivo − valor del relleno)
+ahorro neto anual  = ahorro por causa + ahorro por valorizar − costo anual añadido
+payback (meses)    = inversión ÷ ahorro neto × 12
+VAN a 3 años       = −inversión + Σ ahorro neto ÷ (1 + 12%)^t
+beneficio/costo    = ahorro neto × 3 años ÷ inversión
+```
+
+Trae las cuatro medidas del diagnóstico como interruptores, con una estimación inicial
+editable: segregar la merma (CR5), estandarizar la entrega del proveedor (CR6), reordenar
+el layout (CR7) y balancear el sopleteado (CR8). Dos medidas sobre la misma causa **no se
+suman**: se combinan como reducciones sucesivas. Al mover un deslizador a mano las medidas
+se desmarcan, porque el escenario ya dejó de ser el del catálogo.
+
+Cierra con los tres indicadores clave *antes → después* (tasa exportable, merma y descarte
+aprovechado) y un veredicto explícito cuando la propuesta no se sostiene. Reducciones,
+inversiones y tasa de descuento son **supuestos (S)**, nunca datos medidos, y deben
+discutirse con la empresa.
 
 ## 6. Planificación diaria
 
@@ -262,8 +302,24 @@ proveedor, usuario y plan; catálogos y parámetros en un documento de configura
 bitácora agregada y podada a 200 movimientos.
 
 **Modo local** (archivos abiertos directamente): `localStorage` del navegador, clave
-`flp.db.v4`. Persiste en ese equipo pero no se comparte. El pie del menú indica siempre
+`flp.db.v5`. Persiste en ese equipo pero no se comparte. El pie del menú indica siempre
 en qué modo está.
+
+**Sin señal**: en la finca la cobertura se cae, y el trabajo no puede caerse con ella.
+Lo que no se logra enviar queda en una cola local (`flp.cola.v1`) que guarda la
+*referencia* —colección e id—, no una copia: varias ediciones del mismo registro salen
+una sola vez, con su último estado. La pantalla lo dice en lugar de fingir que se guardó,
+y la cola se vacía sola al volver la red (evento `online` y un reintento cada 20 s, porque
+en el celular el evento a veces no llega). Tres cosas que costaron encontrarse y que
+conviene no volver a romper:
+
+1. Se **envía antes de suscribirse**. Al revés, el primer snapshot llega sin lo que se
+   registró sin señal y lo borra del cache justo antes de poder enviarlo.
+2. Al resembrar el almacén, lo pendiente se aparta y se vuelve a aplicar encima de la
+   semilla nueva — incluidos catálogo y bitácora, que no viven en una colección y por eso
+   no salían en `registrosPendientes()`.
+3. Mientras haya un cambio de catálogo sin enviar, el snapshot remoto **no** lo pisa:
+   lo remoto está atrasado, no al día.
 
 ## 11. Migrar a un backend real
 
@@ -340,6 +396,33 @@ que no revele si un código existe, que un proveedor no entre con credencial de 
 frene la adivinación, que la sesión se recuerde, que Supervisión pueda crear un acceso y
 entregarlo una sola vez, y que la clave temporal deje de servir en cuanto se cambia.
 
-Y **8 comprobaciones** sobre el paquete publicado: las dos puertas, el almacén compartido
+**15 comprobaciones de activación por el propio proveedor** y **10 de corrección con
+rastro**: que un pesaje equivocado pueda enmendarse y que la bitácora conserve el valor
+anterior, quién lo cambió y cuándo.
+
+**11 comprobaciones sin señal**: que la app no finja haber guardado, que lo registrado
+sobreviva a cerrar y reabrir, que salga solo al volver la red —incluido un cambio de
+catálogo, que no vive en una colección— y que deje de marcarse como pendiente.
+
+**17 comprobaciones de costeo y simulador**: que las tres partes del costo cuadren con el
+total, que el Pareto económico cierre en 100%, que el payback concuerde con inversión y
+ahorro, que quitar una medida baje las dos cifras, que mover un deslizador recalcule **sin
+robar el foco**, que valorizar el residuo aporte ahorro propio, y que una inversión
+imposible o un costo anual mayor que el ahorro se declaren inviables en vez de mostrar un
+número absurdo.
+
+Y **9 comprobaciones** sobre el paquete publicado: las dos puertas, el almacén compartido
 activo, un envío anunciado desde el celular apareciendo en la cola de la planta, el pesaje
-llegando en vivo al portal, y la navegación entre puertas.
+llegando en vivo al portal, la navegación entre puertas y el módulo de costeo funcionando
+dentro del archivo único.
+
+### Empaquetar
+
+```bash
+node tools/empaquetar.js      # → dist/sistema-flp.html
+```
+
+Concatena los mismos archivos de `app/` que usa el desarrollo, en el orden que exigen las
+dependencias, y se niega a escribir el paquete si encuentra una etiqueta `</script>` dentro
+del código —que cerraría el bloque antes de tiempo y rompería la página entera en
+silencio. Lo publicado y lo versionado no pueden separarse.

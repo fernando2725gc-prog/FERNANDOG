@@ -534,6 +534,303 @@ const Indicadores = (function () {
     };
   }
 
+  /* ================================================================= costeo
+     Cuánto cuesta cada causa raíz, en dinero. Es el puente entre el
+     diagnóstico (kg perdidos por CR) y la decisión de inversión: mientras la
+     pérdida se mide en kilos nadie la prioriza; medida en dólares al año, sí.
+
+     El costo de una pérdida tiene tres partes, y las tres se suman:
+       · la fruta        — lo que valía esa fruta puesta como exportación
+       · la recuperación — lo que el destino devuelve (en relleno es NEGATIVA:
+                           se paga por botar, de ahí el valorKg -0.02)
+       · la transformación — las horas-hombre ya invertidas en fruta que al
+                           final no se exportó; el estudio de tiempos las da
+                           por caja, así que se prorratean por kilo.
+     ==================================================================== */
+
+  /* Días sobre los que se proyecta. Se toma el tramo que realmente tiene
+     registros, no el rango del filtro: con un filtro muy ancho —o abierto—
+     el rango diría "cien años" y la proyección anual saldría en nada. Si el
+     filtro es más estrecho que los datos, manda el filtro. */
+  function diasDelPeriodo(filtros, datos) {
+    const f = filtros || {};
+    let dias = null;
+    if (f.desde && f.hasta) {
+      const d = Math.round((new Date(f.hasta) - new Date(f.desde)) / 86400000) + 1;
+      if (d > 0) dias = d;
+    }
+    const fechas = datos.producciones.map(function (p) { return p.fecha; })
+      .concat(datos.lotes.map(function (l) { return l.fecha; }))
+      .filter(Boolean).sort();
+    if (fechas.length) {
+      const d = Math.round(
+        (new Date(fechas[fechas.length - 1]) - new Date(fechas[0])) / 86400000) + 1;
+      if (d > 0) dias = dias === null ? d : Math.min(dias, d);
+    }
+    return dias === null || dias < 1 ? 1 : dias;
+  }
+
+  function costeo(filtros) {
+    const p = DB.parametros();
+    const datos = filtrar(filtros);
+    const prod = datos.producciones;
+    const dias = diasDelPeriodo(filtros, datos);
+    const factorAnual = 365 / dias;
+
+    const mapa = {};
+    DB.all("causas").forEach(function (c) {
+      mapa[c.id] = {
+        causaId: c.id, codigo: c.codigo, nombre: c.nombre,
+        etiqueta: c.codigo + " · " + c.nombre,
+        origen: c.origen, definida: c.definida, principal: c.principal,
+        descripcion: c.descripcion || "",
+        kg: 0, kgSinValorizar: 0, cajasEquivalentes: 0,
+        valorFruta: 0, valorRecuperado: 0, costoTransformacion: 0
+      };
+    });
+
+    prod.forEach(function (pr) {
+      const l = DB.linea(pr.lineaId);
+      const peso = l && l.pesoCajaKg ? l.pesoCajaKg : DB.PESO_CAJA_KG;
+      const valorKg = l ? l.precioCaja / peso : 0;
+      const minutosPorKg = l ? l.tiempoEstandarMin / peso : 0;
+
+      (pr.mermas || []).forEach(function (m) {
+        const f = mapa[m.causaId];
+        if (!f) return;
+        const kg = Number(m.kg) || 0;
+        const d = DB.destino(m.destinoId);
+        f.kg += kg;
+        f.cajasEquivalentes += kg / peso;
+        f.valorFruta += kg * valorKg;
+        f.valorRecuperado += kg * (d ? (Number(d.valorKg) || 0) : 0);
+        f.costoTransformacion += (kg * minutosPorKg / 60) * p.costoHoraHombre;
+        if (!d || !d.valoriza) f.kgSinValorizar += kg;
+      });
+    });
+
+    const lista = Object.keys(mapa).map(function (k) { return mapa[k]; })
+      .filter(function (x) { return x.kg > 0; });
+
+    lista.forEach(function (x) {
+      x.costoTotal = x.valorFruta - x.valorRecuperado + x.costoTransformacion;
+      x.costoPorKg = x.kg > 0 ? x.costoTotal / x.kg : 0;
+      x.costoDiario = x.costoTotal / dias;
+      x.costoAnual = x.costoTotal * factorAnual;
+      x.kgAnual = x.kg * factorAnual;
+    });
+    lista.sort(function (a, b) { return b.costoTotal - a.costoTotal; });
+
+    const total = lista.reduce(function (a, x) { return a + x.costoTotal; }, 0);
+    let acumulado = 0;
+    lista.forEach(function (x) {
+      x.porcentaje = total > 0 ? x.costoTotal / total : 0;
+      acumulado += x.porcentaje;
+      x.acumulado = acumulado;
+      /* Pareto: las primeras causas hasta cubrir el 80% son las "vitales". */
+      x.vital = x.acumulado - x.porcentaje < 0.8;
+    });
+
+    function sumar(campo) {
+      return lista.reduce(function (a, x) { return a + x[campo]; }, 0);
+    }
+
+    return {
+      lista: lista,
+      dias: dias,
+      factorAnual: factorAnual,
+      costoHoraHombre: p.costoHoraHombre,
+      kg: sumar("kg"),
+      kgSinValorizar: sumar("kgSinValorizar"),
+      cajasEquivalentes: sumar("cajasEquivalentes"),
+      valorFruta: sumar("valorFruta"),
+      valorRecuperado: sumar("valorRecuperado"),
+      costoTransformacion: sumar("costoTransformacion"),
+      costoTotal: total,
+      costoDiario: total / dias,
+      costoMensual: total * factorAnual / 12,
+      costoAnual: total * factorAnual,
+      /* Cuántas causas concentran el 80% del dinero perdido. */
+      vitales: lista.filter(function (x) { return x.vital; }).length,
+      sinClasificar: lista.filter(function (x) { return !x.definida; })
+        .reduce(function (a, x) { return a + x.costoTotal; }, 0)
+    };
+  }
+
+  /* ============================================================ simulador
+     Escenario "con mejora": se decide cuánto se cree que baja cada causa y
+     cuánto costaría lograrlo. Devuelve ahorro anual, recuperación de la
+     inversión (payback) y el valor actual neto a tres años, para que la
+     propuesta de la tesis se defienda con números y no con intenciones.
+
+     Las reducciones son SUPUESTOS (origen S): el sistema las deja editar y
+     las muestra como tales, nunca como dato medido.
+     ==================================================================== */
+
+  const TASA_DESCUENTO = 0.12;          // costo de oportunidad anual, supuesto
+  const ANIOS_VAN = 3;
+
+  /* Medidas del diagnóstico, con una estimación inicial editable. */
+  const ESCENARIOS = [
+    { id: "esc_segregacion", nombre: "Segregar la merma en la línea",
+      causas: ["CR5"], reduccion: 0.35, valorizacion: 0.60, inversion: 1800,
+      recurrenteAnual: 900,
+      detalle: "Contenedores identificados por destino y un responsable por turno." },
+    { id: "esc_proveedores", nombre: "Estandarizar la entrega del proveedor",
+      causas: ["CR6"], reduccion: 0.30, valorizacion: 0.10, inversion: 1200,
+      recurrenteAnual: 1400,
+      detalle: "Ficha técnica, capacitación en campo y verificación de peso por caja." },
+    { id: "esc_layout", nombre: "Reordenar el layout de planta",
+      causas: ["CR7"], reduccion: 0.40, valorizacion: 0, inversion: 4500,
+      recurrenteAnual: 0,
+      detalle: "Recorrido en línea recta entre recepción, selección y empaque." },
+    { id: "esc_sopleteado", nombre: "Balancear la estación de sopleteado",
+      causas: ["CR8"], reduccion: 0.45, valorizacion: 0, inversion: 2600,
+      recurrenteAnual: 300,
+      detalle: "Reasignar operarios según el takt time y nivelar la carga." }
+  ];
+
+  function acotar(x) { return Math.max(0, Math.min(1, Number(x) || 0)); }
+
+  /* esc = {
+       filtros, reducciones:{CRx:0..1}, inversion, recurrenteAnual,
+       valorizacion: 0..1 (cuánto del residuo que hoy va a relleno se
+       valoriza), valorKgObjetivo: $/kg del destino al que se movería
+     } */
+  function simular(esc) {
+    const e = esc || {};
+    const base = costeo(e.filtros);
+    const red = e.reducciones || {};
+    const destinoObjetivo = DB.destino(e.destinoObjetivoId) ||
+      DB.all("destinos").filter(function (d) { return d.valoriza; })
+        .sort(function (a, b) { return b.valorKg - a.valorKg; })[1] || null;
+    const relleno = DB.all("destinos").find(function (d) { return !d.valoriza; });
+    const valorObjetivo = e.valorKgObjetivo !== undefined
+      ? Number(e.valorKgObjetivo) || 0
+      : (destinoObjetivo ? destinoObjetivo.valorKg : 0);
+    const valorRelleno = relleno ? Number(relleno.valorKg) || 0 : 0;
+
+    const detalle = base.lista.map(function (c) {
+      const r = acotar(red[c.causaId]);
+      return {
+        causaId: c.causaId, codigo: c.codigo, nombre: c.nombre,
+        etiqueta: c.etiqueta, principal: c.principal, definida: c.definida,
+        reduccion: r,
+        kgAnual: c.kgAnual,
+        kgEvitadosAnual: c.kgAnual * r,
+        costoAnual: c.costoAnual,
+        costoAnualConMejora: c.costoAnual * (1 - r),
+        ahorroAnual: c.costoAnual * r
+      };
+    });
+
+    const ahorroCausas = detalle.reduce(function (a, x) { return a + x.ahorroAnual; }, 0);
+    const kgEvitados = detalle.reduce(function (a, x) { return a + x.kgEvitadosAnual; }, 0);
+
+    /* Lo que aun así se descarta y hoy termina en relleno: valorizarlo no
+       evita la pérdida, pero recupera parte y deja de pagar disposición.
+
+       Lo evitado no se resta en bruto: las reducciones actúan sobre TODA la
+       merma, no solo sobre la que va al relleno. Se aplica la reducción
+       media ponderada por kilo, que es la fracción del descarte que deja de
+       existir; restar los kilos evitados sin más dejaba el relleno en cero y
+       la valorización en cero con él. */
+    const kgTotalAnual = base.lista.reduce(function (a, x) { return a + x.kgAnual; }, 0);
+    const reduccionMedia = kgTotalAnual > 0 ? kgEvitados / kgTotalAnual : 0;
+    const kgRellenoAnual = base.kgSinValorizar * base.factorAnual;
+    const kgRellenoRestante = kgRellenoAnual * (1 - reduccionMedia);
+    const fraccion = acotar(e.valorizacion);
+    const kgValorizados = kgRellenoRestante * fraccion;
+    const ahorroValorizacion = kgValorizados * (valorObjetivo - valorRelleno);
+
+    const inversion = Math.max(0, Number(e.inversion) || 0);
+    const recurrente = Math.max(0, Number(e.recurrenteAnual) || 0);
+    const ahorroBruto = ahorroCausas + ahorroValorizacion;
+    const ahorroNeto = ahorroBruto - recurrente;
+
+    /* Payback simple sobre el flujo neto. Sin ahorro neto no hay retorno:
+       se devuelve null y la pantalla lo dice, en vez de un número absurdo. */
+    const paybackMeses = ahorroNeto > 0 && inversion > 0
+      ? (inversion / ahorroNeto) * 12 : (inversion === 0 ? 0 : null);
+
+    let van = -inversion;
+    for (let t = 1; t <= ANIOS_VAN; t += 1) {
+      van += ahorroNeto / Math.pow(1 + TASA_DESCUENTO, t);
+    }
+
+    /* Cómo quedarían los indicadores del periodo con la mejora aplicada. */
+    const ind = calcular(e.filtros);
+    const pesoCaja = DB.PESO_CAJA_KG;
+    const cajasRecuperadas = (kgEvitados / base.factorAnual) / pesoCaja;
+    const kgMermaConMejora = Math.max(0, ind.kgMerma - kgEvitados / base.factorAnual);
+    const kgValorizadoConMejora = Math.min(
+      kgMermaConMejora,
+      ind.kgValorizado + kgValorizados / base.factorAnual
+    );
+
+    return {
+      base: base,
+      detalle: detalle,
+      inversion: inversion,
+      recurrenteAnual: recurrente,
+      ahorroCausas: ahorroCausas,
+      ahorroValorizacion: ahorroValorizacion,
+      ahorroBruto: ahorroBruto,
+      ahorroNeto: ahorroNeto,
+      ahorroMensual: ahorroNeto / 12,
+      kgEvitadosAnual: kgEvitados,
+      kgValorizadosAnual: kgValorizados,
+      valorKgObjetivo: valorObjetivo,
+      destinoObjetivo: destinoObjetivo ? destinoObjetivo.nombre : "—",
+      paybackMeses: paybackMeses,
+      paybackAnios: paybackMeses === null ? null : paybackMeses / 12,
+      van: van,
+      tasaDescuento: TASA_DESCUENTO,
+      aniosVan: ANIOS_VAN,
+      /* Beneficio/costo: dólares ahorrados en el horizonte por dólar puesto. */
+      beneficioCosto: inversion > 0 ? (ahorroNeto * ANIOS_VAN) / inversion : null,
+      viable: ahorroNeto > 0 && van > 0,
+      costoAnualActual: base.costoAnual,
+      costoAnualConMejora: Math.max(0, base.costoAnual - ahorroBruto) + recurrente,
+      indicadores: {
+        tasaMerma: ind.tasaMerma,
+        tasaMermaConMejora: ind.kgProcesados > 0 ? kgMermaConMejora / ind.kgProcesados : 0,
+        tasaExportable: ind.tasaExportable,
+        tasaExportableConMejora: ind.cajasProcesadas > 0
+          ? Math.min(1, (ind.cajasExportables + cajasRecuperadas) / ind.cajasProcesadas)
+          : 0,
+        metaExportable: ind.metaExportable,
+        tasaValorizacion: ind.tasaValorizacion,
+        tasaValorizacionConMejora: kgMermaConMejora > 0
+          ? kgValorizadoConMejora / kgMermaConMejora : 0,
+        cajasRecuperadas: cajasRecuperadas
+      }
+    };
+  }
+
+  /* Escenario armado a partir de las medidas elegidas del diagnóstico. */
+  function escenarioDeMedidas(ids, filtros) {
+    const elegidas = ESCENARIOS.filter(function (m) { return ids.indexOf(m.id) !== -1; });
+    const reducciones = {};
+    let inversion = 0, recurrente = 0, valorizacion = 0;
+    elegidas.forEach(function (m) {
+      m.causas.forEach(function (c) {
+        /* Dos medidas sobre la misma causa no suman linealmente: se combinan
+           como reducciones sucesivas, que es lo que de verdad pasa. */
+        const previa = reducciones[c] || 0;
+        reducciones[c] = previa + m.reduccion * (1 - previa);
+      });
+      inversion += m.inversion;
+      recurrente += m.recurrenteAnual;
+      valorizacion = valorizacion + (m.valorizacion || 0) * (1 - valorizacion);
+    });
+    return {
+      filtros: filtros, reducciones: reducciones, inversion: inversion,
+      recurrenteAnual: recurrente, valorizacion: valorizacion,
+      medidas: elegidas.map(function (m) { return m.id; })
+    };
+  }
+
   return {
     filtrar: filtrar,
     calcular: calcular,
@@ -544,6 +841,10 @@ const Indicadores = (function () {
     porCalidad: porCalidad,
     serie: serie,
     planificar: planificar,
+    costeo: costeo,
+    simular: simular,
+    escenarioDeMedidas: escenarioDeMedidas,
+    ESCENARIOS: ESCENARIOS,
     fichaLote: fichaLote,
     totalMerma: totalMerma,
     mermaValorizada: mermaValorizada,

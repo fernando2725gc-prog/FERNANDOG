@@ -1162,3 +1162,98 @@ textarea { resize: vertical; }
   .comparativo-fila { grid-template-columns: 1fr 4.2rem 1rem 4.2rem; }
   .comparativo-dif { grid-column: 2 / -1; text-align: left; }
 }
+
+/* Un pedido terminado que lleva demasiado tiempo sin cerrarse. */
+.dias-alerta { color: var(--ambar); }
+
+/* ============================== guía de uso ============================= */
+
+/* Texto largo: ancho de lectura cómodo, no el ancho del panel. */
+.guia { max-width: 74ch; }
+.guia-cab { margin-bottom: 1.6rem; padding-bottom: 1rem; border-bottom: 2px solid var(--verde); }
+.guia-eyebrow {
+  font-family: var(--fuente-datos); font-size: .72rem; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--texto-tenue); margin-bottom: .3rem;
+}
+.guia-cab h1 { font-size: 1.6rem; }
+
+.guia-seccion { margin-bottom: 2rem; }
+.guia-seccion h2 {
+  font-size: 1.05rem; padding-bottom: .35rem; margin-bottom: .7rem;
+  border-bottom: 1px solid var(--borde);
+}
+.guia p { line-height: 1.6; }
+.guia ul { padding-left: 1.2rem; line-height: 1.6; }
+.guia em { font-style: normal; font-weight: 600; color: var(--verde); }
+
+/* Una advertencia que se lee sin leerla entera. */
+.guia-ojo {
+  background: var(--verde-suave); border-left: 3px solid var(--verde);
+  border-radius: 6px; padding: .7rem .9rem; font-size: .9rem; margin: .9rem 0 0;
+}
+
+.guia-roles { display: grid; gap: .6rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.guia-rol {
+  display: grid; gap: .15rem; padding: .7rem .85rem; border-radius: var(--radio);
+  border: 1px solid var(--borde); background: var(--superficie-2);
+}
+.guia-rol-icono { font-size: 1.4rem; line-height: 1; }
+.guia-rol small { color: var(--texto-tenue); font-size: .82rem; line-height: 1.4; }
+.guia-rol-tuyo { border-color: var(--verde); background: var(--verde-suave); }
+
+/* El recorrido: cada estado, quién lo mueve y qué significa. */
+.guia-recorrido { list-style: none; margin: .5rem 0; padding: 0; display: grid; gap: .45rem; }
+.guia-recorrido li {
+  display: grid; align-items: baseline; gap: .3rem .9rem;
+  grid-template-columns: 7.5rem 9.5rem 1fr;
+  padding: .55rem .8rem; border-radius: var(--radio);
+  border: 1px solid var(--borde); border-left: 3px solid var(--verde);
+  background: var(--superficie-2); font-size: .88rem;
+}
+.guia-recorrido-desvio { border-left-color: var(--rojo) !important; }
+.guia-estado { font-weight: 700; }
+.guia-quien { color: var(--texto-tenue); font-size: .82rem; }
+
+.guia-pasos { margin: .5rem 0; padding-left: 1.3rem; display: grid; gap: .6rem; }
+.guia-pasos li { line-height: 1.5; }
+/* Solo el título del paso ocupa su propia línea. Antes la regla alcanzaba
+   también a las negritas del texto y partía frases por la mitad. */
+.guia-pasos > li > strong { display: block; }
+.guia-pasos > li > span { display: block; color: var(--texto-tenue); font-size: .9rem; }
+
+.guia-defs { margin: .5rem 0; display: grid; gap: .55rem; }
+.guia-defs dt { font-weight: 700; }
+.guia-defs dd { margin: .1rem 0 0; color: var(--texto-tenue); font-size: .92rem; line-height: 1.55; }
+
+.guia-origenes { list-style: none; padding: 0; display: grid; gap: .35rem; }
+
+.guia-faq { display: grid; gap: .4rem; }
+.guia-faq details {
+  border: 1px solid var(--borde); border-radius: var(--radio); background: var(--superficie-2);
+}
+.guia-faq summary {
+  cursor: pointer; padding: .6rem .85rem; font-weight: 600; font-size: .92rem;
+  list-style: none;
+}
+.guia-faq summary::-webkit-details-marker { display: none; }
+.guia-faq summary::before { content: "▸ "; color: var(--texto-tenue); }
+.guia-faq details[open] summary::before { content: "▾ "; }
+.guia-faq details > div {
+  padding: 0 .85rem .75rem 1.5rem; font-size: .9rem; color: var(--texto-tenue); line-height: 1.55;
+}
+
+.guia-pie {
+  margin-top: 2rem; padding-top: .8rem; border-top: 1px solid var(--borde);
+  font-size: .76rem; color: var(--texto-tenue);
+}
+
+@media (max-width: 640px) {
+  .guia-recorrido li { grid-template-columns: 1fr; gap: .15rem; }
+  .guia-quien { order: -1; }
+}
+
+/* Al imprimir la guía debe salir entera: nada plegado se queda fuera. */
+@media print {
+  .guia-faq details { break-inside: avoid; }
+  .guia-seccion { break-inside: avoid; }
+}

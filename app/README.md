@@ -93,6 +93,7 @@ app/
 │   ├── indicadores.js      Pérdidas, economía circular, proceso, costeo y simulador
 │   ├── graficos.js         SVG a mano: líneas, barras, dona, Pareto, medidor
 │   ├── ui.js               Formato, tablas, formularios, exportación
+│   ├── guia.js             La guía de uso, armada con los catálogos reales
 │   └── estilos.css         Sistema visual, claro/oscuro, impresión
 ├── proveedor/              Aplicación externa
 │   ├── index.html
@@ -200,6 +201,24 @@ aprovechado) y un veredicto explícito cuando la propuesta no se sostiene. Reduc
 inversiones y tasa de descuento son **supuestos (S)**, nunca datos medidos, y deben
 discutirse con la empresa.
 
+## 5 bis. Guía de uso dentro de la app
+
+Un manual aparte envejece y nadie lo abre, así que la guía vive en el sistema
+(`core/guia.js`) y se imprime desde él. No es texto fijo: el recorrido del pedido, los
+roles y los orígenes M/E/S se arman con los catálogos reales, de modo que si mañana
+cambia un parámetro, la guía cambia con él.
+
+- **Planta** → menú *Guía de uso*. Cada rol ve primero sus propios pasos (Recepción no
+  ve el procedimiento de cierre, que no le toca) y después el recorrido completo, cómo
+  leer cada indicador, qué significa la letra junto a los números y las dudas frecuentes.
+- **Portal** → pestaña *Ayuda*. Escrita para el proveedor: anunciar, seguir el lote,
+  su desempeño, su contraseña y qué pasa sin señal. Los estados se le explican en sus
+  términos —la ayuda del catálogo habla de causas raíz y mermas, que ni le sirven ni le
+  corresponden.
+
+Al imprimir, las preguntas plegadas se abren solas y vuelven después a como estaban: un
+`<details>` cerrado no sale en el papel y ninguna regla de CSS lo arregla.
+
 ## 6. Planificación diaria
 
 El módulo que se demuestra en la defensa. Entradas: fecha, horas de turno, operarios y
@@ -216,6 +235,23 @@ operarios necesarios       = tiempo requerido ÷ minutos netos por operario
 
 Avisa si el plan no cabe en el turno, cuántos operarios faltan, y si falta materia prima
 en cámara para alguna línea. El plan se guarda y se exporta a CSV.
+
+### Cerrar un pedido
+
+El cierre lo da solo Supervisión, y solo sobre un lote en estado *Procesado*. Estaba
+escondido en una columna de acciones, así que ahora hay tres caminos al mismo sitio:
+
+1. **Lotes → «Terminados, esperando el cierre»**, un bloque que junta todos los
+   pendientes con los días que llevan abiertos. Deliberadamente **no** se filtra por
+   fecha: un pedido olvidado de hace tres semanas tiene que seguir saltando a la vista
+   aunque el filtro mire solo esta semana. El número junto a *Lotes* en el menú es esa
+   misma cuenta.
+2. **Desde la ficha** de cualquier lote procesado.
+3. **En la fila** del lote, en la tabla general.
+
+Al cerrar se decide si se publica el reporte en el portal del proveedor. Un lote cerrado
+no admite cambios; para enmendarlo hay que *Reabrir*, y la reapertura queda en la bitácora
+con nombre y fecha.
 
 ## 7. Datos del TIC ya cargados
 
@@ -411,9 +447,16 @@ robar el foco**, que valorizar el residuo aporte ahorro propio, y que una invers
 imposible o un costo anual mayor que el ahorro se declaren inviables en vez de mostrar un
 número absurdo.
 
+**19 comprobaciones de cierre y guía**: que el contador del menú cuente los pendientes
+de cierre, que el bloque sobreviva al filtro de fechas, que cerrar publique el reporte,
+que un lote ya cerrado no ofrezca cerrarse otra vez, que Recepción no vea nada de eso,
+que cada rol reciba su propia guía, que la guía se arme con los catálogos reales, que no
+se cuele marcado HTML en el texto y que al imprimir se abran las preguntas plegadas y
+luego vuelvan a su sitio.
+
 Y **9 comprobaciones** sobre el paquete publicado: las dos puertas, el almacén compartido
 activo, un envío anunciado desde el celular apareciendo en la cola de la planta, el pesaje
-llegando en vivo al portal, la navegación entre puertas y el módulo de costeo funcionando
+llegando en vivo al portal, la navegación entre puertas, y el costeo y la guía funcionando
 dentro del archivo único.
 
 ### Empaquetar

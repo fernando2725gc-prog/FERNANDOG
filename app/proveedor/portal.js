@@ -247,6 +247,13 @@
     return html;
   }
 
+  function vistaAyuda() {
+    return '<div class="portal-saludo"><h1>Ayuda</h1>' +
+      '<p class="sub">Cómo funciona el portal, paso a paso.</p></div>' +
+      '<section class="panel">' + Guia.portal() + "</section>" +
+      '<button class="btn btn-plano btn-ancho" id="btnImprimirGuia">Guardar o imprimir esta guía</button>';
+  }
+
   function vistaDesempeno() {
     const r = resumen();
     const lotes = misLotes();
@@ -673,7 +680,8 @@
     const menu = [
       { id: "inicio", texto: "Inicio", icono: "🏠" },
       { id: "lotes", texto: "Mis envíos", icono: "📦" },
-      { id: "desempeno", texto: "Mi desempeño", icono: "📈" }
+      { id: "desempeno", texto: "Mi desempeño", icono: "📈" },
+      { id: "ayuda", texto: "Ayuda", icono: "📘" }
     ];
 
     let html = '<div class="portal">';
@@ -696,6 +704,7 @@
     if (vista === "inicio") html += vistaInicio();
     else if (vista === "lotes") html += vistaLotes();
     else if (vista === "desempeno") html += vistaDesempeno();
+    else if (vista === "ayuda") html += vistaAyuda();
     html += "</main>";
 
     /* Barra inferior: en el celular es la navegación natural. */
@@ -774,6 +783,9 @@
         if (m) m.focus();
       });
     });
+
+    const impGuia = $("#btnImprimirGuia");
+    if (impGuia) impGuia.addEventListener("click", function () { window.print(); });
 
     $$("[data-ficha]").forEach(function (el) {
       el.addEventListener("click", function () { verFicha(el.dataset.ficha); });

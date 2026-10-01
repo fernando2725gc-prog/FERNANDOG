@@ -111,7 +111,8 @@
       { id: "proveedores", texto: "Proveedores", icono: "🤝", roles: ["supervisor"] },
       { id: "usuarios", texto: "Usuarios", icono: "👥", roles: ["supervisor"] },
       { id: "bitacora", texto: "Bitácora", icono: "🕘", roles: ["supervisor"] },
-      { id: "datos", texto: "Datos del sistema", icono: "🗄️", roles: ["supervisor"] }
+      { id: "datos", texto: "Datos del sistema", icono: "🗄️", roles: ["supervisor"] },
+      { id: "guia", texto: "Guía de uso", icono: "📘", roles: "*" }
     ].filter(function (m) { return m.roles === "*" || m.roles.indexOf(usuario.rol) !== -1; });
   }
 
@@ -1059,13 +1060,54 @@
     return b;
   }
 
+  /* Ya procesados y todavía abiertos: el pedido está terminado en planta
+     pero nadie ha dado el cierre. No se filtran por fecha a propósito —un
+     pedido olvidado de hace tres semanas tiene que seguir saltando a la
+     vista aunque el filtro mire solo esta semana. */
+  function lotesPorCerrar() {
+    return DB.all("lotes").filter(function (l) { return l.estado === "Procesado"; })
+      .sort(function (a, b) { return a.fecha < b.fecha ? -1 : 1; });
+  }
+
   function vistaLotes() {
     const lista = Indicadores.filtrar(filtros).lotes
       .sort(function (a, b) { return a.fecha < b.fecha ? 1 : -1; });
+    const porCerrar = lotesPorCerrar();
+    /* La fecha de proceso vive en el registro de producción, no en el lote. */
+    const fechaProceso = {};
+    DB.all("producciones").forEach(function (p) { fechaProceso[p.loteId] = p.fecha; });
 
     let html = '<div class="vista-cab"><div><h1>Lotes</h1>' +
       '<p class="sub">Recorrido completo, del anuncio del proveedor al cierre.</p></div>' +
       '<div class="cab-acciones"><button class="btn btn-plano" id="btnCsvLotes">Exportar CSV</button></div></div>';
+
+    if (puede("cerrar")) {
+      html += '<section class="panel panel-destacado"><h2>Terminados, esperando el cierre (' +
+        nf(porCerrar.length) + ")</h2>" +
+        '<p class="sub panel-sub">Producción ya registró estos pedidos. Al cerrarlos ' +
+        "quedan sin más cambios y el proveedor recibe su reporte.</p>";
+      if (!porCerrar.length) {
+        html += '<p class="vacio">Ningún pedido pendiente de cierre. Todo al día.</p>';
+      } else {
+        html += UI.tabla([
+          { titulo: "Lote", valor: function (l) { return "<code>" + esc(l.codigoLote) + "</code>"; } },
+          { titulo: "Proveedor", valor: function (l) { return esc(Indicadores.nombreProveedor(l.proveedorId)); } },
+          { titulo: "Línea", valor: function (l) { return UI.etiquetaLinea(l.lineaId); } },
+          { titulo: "Procesado", valor: function (l) {
+            return UI.fechaCorta(fechaProceso[l.id] || l.fechaRecepcion || l.fecha); } },
+          { titulo: "Días abierto", num: true, valor: function (l) {
+            const d = Math.round((new Date(DB.hoy()) - new Date(l.fecha)) / 86400000);
+            return d > 7 ? '<strong class="dias-alerta">' + nf(d) + "</strong>" : nf(d); } },
+          { titulo: "Cajas", num: true, valor: function (l) { return nf(l.cajasRecibidas); } },
+          { titulo: "", valor: function (l) {
+            return '<button class="btn-mini" data-ficha="' + esc(l.id) + '">Ficha</button>' +
+              '<button class="btn-mini btn-mini-accion" data-cerrar="' + esc(l.id) +
+              '">Cerrar pedido</button>'; } }
+        ], porCerrar, {});
+      }
+      html += "</section>";
+      html += '<h2 class="seccion-titulo">Todos los lotes</h2>';
+    }
 
     html += barraFiltros({ calidad: true, estado: true });
 
@@ -1191,10 +1233,14 @@
   function verFicha(loteId) {
     const f = Indicadores.fichaLote(loteId);
     if (!f) return;
-    abrirPanel("Ficha del lote " + f.lote.codigoLote, fichaCompleta(f), true);
+    /* Quien abre la ficha de un pedido terminado casi siempre viene a
+       cerrarlo: el botón tiene que estar ahí, no en otra pantalla. */
+    const cerrable = f.lote.estado === "Procesado" && puede("cerrar");
+    abrirPanel("Ficha del lote " + f.lote.codigoLote, fichaCompleta(f), true,
+      cerrable ? { texto: "Cerrar pedido", accion: function () { cerrarLote(loteId); } } : null);
   }
 
-  function abrirPanel(titulo, cuerpo, imprimible) {
+  function abrirPanel(titulo, cuerpo, imprimible, principal) {
     const capa = document.createElement("div");
     capa.className = "modal-capa";
     capa.innerHTML = '<div class="modal modal-ancho" role="dialog" aria-modal="true" aria-labelledby="panelTitulo">' +
@@ -1202,8 +1248,10 @@
       '<button type="button" class="modal-x" aria-label="Cerrar">&times;</button></header>' +
       '<div class="modal-cuerpo modal-cuerpo-libre">' + cuerpo + "</div>" +
       '<footer class="modal-pie modal-pie-fijo">' +
-      '<button type="button" class="btn btn-plano" data-cancelar>Cerrar</button>' +
+      '<button type="button" class="btn btn-plano" data-cancelar>Salir</button>' +
       (imprimible ? '<button type="button" class="btn btn-sec" id="btnImprimirFicha">Imprimir</button>' : "") +
+      (principal ? '<button type="button" class="btn btn-primario" id="btnPanelPrincipal">' +
+        esc(principal.texto) + "</button>" : "") +
       "</footer></div>";
 
     document.body.appendChild(capa);
@@ -1220,6 +1268,10 @@
     $(".modal-x", capa).addEventListener("click", cerrar);
     $("[data-cancelar]", capa).addEventListener("click", cerrar);
     capa.addEventListener("mousedown", function (e) { if (e.target === capa) cerrar(); });
+    const btnPrincipal = $("#btnPanelPrincipal", capa);
+    if (btnPrincipal) {
+      btnPrincipal.addEventListener("click", function () { cerrar(); principal.accion(); });
+    }
     const imp = $("#btnImprimirFicha", capa);
     if (imp) {
       imp.addEventListener("click", function () {
@@ -1248,8 +1300,10 @@
         l.codigoLote + (d.enviar ? " · reporte publicado al proveedor" : " · sin publicar reporte"));
       UI.aviso("Lote " + l.codigoLote + " cerrado.");
       render();
-    }, { aceptar: "Cerrar lote", ancho: true,
-         nota: "Una vez cerrado, el lote <strong>no admite más cambios</strong> de ningún rol." });
+    }, { aceptar: "Cerrar pedido", ancho: true,
+         nota: "Al cerrarlo, el pedido <strong>queda terminado y no admite más cambios</strong> " +
+           "de ningún rol. Si hace falta corregir algo después, Supervisión puede reabrirlo " +
+           "desde Lotes y queda anotado en la bitácora." });
   }
 
   /* ============================== reportes ============================ */
@@ -1442,6 +1496,16 @@
       UI.origen("E") + " estimado · " + UI.origen("S") + " fuente secundaria.</p></footer>";
     html += "</section>";
     return html;
+  }
+
+  /* ================================ guía =============================== */
+
+  function vistaGuia() {
+    return '<div class="vista-cab"><div><h1>Guía de uso</h1>' +
+      '<p class="sub">Escrita para quien usa el sistema, no para quien lo programó.</p></div>' +
+      '<div class="cab-acciones">' +
+      '<button class="btn btn-primario" id="btnImprimir">Imprimir / PDF</button></div></div>' +
+      '<section class="panel">' + Guia.planta(usuario.rol) + "</section>";
   }
 
   /* ========================== costeo y simulador ======================
@@ -2348,6 +2412,7 @@
     const rol = DB.ROLES.find(function (r) { return r.id === usuario.rol; });
     const compartido = DB.esCompartido() && DB.pendientes() === 0;
     const anunciados = DB.all("lotes").filter(function (l) { return l.estado === "Anunciado"; }).length;
+    const porCerrar = lotesPorCerrar().length;
 
     let html = '<div class="capa"><aside class="lateral" id="lateral">' +
       '<div class="marca"><span class="logo" aria-hidden="true">🏭</span>' +
@@ -2355,9 +2420,15 @@
       esc(DB.EMPRESA.nombre) + "</small></div></div><nav>";
 
     menu().forEach(function (m) {
-      /* La cola del patio lleva contador: es lo que llega del portal externo. */
-      const pendiente = m.id === "recepcion" && anunciados > 0
-        ? '<span class="nav-contador">' + anunciados + "</span>" : "";
+      /* Dos contadores: lo que llega del portal externo y lo que ya se
+         procesó y espera el cierre. Sin el segundo, cerrar un pedido era
+         una acción escondida en una columna de una tabla. */
+      let pendiente = "";
+      if (m.id === "recepcion" && anunciados > 0) {
+        pendiente = '<span class="nav-contador">' + anunciados + "</span>";
+      } else if (m.id === "lotes" && porCerrar > 0 && puede("cerrar")) {
+        pendiente = '<span class="nav-contador">' + porCerrar + "</span>";
+      }
       html += '<button type="button" class="nav-item' + (m.id === vista ? " activo" : "") +
         '" data-ir="' + m.id + '"' + (m.id === vista ? ' aria-current="page"' : "") + ">" +
         '<span aria-hidden="true">' + m.icono + "</span>" + esc(m.texto) + pendiente + "</button>";
@@ -2400,6 +2471,7 @@
     else if (vista === "usuarios") html += vistaUsuarios();
     else if (vista === "bitacora") html += vistaBitacora();
     else if (vista === "datos") html += vistaDatos();
+    else if (vista === "guia") html += vistaGuia();
     html += "</main></div></div>";
 
     UI.soltarFormulario();

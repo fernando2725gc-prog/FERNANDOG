@@ -1026,7 +1026,8 @@
       DB.registrarBitacora(usuario.id, "Registro de producción",
         prod.folio + " · lote " + l.codigoLote + " · tasa " +
         pct(prod.gavetasProcesadas > 0 ? prod.cajasExportables / prod.gavetasProcesadas : 0));
-      UI.aviso("Producción " + prod.folio + " registrada. Pasa a Supervisión para su cierre.");
+      UI.aviso("Listo: el lote " + l.codigoLote + " pasó a Procesado. " +
+        "Ahora Supervisión lo cierra.");
       render();
     }, {
       aceptar: "Registrar producción",
@@ -1257,6 +1258,51 @@
       "</div>";
   }
 
+  /* La pregunta que de verdad se hace quien abre una ficha es «y ahora
+     qué». Ningún estado se marca a mano: cada uno se alcanza haciendo el
+     trabajo, y aquí se dice cuál es y a quién le toca. */
+  function SIGUIENTE(l) {
+    if (l.estado === "Rechazado") {
+      return { texto: "El lote no entró a planta. El proveedor ya ve el motivo en su portal.",
+               quien: "Nada pendiente", icono: "⛔", tono: "alerta" };
+    }
+    if (l.estado === "Anunciado") {
+      return { texto: "Falta contarlo y pesarlo. Se hace desde Recepción y pesaje, " +
+                      "con el botón Pesar.",
+               quien: "Le toca a Recepción", icono: "⚖️", ir: "recepcion",
+               puede: puede("pesar") };
+    }
+    if (l.estado === "Recibido") {
+      return { texto: "No hay que marcarlo como procesado: el lote pasa solo a Procesado " +
+                      "cuando se registra el trabajo, desde Producción, con el botón " +
+                      "Registrar producción.",
+               quien: "Le toca a Producción", icono: "🏭", ir: "produccion",
+               puede: puede("procesar") };
+    }
+    if (l.estado === "Procesado") {
+      return { texto: "Ya está trabajado. Falta cerrarlo, desde Lotes, en el bloque " +
+                      "«Terminados, esperando el cierre».",
+               quien: "Le toca a Supervisión", icono: "✅", ir: "lotes",
+               puede: puede("cerrar") };
+    }
+    return { texto: l.reporteEnviado
+               ? "Terminado. El proveedor ya tiene su reporte."
+               : "Terminado, pero el reporte todavía no se publicó al proveedor.",
+             quien: "Nada pendiente", icono: "🏁", tono: "ok" };
+  }
+
+  function siguientePaso(l) {
+    const s = SIGUIENTE(l);
+    return '<div class="siguiente siguiente-' + (s.tono || "normal") + '">' +
+      '<span class="siguiente-icono" aria-hidden="true">' + s.icono + "</span>" +
+      '<div><strong>¿Qué sigue? · ' + esc(s.quien) + "</strong>" +
+      "<small>" + esc(s.texto) + "</small></div>" +
+      (s.ir && s.puede
+        ? '<button type="button" class="btn btn-sec btn-sm" data-ir="' + esc(s.ir) +
+          '">Ir allá</button>'
+        : "") + "</div>";
+  }
+
   function fichaCompleta(f) {
     if (!f) return "<p>Lote no encontrado.</p>";
     const l = f.lote, p = f.produccion;
@@ -1272,7 +1318,7 @@
         '<span class="hito-punto">' + (i + 1) + "</span><strong>" + esc(h[0]) + "</strong>" +
         "<small>" + (h[1] ? UI.fechaLarga(h[1]) + "<br>" + esc(h[3] || "") : "Pendiente") + "</small></div>";
     });
-    html += "</div><div class='ficha-bloques'>";
+    html += "</div>" + siguientePaso(l) + "<div class='ficha-bloques'>";
 
     html += "<section><h4>Identificación</h4><dl>" +
       "<dt>Lote</dt><dd><code>" + esc(l.codigoLote) + "</code></dd>" +
@@ -1389,6 +1435,16 @@
     $(".modal-x", capa).addEventListener("click", cerrar);
     $("[data-cancelar]", capa).addEventListener("click", cerrar);
     capa.addEventListener("mousedown", function (e) { if (e.target === capa) cerrar(); });
+    /* El «ir allá» del bloque «¿qué sigue?» vive dentro del modal, que se
+       monta después de enlazar la página: hay que atarlo aquí. */
+    $$("[data-ir]", capa).forEach(function (b) {
+      b.addEventListener("click", function () {
+        const destino = b.dataset.ir;
+        cerrar();
+        ir(destino);
+      });
+    });
+
     const btnPrincipal = $("#btnPanelPrincipal", capa);
     if (btnPrincipal) {
       btnPrincipal.addEventListener("click", function () { cerrar(); principal.accion(); });
@@ -2777,6 +2833,7 @@
     const compartido = DB.esCompartido() && DB.pendientes() === 0;
     const anunciados = DB.all("lotes").filter(function (l) { return l.estado === "Anunciado"; }).length;
     const porCerrar = lotesPorCerrar().length;
+    const porProcesar = DB.all("lotes").filter(function (l) { return l.estado === "Recibido"; }).length;
 
     let html = '<div class="capa"><aside class="lateral" id="lateral">' +
       '<div class="marca"><span class="logo" aria-hidden="true">🏭</span>' +
@@ -2790,6 +2847,8 @@
       let pendiente = "";
       if (m.id === "recepcion" && anunciados > 0) {
         pendiente = '<span class="nav-contador">' + anunciados + "</span>";
+      } else if (m.id === "produccion" && porProcesar > 0 && puede("procesar")) {
+        pendiente = '<span class="nav-contador">' + porProcesar + "</span>";
       } else if (m.id === "lotes" && porCerrar > 0 && puede("cerrar")) {
         pendiente = '<span class="nav-contador">' + porCerrar + "</span>";
       }

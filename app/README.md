@@ -365,6 +365,21 @@ operarios necesarios       = tiempo requerido ÷ minutos netos por operario
 Avisa si el plan no cabe en el turno, cuántos operarios faltan, y si falta materia prima
 en cámara para alguna línea. El plan se guarda y se exporta a CSV.
 
+### Ningún estado se marca a mano
+
+No hay un botón de «marcar como procesado», ni de «marcar como recibido». Cada estado se
+alcanza **haciendo el trabajo**: el lote pasa a *Recibido* cuando Recepción lo pesa, a
+*Procesado* cuando Producción registra lo que salió, y a *Cerrado* cuando Supervisión lo
+cierra. Es lo correcto —un estado que se puede marcar sin haber hecho el trabajo acaba
+mintiendo— pero no era evidente, así que ahora la app lo dice en tres sitios:
+
+- **Un contador por cola en el menú.** Eran dos de tres: Recepción y Lotes lo tenían y
+  Producción no, que es justo donde se preguntaba dónde marcar.
+- **Un bloque «¿Qué sigue?» en la ficha de cualquier lote**, con el paso que falta, a quién
+  le toca y un botón que lleva a esa pantalla. En un lote recibido dice, con todas sus
+  letras, que no hay que marcarlo como procesado.
+- **La guía**, en el recorrido del pedido y en las dudas frecuentes.
+
 ### Cerrar un pedido
 
 El cierre lo da solo Supervisión, y solo sobre un lote en estado *Procesado*. Estaba
@@ -576,7 +591,7 @@ robar el foco**, que valorizar el residuo aporte ahorro propio, y que una invers
 imposible o un costo anual mayor que el ahorro se declaren inviables en vez de mostrar un
 número absurdo.
 
-**19 comprobaciones de cierre y guía**: que el contador del menú cuente los pendientes
+**23 comprobaciones de cierre, siguiente paso y guía**: que el contador del menú cuente los pendientes
 de cierre, que el bloque sobreviva al filtro de fechas, que cerrar publique el reporte,
 que un lote ya cerrado no ofrezca cerrarse otra vez, que Recepción no vea nada de eso,
 que cada rol reciba su propia guía, que la guía se arme con los catálogos reales, que no

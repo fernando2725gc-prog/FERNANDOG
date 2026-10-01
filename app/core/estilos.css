@@ -1373,3 +1373,31 @@ textarea { resize: vertical; }
 .dap-A { background: var(--borde); color: var(--texto-tenue); }
 
 .vista-tiempos .panel-destacado { border-left-color: var(--linea-3); }
+
+/* ============================ «¿qué sigue?» ============================= */
+
+/* Ningún estado del lote se marca a mano: se alcanza haciendo el trabajo.
+   Este bloque dice cuál es el siguiente paso y a quién le toca, que es la
+   pregunta real de quien abre una ficha. */
+.siguiente {
+  display: flex; align-items: center; gap: .8rem;
+  margin: 0 0 1.1rem; padding: .8rem 1rem;
+  background: var(--verde-suave); border-left: 3px solid var(--verde);
+  border-radius: var(--radio);
+}
+.siguiente-icono { font-size: 1.5rem; line-height: 1; flex: 0 0 auto; }
+.siguiente strong { display: block; font-size: .92rem; }
+.siguiente small { display: block; color: var(--texto-tenue); font-size: .84rem; line-height: 1.45; }
+.siguiente .btn {
+  margin-left: auto; flex: 0 0 auto;
+  /* Sobre el fondo verde del bloque, un botón verde desaparece. */
+  background: var(--superficie); border-color: var(--verde); color: var(--verde);
+}
+.siguiente .btn:hover { background: var(--verde); color: #fff; }
+.siguiente-alerta { background: color-mix(in srgb, var(--rojo) 10%, transparent); border-left-color: var(--rojo); }
+.siguiente-ok { background: color-mix(in srgb, var(--bien) 12%, transparent); border-left-color: var(--bien); }
+
+@media (max-width: 560px) {
+  .siguiente { flex-wrap: wrap; }
+  .siguiente .btn { margin-left: 0; width: 100%; }
+}

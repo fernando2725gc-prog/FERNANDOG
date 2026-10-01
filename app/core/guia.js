@@ -142,6 +142,11 @@ const Guia = (function () {
       "Todo lo que se cuenta en recepción y en proceso son gavetas; las cajas aparecen " +
       "al empacar. Confundirlas hace que ningún indicador signifique nada.</p>" +
       recorrido() +
+      "<p class='guia-ojo'><strong>Ningún estado se marca a mano.</strong> Cada uno se " +
+      "alcanza haciendo el trabajo: el lote pasa a <em>Recibido</em> cuando Recepción lo " +
+      "pesa, a <em>Procesado</em> cuando Producción registra lo que salió, y a " +
+      "<em>Cerrado</em> cuando Supervisión lo cierra. En la ficha de cualquier lote, " +
+      "arriba, dice qué sigue y a quién le toca.</p>" +
       "<p class='guia-ojo'>Mientras un lote no esté <strong>Cerrado</strong>, se puede " +
       "corregir. Una vez cerrado, no: hay que reabrirlo, y eso queda anotado.</p>");
 
@@ -294,6 +299,13 @@ const Guia = (function () {
     html += seccion("senal", "Cuando no hay señal", sinSenal());
 
     html += seccion("dudas", "Dudas frecuentes", preguntas([
+      ["¿Dónde marco que un lote ya fue procesado?",
+       "En ningún sitio: <strong>no hay un botón de «marcar como procesado»</strong>. El " +
+       "lote pasa a <em>Procesado</em> solo, en cuanto Producción registra el trabajo " +
+       "—cajas obtenidas, tiempo y reparto de la merma— desde <em>Producción</em>. Lo " +
+       "mismo vale para los demás estados: ninguno se marca a mano, cada uno se alcanza " +
+       "haciendo su parte. Si tienes dudas con un lote concreto, abre su <em>Ficha</em>: " +
+       "arriba dice qué sigue y a quién le toca."],
       ["No encuentro el botón para cerrar un pedido.",
        "Solo aparece en pedidos en estado <em>Procesado</em> y solo para Supervisión. " +
        "Si el lote todavía no tiene la producción registrada, no hay nada que cerrar."],

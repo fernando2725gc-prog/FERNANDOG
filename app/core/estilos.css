@@ -1401,3 +1401,53 @@ textarea { resize: vertical; }
   .siguiente { flex-wrap: wrap; }
   .siguiente .btn { margin-left: 0; width: 100%; }
 }
+
+/* ============================= liquidación ============================= */
+
+.hoja-liquidacion .tabla { font-size: .86rem; }
+
+.liq-total {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-top: 1rem; padding: .9rem 1.1rem; border-radius: var(--radio);
+  background: var(--verde-suave); border: 1px solid var(--verde-claro);
+}
+.liq-total span { font-size: .84rem; text-transform: uppercase; letter-spacing: .04em; color: var(--texto-tenue); }
+.liq-total strong {
+  font-family: var(--fuente-datos); font-variant-numeric: tabular-nums;
+  font-size: 1.6rem; color: var(--verde);
+}
+
+.liq-rechazos { margin-top: 1.1rem; }
+.liq-rechazos h4 {
+  margin: 0 0 .4rem; font-size: .76rem; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--texto-tenue);
+}
+.liq-rechazos ul { margin: 0; padding-left: 1.1rem; font-size: .86rem; color: var(--texto-tenue); }
+.liq-rechazos li { margin-bottom: .25rem; }
+
+/* Dos firmas: el documento se imprime y se firma en papel. */
+.liq-firmas {
+  display: grid; gap: 2.5rem; grid-template-columns: 1fr 1fr;
+  margin: 2.5rem 0 .5rem;
+}
+.liq-firmas span {
+  display: block; border-top: 1px solid var(--texto-tenue); margin-bottom: .4rem;
+}
+.liq-firmas small { color: var(--texto-tenue); font-size: .8rem; line-height: 1.4; }
+
+@media (max-width: 560px) {
+  .liq-firmas { grid-template-columns: 1fr; gap: 1.8rem; }
+}
+
+@media print {
+  .liq-firmas { break-inside: avoid; }
+  .liq-total { break-inside: avoid; }
+}
+
+.liq-rechazos-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.liq-rechazos-lista li {
+  padding: .6rem .8rem; border-radius: var(--radio);
+  background: color-mix(in srgb, var(--rojo) 8%, transparent);
+  border-left: 3px solid var(--rojo); font-size: .88rem;
+}
+.liq-rechazos-lista small { color: var(--texto-tenue); }

@@ -318,6 +318,80 @@
     });
   }
 
+  /* Cuántos días atrás mira la liquidación que ve el proveedor. */
+  let diasPago = 30;
+
+  function vistaPagos() {
+    const liq = Indicadores.liquidacion(usuario.proveedorId, {
+      desde: DB.diasAtras(diasPago), hasta: DB.hoy()
+    });
+
+    let html = '<div class="portal-saludo"><h1>Pagos</h1>' +
+      '<p class="sub">Lo que la planta te debe por lo que entregaste, sobre el kilo ' +
+      "de báscula.</p></div>";
+
+    html += '<div class="atajos"><span>Período:</span>' +
+      [[30, "30 días"], [90, "3 meses"], [365, "12 meses"]].map(function (o) {
+        return '<button type="button" class="chip' + (diasPago === o[0] ? " chip-activo" : "") +
+          '" data-dias-pago="' + o[0] + '">' + o[1] + "</button>";
+      }).join("") + "</div>";
+
+    if (!liq || !liq.lotes) {
+      return html + '<p class="vacio">No hay entregas registradas en este período.</p>';
+    }
+
+    html += '<div class="kpis kpis-portal">' +
+      UI.kpi("Total del período", money(liq.importe),
+        nf(liq.kg) + " kg en " + nf(liq.lotesPagables) + " entregas", "bien") +
+      UI.kpi("Precio promedio", money(liq.precioPromedio) + "/kg",
+        "ponderado por kilo") +
+      (liq.lotesRechazados
+        ? UI.kpi("No recibidas", nf(liq.lotesRechazados),
+            "entregas rechazadas, sin pago", "mal")
+        : "") +
+      "</div>";
+
+    if (liq.enProceso > 0) {
+      html += '<p class="aviso-inline"><strong>' + nf(liq.enProceso) +
+        (liq.enProceso === 1 ? " entrega sigue" : " entregas siguen") +
+        " en planta.</strong> Ya están pesadas, así que ya cuentan en este total: " +
+        "se paga por lo que entra, no por lo que sale.</p>";
+    }
+
+    html += '<section class="panel"><h2>Detalle</h2>' +
+      UI.tabla([
+        { titulo: "Fecha", valor: function (d) { return UI.fechaCorta(d.fecha); } },
+        { titulo: "Lote", valor: function (d) { return "<code>" + esc(d.codigoLote) + "</code>"; } },
+        { titulo: "Kilos", num: true, valor: function (d) {
+          return d.rechazado ? "—" : nf(d.kg); } },
+        { titulo: "$/kg", num: true, valor: function (d) {
+          return d.rechazado ? "—" : money(d.precioKg); } },
+        { titulo: "Importe", num: true, valor: function (d) {
+          return d.rechazado
+            ? '<span class="etq etq-bajo">Rechazado</span>'
+            : "<strong>" + money(d.importe) + "</strong>"; } }
+      ], liq.detalle, {}) +
+      '<div class="liq-total"><span>Total</span><strong>' + money(liq.importe) +
+      "</strong></div></section>";
+
+    const rech = liq.detalle.filter(function (d) { return d.rechazado; });
+    if (rech.length) {
+      html += '<section class="panel"><h2>Lo que no se recibió</h2><ul class="liq-rechazos-lista">';
+      rech.forEach(function (d) {
+        html += "<li><code>" + esc(d.codigoLote) + "</code> · " + UI.fechaCorta(d.fecha) +
+          "<br><small>" + esc(d.motivo) + "</small></li>";
+      });
+      html += "</ul></section>";
+    }
+
+    html += '<p class="nota-info">Este resumen sale de la báscula de planta. Si una cifra ' +
+      "no te cuadra, el detalle de cada lote está en <strong>Mis envíos</strong>, con lo " +
+      "que declaraste y lo que se pesó.</p>" +
+      '<button class="btn btn-plano btn-ancho" id="btnImprimirPago">Guardar o imprimir</button>';
+
+    return html;
+  }
+
   function vistaAyuda() {
     return '<div class="portal-saludo"><h1>Ayuda</h1>' +
       '<p class="sub">Cómo funciona el portal, paso a paso.</p></div>' +
@@ -766,6 +840,7 @@
       { id: "inicio", texto: "Inicio", icono: "🏠" },
       { id: "lotes", texto: "Mis envíos", icono: "📦" },
       { id: "desempeno", texto: "Mi desempeño", icono: "📈" },
+      { id: "pagos", texto: "Pagos", icono: "🧾" },
       { id: "ayuda", texto: "Ayuda", icono: "📘" }
     ];
 
@@ -791,6 +866,7 @@
     if (vista === "inicio") html += vistaInicio();
     else if (vista === "lotes") html += vistaLotes();
     else if (vista === "desempeno") html += vistaDesempeno();
+    else if (vista === "pagos") html += vistaPagos();
     else if (vista === "ayuda") html += vistaAyuda();
     html += "</main>";
 
@@ -897,6 +973,15 @@
     }
 
     enlazarNovedades();
+
+    $$("[data-dias-pago]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        diasPago = Number(b.dataset.diasPago) || 30;
+        render();
+      });
+    });
+    const impPago = $("#btnImprimirPago");
+    if (impPago) impPago.addEventListener("click", function () { window.print(); });
 
     const impGuia = $("#btnImprimirGuia");
     if (impGuia) impGuia.addEventListener("click", function () { window.print(); });

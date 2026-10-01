@@ -674,6 +674,94 @@ const Indicadores = (function () {
     };
   }
 
+  /* ====================================== liquidación al proveedor
+
+     El documento con el que se le paga. Cierra el ciclo: el proveedor
+     anuncia, la planta pesa, y esto es lo que resulta de ese pesaje.
+
+     Se liquida sobre el KILO de báscula, no sobre lo declarado ni sobre
+     bultos: es el único dato que las dos partes vieron. Un lote rechazado
+     aparece igual, con importe cero y su motivo, porque no decirlo es lo
+     que genera la llamada.
+     ==================================================================== */
+
+  function liquidacion(proveedorId, filtros) {
+    const prov = DB.get("proveedores", proveedorId);
+    if (!prov) return null;
+    const f = filtros || {};
+    const desde = f.desde || "0000-01-01";
+    const hasta = f.hasta || "9999-12-31";
+
+    const lotes = DB.all("lotes").filter(function (l) {
+      const fecha = l.fechaRecepcion || l.fecha;
+      return l.proveedorId === proveedorId && fecha >= desde && fecha <= hasta &&
+        (l.gavetasRecibidas !== null || l.estado === "Rechazado");
+    }).sort(function (a, b) {
+      return (a.fechaRecepcion || a.fecha) < (b.fechaRecepcion || b.fecha) ? -1 : 1;
+    });
+
+    const detalle = lotes.map(function (l) {
+      const rechazado = l.estado === "Rechazado";
+      const kg = rechazado ? 0 : (Number(l.kgRecibidos) || 0);
+      const precio = Number(l.precioKg) || 0;
+      const difKg = l.kgAnunciados ? kg - l.kgAnunciados : null;
+      return {
+        loteId: l.id,
+        fecha: l.fechaRecepcion || l.fecha,
+        codigoLote: l.codigoLote,
+        linea: nombreLinea(l.lineaId),
+        calidad: l.calidadVerificada || l.calidadDeclarada,
+        gavetas: rechazado ? 0 : (Number(l.gavetasRecibidas) || 0),
+        kg: kg,
+        precioKg: precio,
+        importe: kg * precio,
+        rechazado: rechazado,
+        motivo: rechazado ? (l.observacionesRecepcion || "Sin motivo anotado.") : "",
+        /* Un lote pesado ya se paga, aunque todavía no se haya cerrado: lo
+           que se liquida es lo que entró, no lo que salió. Se marca para
+           que el proveedor sepa que aún está en planta. */
+        enProceso: !rechazado && l.estado !== "Cerrado",
+        diferenciaKg: rechazado ? null : difKg,
+        kgAnunciados: Number(l.kgAnunciados) || 0
+      };
+    });
+
+    const pagables = detalle.filter(function (d) { return !d.rechazado; });
+    const kg = pagables.reduce(function (a, d) { return a + d.kg; }, 0);
+    const importe = pagables.reduce(function (a, d) { return a + d.importe; }, 0);
+    const kgAnunciados = pagables.reduce(function (a, d) { return a + d.kgAnunciados; }, 0);
+
+    return {
+      proveedor: prov,
+      /* Folio estable: el mismo período y el mismo proveedor dan el mismo
+         número, así que reimprimir no genera un documento distinto. */
+      folio: "LIQ-" + String(desde).replace(/-/g, "").slice(2) + "-" +
+        String(prov.codigo || prov.id).toUpperCase(),
+      desde: desde,
+      hasta: hasta,
+      detalle: detalle,
+      lotes: detalle.length,
+      lotesPagables: pagables.length,
+      lotesRechazados: detalle.length - pagables.length,
+      gavetas: pagables.reduce(function (a, d) { return a + d.gavetas; }, 0),
+      kg: kg,
+      kgAnunciados: kgAnunciados,
+      diferenciaKg: kg - kgAnunciados,
+      tasaDiferencia: kgAnunciados > 0 ? (kg - kgAnunciados) / kgAnunciados : 0,
+      precioPromedio: kg > 0 ? importe / kg : 0,
+      importe: importe,
+      enProceso: pagables.filter(function (d) { return d.enProceso; }).length
+    };
+  }
+
+  /* Todas las liquidaciones del período, para la vista de Supervisión. */
+  function liquidaciones(filtros) {
+    return DB.all("proveedores")
+      .map(function (p) { return liquidacion(p.id, filtros); })
+      .filter(function (x) { return x && x.lotes > 0; })
+      .sort(function (a, b) { return b.importe - a.importe; });
+  }
+
   /* ---------------------------------------------------- ficha del lote */
 
   function fichaLote(loteId) {
@@ -1110,6 +1198,8 @@ const Indicadores = (function () {
     MEDIDAS: MEDIDAS,
     matrizKPI: matrizKPI,
     fichaLote: fichaLote,
+    liquidacion: liquidacion,
+    liquidaciones: liquidaciones,
     totalMerma: totalMerma,
     mermaValorizada: mermaValorizada,
     valorRecuperado: valorRecuperado,

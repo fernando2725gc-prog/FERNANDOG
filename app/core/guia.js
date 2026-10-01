@@ -261,6 +261,22 @@ const Guia = (function () {
         "(" + UI.origen("S") + "), no medido. Sirve para decidir y para defender la " +
         "propuesta, no para prometer un resultado.</p>");
 
+      html += seccion("liquidar", "Pagar al proveedor",
+        "<p>En <em>Liquidaciones</em> está, por proveedor y por período, lo que hay que " +
+        "pagarle. <strong>Se liquida sobre el kilo de báscula</strong> —no sobre lo que el " +
+        "proveedor declaró ni sobre bultos—, porque es el único dato que las dos partes " +
+        "vieron.</p>" +
+        "<p>Cada proveedor tiene su documento imprimible, con el detalle lote por lote, el " +
+        "total y dos espacios de firma. El mismo período y el mismo proveedor dan siempre " +
+        "el mismo número de documento, así que reimprimirlo no crea uno nuevo.</p>" +
+        "<p class='guia-ojo'>Dos cosas que conviene saber antes de la primera discusión: " +
+        "un lote <strong>ya pesado se paga aunque siga en planta</strong> —se liquida lo " +
+        "que entró, no lo que salió— y un lote <strong>rechazado aparece igual</strong>, " +
+        "con importe cero y su motivo escrito. No decirlo es lo que genera la llamada.</p>" +
+        "<p>El proveedor ve su propia liquidación en el portal, en <em>Pagos</em>, con el " +
+        "mismo cálculo. Si una cifra no le cuadra, tiene el detalle de cada lote en " +
+        "<em>Mis envíos</em>.</p>");
+
       html += seccion("gente", "Dar acceso a alguien",
         pasos([
           ["Persona de planta",
@@ -372,6 +388,16 @@ const Guia = (function () {
       "salieron para exportación.</p>" +
       "<p class='guia-ojo'>Verás el resultado de <strong>tu</strong> fruta, no el detalle " +
       "interno de la planta. Las causas de pérdida del proceso no se publican.</p>");
+
+    html += seccion("pagos", "Lo que te van a pagar",
+      "<p>En <em>Pagos</em> está el total del período y el detalle de cada entrega: " +
+      "kilos de báscula, precio por kilo e importe. Se paga <strong>por kilo pesado en " +
+      "planta</strong>, no por lo que declaraste al enviar ni por gavetas.</p>" +
+      "<p>Una entrega <strong>ya pesada cuenta aunque siga en planta</strong>: se paga lo " +
+      "que entró, no lo que salió. Y si una entrega fue rechazada, aparece con importe " +
+      "cero y el motivo escrito, para que sepas exactamente por qué.</p>" +
+      "<p class='guia-ojo'>Si una cifra no te cuadra, entra a <em>Mis envíos</em>: ahí " +
+      "está, lote por lote, lo que declaraste y lo que marcó la báscula.</p>");
 
     html += seccion("desempeno", "Tu desempeño",
       "<p>La sección <em>Mi desempeño</em> es la que más conviene mirar cada mes. " +

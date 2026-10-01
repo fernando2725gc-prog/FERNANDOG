@@ -103,6 +103,23 @@ const ENRUTADOR = `/* ==========================================================
   } else { montar(); }
 })();`;
 
+/* El service worker tiene que ser un archivo aparte —así lo exige el
+   navegador— y solo se registra donde puede funcionar: contexto seguro y
+   con la página servida, no abierta con file://. */
+const REGISTRO_SW = `(function () {
+  "use strict";
+  if (!("serviceWorker" in navigator)) return;
+  if (location.protocol !== "https:" && location.hostname !== "localhost") return;
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js", { scope: "./" })
+      .then(function (reg) { window.FLP_SW = reg; })
+      .catch(function (e) {
+        /* Sin él la app sigue funcionando: solo necesita señal para abrir. */
+        console.warn("No se pudo preparar el uso sin conexión:", e && e.message);
+      });
+  });
+})();`;
+
 const partes = [];
 /* Sin charset explícito el navegador lee el archivo como latin-1 y toda la
    página sale con acentos rotos. El anfitrión del artefacto añade el suyo,
@@ -133,6 +150,7 @@ GUION.forEach(function (rel) {
   partes.push("<script>\n" + leer(rel) + "\n<\/script>\n");
 });
 partes.push("<script>\n" + ENRUTADOR + "\n<\/script>\n");
+partes.push("<script>\n" + REGISTRO_SW + "\n<\/script>\n");
 
 const html = partes.join("\n");
 
@@ -150,9 +168,12 @@ fs.writeFileSync(SALIDA, html);
 
 /* Los archivos sueltos de la instalación móvil se copian junto a la página,
    con la misma estructura que el manifiesto declara. */
-const ACOMPANAN = ["pwa/manifest.json", "pwa/icono-192.png", "pwa/icono-512.png"];
+const ACOMPANAN = ["pwa/manifest.json", "pwa/sw.js", "pwa/icono-192.png", "pwa/icono-512.png"];
+/* El manifiesto y el service worker van en la raíz: el alcance de un
+   service worker no puede subir por encima de su propia carpeta. */
+const EN_RAIZ = { "pwa/manifest.json": "manifest.json", "pwa/sw.js": "sw.js" };
 ACOMPANAN.forEach(function (rel) {
-  const destino = path.join(path.dirname(SALIDA), rel === "pwa/manifest.json" ? "manifest.json" : rel);
+  const destino = path.join(path.dirname(SALIDA), EN_RAIZ[rel] || rel);
   fs.mkdirSync(path.dirname(destino), { recursive: true });
   fs.copyFileSync(path.join(APP, rel), destino);
 });

@@ -103,7 +103,8 @@ app/
     ├── index.html
     └── planta.js
 
-tools/empaquetar.js         Arma dist/sistema-flp.html (el archivo que se publica)
+│   └── pwa/                Instalación móvil: manifiesto, service worker, iconos
+tools/empaquetar.js         Arma dist/ (página, manifiesto, sw e iconos)
 ```
 
 Sin dependencias, sin build, sin conexión a internet.
@@ -348,6 +349,30 @@ formularios reales, no el código:
   guardar. Se movió arriba, junto a las gavetas: se escribe el número y aparece al
   instante «880 kg · aprox. $1.320».
 
+## 5 quater. Liquidación al proveedor
+
+El documento con el que se paga, y lo que cierra el ciclo: el proveedor anuncia, la planta
+pesa, y esto resulta de ese pesaje. *Liquidaciones* en planta, *Pagos* en el portal, con
+el mismo cálculo a los dos lados.
+
+```
+importe del lote = kg de báscula × precio por kilo
+total            = Σ importes de los lotes no rechazados
+```
+
+Tres decisiones que conviene conocer antes de la primera discusión con un proveedor:
+
+1. **Se liquida sobre el kilo de báscula**, no sobre lo declarado ni sobre bultos: es el
+   único dato que las dos partes vieron.
+2. **Un lote ya pesado se paga aunque siga en planta.** Se liquida lo que entró, no lo que
+   salió; el documento lo marca como «en planta» para que nadie se sorprenda.
+3. **Un lote rechazado aparece igual**, con importe cero y su motivo escrito. No decirlo es
+   lo que genera la llamada.
+
+El documento es imprimible, lleva el detalle lote por lote y dos espacios de firma. El
+folio es estable —mismo período y mismo proveedor dan siempre el mismo número— así que
+reimprimirlo no crea un documento distinto.
+
 ## 6. Planificación diaria
 
 El módulo que se demuestra en la defensa. Entradas: fecha, horas de turno, operarios y
@@ -484,9 +509,20 @@ Queda un icono propio y la app abre a pantalla completa, sin barra de navegador.
 manifiesto declara además dos atajos —*Portal del Proveedor* y *Sistema de Planta*— que en
 Android aparecen al mantener pulsado el icono.
 
-No lleva *service worker*: sin él la app necesita conexión para **cargar**, aunque una vez
-abierta siga funcionando sin señal gracias a la cola local (§10). Añadirlo es el siguiente
-paso si se quiere que abra también sin cobertura.
+### Abre sin conexión
+
+`app/pwa/sw.js` hace que la app **cargue** sin señal, no solo que siga funcionando una vez
+abierta. En la finca es la diferencia entre poder usarla y no.
+
+- La **página** se pide primero a la red y solo se tira del cache si falla. Al revés, una
+  versión nueva publicada no llegaría hasta vaciar el cache a mano.
+- **Iconos y manifiesto** salen del cache y se refrescan por detrás.
+- **Nada más se intercepta.** Los datos viven en el almacén compartido, que ya tiene su
+  propia cola para trabajar sin señal; cachear sus respuestas solo serviría para enseñar
+  datos viejos como si fueran de ahora.
+
+Probado cortando la red de verdad (`setOffline`): la app abre, se entra al portal y se
+trabaja; al volver la señal se recoge la versión nueva.
 
 ## 9. Cómo ejecutarlo
 
@@ -670,6 +706,13 @@ se vaya la operación y se queden los catálogos, que la clave temporal se muest
 no quede escrita, que las cuentas de ejemplo dejen de ofrecerse solas, que la cuenta nueva
 entre y deba cambiar su clave, y que la vieja ya no sirva. Y **4 de instalación móvil**:
 manifiesto válido y descargable, iconos PNG reales y los dos atajos llevando a cada puerta.
+
+**10 comprobaciones de liquidación**: que el total salga de kg × precio y **no** de lo
+declarado, que un rechazado quede en cero con su motivo, que las líneas del documento
+sumen el total, que el folio sea estable, que el proveedor vea exactamente la misma cifra
+que calcula la planta y que nunca vea un lote ajeno. Y **6 de uso sin conexión**, cortando
+la red de verdad: la app abre, se entra al portal, se trabaja, y al volver la señal se
+recoge la versión nueva.
 
 Y **9 comprobaciones** sobre el paquete publicado: las dos puertas, el almacén compartido
 activo, un envío anunciado desde el celular apareciendo en la cola de la planta, el pesaje

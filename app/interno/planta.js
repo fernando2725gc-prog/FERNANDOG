@@ -114,6 +114,7 @@
       { id: "produccion", texto: "Producción", icono: "🏭", roles: ["produccion", "supervisor"] },
       { id: "lotes", texto: "Lotes", icono: "📦", roles: "*" },
       { id: "reportes", texto: "Reportes", icono: "📄", roles: "*" },
+      { id: "liquidacion", texto: "Liquidaciones", icono: "🧾", roles: ["supervisor"] },
       { id: "costeo", texto: "Costeo y mejora", icono: "💵", roles: ["supervisor"] },
       { id: "catalogos", texto: "Parámetros", icono: "⚙️", roles: ["supervisor"] },
       { id: "proveedores", texto: "Proveedores", icono: "🤝", roles: ["supervisor"] },
@@ -1712,6 +1713,187 @@
     });
   }
 
+  /* ========================== liquidaciones ===========================
+     El documento con el que se paga al proveedor. Es lo que cierra el
+     ciclo: él anuncia, la planta pesa, y esto resulta de ese pesaje.
+     =================================================================== */
+
+  let provLiquidacion = null;
+
+  function vistaLiquidacion() {
+    const todas = Indicadores.liquidaciones(filtros);
+
+    let html = '<div class="vista-cab"><div><h1>Liquidaciones</h1>' +
+      '<p class="sub">Lo que hay que pagarle a cada proveedor por el período, ' +
+      "sobre el kilo de báscula.</p></div>" +
+      '<div class="cab-acciones">' +
+      '<button class="btn btn-plano" id="btnCsvLiquidacion">Exportar CSV</button>' +
+      '<button class="btn btn-primario" id="btnImprimir">Imprimir / PDF</button></div></div>';
+
+    html += barraFiltros({ buscar: false });
+
+    if (!todas.length) {
+      return html + '<p class="vacio">Ningún proveedor entregó fruta en este período.</p>';
+    }
+
+    const total = todas.reduce(function (a, x) { return a + x.importe; }, 0);
+    const kg = todas.reduce(function (a, x) { return a + x.kg; }, 0);
+    const enProceso = todas.reduce(function (a, x) { return a + x.enProceso; }, 0);
+
+    html += '<div class="kpis">' +
+      UI.kpi("A pagar en el período", money(total),
+        nf(todas.length) + " proveedores · " + nf(kg) + " kg", "bien") +
+      UI.kpi("Precio promedio", money(kg > 0 ? total / kg : 0) + "/kg",
+        "ponderado por kilo entregado") +
+      UI.kpi("Lotes todavía en planta", nf(enProceso),
+        enProceso > 0 ? "ya pesados: se pagan igual" : "todo cerrado",
+        enProceso > 0 ? "regular" : "bien") +
+      "</div>";
+
+    html += '<section class="panel"><h2>Resumen por proveedor</h2>' +
+      UI.tabla([
+        { titulo: "Proveedor", valor: function (x) {
+          return "<strong>" + esc(x.proveedor.nombre) + "</strong>" +
+            '<br><small class="tenue">' + esc(x.proveedor.documento) + "</small>"; },
+          csv: function (x) { return x.proveedor.nombre; } },
+        { titulo: "Lotes", num: true, valor: function (x) {
+          return nf(x.lotesPagables) + (x.lotesRechazados
+            ? ' <small class="tenue">+' + nf(x.lotesRechazados) + " rech.</small>" : ""); },
+          csv: function (x) { return x.lotesPagables; } },
+        { titulo: "Gavetas", num: true, valor: function (x) { return nf(x.gavetas); },
+          csv: function (x) { return x.gavetas; } },
+        { titulo: "Kilos", num: true, valor: function (x) { return nf(x.kg) + " kg"; },
+          csv: function (x) { return x.kg.toFixed(1); } },
+        { titulo: "Dif. con lo declarado", num: true, valor: function (x) {
+          const c = Math.abs(x.tasaDiferencia) <= 0.01 ? "etq-ok"
+            : Math.abs(x.tasaDiferencia) <= 0.03 ? "etq-B" : "etq-bajo";
+          return '<span class="etq ' + c + '">' + pctFirmado(x.tasaDiferencia) + "</span>"; },
+          csv: function (x) { return (x.tasaDiferencia * 100).toFixed(2); } },
+        { titulo: "$/kg", num: true, valor: function (x) { return money(x.precioPromedio); },
+          csv: function (x) { return x.precioPromedio.toFixed(3); } },
+        { titulo: "A pagar", num: true, valor: function (x) {
+          return "<strong>" + money(x.importe) + "</strong>"; },
+          csv: function (x) { return x.importe.toFixed(2); } },
+        { titulo: "", valor: function (x) {
+          return '<button class="btn-mini btn-mini-accion" data-liquidar="' +
+            esc(x.proveedor.id) + '">Ver documento</button>'; },
+          csv: function () { return ""; } }
+      ], todas, {}) + "</section>";
+
+    html += '<p class="nota-info">Se liquida sobre el <strong>kilo de báscula</strong>, ' +
+      "no sobre lo que el proveedor declaró ni sobre bultos: es el único dato que las dos " +
+      "partes vieron. Un lote pesado se paga aunque todavía esté en planta —lo que se " +
+      "liquida es lo que entró, no lo que salió— y los rechazados aparecen con importe " +
+      "cero y su motivo.</p>";
+
+    return html;
+  }
+
+  /* El documento en sí, imprimible y con sus firmas. */
+  function hojaLiquidacion(liq) {
+    let html = '<div class="hoja hoja-liquidacion">' +
+      '<header class="hoja-cab"><div>' +
+      '<p class="hoja-empresa">' + esc(DB.EMPRESA.razonSocial) + "</p>" +
+      "<h2>Liquidación de entrega</h2>" +
+      '<p class="sub">' + esc(liq.proveedor.nombre) + " · " + esc(liq.proveedor.documento) +
+      "</p></div>" +
+      '<div class="hoja-meta"><p><strong>Documento:</strong> <code>' + esc(liq.folio) + "</code></p>" +
+      "<p><strong>Período:</strong> " + UI.fechaLarga(liq.desde) + " — " + UI.fechaLarga(liq.hasta) + "</p>" +
+      "<p><strong>Emitido:</strong> " + UI.fechaLarga(DB.hoy()) + "</p></div></header>";
+
+    html += '<div class="hoja-kpis">' +
+      "<div><span>Lotes pagables</span><strong>" + nf(liq.lotesPagables) + "</strong></div>" +
+      "<div><span>Gavetas</span><strong>" + nf(liq.gavetas) + "</strong></div>" +
+      "<div><span>Kilos de báscula</span><strong>" + nf(liq.kg) + "</strong></div>" +
+      "<div><span>Precio promedio</span><strong>" + money(liq.precioPromedio) + "/kg</strong></div>" +
+      "<div><span>Total a pagar</span><strong>" + money(liq.importe) + "</strong></div>" +
+      "</div>";
+
+    html += UI.tabla([
+      { titulo: "Fecha", valor: function (d) { return UI.fechaCorta(d.fecha); } },
+      { titulo: "Lote", valor: function (d) { return "<code>" + esc(d.codigoLote) + "</code>"; } },
+      { titulo: "Producto", valor: function (d) { return esc(d.linea); } },
+      { titulo: "Calidad", valor: function (d) {
+        return '<span class="etq etq-' + esc(d.calidad) + '">' + esc(d.calidad) + "</span>"; } },
+      { titulo: "Gavetas", num: true, valor: function (d) { return d.rechazado ? "—" : nf(d.gavetas); } },
+      { titulo: "Kilos", num: true, valor: function (d) { return d.rechazado ? "—" : nf(d.kg); } },
+      { titulo: "$/kg", num: true, valor: function (d) { return d.rechazado ? "—" : money(d.precioKg); } },
+      { titulo: "Importe", num: true, valor: function (d) {
+        return d.rechazado
+          ? '<span class="etq etq-bajo">Rechazado</span>'
+          : "<strong>" + money(d.importe) + "</strong>" +
+            (d.enProceso ? ' <small class="tenue">en planta</small>' : ""); } }
+    ], liq.detalle, {});
+
+    html += '<div class="liq-total"><span>Total a pagar</span><strong>' +
+      money(liq.importe) + "</strong></div>";
+
+    const rech = liq.detalle.filter(function (d) { return d.rechazado; });
+    if (rech.length) {
+      html += '<section class="liq-rechazos"><h4>Lotes no recibidos</h4><ul>';
+      rech.forEach(function (d) {
+        html += "<li><code>" + esc(d.codigoLote) + "</code> · " + UI.fechaCorta(d.fecha) +
+          " — " + esc(d.motivo) + "</li>";
+      });
+      html += "</ul></section>";
+    }
+
+    html += '<div class="liq-firmas">' +
+      "<div><span></span><small>Por " + esc(DB.EMPRESA.nombre) + "</small></div>" +
+      "<div><span></span><small>" + esc(liq.proveedor.contacto || liq.proveedor.nombre) +
+      "<br>" + esc(liq.proveedor.documento) + "</small></div></div>";
+
+    html += '<footer class="hoja-pie"><p>Liquidación calculada sobre el peso registrado en ' +
+      "la báscula de planta. Las diferencias con lo declarado por el proveedor están en el " +
+      "detalle de cada lote.</p></footer></div>";
+    return html;
+  }
+
+  function verLiquidacion(proveedorId) {
+    const liq = Indicadores.liquidacion(proveedorId, filtros);
+    if (!liq) return;
+    provLiquidacion = proveedorId;
+    abrirPanel("Liquidación · " + liq.proveedor.nombre, hojaLiquidacion(liq), true);
+  }
+
+  function enlazarLiquidacion() {
+    $$("[data-liquidar]").forEach(function (b) {
+      b.addEventListener("click", function () { verLiquidacion(b.dataset.liquidar); });
+    });
+    const csv = $("#btnCsvLiquidacion");
+    if (csv) {
+      csv.addEventListener("click", function () {
+        const filas = [];
+        Indicadores.liquidaciones(filtros).forEach(function (liq) {
+          liq.detalle.forEach(function (d) {
+            filas.push({
+              proveedor: liq.proveedor.nombre, documento: liq.proveedor.documento,
+              folio: liq.folio, fecha: d.fecha, lote: d.codigoLote, producto: d.linea,
+              calidad: d.calidad, gavetas: d.gavetas, kg: d.kg, precioKg: d.precioKg,
+              importe: d.importe, estado: d.rechazado ? "Rechazado" : (d.enProceso ? "En planta" : "Cerrado"),
+              motivo: d.motivo
+            });
+          });
+        });
+        UI.descargarCSV("liquidaciones_" + filtros.desde + "_" + filtros.hasta, [
+          { titulo: "Proveedor", csv: function (x) { return x.proveedor; } },
+          { titulo: "RUC", csv: function (x) { return x.documento; } },
+          { titulo: "Documento", csv: function (x) { return x.folio; } },
+          { titulo: "Fecha", csv: function (x) { return x.fecha; } },
+          { titulo: "Lote", csv: function (x) { return x.lote; } },
+          { titulo: "Producto", csv: function (x) { return x.producto; } },
+          { titulo: "Calidad", csv: function (x) { return x.calidad; } },
+          { titulo: "Gavetas", csv: function (x) { return x.gavetas; } },
+          { titulo: "Kilos", csv: function (x) { return x.kg.toFixed(1); } },
+          { titulo: "Precio por kilo", csv: function (x) { return x.precioKg.toFixed(3); } },
+          { titulo: "Importe", csv: function (x) { return x.importe.toFixed(2); } },
+          { titulo: "Estado", csv: function (x) { return x.estado; } },
+          { titulo: "Motivo del rechazo", csv: function (x) { return x.motivo; } }
+        ], filas);
+      });
+    }
+  }
+
   /* ========================= estudio de tiempos ========================
      La pantalla que sostiene la parte de ingeniería del documento: de la
      lectura con cronómetro al tiempo estándar, y de ahí a cuánta gente
@@ -2969,6 +3151,7 @@
     else if (vista === "produccion") html += vistaProduccion();
     else if (vista === "lotes") html += vistaLotes();
     else if (vista === "reportes") html += vistaReportes();
+    else if (vista === "liquidacion") html += vistaLiquidacion();
     else if (vista === "costeo") html += vistaCosteo();
     else if (vista === "catalogos") html += vistaCatalogos();
     else if (vista === "proveedores") html += vistaProveedores();
@@ -3363,6 +3546,7 @@
     }
     enlazarNovedades();
     if (vista === "tiempos") enlazarTiempos();
+    if (vista === "liquidacion") enlazarLiquidacion();
     if (vista === "costeo") enlazarCosteo();
 
     const btnLimpio = $("#btnArrancarLimpio");

@@ -695,8 +695,15 @@ textarea { resize: vertical; }
   /* El modal ocupa la pantalla: es una pantalla de captura, no una ventana. */
   .modal-capa { padding: 0; align-items: stretch; }
   .modal { max-height: 100vh; border-radius: 0; width: 100%; }
-  .modal-pie { position: sticky; bottom: 0; background: var(--superficie); }
+  /* El pie se queda pegado abajo, así que tapaba el último campo: el
+     resumen del envío, que es justo lo que el proveedor quiere ver antes
+     de guardar. Se le deja aire al final del cuerpo. */
+  .modal-pie {
+    position: sticky; bottom: 0; background: var(--superficie);
+    box-shadow: 0 -6px 16px rgba(0, 0, 0, .08);
+  }
   .modal-pie .btn { flex: 1; }
+  .modal-cuerpo { padding-bottom: 1.6rem; }
 
   /* El aviso no debe tapar el boton de guardar. */
   .avisos { bottom: auto; top: .8rem; right: .8rem; left: .8rem; max-width: none; }
@@ -3020,10 +3027,14 @@ const Indicadores = (function () {
       /* --- proceso --- */
       minutosReales: minutosReales,
       minutosEstandar: minutosEstandar,
-      eficienciaTiempo: minutosReales > 0 ? minutosEstandar / minutosReales : 0,
+      /* El estándar está en minutos-PERSONA, así que el real también tiene
+         que estarlo: minutos de reloj × operarios. Compararlo contra el
+         reloj a secas daba eficiencias del 600%, que es la señal de que se
+         estaban mezclando dos unidades. */
+      eficienciaTiempo: horasHombre > 0 ? minutosEstandar / (horasHombre * 60) : 0,
       horasHombre: horasHombre,
       productividad: horasHombre > 0 ? gavetasProcesadas / horasHombre : 0,
-      minutosPorGaveta: gavetasProcesadas > 0 ? minutosReales / gavetasProcesadas : 0,
+      minutosPorGaveta: gavetasProcesadas > 0 ? (horasHombre * 60) / gavetasProcesadas : 0,
 
       /* --- economico --- */
       valorCompra: valorCompra,
@@ -3056,7 +3067,8 @@ const Indicadores = (function () {
           proveedorId: l.proveedorId, nombre: nombreProveedor(l.proveedorId),
           lotes: 0, rechazados: 0, gavetasAnunciadas: 0, gavetasAnunPesadas: 0,
           gavetasRecibidas: 0, kgAnunPesados: 0, kgRecibidos: 0, valor: 0, calidadA: 0,
-          gavetasProcesadas: 0, cajasExportables: 0, kgMerma: 0
+          gavetasProcesadas: 0, cajasExportables: 0,
+          kgProcesados: 0, kgExportable: 0, kgMerma: 0
         };
       }
       const m = mapa[l.proveedorId];
@@ -3078,12 +3090,14 @@ const Indicadores = (function () {
       const m = mapa[lote.proveedorId];
       m.gavetasProcesadas += Number(p.gavetasProcesadas) || 0;
       m.cajasExportables += Number(p.cajasExportables) || 0;
+      m.kgProcesados += Number(p.kgProcesados) || 0;
+      m.kgExportable += Number(p.kgExportable) || 0;
       m.kgMerma += totalMerma(p);
     });
 
     return Object.keys(mapa).map(function (k) {
       const m = mapa[k];
-      m.tasaExportable = m.gavetasProcesadas > 0 ? m.cajasExportables / m.gavetasProcesadas : 0;
+      m.tasaExportable = m.kgProcesados > 0 ? m.kgExportable / m.kgProcesados : 0;
       m.pctCalidadA = m.gavetasRecibidas > 0 ? m.calidadA / m.gavetasRecibidas : 0;
       m.precioPromedio = m.gavetasRecibidas > 0 ? m.valor / m.gavetasRecibidas : 0;
       m.diferenciaGavetas = m.gavetasRecibidas - m.gavetasAnunPesadas;
@@ -3111,6 +3125,7 @@ const Indicadores = (function () {
           lineaId: id, nombre: nombreLinea(id), color: colorLinea(id),
           meta: l ? l.metaRendimiento : 0,
           gavetasRecibidas: 0, gavetasProcesadas: 0, cajasExportables: 0,
+          kgProcesados: 0, kgExportable: 0,
           kgMerma: 0, kgValorizado: 0, minutosReales: 0, minutosEstandar: 0
         };
       }
@@ -3124,15 +3139,18 @@ const Indicadores = (function () {
       const b = bucket(p.lineaId);
       b.gavetasProcesadas += Number(p.gavetasProcesadas) || 0;
       b.cajasExportables += Number(p.cajasExportables) || 0;
+      b.kgProcesados += Number(p.kgProcesados) || 0;
+      b.kgExportable += Number(p.kgExportable) || 0;
       b.kgMerma += totalMerma(p);
       b.kgValorizado += mermaValorizada(p);
-      b.minutosReales += Number(p.tiempoRealMin) || 0;
+      /* Minutos-persona: el reloj multiplicado por la gente que estuvo. */
+      b.minutosReales += (Number(p.tiempoRealMin) || 0) * (Number(p.operarios) || 1);
       b.minutosEstandar += tiempoEstandar(p);
     });
 
     return Object.keys(mapa).map(function (k) {
       const m = mapa[k];
-      m.tasaExportable = m.gavetasProcesadas > 0 ? m.cajasExportables / m.gavetasProcesadas : 0;
+      m.tasaExportable = m.kgProcesados > 0 ? m.kgExportable / m.kgProcesados : 0;
       m.brecha = m.tasaExportable - m.meta;
       m.eficiencia = m.minutosReales > 0 ? m.minutosEstandar / m.minutosReales : 0;
       m.minutosPorGaveta = m.gavetasProcesadas > 0 ? m.minutosReales / m.gavetasProcesadas : 0;
@@ -3243,8 +3261,8 @@ const Indicadores = (function () {
     });
     datos.producciones.forEach(function (p) {
       const b = bucket(p.fecha);
-      b.procesado += Number(p.gavetasProcesadas) || 0;
-      b.exportable += Number(p.cajasExportables) || 0;
+      b.procesado += Number(p.kgProcesados) || 0;
+      b.exportable += Number(p.kgExportable) || 0;
     });
 
     return Object.keys(mapa).sort().map(function (k) {
@@ -3515,7 +3533,8 @@ const Indicadores = (function () {
         ? prod.cajasExportables / prod.gavetasProcesadas : null,
       meta: linea ? linea.metaRendimiento : null,
       tiempoEstandarMin: prod ? tiempoEstandar(prod) : 0,
-      eficiencia: prod && prod.tiempoRealMin > 0 ? tiempoEstandar(prod) / prod.tiempoRealMin : null,
+      eficiencia: prod && prod.tiempoRealMin > 0
+        ? tiempoEstandar(prod) / (prod.tiempoRealMin * (Number(prod.operarios) || 1)) : null,
       mermas: prod ? (prod.mermas || []).slice().sort(function (a, b) { return b.kg - a.kg; }) : []
     };
   }
@@ -4350,6 +4369,15 @@ const UI = (function () {
 
   /* --------------------------------------------------------------- tablas */
 
+  /* La ayuda de un campo se escapa, porque puede venir de un dato. Cuando
+     hace falta resaltar una cifra dentro de ella, se usa `ayudaHTML`, que
+     es siempre texto escrito en el código, nunca de origen externo. */
+  function textoAyuda(c) {
+    if (c.ayudaHTML) return '<small class="ayuda">' + c.ayudaHTML + "</small>";
+    if (c.ayuda) return '<small class="ayuda">' + esc(c.ayuda) + "</small>";
+    return "";
+  }
+
   function tabla(columnas, filas, opciones) {
     const o = opciones || {};
     if (!filas.length) {
@@ -4538,7 +4566,7 @@ const UI = (function () {
     if (c.tipo === "calculado") {
       return '<div class="campo campo-' + (c.ancho || "full") + ' campo-calculado">' +
         "<label>" + esc(c.etiqueta) + '</label><output id="' + esc(c.nombre) + '">—</output>' +
-        (c.ayuda ? '<small class="ayuda">' + esc(c.ayuda) + "</small>" : "") + "</div>";
+        textoAyuda(c) + "</div>";
     }
 
     /* Campo repetible: una fila por elemento, con columnas configurables.
@@ -4546,7 +4574,7 @@ const UI = (function () {
     if (c.tipo === "repetible") {
       return '<div class="campo campo-full repetible" data-repetible="' + esc(c.nombre) + '">' +
         "<label>" + esc(c.etiqueta) + "</label>" +
-        (c.ayuda ? '<small class="ayuda">' + esc(c.ayuda) + "</small>" : "") +
+        textoAyuda(c) +
         '<div class="rep-filas"></div>' +
         '<button type="button" class="btn btn-plano btn-sm rep-agregar">+ ' +
         esc(c.textoAgregar || "Agregar") + "</button>" +
@@ -4591,7 +4619,7 @@ const UI = (function () {
       (c.tipo === "checkbox" ? "" : '<label for="' + id + '">' + esc(c.etiqueta) +
         (c.requerido ? ' <span class="req" aria-hidden="true">*</span>' : "") + "</label>") +
       control +
-      (c.ayuda ? '<small class="ayuda">' + esc(c.ayuda) + "</small>" : "") + "</div>";
+      textoAyuda(c) + "</div>";
   }
 
   /* Filas dinámicas de un campo repetible. */
@@ -5604,6 +5632,7 @@ const Guia = (function () {
     });
 
     let cajasAnun = 0, cajasRec = 0, cajasProc = 0, cajasExp = 0, valor = 0, calA = 0, rech = 0;
+    let kgProc = 0, kgExp = 0;
     lotes.forEach(function (l) {
       cajasAnun += Number(l.gavetasAnunciadas) || 0;
       if (l.estado === "Rechazado") { rech += 1; return; }
@@ -5615,6 +5644,10 @@ const Guia = (function () {
       if (p) {
         cajasProc += Number(p.gavetasProcesadas) || 0;
         cajasExp += Number(p.cajasExportables) || 0;
+        /* El rendimiento se mide en kilos: la gaveta que entrega y la caja
+           que sale pesan cosas distintas. */
+        kgProc += Number(p.kgProcesados) || 0;
+        kgExp += Number(p.kgExportable) || 0;
       }
     });
 
@@ -5629,7 +5662,7 @@ const Guia = (function () {
       diferencia: cajasRec - anunPesadas,
       tasaDiferencia: anunPesadas > 0 ? (cajasRec - anunPesadas) / anunPesadas : 0,
       cajasExportables: cajasExp,
-      tasaExportable: cajasProc > 0 ? cajasExp / cajasProc : 0,
+      tasaExportable: kgProc > 0 ? kgExp / kgProc : 0,
       pctCalidadA: cajasRec > 0 ? calA / cajasRec : 0,
       valor: valor,
       tasaRechazo: lotes.length > 0 ? rech / lotes.length : 0
@@ -5670,7 +5703,7 @@ const Guia = (function () {
       "Diferencia entre lo que anuncias y lo que pesa la planta",
       Math.abs(r.tasaDiferencia) <= 0.01 ? "bien" : Math.abs(r.tasaDiferencia) <= 0.03 ? "regular" : "mal");
     html += UI.kpi("Tu fruta exportable", pct(r.tasaExportable),
-      "De cada 100 cajas que entregas", r.tasaExportable >= 0.78 ? "bien" : "regular");
+      "De cada 100 kg que entregas", r.tasaExportable >= 0.78 ? "bien" : "regular");
     html += UI.kpi("Valor liquidado", money(r.valor),
       pct(r.pctCalidadA) + " de tu fruta entra como calidad A", "neutro");
     html += "</section>";
@@ -5906,14 +5939,15 @@ const Guia = (function () {
     const lineas = DB.all("lineas").filter(function (l) { return l.activa; });
     const b = base || {};
 
+    /* El orden es el de la cabeza de quien lo llena: qué mando, cuánto,
+       cuánto pesa y —de inmediato— a cuántos kilos y a cuánto dinero
+       equivale. El resumen iba al final, donde el pie del celular lo
+       tapaba justo antes de guardar. */
     const campos = [
       { nombre: "lineaId", etiqueta: "¿Qué producto envías?", tipo: "select", requerido: true,
         vacio: "Selecciona…", valor: b.lineaId || "",
         ayuda: "Al elegirlo se precarga el peso nominal de su gaveta.",
         opciones: lineas.map(function (l) { return { valor: l.id, texto: l.nombre }; }) },
-      { nombre: "fecha", etiqueta: "Fecha del envío", tipo: "date", valor: DB.hoy(),
-        requerido: true, ancho: "mitad",
-        validar: function (v) { return v > DB.hoy() ? "La fecha no puede ser futura." : null; } },
       { nombre: "gavetasAnunciadas", etiqueta: "¿Cuántas gavetas envías?", tipo: "number",
         requerido: true, min: 1, max: 5000, paso: "1", ancho: "mitad",
         valor: b.gavetasAnunciadas || "",
@@ -5933,14 +5967,17 @@ const Guia = (function () {
           }
           return null;
         } },
+      { nombre: "resumenCalc", etiqueta: "Esto es lo que estás enviando", tipo: "calculado",
+        ayuda: "Peso y valor aproximados. Se liquida sobre lo que pese la báscula de planta." },
+      { nombre: "fecha", etiqueta: "Fecha del envío", tipo: "date", valor: DB.hoy(),
+        requerido: true, ancho: "mitad",
+        validar: function (v) { return v > DB.hoy() ? "La fecha no puede ser futura." : null; } },
       { nombre: "calidadDeclarada", etiqueta: "Calidad que declaras", tipo: "select",
         requerido: true, ancho: "mitad", valor: b.calidadDeclarada || "A",
         opciones: DB.CALIDADES.map(function (c) { return { valor: c.id, texto: c.nombre }; }) },
       { nombre: "transporte", etiqueta: "Transporte", tipo: "select", ancho: "mitad",
         valor: b.transporte || "Propio",
         opciones: [{ valor: "Propio", texto: "Propio" }, { valor: "Contratado", texto: "Contratado" }] },
-      { nombre: "resumenCalc", etiqueta: "Equivalencia del envío", tipo: "calculado",
-        ayuda: "Peso y valor estimados. Se liquidará sobre lo que pese la báscula." },
       { nombre: "observacionesProveedor", etiqueta: "¿Algo que deba saber la planta?",
         tipo: "textarea", marcador: "Estado de la fruta, hora de salida, novedades del viaje." }
     ];
@@ -7286,15 +7323,29 @@ const Guia = (function () {
 
     const proc = lista.reduce(function (a, p) { return a + p.gavetasProcesadas; }, 0);
     const exp = lista.reduce(function (a, p) { return a + p.cajasExportables; }, 0);
+    /* El rendimiento se mide en kilos. Cajas entre gavetas no es una tasa:
+       daba 391%, que es el número que delata la mezcla de unidades. */
+    const kgProc = lista.reduce(function (a, p) { return a + (Number(p.kgProcesados) || 0); }, 0);
+    const kgExp = lista.reduce(function (a, p) { return a + (Number(p.kgExportable) || 0); }, 0);
     html += '<p class="resumen-linea"><strong>' + nf(lista.length) + "</strong> lotes · <strong>" +
       nf(proc) + "</strong> gavetas procesadas · <strong>" + nf(exp) +
-      "</strong> exportables · tasa <strong>" + pct(proc > 0 ? exp / proc : 0) + "</strong></p>";
+      "</strong> cajas empacadas · rendimiento <strong>" +
+      pct(kgProc > 0 ? kgExp / kgProc : 0) + "</strong> <span class='tenue'>(" +
+      nf(kgExp) + " de " + nf(kgProc) + " kg)</span></p>";
 
     html += UI.tabla(columnasProduccion(), lista, { vacio: "No hay producción en este período." });
     html += '<p class="ir-a">Esta tabla es el registro de <strong>lo producido</strong>. ' +
       "El recorrido completo de cada pedido —anuncio, pesaje, cierre— está en " +
       '<button type="button" class="enlace" data-ir="lotes">Lotes</button>.</p>';
     return html;
+  }
+
+  /* El estándar está en minutos-persona, así que el tiempo real también:
+     el reloj multiplicado por la gente que estuvo en la línea. Dividir por
+     el reloj a secas daba eficiencias del 600%. */
+  function eficienciaProd(p) {
+    const real = (Number(p.tiempoRealMin) || 0) * (Number(p.operarios) || 1);
+    return real > 0 ? Indicadores.tiempoEstandar(p) / real : 0;
   }
 
   function columnasProduccion() {
@@ -7327,10 +7378,9 @@ const Guia = (function () {
           const t = Indicadores.totalMerma(p);
           return t > 0 ? ((Indicadores.mermaValorizada(p) / t) * 100).toFixed(1) : ""; } },
       { titulo: "Eficiencia", num: true, valor: function (p) {
-        const e = p.tiempoRealMin > 0 ? Indicadores.tiempoEstandar(p) / p.tiempoRealMin : 0;
+        const e = eficienciaProd(p);
         return '<span class="etq ' + (e >= 0.95 ? "etq-ok" : "etq-bajo") + '">' + pct(e) + "</span>"; },
-        csv: function (p) {
-          return p.tiempoRealMin > 0 ? ((Indicadores.tiempoEstandar(p) / p.tiempoRealMin) * 100).toFixed(1) : ""; } },
+        csv: function (p) { return (eficienciaProd(p) * 100).toFixed(1); } },
       { titulo: "CR principal", valor: function (p) {
         const m = (p.mermas || []).slice().sort(function (a, b) { return b.kg - a.kg; })[0];
         if (!m) return '<span class="tenue">—</span>';
@@ -7384,8 +7434,10 @@ const Guia = (function () {
       { nombre: "cajasExportables", etiqueta: "Cajas exportables obtenidas", tipo: "number",
         requerido: true, min: 0, paso: "1", ancho: "mitad",
         valor: corregir ? prodPrevia.cajasExportables : "",
-        ayuda: "Caja de " + nf(linea.pesoCajaKg, 1) + " kg. De una gaveta salen unas " +
-          nf(estudio.cajasPorGaveta, 2) + " cajas.",
+        /* Se dice cuántas deberían salir: quien registra compara en vez de
+           calcular, y una diferencia grande salta sola. */
+        ayudaHTML: "Cajas de " + nf(linea.pesoCajaKg, 1) + " kg. Con este lote deberían salir " +
+          "unas <strong>" + nf(l.gavetasRecibidas * estudio.cajasPorGaveta) + "</strong>.",
         validar: function (v, d) {
           const kgProc = (Number(d.gavetasProcesadas) || 0) * kgPorGaveta;
           return kgProc > 0 && v * linea.pesoCajaKg > kgProc
@@ -7394,15 +7446,17 @@ const Guia = (function () {
       { nombre: "operarios", etiqueta: "Operarios en la línea", tipo: "number", requerido: true,
         min: 1, max: 100, paso: "1", ancho: "mitad",
         valor: corregir ? prodPrevia.operarios : 4 },
-      { nombre: "tiempoRealMin", etiqueta: "Tiempo real de proceso (min)", tipo: "number",
-        requerido: true, min: 1, paso: "1", ancho: "mitad",
+      { nombre: "tiempoRealMin", etiqueta: "¿Cuánto tardó la línea? (minutos de reloj)",
+        tipo: "number", requerido: true, min: 1, paso: "1", ancho: "mitad",
         valor: corregir ? prodPrevia.tiempoRealMin : "",
-        ayuda: "Estándar para este lote: " + nf(tEstandar, 0) + " min-persona (" +
-          nf(estudio.contenidoGavetaMin, 2) + " min-persona por gaveta " + "M)." },
+        /* El estándar está en minutos-persona y el campo pide minutos de
+           reloj: decirlo evita que alguien escriba el número equivocado,
+           que era fácil y silencioso. */
+        ayudaHTML: '<span id="pistaTiempo">Lo que marcó el reloj, de principio a fin.</span>' },
       { nombre: "operador", etiqueta: "Responsable de línea", tipo: "text", requerido: true,
         valor: corregir ? prodPrevia.operador : usuario.nombre, ancho: "mitad" },
-      { nombre: "tasaCalc", etiqueta: "Tasa de exportable", tipo: "calculado", ancho: "mitad" },
-      { nombre: "eficienciaCalc", etiqueta: "Eficiencia contra el estándar", tipo: "calculado", ancho: "mitad" },
+      { nombre: "tasaCalc", etiqueta: "Rendimiento (kg empacados / kg procesados)", tipo: "calculado", ancho: "mitad" },
+      { nombre: "eficienciaCalc", etiqueta: "Eficiencia de la mano de obra", tipo: "calculado", ancho: "mitad" },
       { nombre: "mermas", etiqueta: "Reparto de la merma: causa raíz y destino", tipo: "repetible",
         textoAgregar: "Agregar causa",
         ayuda: "La suma debe cuadrar con la merma total (procesado − exportable). " +
@@ -7539,13 +7593,28 @@ const Guia = (function () {
           }
         }
 
+        /* El estándar se enseña traducido al reloj con la gente que se
+           acaba de escribir: así se compara con lo que la persona va a
+           teclear, en vez de obligarla a dividir mentalmente. */
+        const gente = Number(d.operarios) || 0;
+        const estPersona = proc * estudio.contenidoGavetaMin;
+        const pista = $("#pistaTiempo", form);
+        if (pista) {
+          pista.innerHTML = proc > 0 && gente > 0
+            ? "Con <strong>" + nf(gente) + "</strong> operarios, el estándar para estas " +
+              nf(proc) + " gavetas es <strong>" + nf(estPersona / gente, 0) +
+              " min</strong> de reloj."
+            : "Lo que marcó el reloj, de principio a fin.";
+        }
+
         const outE = $("#eficienciaCalc", form);
         if (outE) {
-          const est = proc * estudio.contenidoGavetaMin;
-          if (proc <= 0 || real <= 0) { outE.textContent = "—"; outE.className = ""; }
+          if (proc <= 0 || real <= 0 || gente <= 0) { outE.textContent = "—"; outE.className = ""; }
           else {
-            const ef = est / real;
-            outE.textContent = pct(ef) + " · estándar " + nf(est, 0) + " min";
+            /* Minutos-persona contra minutos-persona: el reloj por la gente. */
+            const ef = estPersona / (real * gente);
+            outE.textContent = pct(ef) + " · estándar " + nf(estPersona / gente, 0) +
+              " min de reloj con " + nf(gente) + " operarios";
             outE.className = ef >= 0.95 ? "ok" : "bajo";
           }
         }
@@ -7559,12 +7628,14 @@ const Guia = (function () {
           ]).reduce(function (a, m) { return a + m.kg; }, 0);
           if (objetivo <= 0) {
             balance.className = "balance";
-            balance.innerHTML = "Indica primero las cajas procesadas y exportables.";
+            balance.innerHTML = "Escribe primero las gavetas procesadas y las cajas obtenidas.";
           } else {
             const falta = objetivo - suma;
             const ok = Math.abs(falta) <= Math.max(1, objetivo * 0.005);
             balance.className = "balance " + (ok ? "balance-ok" : "balance-pendiente");
-            balance.innerHTML = "Merma total: <strong>" + nf(objetivo, 1) + " kg</strong> · asignado: " +
+            balance.innerHTML = "Se perdieron <strong>" + nf(objetivo, 1) + " kg</strong> " +
+              '<span class="tenue">(' + nf(proc * kgPorGaveta, 0) + " kg entraron − " +
+              nf(expo * linea.pesoCajaKg, 0) + " kg se empacaron)</span> · repartidos: " +
               "<strong>" + nf(suma, 1) + " kg</strong> · " +
               (ok ? "balance de masa cuadrado ✓"
                   : (falta > 0 ? "faltan <strong>" + nf(falta, 1) + " kg</strong>"

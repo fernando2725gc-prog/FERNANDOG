@@ -199,10 +199,14 @@ const Indicadores = (function () {
       /* --- proceso --- */
       minutosReales: minutosReales,
       minutosEstandar: minutosEstandar,
-      eficienciaTiempo: minutosReales > 0 ? minutosEstandar / minutosReales : 0,
+      /* El estándar está en minutos-PERSONA, así que el real también tiene
+         que estarlo: minutos de reloj × operarios. Compararlo contra el
+         reloj a secas daba eficiencias del 600%, que es la señal de que se
+         estaban mezclando dos unidades. */
+      eficienciaTiempo: horasHombre > 0 ? minutosEstandar / (horasHombre * 60) : 0,
       horasHombre: horasHombre,
       productividad: horasHombre > 0 ? gavetasProcesadas / horasHombre : 0,
-      minutosPorGaveta: gavetasProcesadas > 0 ? minutosReales / gavetasProcesadas : 0,
+      minutosPorGaveta: gavetasProcesadas > 0 ? (horasHombre * 60) / gavetasProcesadas : 0,
 
       /* --- economico --- */
       valorCompra: valorCompra,
@@ -235,7 +239,8 @@ const Indicadores = (function () {
           proveedorId: l.proveedorId, nombre: nombreProveedor(l.proveedorId),
           lotes: 0, rechazados: 0, gavetasAnunciadas: 0, gavetasAnunPesadas: 0,
           gavetasRecibidas: 0, kgAnunPesados: 0, kgRecibidos: 0, valor: 0, calidadA: 0,
-          gavetasProcesadas: 0, cajasExportables: 0, kgMerma: 0
+          gavetasProcesadas: 0, cajasExportables: 0,
+          kgProcesados: 0, kgExportable: 0, kgMerma: 0
         };
       }
       const m = mapa[l.proveedorId];
@@ -257,12 +262,14 @@ const Indicadores = (function () {
       const m = mapa[lote.proveedorId];
       m.gavetasProcesadas += Number(p.gavetasProcesadas) || 0;
       m.cajasExportables += Number(p.cajasExportables) || 0;
+      m.kgProcesados += Number(p.kgProcesados) || 0;
+      m.kgExportable += Number(p.kgExportable) || 0;
       m.kgMerma += totalMerma(p);
     });
 
     return Object.keys(mapa).map(function (k) {
       const m = mapa[k];
-      m.tasaExportable = m.gavetasProcesadas > 0 ? m.cajasExportables / m.gavetasProcesadas : 0;
+      m.tasaExportable = m.kgProcesados > 0 ? m.kgExportable / m.kgProcesados : 0;
       m.pctCalidadA = m.gavetasRecibidas > 0 ? m.calidadA / m.gavetasRecibidas : 0;
       m.precioPromedio = m.gavetasRecibidas > 0 ? m.valor / m.gavetasRecibidas : 0;
       m.diferenciaGavetas = m.gavetasRecibidas - m.gavetasAnunPesadas;
@@ -290,6 +297,7 @@ const Indicadores = (function () {
           lineaId: id, nombre: nombreLinea(id), color: colorLinea(id),
           meta: l ? l.metaRendimiento : 0,
           gavetasRecibidas: 0, gavetasProcesadas: 0, cajasExportables: 0,
+          kgProcesados: 0, kgExportable: 0,
           kgMerma: 0, kgValorizado: 0, minutosReales: 0, minutosEstandar: 0
         };
       }
@@ -303,15 +311,18 @@ const Indicadores = (function () {
       const b = bucket(p.lineaId);
       b.gavetasProcesadas += Number(p.gavetasProcesadas) || 0;
       b.cajasExportables += Number(p.cajasExportables) || 0;
+      b.kgProcesados += Number(p.kgProcesados) || 0;
+      b.kgExportable += Number(p.kgExportable) || 0;
       b.kgMerma += totalMerma(p);
       b.kgValorizado += mermaValorizada(p);
-      b.minutosReales += Number(p.tiempoRealMin) || 0;
+      /* Minutos-persona: el reloj multiplicado por la gente que estuvo. */
+      b.minutosReales += (Number(p.tiempoRealMin) || 0) * (Number(p.operarios) || 1);
       b.minutosEstandar += tiempoEstandar(p);
     });
 
     return Object.keys(mapa).map(function (k) {
       const m = mapa[k];
-      m.tasaExportable = m.gavetasProcesadas > 0 ? m.cajasExportables / m.gavetasProcesadas : 0;
+      m.tasaExportable = m.kgProcesados > 0 ? m.kgExportable / m.kgProcesados : 0;
       m.brecha = m.tasaExportable - m.meta;
       m.eficiencia = m.minutosReales > 0 ? m.minutosEstandar / m.minutosReales : 0;
       m.minutosPorGaveta = m.gavetasProcesadas > 0 ? m.minutosReales / m.gavetasProcesadas : 0;
@@ -422,8 +433,8 @@ const Indicadores = (function () {
     });
     datos.producciones.forEach(function (p) {
       const b = bucket(p.fecha);
-      b.procesado += Number(p.gavetasProcesadas) || 0;
-      b.exportable += Number(p.cajasExportables) || 0;
+      b.procesado += Number(p.kgProcesados) || 0;
+      b.exportable += Number(p.kgExportable) || 0;
     });
 
     return Object.keys(mapa).sort().map(function (k) {
@@ -694,7 +705,8 @@ const Indicadores = (function () {
         ? prod.cajasExportables / prod.gavetasProcesadas : null,
       meta: linea ? linea.metaRendimiento : null,
       tiempoEstandarMin: prod ? tiempoEstandar(prod) : 0,
-      eficiencia: prod && prod.tiempoRealMin > 0 ? tiempoEstandar(prod) / prod.tiempoRealMin : null,
+      eficiencia: prod && prod.tiempoRealMin > 0
+        ? tiempoEstandar(prod) / (prod.tiempoRealMin * (Number(prod.operarios) || 1)) : null,
       mermas: prod ? (prod.mermas || []).slice().sort(function (a, b) { return b.kg - a.kg; }) : []
     };
   }

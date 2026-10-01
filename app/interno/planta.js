@@ -786,15 +786,29 @@
 
     const proc = lista.reduce(function (a, p) { return a + p.gavetasProcesadas; }, 0);
     const exp = lista.reduce(function (a, p) { return a + p.cajasExportables; }, 0);
+    /* El rendimiento se mide en kilos. Cajas entre gavetas no es una tasa:
+       daba 391%, que es el número que delata la mezcla de unidades. */
+    const kgProc = lista.reduce(function (a, p) { return a + (Number(p.kgProcesados) || 0); }, 0);
+    const kgExp = lista.reduce(function (a, p) { return a + (Number(p.kgExportable) || 0); }, 0);
     html += '<p class="resumen-linea"><strong>' + nf(lista.length) + "</strong> lotes · <strong>" +
       nf(proc) + "</strong> gavetas procesadas · <strong>" + nf(exp) +
-      "</strong> exportables · tasa <strong>" + pct(proc > 0 ? exp / proc : 0) + "</strong></p>";
+      "</strong> cajas empacadas · rendimiento <strong>" +
+      pct(kgProc > 0 ? kgExp / kgProc : 0) + "</strong> <span class='tenue'>(" +
+      nf(kgExp) + " de " + nf(kgProc) + " kg)</span></p>";
 
     html += UI.tabla(columnasProduccion(), lista, { vacio: "No hay producción en este período." });
     html += '<p class="ir-a">Esta tabla es el registro de <strong>lo producido</strong>. ' +
       "El recorrido completo de cada pedido —anuncio, pesaje, cierre— está en " +
       '<button type="button" class="enlace" data-ir="lotes">Lotes</button>.</p>';
     return html;
+  }
+
+  /* El estándar está en minutos-persona, así que el tiempo real también:
+     el reloj multiplicado por la gente que estuvo en la línea. Dividir por
+     el reloj a secas daba eficiencias del 600%. */
+  function eficienciaProd(p) {
+    const real = (Number(p.tiempoRealMin) || 0) * (Number(p.operarios) || 1);
+    return real > 0 ? Indicadores.tiempoEstandar(p) / real : 0;
   }
 
   function columnasProduccion() {
@@ -827,10 +841,9 @@
           const t = Indicadores.totalMerma(p);
           return t > 0 ? ((Indicadores.mermaValorizada(p) / t) * 100).toFixed(1) : ""; } },
       { titulo: "Eficiencia", num: true, valor: function (p) {
-        const e = p.tiempoRealMin > 0 ? Indicadores.tiempoEstandar(p) / p.tiempoRealMin : 0;
+        const e = eficienciaProd(p);
         return '<span class="etq ' + (e >= 0.95 ? "etq-ok" : "etq-bajo") + '">' + pct(e) + "</span>"; },
-        csv: function (p) {
-          return p.tiempoRealMin > 0 ? ((Indicadores.tiempoEstandar(p) / p.tiempoRealMin) * 100).toFixed(1) : ""; } },
+        csv: function (p) { return (eficienciaProd(p) * 100).toFixed(1); } },
       { titulo: "CR principal", valor: function (p) {
         const m = (p.mermas || []).slice().sort(function (a, b) { return b.kg - a.kg; })[0];
         if (!m) return '<span class="tenue">—</span>';
@@ -884,8 +897,10 @@
       { nombre: "cajasExportables", etiqueta: "Cajas exportables obtenidas", tipo: "number",
         requerido: true, min: 0, paso: "1", ancho: "mitad",
         valor: corregir ? prodPrevia.cajasExportables : "",
-        ayuda: "Caja de " + nf(linea.pesoCajaKg, 1) + " kg. De una gaveta salen unas " +
-          nf(estudio.cajasPorGaveta, 2) + " cajas.",
+        /* Se dice cuántas deberían salir: quien registra compara en vez de
+           calcular, y una diferencia grande salta sola. */
+        ayudaHTML: "Cajas de " + nf(linea.pesoCajaKg, 1) + " kg. Con este lote deberían salir " +
+          "unas <strong>" + nf(l.gavetasRecibidas * estudio.cajasPorGaveta) + "</strong>.",
         validar: function (v, d) {
           const kgProc = (Number(d.gavetasProcesadas) || 0) * kgPorGaveta;
           return kgProc > 0 && v * linea.pesoCajaKg > kgProc
@@ -894,15 +909,17 @@
       { nombre: "operarios", etiqueta: "Operarios en la línea", tipo: "number", requerido: true,
         min: 1, max: 100, paso: "1", ancho: "mitad",
         valor: corregir ? prodPrevia.operarios : 4 },
-      { nombre: "tiempoRealMin", etiqueta: "Tiempo real de proceso (min)", tipo: "number",
-        requerido: true, min: 1, paso: "1", ancho: "mitad",
+      { nombre: "tiempoRealMin", etiqueta: "¿Cuánto tardó la línea? (minutos de reloj)",
+        tipo: "number", requerido: true, min: 1, paso: "1", ancho: "mitad",
         valor: corregir ? prodPrevia.tiempoRealMin : "",
-        ayuda: "Estándar para este lote: " + nf(tEstandar, 0) + " min-persona (" +
-          nf(estudio.contenidoGavetaMin, 2) + " min-persona por gaveta " + "M)." },
+        /* El estándar está en minutos-persona y el campo pide minutos de
+           reloj: decirlo evita que alguien escriba el número equivocado,
+           que era fácil y silencioso. */
+        ayudaHTML: '<span id="pistaTiempo">Lo que marcó el reloj, de principio a fin.</span>' },
       { nombre: "operador", etiqueta: "Responsable de línea", tipo: "text", requerido: true,
         valor: corregir ? prodPrevia.operador : usuario.nombre, ancho: "mitad" },
-      { nombre: "tasaCalc", etiqueta: "Tasa de exportable", tipo: "calculado", ancho: "mitad" },
-      { nombre: "eficienciaCalc", etiqueta: "Eficiencia contra el estándar", tipo: "calculado", ancho: "mitad" },
+      { nombre: "tasaCalc", etiqueta: "Rendimiento (kg empacados / kg procesados)", tipo: "calculado", ancho: "mitad" },
+      { nombre: "eficienciaCalc", etiqueta: "Eficiencia de la mano de obra", tipo: "calculado", ancho: "mitad" },
       { nombre: "mermas", etiqueta: "Reparto de la merma: causa raíz y destino", tipo: "repetible",
         textoAgregar: "Agregar causa",
         ayuda: "La suma debe cuadrar con la merma total (procesado − exportable). " +
@@ -1039,13 +1056,28 @@
           }
         }
 
+        /* El estándar se enseña traducido al reloj con la gente que se
+           acaba de escribir: así se compara con lo que la persona va a
+           teclear, en vez de obligarla a dividir mentalmente. */
+        const gente = Number(d.operarios) || 0;
+        const estPersona = proc * estudio.contenidoGavetaMin;
+        const pista = $("#pistaTiempo", form);
+        if (pista) {
+          pista.innerHTML = proc > 0 && gente > 0
+            ? "Con <strong>" + nf(gente) + "</strong> operarios, el estándar para estas " +
+              nf(proc) + " gavetas es <strong>" + nf(estPersona / gente, 0) +
+              " min</strong> de reloj."
+            : "Lo que marcó el reloj, de principio a fin.";
+        }
+
         const outE = $("#eficienciaCalc", form);
         if (outE) {
-          const est = proc * estudio.contenidoGavetaMin;
-          if (proc <= 0 || real <= 0) { outE.textContent = "—"; outE.className = ""; }
+          if (proc <= 0 || real <= 0 || gente <= 0) { outE.textContent = "—"; outE.className = ""; }
           else {
-            const ef = est / real;
-            outE.textContent = pct(ef) + " · estándar " + nf(est, 0) + " min";
+            /* Minutos-persona contra minutos-persona: el reloj por la gente. */
+            const ef = estPersona / (real * gente);
+            outE.textContent = pct(ef) + " · estándar " + nf(estPersona / gente, 0) +
+              " min de reloj con " + nf(gente) + " operarios";
             outE.className = ef >= 0.95 ? "ok" : "bajo";
           }
         }
@@ -1059,12 +1091,14 @@
           ]).reduce(function (a, m) { return a + m.kg; }, 0);
           if (objetivo <= 0) {
             balance.className = "balance";
-            balance.innerHTML = "Indica primero las cajas procesadas y exportables.";
+            balance.innerHTML = "Escribe primero las gavetas procesadas y las cajas obtenidas.";
           } else {
             const falta = objetivo - suma;
             const ok = Math.abs(falta) <= Math.max(1, objetivo * 0.005);
             balance.className = "balance " + (ok ? "balance-ok" : "balance-pendiente");
-            balance.innerHTML = "Merma total: <strong>" + nf(objetivo, 1) + " kg</strong> · asignado: " +
+            balance.innerHTML = "Se perdieron <strong>" + nf(objetivo, 1) + " kg</strong> " +
+              '<span class="tenue">(' + nf(proc * kgPorGaveta, 0) + " kg entraron − " +
+              nf(expo * linea.pesoCajaKg, 0) + " kg se empacaron)</span> · repartidos: " +
               "<strong>" + nf(suma, 1) + " kg</strong> · " +
               (ok ? "balance de masa cuadrado ✓"
                   : (falta > 0 ? "faltan <strong>" + nf(falta, 1) + " kg</strong>"

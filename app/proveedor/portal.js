@@ -120,6 +120,7 @@
     });
 
     let cajasAnun = 0, cajasRec = 0, cajasProc = 0, cajasExp = 0, valor = 0, calA = 0, rech = 0;
+    let kgProc = 0, kgExp = 0;
     lotes.forEach(function (l) {
       cajasAnun += Number(l.gavetasAnunciadas) || 0;
       if (l.estado === "Rechazado") { rech += 1; return; }
@@ -131,6 +132,10 @@
       if (p) {
         cajasProc += Number(p.gavetasProcesadas) || 0;
         cajasExp += Number(p.cajasExportables) || 0;
+        /* El rendimiento se mide en kilos: la gaveta que entrega y la caja
+           que sale pesan cosas distintas. */
+        kgProc += Number(p.kgProcesados) || 0;
+        kgExp += Number(p.kgExportable) || 0;
       }
     });
 
@@ -145,7 +150,7 @@
       diferencia: cajasRec - anunPesadas,
       tasaDiferencia: anunPesadas > 0 ? (cajasRec - anunPesadas) / anunPesadas : 0,
       cajasExportables: cajasExp,
-      tasaExportable: cajasProc > 0 ? cajasExp / cajasProc : 0,
+      tasaExportable: kgProc > 0 ? kgExp / kgProc : 0,
       pctCalidadA: cajasRec > 0 ? calA / cajasRec : 0,
       valor: valor,
       tasaRechazo: lotes.length > 0 ? rech / lotes.length : 0
@@ -186,7 +191,7 @@
       "Diferencia entre lo que anuncias y lo que pesa la planta",
       Math.abs(r.tasaDiferencia) <= 0.01 ? "bien" : Math.abs(r.tasaDiferencia) <= 0.03 ? "regular" : "mal");
     html += UI.kpi("Tu fruta exportable", pct(r.tasaExportable),
-      "De cada 100 cajas que entregas", r.tasaExportable >= 0.78 ? "bien" : "regular");
+      "De cada 100 kg que entregas", r.tasaExportable >= 0.78 ? "bien" : "regular");
     html += UI.kpi("Valor liquidado", money(r.valor),
       pct(r.pctCalidadA) + " de tu fruta entra como calidad A", "neutro");
     html += "</section>";
@@ -422,14 +427,15 @@
     const lineas = DB.all("lineas").filter(function (l) { return l.activa; });
     const b = base || {};
 
+    /* El orden es el de la cabeza de quien lo llena: qué mando, cuánto,
+       cuánto pesa y —de inmediato— a cuántos kilos y a cuánto dinero
+       equivale. El resumen iba al final, donde el pie del celular lo
+       tapaba justo antes de guardar. */
     const campos = [
       { nombre: "lineaId", etiqueta: "¿Qué producto envías?", tipo: "select", requerido: true,
         vacio: "Selecciona…", valor: b.lineaId || "",
         ayuda: "Al elegirlo se precarga el peso nominal de su gaveta.",
         opciones: lineas.map(function (l) { return { valor: l.id, texto: l.nombre }; }) },
-      { nombre: "fecha", etiqueta: "Fecha del envío", tipo: "date", valor: DB.hoy(),
-        requerido: true, ancho: "mitad",
-        validar: function (v) { return v > DB.hoy() ? "La fecha no puede ser futura." : null; } },
       { nombre: "gavetasAnunciadas", etiqueta: "¿Cuántas gavetas envías?", tipo: "number",
         requerido: true, min: 1, max: 5000, paso: "1", ancho: "mitad",
         valor: b.gavetasAnunciadas || "",
@@ -449,14 +455,17 @@
           }
           return null;
         } },
+      { nombre: "resumenCalc", etiqueta: "Esto es lo que estás enviando", tipo: "calculado",
+        ayuda: "Peso y valor aproximados. Se liquida sobre lo que pese la báscula de planta." },
+      { nombre: "fecha", etiqueta: "Fecha del envío", tipo: "date", valor: DB.hoy(),
+        requerido: true, ancho: "mitad",
+        validar: function (v) { return v > DB.hoy() ? "La fecha no puede ser futura." : null; } },
       { nombre: "calidadDeclarada", etiqueta: "Calidad que declaras", tipo: "select",
         requerido: true, ancho: "mitad", valor: b.calidadDeclarada || "A",
         opciones: DB.CALIDADES.map(function (c) { return { valor: c.id, texto: c.nombre }; }) },
       { nombre: "transporte", etiqueta: "Transporte", tipo: "select", ancho: "mitad",
         valor: b.transporte || "Propio",
         opciones: [{ valor: "Propio", texto: "Propio" }, { valor: "Contratado", texto: "Contratado" }] },
-      { nombre: "resumenCalc", etiqueta: "Equivalencia del envío", tipo: "calculado",
-        ayuda: "Peso y valor estimados. Se liquidará sobre lo que pese la báscula." },
       { nombre: "observacionesProveedor", etiqueta: "¿Algo que deba saber la planta?",
         tipo: "textarea", marcador: "Estado de la fruta, hora de salida, novedades del viaje." }
     ];

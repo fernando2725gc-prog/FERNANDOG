@@ -330,6 +330,24 @@ columnas. Se arregló quitando la repetición, no maquillándola:
 - Mientras se busca algo concreto, la cola de cierre se oculta: quien escribe un código
   quiere ver ese lote, no otra tabla encima.
 
+### Que se entienda sin explicación
+
+Tres cosas que el refactor de unidades dejó confusas y se arreglaron mirando los
+formularios reales, no el código:
+
+- **«Tiempo real de proceso»** no decía si eran minutos de reloj o minutos-persona, y el
+  estándar se mostraba en la otra unidad. Ahora el campo pregunta *«¿Cuánto tardó la
+  línea? (minutos de reloj)»* y, debajo, traduce el estándar con la gente que se acaba de
+  escribir: «Con 4 operarios, el estándar para estas 60 gavetas es 300 min de reloj».
+- **Las cajas esperadas** no se decían: quien registra tenía que calcularlas. Ahora el
+  campo dice cuántas deberían salir de ese lote, así que se compara en vez de calcular y
+  una diferencia grande salta sola.
+- **El balance** decía «Merma total: 32 kg». Ahora dice de dónde sale: «Se perdieron 32 kg
+  (662 kg entraron − 630 kg se empacaron)».
+- En el celular, **el resumen del envío** quedaba tapado por el pie fijo justo antes de
+  guardar. Se movió arriba, junto a las gavetas: se escribe el número y aparece al
+  instante «880 kg · aprox. $1.320».
+
 ## 6. Planificación diaria
 
 El módulo que se demuestra en la defensa. Entradas: fecha, horas de turno, operarios y
@@ -579,6 +597,15 @@ que TE salga de TO × V × (1 + suplemento) en cada actividad, que cambiar una l
 el estándar y el costo, que el contenido supere al ciclo donde hay dos personas, que las
 estaciones sumen los operarios del total, y que el planificador use el contenido de trabajo
 y **no** el tiempo de ciclo.
+
+**14 comprobaciones de cordura**: que ninguna tasa se salga de 0–100 %, que la eficiencia
+viva en un rango creíble, que ningún porcentaje imposible llegue a la pantalla —en el
+panel, en producción, en lotes, en costeo, en los reportes y en el portal—, que la merma
+nunca supere lo procesado, que el balance de masa cierre en cada lote y que el peso real
+por gaveta se parezca al nominal. Un número imposible en pantalla es lo menos intuitivo
+que hay: quien lo ve deja de confiar en todo lo demás. Esta suite encontró tres sitios
+donde se dividían minutos-persona entre minutos de reloj, y uno donde se dividían cajas
+entre gavetas.
 
 Y **9 comprobaciones** sobre el paquete publicado: las dos puertas, el almacén compartido
 activo, un envío anunciado desde el celular apareciendo en la cola de la planta, el pesaje

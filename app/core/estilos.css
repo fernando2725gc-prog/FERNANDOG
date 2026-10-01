@@ -686,8 +686,15 @@ textarea { resize: vertical; }
   /* El modal ocupa la pantalla: es una pantalla de captura, no una ventana. */
   .modal-capa { padding: 0; align-items: stretch; }
   .modal { max-height: 100vh; border-radius: 0; width: 100%; }
-  .modal-pie { position: sticky; bottom: 0; background: var(--superficie); }
+  /* El pie se queda pegado abajo, así que tapaba el último campo: el
+     resumen del envío, que es justo lo que el proveedor quiere ver antes
+     de guardar. Se le deja aire al final del cuerpo. */
+  .modal-pie {
+    position: sticky; bottom: 0; background: var(--superficie);
+    box-shadow: 0 -6px 16px rgba(0, 0, 0, .08);
+  }
   .modal-pie .btn { flex: 1; }
+  .modal-cuerpo { padding-bottom: 1.6rem; }
 
   /* El aviso no debe tapar el boton de guardar. */
   .avisos { bottom: auto; top: .8rem; right: .8rem; left: .8rem; max-width: none; }

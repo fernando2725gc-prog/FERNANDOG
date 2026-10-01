@@ -93,6 +93,15 @@ const UI = (function () {
 
   /* --------------------------------------------------------------- tablas */
 
+  /* La ayuda de un campo se escapa, porque puede venir de un dato. Cuando
+     hace falta resaltar una cifra dentro de ella, se usa `ayudaHTML`, que
+     es siempre texto escrito en el código, nunca de origen externo. */
+  function textoAyuda(c) {
+    if (c.ayudaHTML) return '<small class="ayuda">' + c.ayudaHTML + "</small>";
+    if (c.ayuda) return '<small class="ayuda">' + esc(c.ayuda) + "</small>";
+    return "";
+  }
+
   function tabla(columnas, filas, opciones) {
     const o = opciones || {};
     if (!filas.length) {
@@ -281,7 +290,7 @@ const UI = (function () {
     if (c.tipo === "calculado") {
       return '<div class="campo campo-' + (c.ancho || "full") + ' campo-calculado">' +
         "<label>" + esc(c.etiqueta) + '</label><output id="' + esc(c.nombre) + '">—</output>' +
-        (c.ayuda ? '<small class="ayuda">' + esc(c.ayuda) + "</small>" : "") + "</div>";
+        textoAyuda(c) + "</div>";
     }
 
     /* Campo repetible: una fila por elemento, con columnas configurables.
@@ -289,7 +298,7 @@ const UI = (function () {
     if (c.tipo === "repetible") {
       return '<div class="campo campo-full repetible" data-repetible="' + esc(c.nombre) + '">' +
         "<label>" + esc(c.etiqueta) + "</label>" +
-        (c.ayuda ? '<small class="ayuda">' + esc(c.ayuda) + "</small>" : "") +
+        textoAyuda(c) +
         '<div class="rep-filas"></div>' +
         '<button type="button" class="btn btn-plano btn-sm rep-agregar">+ ' +
         esc(c.textoAgregar || "Agregar") + "</button>" +
@@ -334,7 +343,7 @@ const UI = (function () {
       (c.tipo === "checkbox" ? "" : '<label for="' + id + '">' + esc(c.etiqueta) +
         (c.requerido ? ' <span class="req" aria-hidden="true">*</span>' : "") + "</label>") +
       control +
-      (c.ayuda ? '<small class="ayuda">' + esc(c.ayuda) + "</small>" : "") + "</div>";
+      textoAyuda(c) + "</div>";
   }
 
   /* Filas dinámicas de un campo repetible. */

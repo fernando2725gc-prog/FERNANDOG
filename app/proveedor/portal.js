@@ -121,27 +121,27 @@
 
     let cajasAnun = 0, cajasRec = 0, cajasProc = 0, cajasExp = 0, valor = 0, calA = 0, rech = 0;
     lotes.forEach(function (l) {
-      cajasAnun += Number(l.cajasAnunciadas) || 0;
+      cajasAnun += Number(l.gavetasAnunciadas) || 0;
       if (l.estado === "Rechazado") { rech += 1; return; }
-      if (l.cajasRecibidas === null) return;
-      cajasRec += Number(l.cajasRecibidas) || 0;
-      valor += (Number(l.cajasRecibidas) || 0) * (Number(l.precioCaja) || 0);
-      if (l.calidadVerificada === "A") calA += Number(l.cajasRecibidas) || 0;
+      if (l.gavetasRecibidas === null) return;
+      cajasRec += Number(l.gavetasRecibidas) || 0;
+      valor += (Number(l.kgRecibidos) || 0) * (Number(l.precioKg) || 0);
+      if (l.calidadVerificada === "A") calA += Number(l.gavetasRecibidas) || 0;
       const p = produccionDe(l.id);
       if (p) {
-        cajasProc += Number(p.cajasProcesadas) || 0;
+        cajasProc += Number(p.gavetasProcesadas) || 0;
         cajasExp += Number(p.cajasExportables) || 0;
       }
     });
 
     const pesados = lotes.filter(function (l) {
-      return l.cajasRecibidas !== null && l.estado !== "Rechazado";
+      return l.gavetasRecibidas !== null && l.estado !== "Rechazado";
     });
-    const anunPesadas = pesados.reduce(function (a, l) { return a + l.cajasAnunciadas; }, 0);
+    const anunPesadas = pesados.reduce(function (a, l) { return a + l.gavetasAnunciadas; }, 0);
 
     return {
       lotes: lotes.length, enCurso: enCurso.length, rechazados: rech,
-      cajasAnunciadas: cajasAnun, cajasRecibidas: cajasRec,
+      gavetasAnunciadas: cajasAnun, gavetasRecibidas: cajasRec,
       diferencia: cajasRec - anunPesadas,
       tasaDiferencia: anunPesadas > 0 ? (cajasRec - anunPesadas) / anunPesadas : 0,
       cajasExportables: cajasExp,
@@ -180,7 +180,7 @@
     }
 
     html += '<section class="kpis kpis-portal">';
-    html += UI.kpi("Cajas entregadas", nf(r.cajasRecibidas),
+    html += UI.kpi("Cajas entregadas", nf(r.gavetasRecibidas),
       r.lotes + " envíos en total", "linea1");
     html += UI.kpi("Exactitud al declarar", UI.pctFirmado(r.tasaDiferencia),
       "Diferencia entre lo que anuncias y lo que pesa la planta",
@@ -208,7 +208,7 @@
         ? '<span class="estado estado-pendienteenvio">Pendiente de enviar</span>'
         : UI.insignia(l.estado)) + "</div>" +
       '<div class="lote-cuerpo">' + UI.etiquetaLinea(l.lineaId) +
-      "<strong>" + nf(l.cajasAnunciadas) + " cajas</strong>" +
+      "<strong>" + nf(l.gavetasAnunciadas) + " gavetas</strong>" +
       '<span class="tenue">' + UI.fechaCorta(l.fecha) + "</span></div>";
 
     /* Pasos del recorrido: el proveedor ve dónde está su fruta. */
@@ -224,11 +224,11 @@
       html += '<p class="lote-rechazo">' + esc(l.observacionesRecepcion || "Lote rechazado.") + "</p>";
     }
 
-    if (l.cajasRecibidas !== null && l.estado !== "Rechazado") {
-      const dif = l.cajasRecibidas - l.cajasAnunciadas;
-      html += '<p class="lote-dato">Pesado en planta: <strong>' + nf(l.cajasRecibidas) +
-        " cajas</strong>" + (dif !== 0
-          ? ' <span class="etq ' + (Math.abs(dif / l.cajasAnunciadas) <= 0.01 ? "etq-ok" : "etq-bajo") +
+    if (l.gavetasRecibidas !== null && l.estado !== "Rechazado") {
+      const dif = l.gavetasRecibidas - l.gavetasAnunciadas;
+      html += '<p class="lote-dato">Pesado en planta: <strong>' + nf(l.gavetasRecibidas) +
+        " gavetas</strong>" + (dif !== 0
+          ? ' <span class="etq ' + (Math.abs(dif / l.gavetasAnunciadas) <= 0.01 ? "etq-ok" : "etq-bajo") +
             '">' + (dif > 0 ? "+" : "") + nf(dif) + "</span>" : "") + "</p>";
     }
 
@@ -248,7 +248,7 @@
     if (!texto) return true;
     const t = texto.toLowerCase();
     return [l.codigoLote, l.estado, Indicadores.nombreLinea(l.lineaId),
-            UI.fechaCorta(l.fecha), String(l.cajasAnunciadas)]
+            UI.fechaCorta(l.fecha), String(l.gavetasAnunciadas)]
       .some(function (c) { return String(c).toLowerCase().indexOf(t) !== -1; });
   }
 
@@ -327,21 +327,21 @@
     /* Desempeño por línea de producto, solo del propio proveedor. */
     const porLinea = {};
     lotes.forEach(function (l) {
-      if (l.estado === "Rechazado" || l.cajasRecibidas === null) return;
+      if (l.estado === "Rechazado" || l.gavetasRecibidas === null) return;
       if (!porLinea[l.lineaId]) {
         const ln = DB.linea(l.lineaId);
         porLinea[l.lineaId] = {
           nombre: ln ? ln.nombre : "—", color: ln ? ln.color : "#888",
-          meta: ln ? ln.metaExportable : 0,
+          meta: ln ? ln.metaRendimiento : 0,
           cajas: 0, anunciadas: 0, proc: 0, exp: 0, valor: 0
         };
       }
       const b = porLinea[l.lineaId];
-      b.cajas += l.cajasRecibidas;
-      b.anunciadas += l.cajasAnunciadas;
-      b.valor += l.cajasRecibidas * l.precioCaja;
+      b.cajas += l.gavetasRecibidas;
+      b.anunciadas += l.gavetasAnunciadas;
+      b.valor += (l.kgRecibidos || 0) * (l.precioKg || 0);
       const p = produccionDe(l.id);
-      if (p) { b.proc += p.cajasProcesadas; b.exp += p.cajasExportables; }
+      if (p) { b.proc += p.kgProcesados; b.exp += p.kgExportable; }
     });
 
     const filas = Object.keys(porLinea).map(function (k) {
@@ -356,7 +356,7 @@
 
     html += '<section class="kpis kpis-portal">';
     html += UI.kpi("Exactitud al declarar", UI.pctFirmado(r.tasaDiferencia),
-      nf(Math.abs(r.diferencia)) + " cajas de diferencia acumulada",
+      nf(Math.abs(r.diferencia)) + " gavetas de diferencia acumulada",
       Math.abs(r.tasaDiferencia) <= 0.01 ? "bien" : Math.abs(r.tasaDiferencia) <= 0.03 ? "regular" : "mal");
     html += UI.kpi("Fruta exportable", pct(r.tasaExportable), "De lo que entregas",
       r.tasaExportable >= 0.78 ? "bien" : "regular");
@@ -373,7 +373,7 @@
             return '<span class="linea-tag" style="--linea:' + esc(b.color) +
               '"><span class="linea-punto"></span>' + esc(b.nombre) + "</span>";
           } },
-          { titulo: "Cajas", num: true, valor: function (b) { return nf(b.cajas); } },
+          { titulo: "Gavetas", num: true, valor: function (b) { return nf(b.cajas); } },
           { titulo: "Exactitud", num: true, valor: function (b) {
             const clase = Math.abs(b.tasaDiferencia) <= 0.01 ? "etq-ok" : "etq-bajo";
             return '<span class="etq ' + clase + '">' + UI.pctFirmado(b.tasaDiferencia) + "</span>";
@@ -425,27 +425,27 @@
     const campos = [
       { nombre: "lineaId", etiqueta: "¿Qué producto envías?", tipo: "select", requerido: true,
         vacio: "Selecciona…", valor: b.lineaId || "",
-        ayuda: "Al elegirlo se precarga el peso nominal de su caja.",
+        ayuda: "Al elegirlo se precarga el peso nominal de su gaveta.",
         opciones: lineas.map(function (l) { return { valor: l.id, texto: l.nombre }; }) },
       { nombre: "fecha", etiqueta: "Fecha del envío", tipo: "date", valor: DB.hoy(),
         requerido: true, ancho: "mitad",
         validar: function (v) { return v > DB.hoy() ? "La fecha no puede ser futura." : null; } },
-      { nombre: "cajasAnunciadas", etiqueta: "¿Cuántas cajas envías?", tipo: "number",
+      { nombre: "gavetasAnunciadas", etiqueta: "¿Cuántas gavetas envías?", tipo: "number",
         requerido: true, min: 1, max: 5000, paso: "1", ancho: "mitad",
-        valor: b.cajasAnunciadas || "",
-        ayuda: "Cajas de " + DB.PESO_CAJA_KG + " kg. Recepción las contará y pesará al llegar." },
-      { nombre: "pesoCajaDeclarado", etiqueta: "Peso estimado por caja (kg)", tipo: "number",
+        valor: b.gavetasAnunciadas || "",
+        ayuda: "Gavetas tal como salen de la finca. Recepción las contará y pesará al llegar." },
+      { nombre: "pesoGavetaDeclarado", etiqueta: "Peso estimado por gaveta (kg)", tipo: "number",
         requerido: true, min: 1, max: 60, paso: "0.1", ancho: "mitad",
-        valor: b.pesoCajaDeclarado || "",
-        ayuda: "El peso nominal es " + DB.PESO_CAJA_KG + " kg. Ajústalo si tus cajas " +
-          "van más llenas o más livianas: la planta pesará en báscula y comparará.",
+        valor: b.pesoGavetaDeclarado || "",
+        ayuda: "Ajústalo si tus gavetas van más llenas o más livianas: la planta " +
+          "pesará en báscula y comparará.",
         validar: function (v, d) {
           const l = DB.linea(d.lineaId);
           if (!l) return null;
-          const min = l.pesoCajaKg * 0.6, max = l.pesoCajaKg * 1.5;
+          const min = l.pesoGavetaKg * 0.6, max = l.pesoGavetaKg * 1.5;
           if (v < min || v > max) {
-            return "Un peso de " + nf(v, 1) + " kg por caja se aleja mucho del nominal (" +
-              nf(l.pesoCajaKg, 1) + " kg). Si es correcto, avísale a la planta en las observaciones.";
+            return "Un peso de " + nf(v, 1) + " kg por gaveta se aleja mucho del nominal (" +
+              nf(l.pesoGavetaKg, 1) + " kg). Si es correcto, avísale a la planta en las observaciones.";
           }
           return null;
         } },
@@ -471,23 +471,23 @@
         fecha: d.fecha,
         proveedorId: usuario.proveedorId,
         lineaId: d.lineaId,
-        cajasAnunciadas: Number(d.cajasAnunciadas),
-        pesoCajaDeclarado: Number(d.pesoCajaDeclarado),
-        kgAnunciados: Math.round(Number(d.cajasAnunciadas) * Number(d.pesoCajaDeclarado)),
+        gavetasAnunciadas: Number(d.gavetasAnunciadas),
+        pesoGavetaDeclarado: Number(d.pesoGavetaDeclarado),
+        kgAnunciados: Math.round(Number(d.gavetasAnunciadas) * Number(d.pesoGavetaDeclarado)),
         calidadDeclarada: d.calidadDeclarada,
-        precioCaja: linea.precioCaja,
+        precioKg: linea.valorKgProductor,
         transporte: d.transporte || "Propio",
         observacionesProveedor: d.observacionesProveedor || "",
         anunciadoPor: usuario.id,
         creadoEn: new Date().toISOString(),
-        fechaRecepcion: null, cajasRecibidas: null, kgRecibidos: null,
+        fechaRecepcion: null, gavetasRecibidas: null, kgRecibidos: null,
         calidadVerificada: null, observacionesRecepcion: "", recibidoPor: null,
         estado: "Anunciado",
         fechaCierre: null, cerradoPor: null, reporteEnviado: false, fechaReporte: null
       });
 
       DB.registrarBitacora(usuario.id, "Anuncio de envío",
-        lote.codigoLote + " · " + nf(lote.cajasAnunciadas) + " cajas de " + linea.nombre);
+        lote.codigoLote + " · " + nf(lote.gavetasAnunciadas) + " gavetas de " + linea.nombre);
       UI.aviso(DB.estaPendiente("lotes", lote.id)
         ? "Envío " + lote.codigoLote + " guardado. Se enviará solo cuando vuelva la señal."
         : "Envío " + lote.codigoLote + " anunciado. La planta ya lo ve en su cola.");
@@ -501,21 +501,21 @@
         : "La planta verá tu envío al instante y lo pesará cuando llegue.",
       alCambiar: function (d, form) {
         const linea = DB.linea(d.lineaId);
-        const campoPeso = $("#campo_pesoCajaDeclarado", form);
+        const campoPeso = $("#campo_pesoGavetaDeclarado", form);
 
         /* Al elegir la línea se sugiere su peso nominal, pero solo si el
            proveedor todavía no escribió el suyo. */
-        if (linea && campoPeso && !campoPeso.value) campoPeso.value = linea.pesoCajaKg;
+        if (linea && campoPeso && !campoPeso.value) campoPeso.value = linea.pesoGavetaKg;
 
         const out = $("#resumenCalc", form);
         if (!out) return;
-        const c = Number(d.cajasAnunciadas) || 0;
-        const peso = Number(d.pesoCajaDeclarado) || (linea ? linea.pesoCajaKg : 0);
+        const c = Number(d.gavetasAnunciadas) || 0;
+        const peso = Number(d.pesoGavetaDeclarado) || (linea ? linea.pesoGavetaKg : 0);
         if (!linea || !c) { out.textContent = "—"; return; }
         const kg = c * peso;
-        const nominal = c * linea.pesoCajaKg;
+        const nominal = c * linea.pesoGavetaKg;
         out.innerHTML = nf(kg) + " kg · " + '<span class="tenue">aprox.</span> ' +
-          money(c * linea.precioCaja) +
+          money(kg * linea.valorKgProductor) +
           (Math.abs(kg - nominal) > nominal * 0.02
             ? '<br><small class="tenue">' + (kg > nominal ? "+" : "") + nf(kg - nominal) +
               " kg respecto al peso nominal</small>" : "");
@@ -535,7 +535,7 @@
 
     cuerpo += '<div class="ficha-linea">';
     [["Anunciado", l.fecha, true],
-     [l.estado === "Rechazado" ? "Rechazado" : "Pesado", l.fechaRecepcion, l.cajasRecibidas !== null],
+     [l.estado === "Rechazado" ? "Rechazado" : "Pesado", l.fechaRecepcion, l.gavetasRecibidas !== null],
      ["Procesado", p ? p.fecha : null, !!p],
      ["Cerrado", l.fechaCierre, l.estado === "Cerrado"]].forEach(function (h, i) {
       cuerpo += '<div class="ficha-hito' + (h[2] ? " hito-hecho" : "") + '">' +
@@ -549,24 +549,24 @@
     cuerpo += "<section><h4>Tu envío</h4><dl>" +
       "<dt>Lote</dt><dd><code>" + esc(l.codigoLote) + "</code></dd>" +
       "<dt>Producto</dt><dd>" + esc(f.linea ? f.linea.nombre : "—") + "</dd>" +
-      "<dt>Cajas anunciadas</dt><dd>" + nf(l.cajasAnunciadas) + "</dd>" +
-      "<dt>Peso que declaraste</dt><dd>" + nf(l.pesoCajaDeclarado || 0, 1) + " kg/caja · " +
+      "<dt>Cajas anunciadas</dt><dd>" + nf(l.gavetasAnunciadas) + "</dd>" +
+      "<dt>Peso que declaraste</dt><dd>" + nf(l.pesoGavetaDeclarado || 0, 1) + " kg/gaveta · " +
       nf(l.kgAnunciados || 0) + " kg</dd>" +
       "<dt>Calidad declarada</dt><dd>" + esc(l.calidadDeclarada) + "</dd>" +
       "<dt>Transporte</dt><dd>" + esc(l.transporte) + "</dd></dl></section>";
 
-    if (l.cajasRecibidas !== null && l.estado !== "Rechazado") {
+    if (l.gavetasRecibidas !== null && l.estado !== "Rechazado") {
       cuerpo += "<section><h4>Lo que recibió la planta</h4><dl>" +
-        "<dt>Cajas pesadas</dt><dd><strong>" + nf(l.cajasRecibidas) + "</strong></dd>" +
+        "<dt>Gavetas pesadas</dt><dd><strong>" + nf(l.gavetasRecibidas) + "</strong></dd>" +
         "<dt>Peso real</dt><dd>" + nf(l.kgRecibidos) + " kg · " +
-        nf(f.pesoCajaReal || 0, 1) + " kg/caja</dd>" +
+        nf(f.pesoGavetaReal || 0, 1) + " kg/gaveta</dd>" +
         "<dt>Diferencia de peso</dt><dd>" + (f.tasaDiferenciaKg === null ? "—" :
           '<span class="etq ' + (Math.abs(f.tasaDiferenciaKg) <= 0.02 ? "etq-ok" : "etq-bajo") + '">' +
           (f.diferenciaKg > 0 ? "+" : "") + nf(f.diferenciaKg) + " kg · " +
           UI.pctFirmado(f.tasaDiferenciaKg) + "</span>") + "</dd>" +
-        "<dt>Diferencia</dt><dd>" + (f.diferenciaCajas === null ? "—" :
+        "<dt>Diferencia</dt><dd>" + (f.diferenciaGavetas === null ? "—" :
           '<span class="etq ' + (Math.abs(f.tasaDiferencia) <= 0.01 ? "etq-ok" : "etq-bajo") + '">' +
-          (f.diferenciaCajas > 0 ? "+" : "") + nf(f.diferenciaCajas) + " cajas · " +
+          (f.diferenciaGavetas > 0 ? "+" : "") + nf(f.diferenciaGavetas) + " gavetas · " +
           UI.pctFirmado(f.tasaDiferencia) + "</span>") + "</dd>" +
         "<dt>Calidad verificada</dt><dd>" + esc(l.calidadVerificada || "—") +
         (l.calidadVerificada && l.calidadVerificada !== l.calidadDeclarada
@@ -576,7 +576,7 @@
 
     if (p) {
       cuerpo += "<section><h4>Cómo rindió tu fruta</h4><dl>" +
-        "<dt>Cajas procesadas</dt><dd>" + nf(p.cajasProcesadas) + "</dd>" +
+        "<dt>Cajas procesadas</dt><dd>" + nf(p.gavetasProcesadas) + "</dd>" +
         "<dt>Cajas exportables</dt><dd><strong>" + nf(p.cajasExportables) + "</strong></dd>" +
         "<dt>Rendimiento</dt><dd>" +
         '<span class="etq ' + (f.tasaExportable >= f.meta ? "etq-ok" : "etq-bajo") + '">' +

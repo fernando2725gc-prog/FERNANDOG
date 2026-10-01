@@ -1360,6 +1360,22 @@ textarea { resize: vertical; }
   border-radius: var(--radio); padding: .7rem .9rem;
 }
 
+/* ========================= símbolos del DAP ============================ */
+
+/* Los cinco símbolos de la norma ASME, para leer la tabla de actividades
+   como se lee un diagrama de análisis del proceso. */
+.dap {
+  display: inline-grid; place-items: center; width: 1.5rem; height: 1.5rem;
+  border-radius: 4px; font-size: .85rem; font-weight: 700; cursor: help;
+}
+.dap-O { background: color-mix(in srgb, var(--verde) 15%, transparent); color: var(--verde); }
+.dap-T { background: color-mix(in srgb, var(--azul) 15%, transparent); color: var(--azul); }
+.dap-I { background: color-mix(in srgb, var(--ambar) 18%, transparent); color: var(--ambar); }
+.dap-D { background: color-mix(in srgb, var(--rojo) 15%, transparent); color: var(--rojo); }
+.dap-A { background: var(--borde); color: var(--texto-tenue); }
+
+.vista-tiempos .panel-destacado { border-left-color: var(--linea-3); }
+
 </style>
 
 <a class="salto" href="#contenido">Saltar al contenido</a>
@@ -1595,8 +1611,8 @@ const Auth = (function () {
 const DB = (function () {
   "use strict";
 
-  const KEY = "flp.db.v5";
-  const ESQUEMA = 5;
+  const KEY = "flp.db.v6";
+  const ESQUEMA = 6;
 
   /* ---------------------------------------------------------------- utils */
 
@@ -1645,7 +1661,11 @@ const DB = (function () {
     confidencial: true
   };
 
-  const PESO_CAJA_KG = 11;
+  /* La unidad que llega del campo es la GAVETA; la que sale a exportación
+     es la CAJA, y pesan cosas muy distintas. Confundirlas era el error de
+     fondo de la versión anterior: daba por hecho que una caja pesaba 11 kg,
+     que es lo que pesa una gaveta de pitahaya. */
+  const PESO_GAVETA_KG = 11;
 
   /* Origen del dato — el estándar de rigor exige declararlo en todo número
      que no venga de un registro del propio sistema. */
@@ -1696,29 +1716,195 @@ const DB = (function () {
   function lineasBase() {
     return [
       { id: "ln_pitahaya", codigo: "PIT", nombre: "Pitahaya roja",
-        tiempoEstandarMin: 24.28, origenTiempo: "M",
-        pesoCajaKg: PESO_CAJA_KG, origenPeso: "M",
-        metaExportable: 0.82, origenMeta: "E",
-        precioCaja: 18.50, origenPrecio: "E",
+        pesoGavetaKg: 11, origenPesoGaveta: "M",
+        pesoCajaKg: 3, origenPesoCaja: "M",
+        /* Rendimiento exportable sobre lo que entra a proceso, del balance
+           de masa de la base maestra. Sustituye a la «meta» inventada. */
+        rendimientoExportable: 0.965, origenRendimiento: "M",
+        metaRendimiento: 0.98, origenMeta: "E",
+        valorKgProductor: 1.50, origenValorKg: "S",
+        valorKgLocal: 0.60, origenValorLocal: "S",
+        ingresoDiarioKg: 2000, origenIngreso: "E",
         color: "#c0246b", activa: true },
       { id: "ln_tomate", codigo: "TOM", nombre: "Tomate de árbol",
-        tiempoEstandarMin: 26.93, origenTiempo: "M",
-        pesoCajaKg: PESO_CAJA_KG, origenPeso: "M",
-        metaExportable: 0.78, origenMeta: "E",
-        precioCaja: 12.80, origenPrecio: "E",
+        pesoGavetaKg: 20, origenPesoGaveta: "M",
+        pesoCajaKg: 2.5, origenPesoCaja: "M",
+        rendimientoExportable: 0.960, origenRendimiento: "M",
+        metaRendimiento: 0.98, origenMeta: "E",
+        valorKgProductor: 1.54, origenValorKg: "S",
+        valorKgLocal: 0.90, origenValorLocal: "E",
+        ingresoDiarioKg: 1000, origenIngreso: "E",
         color: "#c85a1e", activa: true },
       { id: "ln_granadilla", codigo: "GRA", nombre: "Granadilla",
-        tiempoEstandarMin: 29.76, origenTiempo: "M",
-        pesoCajaKg: PESO_CAJA_KG, origenPeso: "M",
-        metaExportable: 0.75, origenMeta: "E",
-        precioCaja: 15.40, origenPrecio: "E",
+        pesoGavetaKg: 12, origenPesoGaveta: "M",
+        pesoCajaKg: 2, origenPesoCaja: "M",
+        rendimientoExportable: 0.975, origenRendimiento: "M",
+        metaRendimiento: 0.98, origenMeta: "E",
+        valorKgProductor: 1.40, origenValorKg: "E",
+        valorKgLocal: 0.70, origenValorLocal: "E",
+        ingresoDiarioKg: 860, origenIngreso: "E",
         color: "#b8860b", activa: true }
     ];
   }
 
-  /* Las ocho causas raíz del diagnóstico. Solo CR5-CR8 están nombradas en el
-     documento del TIC; las demás quedan por definir y se editan desde la app
-     en vez de inventarlas aquí. */
+  /* Estudio de tiempos, actividad por actividad, tal como está en la base
+     maestra del TIC. Aquí NO se guarda el tiempo estándar: se guarda la
+     lectura (TO), la valoración Westinghouse (v) y el suplemento OIT, y el
+     estándar se calcula. Así, cuando se cronometren ciclos nuevos, basta
+     cambiar el TO y se recalculan takt, operarios, costo y pérdidas.
+
+     `personas` es la clave de la asignación: una actividad con 2 personas
+     tarda lo mismo pero consume el doble de mano de obra. De ahí salen dos
+     relojes distintos —el ciclo y el contenido de trabajo— que la versión
+     anterior confundía en un solo número. */
+  function actividadesBase() {
+    return [
+      /* ---- pitahaya ---- */
+      { id: "P-REC", lineaId: "ln_pitahaya", orden: 1, codigo: "P-REC",
+        nombre: "Recepción y pesaje de gaveta",
+        simbolo: "O", estacion: "Recepción", unidad: "gaveta",
+        to: 0.5, v: 1, suplemento: 0.19, personas: 1,
+        origen: "E", base: "Pesaje y registro manual por gaveta; del orden de pesar una caja (0,25) más el registro.", activa: true },
+      { id: "P-INR", lineaId: "ln_pitahaya", orden: 2, codigo: "P-INR",
+        nombre: "Inspección de calidad en recepción",
+        simbolo: "I", estacion: "Recepción", unidad: "gaveta",
+        to: 0.4, v: 1, suplemento: 0.17, personas: 1,
+        origen: "E", base: "Muestreo visual ≈ 1/3 de la verificación completa medida en empaque (P-VER).", activa: true },
+      { id: "P-TR1", lineaId: "ln_pitahaya", orden: 3, codigo: "P-TR1",
+        nombre: "Transporte a almacenaje / categorización",
+        simbolo: "T", estacion: "Transporte", unidad: "gaveta",
+        to: 1, v: 1, suplemento: 0.19, personas: 1,
+        origen: "E", base: "~25 m (análogo a 35 pasos medidos en tomate), ida y vuelta + 10 s de carga.", activa: true },
+      { id: "P-TR2", lineaId: "ln_pitahaya", orden: 4, codigo: "P-TR2",
+        nombre: "Transporte a sopleteado",
+        simbolo: "T", estacion: "Transporte", unidad: "gaveta",
+        to: 0.6667, v: 1, suplemento: 0.19, personas: 1,
+        origen: "E", base: "~15 m estimados; medir.", activa: true },
+      { id: "P-SOP", lineaId: "ln_pitahaya", orden: 5, codigo: "P-SOP",
+        nombre: "Sopleteado: retiro de espinas/brácteas y corte de pedúnculo (mesa de 2 personas)",
+        simbolo: "O", estacion: "Sopleteado", unidad: "gaveta",
+        to: 2.675, v: 1, suplemento: 0.19, personas: 2,
+        origen: "M", base: "Promedio de mesas 2 y 3 (200 y 121 s por gaveta), pendiente confirmar alcance.", activa: true },
+      { id: "P-TR3", lineaId: "ln_pitahaya", orden: 6, codigo: "P-TR3",
+        nombre: "Transporte a empaque",
+        simbolo: "T", estacion: "Transporte", unidad: "gaveta",
+        to: 0.5, v: 1, suplemento: 0.19, personas: 1,
+        origen: "E", base: "~10 m estimados. La mesa 1 ya evita este traslado.", activa: true },
+      { id: "P-VER", lineaId: "ln_pitahaya", orden: 7, codigo: "P-VER",
+        nombre: "Verificar calidad y colocar mallón",
+        simbolo: "I", estacion: "Empaque", unidad: "gaveta",
+        to: 1.1833, v: 1, suplemento: 0.17, personas: 1,
+        origen: "M", base: "3 lecturas (Registro_Campo n° 5-7).", activa: true },
+      { id: "P-EMP", lineaId: "ln_pitahaya", orden: 8, codigo: "P-EMP",
+        nombre: "Empacar en caja de 3 kg",
+        simbolo: "O", estacion: "Empaque", unidad: "caja",
+        to: 1.3, v: 1, suplemento: 0.16, personas: 1,
+        origen: "M", base: "1 lectura (Registro_Campo n° 8). Tomar 5 ciclos.", activa: true },
+      { id: "P-PES", lineaId: "ln_pitahaya", orden: 9, codigo: "P-PES",
+        nombre: "Calibrar y pesar la caja",
+        simbolo: "I", estacion: "Empaque", unidad: "caja",
+        to: 0.25, v: 1, suplemento: 0.17, personas: 1,
+        origen: "E", base: "~15 s de pesaje y ajuste de una fruta.", activa: true },
+      { id: "P-FLE", lineaId: "ln_pitahaya", orden: 10, codigo: "P-FLE",
+        nombre: "Colocar fleje / etiqueta",
+        simbolo: "O", estacion: "Empaque", unidad: "caja",
+        to: 0.3, v: 1, suplemento: 0.16, personas: 1,
+        origen: "M", base: "1 lectura (Registro_Campo n° 9).", activa: true },
+      { id: "P-PAL", lineaId: "ln_pitahaya", orden: 11, codigo: "P-PAL",
+        nombre: "Colocar caja en pallet por calibre",
+        simbolo: "T", estacion: "Empaque", unidad: "caja",
+        to: 0.1, v: 1, suplemento: 0.16, personas: 1,
+        origen: "M", base: "1 lectura (Registro_Campo n° 10).", activa: true },
+      { id: "P-ETQ", lineaId: "ln_pitahaya", orden: 12, codigo: "P-ETQ",
+        nombre: "Etiquetado final del cliente",
+        simbolo: "O", estacion: "Empaque", unidad: "caja",
+        to: 0.15, v: 1, suplemento: 0.16, personas: 1,
+        origen: "E", base: "~9 s por caja. Confirmar si se pone sticker por fruta (en maracuyá: 0,52 min/caja).", activa: true },
+      /* ---- tomate ---- */
+      { id: "T-REC", lineaId: "ln_tomate", orden: 1, codigo: "T-REC",
+        nombre: "Recepción y pesaje de gaveta",
+        simbolo: "O", estacion: "Recepción", unidad: "gaveta",
+        to: 0.6, v: 1, suplemento: 0.24, personas: 1,
+        origen: "E", base: "Análogo a pitahaya (0,50) ajustado por gaveta de 20 kg.", activa: true },
+      { id: "T-INR", lineaId: "ln_tomate", orden: 2, codigo: "T-INR",
+        nombre: "Inspección de calidad en recepción",
+        simbolo: "I", estacion: "Recepción", unidad: "gaveta",
+        to: 0.4, v: 1, suplemento: 0.17, personas: 1,
+        origen: "E", base: "Igual a pitahaya; el DAP registra esta inspección sin tiempo.", activa: true },
+      { id: "T-TR1", lineaId: "ln_tomate", orden: 3, codigo: "T-TR1",
+        nombre: "Transporte de almacenamiento a empaque",
+        simbolo: "T", estacion: "Transporte", unidad: "gaveta",
+        to: 0.9833, v: 1, suplemento: 0.24, personas: 1,
+        origen: "E", base: "Distancia M (35 pasos × 0,7 m); tiempo estimado a 1 m/s.", activa: true },
+      { id: "T-CLL", lineaId: "ln_tomate", orden: 4, codigo: "T-CLL",
+        nombre: "Inspección, clasificación y limpieza (lavado con agente sin ficha técnica)",
+        simbolo: "O", estacion: "Clasificación y limpieza", unidad: "gaveta",
+        to: 12.09, v: 1, suplemento: 0.17, personas: 2,
+        origen: "M", base: "1 lectura con 2 personas (Registro_Campo n° 14). Separar limpieza y clasificación en la próxima visita.", activa: true },
+      { id: "T-SEC", lineaId: "ln_tomate", orden: 5, codigo: "T-SEC",
+        nombre: "Secado",
+        simbolo: "O", estacion: "Clasificación y limpieza", unidad: "gaveta",
+        to: 7.29, v: 1, suplemento: 0.17, personas: 1,
+        origen: "M", base: "1 lectura (Registro_Campo n° 15). Personas: 1 (supuesto).", activa: true },
+      { id: "T-EMP", lineaId: "ln_tomate", orden: 6, codigo: "T-EMP",
+        nombre: "Empacar en caja de 2,5 kg",
+        simbolo: "O", estacion: "Empaque", unidad: "caja",
+        to: 1.29, v: 1, suplemento: 0.16, personas: 1,
+        origen: "M", base: "1 lectura (Registro_Campo n° 16). En maracuyá, con la misma caja: 1,00 min (5 ciclos).", activa: true },
+      { id: "T-PES", lineaId: "ln_tomate", orden: 7, codigo: "T-PES",
+        nombre: "Calibrar y pesar la caja",
+        simbolo: "I", estacion: "Empaque", unidad: "caja",
+        to: 0.25, v: 1, suplemento: 0.17, personas: 1,
+        origen: "E", base: "Análogo a pitahaya.", activa: true },
+      { id: "T-FLE", lineaId: "ln_tomate", orden: 8, codigo: "T-FLE",
+        nombre: "Colocar fleje / etiqueta",
+        simbolo: "O", estacion: "Empaque", unidad: "caja",
+        to: 0.3, v: 1, suplemento: 0.16, personas: 1,
+        origen: "E", base: "Análogo al tiempo medido en pitahaya (0,30).", activa: true },
+      { id: "T-PAL", lineaId: "ln_tomate", orden: 9, codigo: "T-PAL",
+        nombre: "Transporte de caja al pallet",
+        simbolo: "T", estacion: "Empaque", unidad: "caja",
+        to: 0.2, v: 1, suplemento: 0.16, personas: 1,
+        origen: "M", base: "Distancia M (2 m); tiempo solo en versión FLP2 (verificar).", activa: true },
+      /* ---- granadilla ---- */
+      { id: "G-REC", lineaId: "ln_granadilla", orden: 1, codigo: "G-REC",
+        nombre: "Recepción y pesaje de gaveta",
+        simbolo: "O", estacion: "Recepción", unidad: "gaveta",
+        to: 0.5, v: 1, suplemento: 0.19, personas: 1,
+        origen: "E", base: "Análogo a pitahaya (gaveta de 12 kg).", activa: true },
+      { id: "G-INR", lineaId: "ln_granadilla", orden: 2, codigo: "G-INR",
+        nombre: "Inspección de calidad en recepción",
+        simbolo: "I", estacion: "Recepción", unidad: "gaveta",
+        to: 0.4, v: 1, suplemento: 0.17, personas: 1,
+        origen: "E", base: "Análogo a pitahaya.", activa: true },
+      { id: "G-TR1", lineaId: "ln_granadilla", orden: 3, codigo: "G-TR1",
+        nombre: "Traslado de almacenamiento a empaque",
+        simbolo: "T", estacion: "Transporte", unidad: "gaveta",
+        to: 0.7667, v: 1, suplemento: 0.19, personas: 1,
+        origen: "E", base: "Distancia de 18 m (FLP2); tiempo estimado a 1 m/s.", activa: true },
+      { id: "G-CLA", lineaId: "ln_granadilla", orden: 4, codigo: "G-CLA",
+        nombre: "Colocar en gaveta, verificar peso ≥ 70 g y poner mallón nuevo",
+        simbolo: "O", estacion: "Clasificación", unidad: "gaveta",
+        to: 7.86, v: 1, suplemento: 0.17, personas: 1.5,
+        origen: "M", base: "Dos métodos (Registro_Campo n° 21-22): 9,43 min (1 persona) y 6,29 min (2 personas). Actual = promedio.", activa: true },
+      { id: "G-EMP", lineaId: "ln_granadilla", orden: 5, codigo: "G-EMP",
+        nombre: "Empacar según calibre en caja de 2 kg",
+        simbolo: "O", estacion: "Empaque", unidad: "caja",
+        to: 0.885, v: 1, suplemento: 0.16, personas: 1,
+        origen: "M", base: "Dos métodos (Registro_Campo n° 23-24): 0,40 y 1,37 min. Actual = promedio.", activa: true },
+      { id: "G-PES", lineaId: "ln_granadilla", orden: 6, codigo: "G-PES",
+        nombre: "Verificar peso de la caja",
+        simbolo: "I", estacion: "Empaque", unidad: "caja",
+        to: 0.2, v: 1, suplemento: 0.17, personas: 1,
+        origen: "E", base: "Menor que en pitahaya: el empaque ya se hace por calibre.", activa: true },
+      { id: "G-PAL", lineaId: "ln_granadilla", orden: 7, codigo: "G-PAL",
+        nombre: "Traslado al pallet de exportación con etiquetado",
+        simbolo: "T", estacion: "Empaque", unidad: "caja",
+        to: 0.25, v: 1, suplemento: 0.16, personas: 1,
+        origen: "E", base: "Pallet 0,10 (medido en pitahaya) + etiqueta 0,15. El 6,29 anotado se descarta por ser copia (Registro_Campo n°", activa: true }
+    ];
+  }
+
   function causasBase() {
     return [
       { id: "CR1", codigo: "CR1", nombre: "Por definir", origen: "Por clasificar",
@@ -1871,12 +2057,61 @@ const DB = (function () {
   /* Parámetros de planta que alimentan el planificador diario. */
   function parametrosBase() {
     return {
-      horasTurno: 8, origenHorasTurno: "E",
+      /* Todos de la hoja LEEME_Parametros de la base maestra. */
+      diasOperativos: 240, origenDias: "E",
+      jornadaMin: 480, origenJornada: "E",
+      pausasMin: 60, origenPausas: "M",
+      /* Jornada menos pausas: es el tiempo con el que se calcula el takt. */
+      disponibleMin: 420, origenDisponible: "E",
       operariosDisponibles: 12, origenOperarios: "E",
       eficienciaPlanta: 0.85, origenEficiencia: "E",
-      suplementosOIT: 0.13, origenSuplementos: "S",
-      costoHoraHombre: 3.20, origenCostoHora: "E"
+      salarioBasico: 482, origenSalario: "S",
+      /* SBU + décimos + fondos de reserva + aporte patronal, sobre 1920 h. */
+      costoHoraHombre: 4.132, origenCostoHora: "E",
+      deshidratacion: 0.005, origenDeshidratacion: "E"
     };
+  }
+
+  /* ------------------------------------------------- tiempos derivados */
+
+  /* El tiempo estándar NO se guarda: se calcula desde la lectura.
+         TN = TO × valoración Westinghouse
+         TE = TN × (1 + suplemento OIT)
+     Es la cadena del estudio de tiempos, y dejarla a la vista es lo que
+     permite que una medición nueva se propague sola a todo lo demás. */
+  function tiempoEstandarAct(a) {
+    return (Number(a.to) || 0) * (Number(a.v) || 1) * (1 + (Number(a.suplemento) || 0));
+  }
+
+  /* Cuántas cajas de exportación salen de una gaveta: es el puente entre
+     la unidad que entra del campo y la que sale al contenedor. */
+  function cajasPorGaveta(linea) {
+    if (!linea || !linea.pesoCajaKg) return 0;
+    return (linea.pesoGavetaKg * linea.rendimientoExportable) / linea.pesoCajaKg;
+  }
+
+  function actividadesDe(lineaId, lista) {
+    return (lista || actividadesBase()).filter(function (a) {
+      return a.lineaId === lineaId && a.activa !== false;
+    });
+  }
+
+  /* Minutos de RELOJ que tarda una gaveta en recorrer la línea. */
+  function cicloGavetaMin(linea, lista) {
+    const porGaveta = cajasPorGaveta(linea);
+    return actividadesDe(linea.id, lista).reduce(function (a, act) {
+      return a + tiempoEstandarAct(act) * (act.unidad === "caja" ? porGaveta : 1);
+    }, 0);
+  }
+
+  /* Minutos-PERSONA que consume esa misma gaveta. Difiere del ciclo en las
+     actividades que ocupan a más de una persona a la vez. */
+  function contenidoGavetaMin(linea, lista) {
+    const porGaveta = cajasPorGaveta(linea);
+    return actividadesDe(linea.id, lista).reduce(function (a, act) {
+      return a + tiempoEstandarAct(act) * (act.unidad === "caja" ? porGaveta : 1) *
+        (Number(act.personas) || 1);
+    }, 0);
   }
 
   /* ---------------------------------------------------------------- semilla */
@@ -1886,6 +2121,7 @@ const DB = (function () {
     const historial = dias || 70;
 
     const lineas = lineasBase();
+    const actividades = actividadesBase();
     const causas = causasBase();
     const destinos = destinosBase();
     const proveedores = proveedoresBase();
@@ -1907,7 +2143,10 @@ const DB = (function () {
         const pv = proveedores[Math.floor(r() * 5)];
         const linea = lineas[Math.floor(r() * lineas.length)];
         const calidad = r() < 0.66 ? "A" : r() < 0.87 ? "B" : "C";
-        const cajas = 40 + Math.floor(r() * 180);
+        /* Gavetas por envío, dimensionadas sobre el ingreso diario real de
+           cada línea (2000 / 1000 / 860 kg al día). */
+        const gavetasDia = linea.ingresoDiarioKg / linea.pesoGavetaKg;
+        const gavetas = Math.max(8, Math.round(gavetasDia * (0.25 + r() * 0.55)));
         folio += 1;
 
         const lote = {
@@ -1917,20 +2156,21 @@ const DB = (function () {
           fecha: fecha,
           proveedorId: pv.id,
           lineaId: linea.id,
-          cajasAnunciadas: cajas,
-          /* El proveedor declara cuánto pesa su caja: no todas vienen al
+          gavetasAnunciadas: gavetas,
+          /* El proveedor declara cuánto pesa su gaveta: no todas vienen al
              peso nominal, y esa diferencia es parte de la CR6. */
-          pesoCajaDeclarado: Number((linea.pesoCajaKg * (0.97 + r() * 0.06)).toFixed(2)),
+          pesoGavetaDeclarado: Number((linea.pesoGavetaKg * (0.97 + r() * 0.06)).toFixed(2)),
           kgAnunciados: 0,
           calidadDeclarada: calidad,
-          precioCaja: Number((linea.precioCaja * (0.92 + r() * 0.18)).toFixed(2)),
+          /* Se liquida por kilo recibido, no por bulto. */
+          precioKg: Number((linea.valorKgProductor * (0.94 + r() * 0.12)).toFixed(3)),
           transporte: r() < 0.5 ? "Propio" : "Contratado",
           observacionesProveedor: "",
           anunciadoPor: "us_01",
           creadoEn: fecha + "T07:30:00",
 
           fechaRecepcion: null,
-          cajasRecibidas: null,
+          gavetasRecibidas: null,
           kgRecibidos: null,
           calidadVerificada: null,
           observacionesRecepcion: "",
@@ -1943,14 +2183,14 @@ const DB = (function () {
           fechaReporte: null
         };
 
-        lote.kgAnunciados = Math.round(cajas * lote.pesoCajaDeclarado);
+        lote.kgAnunciados = Math.round(gavetas * lote.pesoGavetaDeclarado);
 
         if (d > 1) {
           if (r() < 0.03) {
             lote.estado = "Rechazado";
             lote.fechaRecepcion = fecha;
             lote.recibidoPor = "us_03";
-            lote.cajasRecibidas = 0;
+            lote.gavetasRecibidas = 0;
             lote.kgRecibidos = 0;
             lote.calidadVerificada = "C";
             lote.observacionesRecepcion = "Lote rechazado: fruta fuera de los mínimos de exportación.";
@@ -1958,9 +2198,9 @@ const DB = (function () {
             const s = sesgo[pv.id] || 0.99;
             lote.fechaRecepcion = r() < 0.85 ? fecha : sumarDias(fecha, 1);
             lote.recibidoPor = "us_03";
-            lote.cajasRecibidas = Math.max(1, Math.round(cajas * (s + (r() - 0.5) * 0.02)));
-            /* El peso por caja también varía: no todas vienen completas. */
-            lote.kgRecibidos = Math.round(lote.cajasRecibidas * linea.pesoCajaKg * (0.97 + r() * 0.05));
+            lote.gavetasRecibidas = Math.max(1, Math.round(gavetas * (s + (r() - 0.5) * 0.02)));
+            /* El peso por gaveta también varía: no todas vienen completas. */
+            lote.kgRecibidos = Math.round(lote.gavetasRecibidas * linea.pesoGavetaKg * (0.97 + r() * 0.05));
             lote.calidadVerificada = r() < 0.18
               ? (calidad === "A" ? "B" : "C") : calidad;
             lote.estado = "Recibido";
@@ -1983,11 +2223,15 @@ const DB = (function () {
       const linea = lineas.find(function (l) { return l.id === lote.lineaId; });
       const cal = CALIDADES.find(function (c) { return c.id === lote.calidadVerificada; });
 
-      const cajasProcesadas = lote.cajasRecibidas;
+      const gavetasProcesadas = lote.gavetasRecibidas;
       const kgProcesados = lote.kgRecibidos;
-      const tasa = linea.metaExportable * cal.factor * (0.92 + r() * 0.15);
-      const cajasExportables = Math.round(cajasProcesadas * Math.min(tasa, 0.95));
-      const kgExportable = Math.round(cajasExportables * linea.pesoCajaKg);
+      /* Rendimiento en KILOS, que es como lo mide el balance de masa: de lo
+         que entra a proceso, qué fracción sale empacada para exportación.
+         Antes se contaba en «cajas sobre cajas», que con bultos de distinto
+         peso a la entrada y a la salida no significa nada. */
+      const rend = Math.min(0.995, linea.rendimientoExportable * cal.factor * (0.985 + r() * 0.03));
+      const kgExportable = Math.round(kgProcesados * rend);
+      const cajasExportables = Math.round(kgExportable / linea.pesoCajaKg);
       const kgMerma = kgProcesados - kgExportable;
 
       /* Reparto entre causas raíz. CR5-CR8 concentran la mayor parte, como
@@ -2032,8 +2276,11 @@ const DB = (function () {
       /* Tiempo real contra el estándar: la brecha alimenta el indicador de
          eficiencia y el análisis de balanceo de línea. */
       const operarios = 3 + Math.floor(r() * 4);
-      const tiempoEstandar = cajasProcesadas * linea.tiempoEstandarMin;
-      const tiempoReal = Math.round(tiempoEstandar * (0.95 + r() * 0.28));
+      /* El estándar del lote es el contenido de trabajo —minutos-persona—
+         porque es contra eso que se compara el tiempo que de verdad
+         consumió la gente. El cálculo vive en indicadores.js. */
+      const tiempoEstandar = gavetasProcesadas * contenidoGavetaMin(linea, actividades);
+      const tiempoReal = Math.round((tiempoEstandar / operarios) * (0.95 + r() * 0.28));
 
       producciones.push({
         id: uid("pr"),
@@ -2043,7 +2290,7 @@ const DB = (function () {
         codigoLote: lote.codigoLote,
         lineaId: lote.lineaId,
         turno: r() < 0.55 ? "Matutino" : "Vespertino",
-        cajasProcesadas: cajasProcesadas,
+        gavetasProcesadas: gavetasProcesadas,
         kgProcesados: kgProcesados,
         cajasExportables: cajasExportables,
         kgExportable: kgExportable,
@@ -2072,6 +2319,7 @@ const DB = (function () {
       esquema: ESQUEMA,
       creadoEn: new Date().toISOString(),
       lineas: lineas,
+      actividades: actividadesBase(),
       causas: causas,
       destinos: destinos,
       proveedores: proveedores,
@@ -2094,7 +2342,7 @@ const DB = (function () {
 
   const COLECCIONES = ["proveedores", "usuarios", "lotes", "producciones", "planes"];
   /* Catálogos y parámetros: pocos y pequeños, viajan en un solo documento. */
-  const CONFIG = ["lineas", "causas", "destinos", "parametros"];
+  const CONFIG = ["lineas", "actividades", "causas", "destinos", "parametros"];
 
   let remoto = null;
   let modo = "local";
@@ -2518,7 +2766,12 @@ const DB = (function () {
 
   return {
     EMPRESA: EMPRESA,
-    PESO_CAJA_KG: PESO_CAJA_KG,
+    PESO_GAVETA_KG: PESO_GAVETA_KG,
+    tiempoEstandarAct: tiempoEstandarAct,
+    cajasPorGaveta: cajasPorGaveta,
+    actividadesDe: actividadesDe,
+    cicloGavetaMin: cicloGavetaMin,
+    contenidoGavetaMin: contenidoGavetaMin,
     ORIGENES: ORIGENES,
     ESTADOS: ESTADOS,
     CALIDADES: CALIDADES,
@@ -2611,7 +2864,10 @@ const Indicadores = (function () {
      tiempos. Es la referencia contra la que se mide la eficiencia. */
   function tiempoEstandar(prod) {
     const l = DB.linea(prod.lineaId);
-    return l ? (Number(prod.cajasProcesadas) || 0) * l.tiempoEstandarMin : 0;
+    /* Minutos-PERSONA que ese lote debió consumir: es contra eso que se
+       compara el tiempo que de verdad costó, no contra el reloj. */
+    return l ? (Number(prod.gavetasProcesadas) || 0) *
+      DB.contenidoGavetaMin(l, DB.all("actividades")) : 0;
   }
 
   function editable(lote) {
@@ -2668,16 +2924,16 @@ const Indicadores = (function () {
     const prod = datos.producciones;
 
     const pesados = lotes.filter(function (l) {
-      return l.cajasRecibidas !== null && l.estado !== "Rechazado";
+      return l.gavetasRecibidas !== null && l.estado !== "Rechazado";
     });
 
-    const cajasAnunciadas = suma(lotes, "cajasAnunciadas");
-    const cajasAnunPesadas = suma(pesados, "cajasAnunciadas");
-    const cajasRecibidas = suma(pesados, "cajasRecibidas");
+    const gavetasAnunciadas = suma(lotes, "gavetasAnunciadas");
+    const gavetasAnunPesadas = suma(pesados, "gavetasAnunciadas");
+    const gavetasRecibidas = suma(pesados, "gavetasRecibidas");
     const kgRecibidos = suma(pesados, "kgRecibidos");
     const kgAnunPesados = suma(pesados, "kgAnunciados");
 
-    const cajasProcesadas = suma(prod, "cajasProcesadas");
+    const gavetasProcesadas = suma(prod, "gavetasProcesadas");
     const kgProcesados = suma(prod, "kgProcesados");
     const cajasExportables = suma(prod, "cajasExportables");
     const kgExportable = suma(prod, "kgExportable");
@@ -2693,22 +2949,26 @@ const Indicadores = (function () {
     }, 0);
 
     const valorCompra = pesados.reduce(function (a, l) {
-      return a + (Number(l.cajasRecibidas) || 0) * (Number(l.precioCaja) || 0);
+      return a + (Number(l.kgRecibidos) || 0) * (Number(l.precioKg) || 0);
     }, 0);
 
     /* Meta ponderada por la mezcla realmente procesada: si el periodo tuvo
        mucha granadilla (meta mas baja), la meta del periodo debe bajar. */
     let metaPonderada = 0;
-    if (cajasProcesadas > 0) {
+    if (gavetasProcesadas > 0) {
       const acc = prod.reduce(function (a, p) {
         const l = DB.linea(p.lineaId);
-        return a + (l ? l.metaExportable : 0.8) * (Number(p.cajasProcesadas) || 0);
+        return a + (l ? l.metaRendimiento : 0.98) * (Number(p.kgProcesados) || 0);
       }, 0);
-      metaPonderada = acc / cajasProcesadas;
+      metaPonderada = kgProcesados > 0 ? acc / kgProcesados : 0;
     }
 
-    const tasaExportable = cajasProcesadas > 0 ? cajasExportables / cajasProcesadas : 0;
-    const diferenciaCajas = cajasRecibidas - cajasAnunPesadas;
+    /* Rendimiento exportable EN KILOS: de lo que entró a proceso, cuánto
+       salió empacado. Antes se dividía cajas entre cajas, con bultos de
+       distinto peso a la entrada (gaveta) y a la salida (caja), así que el
+       número no significaba nada. */
+    const tasaExportable = kgProcesados > 0 ? kgExportable / kgProcesados : 0;
+    const diferenciaGavetas = gavetasRecibidas - gavetasAnunPesadas;
 
     const cerrados = lotes.filter(function (l) { return l.estado === "Cerrado" && l.fechaCierre; });
     const cicloTotal = cerrados.reduce(function (a, l) {
@@ -2721,29 +2981,32 @@ const Indicadores = (function () {
     });
 
     const rechazados = lotes.filter(function (l) { return l.estado === "Rechazado"; });
-    const cajasPerdidas = cajasProcesadas - cajasExportables;
+    /* Lo perdido se mide en kilos y se valora al precio pagado al
+        productor: una «caja perdida» no existe, porque lo que se pierde
+        nunca llegó a ser caja. */
+    const kgPerdidos = kgProcesados - kgExportable;
 
     return {
       /* --- volumen --- */
-      cajasAnunciadas: cajasAnunciadas,
-      cajasRecibidas: cajasRecibidas,
+      gavetasAnunciadas: gavetasAnunciadas,
+      gavetasRecibidas: gavetasRecibidas,
       kgRecibidos: kgRecibidos,
-      diferenciaCajas: diferenciaCajas,
-      tasaDiferenciaCajas: cajasAnunPesadas > 0 ? diferenciaCajas / cajasAnunPesadas : 0,
-      /* Dos diferencias distintas: pueden llegar todas las cajas y aun asi
-         pesar menos, si vienen incompletas. */
+      diferenciaGavetas: diferenciaGavetas,
+      tasaDiferenciaGavetas: gavetasAnunPesadas > 0 ? diferenciaGavetas / gavetasAnunPesadas : 0,
+      /* Dos diferencias distintas: pueden llegar todas las gavetas y aun
+         así pesar menos, si vienen incompletas. */
       kgAnunciados: kgAnunPesados,
       diferenciaKg: kgRecibidos - kgAnunPesados,
       tasaDiferenciaKg: kgAnunPesados > 0 ? (kgRecibidos - kgAnunPesados) / kgAnunPesados : 0,
-      cajasProcesadas: cajasProcesadas,
+      gavetasProcesadas: gavetasProcesadas,
       kgProcesados: kgProcesados,
       cajasExportables: cajasExportables,
       kgExportable: kgExportable,
-      cajasPerdidas: cajasPerdidas,
+      kgPerdidos: kgPerdidos,
 
       /* --- perdidas --- */
       tasaExportable: tasaExportable,
-      metaExportable: metaPonderada,
+      metaRendimiento: metaPonderada,
       cumplimientoMeta: metaPonderada > 0 ? tasaExportable / metaPonderada : 0,
       kgMerma: kgMerma,
       tasaMerma: kgProcesados > 0 ? kgMerma / kgProcesados : 0,
@@ -2759,13 +3022,13 @@ const Indicadores = (function () {
       minutosEstandar: minutosEstandar,
       eficienciaTiempo: minutosReales > 0 ? minutosEstandar / minutosReales : 0,
       horasHombre: horasHombre,
-      productividad: horasHombre > 0 ? cajasProcesadas / horasHombre : 0,
-      minutosPorCaja: cajasProcesadas > 0 ? minutosReales / cajasProcesadas : 0,
+      productividad: horasHombre > 0 ? gavetasProcesadas / horasHombre : 0,
+      minutosPorGaveta: gavetasProcesadas > 0 ? minutosReales / gavetasProcesadas : 0,
 
       /* --- economico --- */
       valorCompra: valorCompra,
       costoPorCajaExportable: cajasExportables > 0 ? valorCompra / cajasExportables : 0,
-      perdidaEconomica: cajasPerdidas * (cajasRecibidas > 0 ? valorCompra / cajasRecibidas : 0),
+      perdidaEconomica: kgPerdidos * (kgRecibidos > 0 ? valorCompra / kgRecibidos : 0),
 
       /* --- flujo --- */
       numLotes: lotes.length,
@@ -2773,8 +3036,8 @@ const Indicadores = (function () {
       porEstado: porEstado,
       numRechazados: rechazados.length,
       tasaRechazo: lotes.length > 0 ? rechazados.length / lotes.length : 0,
-      cajasSinProcesar: Math.max(cajasRecibidas - cajasProcesadas, 0),
-      tasaProcesamiento: cajasRecibidas > 0 ? cajasProcesadas / cajasRecibidas : 0,
+      cajasSinProcesar: Math.max(gavetasRecibidas - gavetasProcesadas, 0),
+      tasaProcesamiento: gavetasRecibidas > 0 ? gavetasProcesadas / gavetasRecibidas : 0,
       cicloPromedio: cerrados.length > 0 ? cicloTotal / cerrados.length : 0,
       numCerrados: cerrados.length,
       proveedoresActivos: new Set(lotes.map(function (l) { return l.proveedorId; })).size
@@ -2791,50 +3054,50 @@ const Indicadores = (function () {
       if (!mapa[l.proveedorId]) {
         mapa[l.proveedorId] = {
           proveedorId: l.proveedorId, nombre: nombreProveedor(l.proveedorId),
-          lotes: 0, rechazados: 0, cajasAnunciadas: 0, cajasAnunPesadas: 0,
-          cajasRecibidas: 0, kgAnunPesados: 0, kgRecibidos: 0, valor: 0, calidadA: 0,
-          cajasProcesadas: 0, cajasExportables: 0, kgMerma: 0
+          lotes: 0, rechazados: 0, gavetasAnunciadas: 0, gavetasAnunPesadas: 0,
+          gavetasRecibidas: 0, kgAnunPesados: 0, kgRecibidos: 0, valor: 0, calidadA: 0,
+          gavetasProcesadas: 0, cajasExportables: 0, kgMerma: 0
         };
       }
       const m = mapa[l.proveedorId];
       m.lotes += 1;
-      m.cajasAnunciadas += Number(l.cajasAnunciadas) || 0;
+      m.gavetasAnunciadas += Number(l.gavetasAnunciadas) || 0;
       if (l.estado === "Rechazado") { m.rechazados += 1; return; }
-      if (l.cajasRecibidas === null) return;
-      m.cajasAnunPesadas += Number(l.cajasAnunciadas) || 0;
-      m.cajasRecibidas += Number(l.cajasRecibidas) || 0;
+      if (l.gavetasRecibidas === null) return;
+      m.gavetasAnunPesadas += Number(l.gavetasAnunciadas) || 0;
+      m.gavetasRecibidas += Number(l.gavetasRecibidas) || 0;
       m.kgAnunPesados += Number(l.kgAnunciados) || 0;
       m.kgRecibidos += Number(l.kgRecibidos) || 0;
-      m.valor += (Number(l.cajasRecibidas) || 0) * (Number(l.precioCaja) || 0);
-      if (l.calidadVerificada === "A") m.calidadA += Number(l.cajasRecibidas) || 0;
+      m.valor += (Number(l.kgRecibidos) || 0) * (Number(l.precioKg) || 0);
+      if (l.calidadVerificada === "A") m.calidadA += Number(l.gavetasRecibidas) || 0;
     });
 
     datos.producciones.forEach(function (p) {
       const lote = datos.indice[p.loteId];
       if (!lote || !mapa[lote.proveedorId]) return;
       const m = mapa[lote.proveedorId];
-      m.cajasProcesadas += Number(p.cajasProcesadas) || 0;
+      m.gavetasProcesadas += Number(p.gavetasProcesadas) || 0;
       m.cajasExportables += Number(p.cajasExportables) || 0;
       m.kgMerma += totalMerma(p);
     });
 
     return Object.keys(mapa).map(function (k) {
       const m = mapa[k];
-      m.tasaExportable = m.cajasProcesadas > 0 ? m.cajasExportables / m.cajasProcesadas : 0;
-      m.pctCalidadA = m.cajasRecibidas > 0 ? m.calidadA / m.cajasRecibidas : 0;
-      m.precioPromedio = m.cajasRecibidas > 0 ? m.valor / m.cajasRecibidas : 0;
-      m.diferenciaCajas = m.cajasRecibidas - m.cajasAnunPesadas;
-      m.tasaDiferencia = m.cajasAnunPesadas > 0 ? m.diferenciaCajas / m.cajasAnunPesadas : 0;
+      m.tasaExportable = m.gavetasProcesadas > 0 ? m.cajasExportables / m.gavetasProcesadas : 0;
+      m.pctCalidadA = m.gavetasRecibidas > 0 ? m.calidadA / m.gavetasRecibidas : 0;
+      m.precioPromedio = m.gavetasRecibidas > 0 ? m.valor / m.gavetasRecibidas : 0;
+      m.diferenciaGavetas = m.gavetasRecibidas - m.gavetasAnunPesadas;
+      m.tasaDiferencia = m.gavetasAnunPesadas > 0 ? m.diferenciaGavetas / m.gavetasAnunPesadas : 0;
       m.tasaDiferenciaKg = m.kgAnunPesados > 0
         ? (m.kgRecibidos - m.kgAnunPesados) / m.kgAnunPesados : 0;
-      m.pesoCajaReal = m.cajasRecibidas > 0 ? m.kgRecibidos / m.cajasRecibidas : 0;
+      m.pesoGavetaReal = m.gavetasRecibidas > 0 ? m.kgRecibidos / m.gavetasRecibidas : 0;
       m.tasaRechazo = m.lotes > 0 ? m.rechazados / m.lotes : 0;
       /* Indice de variabilidad: es la CR6 hecha numero. Combina lo que el
          proveedor falla al declarar, lo que le rechazan y lo que rinde. */
       m.indiceVariabilidad = Math.abs(m.tasaDiferencia) + m.tasaRechazo +
         Math.max(0, 0.8 - m.tasaExportable);
       return m;
-    }).sort(function (a, b) { return b.cajasRecibidas - a.cajasRecibidas; });
+    }).sort(function (a, b) { return b.gavetasRecibidas - a.gavetasRecibidas; });
   }
 
   function porLinea(filtros) {
@@ -2846,8 +3109,8 @@ const Indicadores = (function () {
         const l = DB.linea(id);
         mapa[id] = {
           lineaId: id, nombre: nombreLinea(id), color: colorLinea(id),
-          meta: l ? l.metaExportable : 0, tiempoEstandarMin: l ? l.tiempoEstandarMin : 0,
-          cajasRecibidas: 0, cajasProcesadas: 0, cajasExportables: 0,
+          meta: l ? l.metaRendimiento : 0,
+          gavetasRecibidas: 0, gavetasProcesadas: 0, cajasExportables: 0,
           kgMerma: 0, kgValorizado: 0, minutosReales: 0, minutosEstandar: 0
         };
       }
@@ -2855,11 +3118,11 @@ const Indicadores = (function () {
     }
 
     datos.lotes.forEach(function (l) {
-      bucket(l.lineaId).cajasRecibidas += Number(l.cajasRecibidas) || 0;
+      bucket(l.lineaId).gavetasRecibidas += Number(l.gavetasRecibidas) || 0;
     });
     datos.producciones.forEach(function (p) {
       const b = bucket(p.lineaId);
-      b.cajasProcesadas += Number(p.cajasProcesadas) || 0;
+      b.gavetasProcesadas += Number(p.gavetasProcesadas) || 0;
       b.cajasExportables += Number(p.cajasExportables) || 0;
       b.kgMerma += totalMerma(p);
       b.kgValorizado += mermaValorizada(p);
@@ -2869,13 +3132,13 @@ const Indicadores = (function () {
 
     return Object.keys(mapa).map(function (k) {
       const m = mapa[k];
-      m.tasaExportable = m.cajasProcesadas > 0 ? m.cajasExportables / m.cajasProcesadas : 0;
+      m.tasaExportable = m.gavetasProcesadas > 0 ? m.cajasExportables / m.gavetasProcesadas : 0;
       m.brecha = m.tasaExportable - m.meta;
       m.eficiencia = m.minutosReales > 0 ? m.minutosEstandar / m.minutosReales : 0;
-      m.minutosPorCaja = m.cajasProcesadas > 0 ? m.minutosReales / m.cajasProcesadas : 0;
+      m.minutosPorGaveta = m.gavetasProcesadas > 0 ? m.minutosReales / m.gavetasProcesadas : 0;
       m.tasaValorizacion = m.kgMerma > 0 ? m.kgValorizado / m.kgMerma : 0;
       return m;
-    }).sort(function (a, b) { return b.cajasRecibidas - a.cajasRecibidas; });
+    }).sort(function (a, b) { return b.gavetasRecibidas - a.gavetasRecibidas; });
   }
 
   /* Pareto por causa raiz: cuanto pesa cada CR en la perdida total. Es el
@@ -2895,7 +3158,7 @@ const Indicadores = (function () {
 
     prod.forEach(function (p) {
       const l = DB.linea(p.lineaId);
-      const valorKg = l && l.pesoCajaKg ? l.precioCaja / l.pesoCajaKg : 0;
+      const valorKg = l ? (Number(l.valorKgProductor) || 0) : 0;
       (p.mermas || []).forEach(function (m) {
         if (!mapa[m.causaId]) return;
         const kg = Number(m.kg) || 0;
@@ -2956,7 +3219,7 @@ const Indicadores = (function () {
       return {
         id: c.id, nombre: c.nombre,
         kg: items.reduce(function (a, l) {
-          return a + (Number(l.cajasRecibidas) || Number(l.cajasAnunciadas) || 0);
+          return a + (Number(l.gavetasRecibidas) || Number(l.gavetasAnunciadas) || 0);
         }, 0),
         lotes: items.length
       };
@@ -2975,12 +3238,12 @@ const Indicadores = (function () {
     }
 
     datos.lotes.forEach(function (l) {
-      if (l.cajasRecibidas === null) return;
-      bucket(l.fechaRecepcion || l.fecha).recibido += Number(l.cajasRecibidas) || 0;
+      if (l.gavetasRecibidas === null) return;
+      bucket(l.fechaRecepcion || l.fecha).recibido += Number(l.gavetasRecibidas) || 0;
     });
     datos.producciones.forEach(function (p) {
       const b = bucket(p.fecha);
-      b.procesado += Number(p.cajasProcesadas) || 0;
+      b.procesado += Number(p.gavetasProcesadas) || 0;
       b.exportable += Number(p.cajasExportables) || 0;
     });
 
@@ -2991,48 +3254,188 @@ const Indicadores = (function () {
     });
   }
 
+  /* ===================================== estudio de tiempos y asignación
+
+     Dos relojes, nunca uno. Confundirlos es el error clásico, y era el de
+     la versión anterior de esta app:
+
+       · TIEMPO DE CICLO (min/gaveta)  — cuánto tarda la gaveta en recorrer
+         la línea. Sirve para prometer entregas y para compararse con el
+         takt. No depende de cuánta gente haya.
+       · CONTENIDO DE TRABAJO (min-persona/gaveta) — cuánta mano de obra
+         consume esa misma gaveta. Sirve para asignar personal y costear.
+         Sí depende: una actividad con dos personas tarda lo mismo y cuesta
+         el doble.
+
+     La asignación sale del segundo dividido por el takt, y la estación que
+     manda es la de mayor contenido, no la más larga.
+     ==================================================================== */
+
+  function estudioTiempos(lineaId, opciones) {
+    const linea = DB.linea(lineaId);
+    if (!linea) return null;
+    const o = opciones || {};
+    const p = DB.parametros();
+
+    const disponible = Number(o.disponibleMin) || p.disponibleMin;
+    const ingresoKg = Number(o.ingresoDiarioKg) || linea.ingresoDiarioKg;
+    const porGaveta = DB.cajasPorGaveta(linea);
+    const gavetasDia = linea.pesoGavetaKg > 0 ? ingresoKg / linea.pesoGavetaKg : 0;
+
+    const detalle = DB.actividadesDe(lineaId, DB.all("actividades"))
+      .slice()
+      .sort(function (a, b) { return (a.orden || 0) - (b.orden || 0); })
+      .map(function (a) {
+        const tn = (Number(a.to) || 0) * (Number(a.v) || 1);
+        const te = tn * (1 + (Number(a.suplemento) || 0));
+        const unidades = a.unidad === "caja" ? porGaveta : 1;
+        const personas = Number(a.personas) || 1;
+        return {
+          id: a.id, codigo: a.codigo, nombre: a.nombre, simbolo: a.simbolo,
+          estacion: a.estacion, unidad: a.unidad, origen: a.origen, base: a.base,
+          to: Number(a.to) || 0, v: Number(a.v) || 1, suplemento: Number(a.suplemento) || 0,
+          tn: tn, te: te, personas: personas,
+          unidadesPorGaveta: unidades,
+          tePorGaveta: te * unidades,
+          minPersonaPorGaveta: te * unidades * personas
+        };
+      });
+
+    const ciclo = detalle.reduce(function (a, d) { return a + d.tePorGaveta; }, 0);
+    const contenido = detalle.reduce(function (a, d) { return a + d.minPersonaPorGaveta; }, 0);
+
+    detalle.forEach(function (d) {
+      d.participacion = contenido > 0 ? d.minPersonaPorGaveta / contenido : 0;
+    });
+
+    /* Resumen por estación: es el nivel al que se asigna gente de verdad. */
+    const mapa = {};
+    detalle.forEach(function (d) {
+      if (!mapa[d.estacion]) {
+        mapa[d.estacion] = { estacion: d.estacion, ciclo: 0, contenido: 0, actividades: 0 };
+      }
+      mapa[d.estacion].ciclo += d.tePorGaveta;
+      mapa[d.estacion].contenido += d.minPersonaPorGaveta;
+      mapa[d.estacion].actividades += 1;
+    });
+
+    /* Takt: cada cuántos minutos debe salir una gaveta para cubrir el
+       ingreso del día con el tiempo disponible del turno. */
+    const takt = gavetasDia > 0 ? disponible / gavetasDia : 0;
+
+    const estaciones = Object.keys(mapa).map(function (k) { return mapa[k]; });
+    estaciones.forEach(function (e) {
+      e.participacion = contenido > 0 ? e.contenido / contenido : 0;
+      /* Gente necesaria en la estación para no romper el takt. */
+      e.operarios = takt > 0 ? e.contenido / takt : 0;
+      e.operariosEnteros = Math.ceil(e.operarios - 0.0001);
+    });
+    estaciones.sort(function (a, b) { return b.contenido - a.contenido; });
+
+    const operariosExactos = takt > 0 ? contenido / takt : 0;
+    const cuello = estaciones[0] || null;
+
+    const cajasDia = gavetasDia * porGaveta;
+    const costoLinea = (contenido / 60) * p.costoHoraHombre;   // por gaveta
+
+    return {
+      linea: linea,
+      detalle: detalle,
+      estaciones: estaciones,
+      cuello: cuello,
+      disponibleMin: disponible,
+      ingresoDiarioKg: ingresoKg,
+      gavetasDia: gavetasDia,
+      cajasDia: cajasDia,
+      cajasPorGaveta: porGaveta,
+      cicloGavetaMin: ciclo,
+      contenidoGavetaMin: contenido,
+      cicloCajaMin: porGaveta > 0 ? ciclo / porGaveta : 0,
+      contenidoCajaMin: porGaveta > 0 ? contenido / porGaveta : 0,
+      contenidoKgMin: linea.pesoGavetaKg > 0 ? contenido / linea.pesoGavetaKg : 0,
+      taktMin: takt,
+      operariosExactos: operariosExactos,
+      operariosMinimos: Math.ceil(operariosExactos - 0.0001),
+      /* Eficiencia del balanceo: cuánta de la capacidad asignada se usa de
+         verdad. Lo que se pierde aquí son personas paradas esperando. */
+      eficienciaBalance: cuello && cuello.operariosEnteros > 0
+        ? operariosExactos / estaciones.reduce(function (a, e) { return a + e.operariosEnteros; }, 0)
+        : 0,
+      costoManoObraGaveta: costoLinea,
+      costoManoObraCaja: porGaveta > 0 ? costoLinea / porGaveta : 0,
+      costoManoObraKg: linea.pesoGavetaKg > 0 ? costoLinea / linea.pesoGavetaKg : 0
+    };
+  }
+
+  /* Las tres líneas de un vistazo, que es la tabla comparativa del TIC. */
+  function estudioTodas(opciones) {
+    return DB.all("lineas").filter(function (l) { return l.activa; })
+      .map(function (l) { return estudioTiempos(l.id, opciones); })
+      .filter(Boolean);
+  }
+
   /* ------------------------------------------------- planificación diaria */
 
-  /* Dado un plan de produccion (cajas por linea) y los parametros de planta,
-     calcula el takt time, la carga de cada linea y si el turno alcanza.
-     Es el nucleo del modulo de planificacion diaria. */
+  /* El plan se escribe en GAVETAS, que es lo que de verdad entra del campo
+     y lo que hay en cámara. De ahí salen las cajas, no al revés.
+
+     La asignación de gente usa el CONTENIDO DE TRABAJO (min-persona), no el
+     tiempo de ciclo: la versión anterior dividía el ciclo entre los minutos
+     de un operario, lo que subestimaba el personal en toda actividad
+     atendida por más de una persona —el sopleteado de pitahaya o la
+     clasificación de tomate, justo las que mandan. */
   function planificar(plan) {
     const p = DB.parametros();
-    const horas = Number(plan.horasTurno) || p.horasTurno;
+    const minutosTurno = Number(plan.jornadaMin) || p.jornadaMin;
+    const pausas = plan.pausasMin === undefined ? p.pausasMin : Number(plan.pausasMin);
     const operarios = Number(plan.operarios) || p.operariosDisponibles;
     const eficiencia = Number(plan.eficiencia) || p.eficienciaPlanta;
 
-    /* Minutos productivos: el turno menos los suplementos de la OIT, y
-       ajustado por la eficiencia observada de la planta. */
-    const minutosTurno = horas * 60;
-    const minutosNetosPorOperario = minutosTurno * (1 - p.suplementosOIT) * eficiencia;
+    /* Tiempo con el que se cuenta de verdad: la jornada menos las pausas,
+       ajustada por la eficiencia observada de la planta. Los suplementos de
+       la OIT NO se restan aquí: ya están dentro de cada tiempo estándar. */
+    const disponibleMin = Math.max(0, minutosTurno - pausas);
+    const minutosNetosPorOperario = disponibleMin * eficiencia;
     const capacidadTotalMin = minutosNetosPorOperario * operarios;
 
     const detalle = (plan.lineas || []).map(function (item) {
       const linea = DB.linea(item.lineaId);
       if (!linea) return null;
-      const cajas = Number(item.cajas) || 0;
-      const minutosRequeridos = cajas * linea.tiempoEstandarMin;
+      const gavetas = Number(item.gavetas) || 0;
+      const est = estudioTiempos(linea.id, { disponibleMin: disponibleMin });
+      if (!est) return null;
+
+      const minutosRequeridos = gavetas * est.contenidoGavetaMin;
       const operariosNecesarios = minutosNetosPorOperario > 0
         ? minutosRequeridos / minutosNetosPorOperario : 0;
+      const kg = gavetas * linea.pesoGavetaKg;
 
       return {
         lineaId: linea.id,
         nombre: linea.nombre,
         color: linea.color,
-        cajas: cajas,
-        tiempoEstandarMin: linea.tiempoEstandarMin,
+        gavetas: gavetas,
+        cajas: gavetas * est.cajasPorGaveta,
+        cicloGavetaMin: est.cicloGavetaMin,
+        contenidoGavetaMin: est.contenidoGavetaMin,
+        /* Minutos-persona que pide el plan. */
         minutosRequeridos: minutosRequeridos,
         horasRequeridas: minutosRequeridos / 60,
         operariosNecesarios: operariosNecesarios,
-        /* Takt time: cada cuantos minutos debe salir una caja para cumplir. */
-        taktMin: cajas > 0 ? minutosTurno / cajas : 0,
-        kg: cajas * linea.pesoCajaKg,
-        valor: cajas * linea.precioCaja
+        /* Takt: cada cuántos minutos debe salir una gaveta para cumplir. */
+        taktMin: gavetas > 0 ? disponibleMin / gavetas : 0,
+        /* Lo que la línea puede dar si se le pone la gente que pide. */
+        cuello: est.cuello ? est.cuello.estacion : "—",
+        cuelloParticipacion: est.cuello ? est.cuello.participacion : 0,
+        estaciones: est.estaciones,
+        kg: kg,
+        valor: kg * linea.valorKgProductor,
+        costoManoObra: (minutosRequeridos / 60) * p.costoHoraHombre
       };
     }).filter(Boolean);
 
     const minutosRequeridos = detalle.reduce(function (a, d) { return a + d.minutosRequeridos; }, 0);
+    const gavetasTotales = detalle.reduce(function (a, d) { return a + d.gavetas; }, 0);
     const cajasTotales = detalle.reduce(function (a, d) { return a + d.cajas; }, 0);
     const operariosNecesarios = detalle.reduce(function (a, d) { return a + d.operariosNecesarios; }, 0);
 
@@ -3049,15 +3452,16 @@ const Indicadores = (function () {
     const disponible = {};
     DB.all("lotes").forEach(function (l) {
       if (l.estado !== "Recibido") return;
-      disponible[l.lineaId] = (disponible[l.lineaId] || 0) + (Number(l.cajasRecibidas) || 0);
+      disponible[l.lineaId] = (disponible[l.lineaId] || 0) + (Number(l.gavetasRecibidas) || 0);
     });
     detalle.forEach(function (d) {
       d.disponible = disponible[d.lineaId] || 0;
-      d.faltante = Math.max(0, d.cajas - d.disponible);
+      d.faltante = Math.max(0, d.gavetas - d.disponible);
     });
 
     return {
       detalle: detalle,
+      gavetasTotales: gavetasTotales,
       cajasTotales: cajasTotales,
       kgTotales: detalle.reduce(function (a, d) { return a + d.kg; }, 0),
       valorTotal: detalle.reduce(function (a, d) { return a + d.valor; }, 0),
@@ -3070,10 +3474,12 @@ const Indicadores = (function () {
       operarios: operarios,
       operariosNecesarios: operariosNecesarios,
       operariosFaltantes: Math.max(0, Math.ceil(operariosNecesarios - operarios)),
-      horasTurno: horas,
+      jornadaMin: minutosTurno,
+      pausasMin: pausas,
+      disponibleMin: disponibleMin,
       minutosNetosPorOperario: minutosNetosPorOperario,
-      taktPromedio: cajasTotales > 0 ? minutosTurno / cajasTotales : 0,
-      costoManoObra: (operarios * horas) * p.costoHoraHombre,
+      taktPromedio: gavetasTotales > 0 ? disponibleMin / gavetasTotales : 0,
+      costoManoObra: detalle.reduce(function (a, d) { return a + d.costoManoObra; }, 0),
       hayFaltantes: detalle.some(function (d) { return d.faltante > 0; })
     };
   }
@@ -3086,7 +3492,7 @@ const Indicadores = (function () {
     const prod = DB.all("producciones").find(function (p) { return p.loteId === loteId; }) || null;
     const linea = DB.linea(lote.lineaId);
 
-    const dif = lote.cajasRecibidas === null ? null : lote.cajasRecibidas - lote.cajasAnunciadas;
+    const dif = lote.gavetasRecibidas === null ? null : lote.gavetasRecibidas - lote.gavetasAnunciadas;
     const difKg = lote.kgRecibidos === null ? null : lote.kgRecibidos - (lote.kgAnunciados || 0);
     const kgMerma = prod ? totalMerma(prod) : 0;
 
@@ -3095,19 +3501,19 @@ const Indicadores = (function () {
       produccion: prod,
       linea: linea,
       proveedor: DB.get("proveedores", lote.proveedorId),
-      diferenciaCajas: dif,
-      tasaDiferencia: dif === null || !lote.cajasAnunciadas ? null : dif / lote.cajasAnunciadas,
+      diferenciaGavetas: dif,
+      tasaDiferencia: dif === null || !lote.gavetasAnunciadas ? null : dif / lote.gavetasAnunciadas,
       diferenciaKg: difKg,
       tasaDiferenciaKg: difKg === null || !lote.kgAnunciados ? null : difKg / lote.kgAnunciados,
-      pesoCajaReal: lote.cajasRecibidas ? lote.kgRecibidos / lote.cajasRecibidas : null,
-      valor: (lote.cajasRecibidas || 0) * (lote.precioCaja || 0),
+      pesoGavetaReal: lote.gavetasRecibidas ? lote.kgRecibidos / lote.gavetasRecibidas : null,
+      valor: (lote.kgRecibidos || 0) * (lote.precioKg || 0),
       kgMerma: kgMerma,
       kgValorizado: prod ? mermaValorizada(prod) : 0,
       tasaValorizacion: prod && kgMerma > 0 ? mermaValorizada(prod) / kgMerma : null,
       valorDescarte: prod ? valorRecuperado(prod) : 0,
-      tasaExportable: prod && prod.cajasProcesadas > 0
-        ? prod.cajasExportables / prod.cajasProcesadas : null,
-      meta: linea ? linea.metaExportable : null,
+      tasaExportable: prod && prod.gavetasProcesadas > 0
+        ? prod.cajasExportables / prod.gavetasProcesadas : null,
+      meta: linea ? linea.metaRendimiento : null,
       tiempoEstandarMin: prod ? tiempoEstandar(prod) : 0,
       eficiencia: prod && prod.tiempoRealMin > 0 ? tiempoEstandar(prod) / prod.tiempoRealMin : null,
       mermas: prod ? (prod.mermas || []).slice().sort(function (a, b) { return b.kg - a.kg; }) : []
@@ -3164,16 +3570,18 @@ const Indicadores = (function () {
         etiqueta: c.codigo + " · " + c.nombre,
         origen: c.origen, definida: c.definida, principal: c.principal,
         descripcion: c.descripcion || "",
-        kg: 0, kgSinValorizar: 0, cajasEquivalentes: 0,
+        kg: 0, kgSinValorizar: 0, gavetasEquivalentes: 0,
         valorFruta: 0, valorRecuperado: 0, costoTransformacion: 0
       };
     });
 
     prod.forEach(function (pr) {
       const l = DB.linea(pr.lineaId);
-      const peso = l && l.pesoCajaKg ? l.pesoCajaKg : DB.PESO_CAJA_KG;
-      const valorKg = l ? l.precioCaja / peso : 0;
-      const minutosPorKg = l ? l.tiempoEstandarMin / peso : 0;
+      const peso = l && l.pesoGavetaKg ? l.pesoGavetaKg : DB.PESO_GAVETA_KG;
+      const valorKg = l ? (Number(l.valorKgProductor) || 0) : 0;
+      /* Minutos-persona por kilo, del estudio de tiempos. */
+      const minutosPorKg = l
+        ? DB.contenidoGavetaMin(l, DB.all("actividades")) / peso : 0;
 
       (pr.mermas || []).forEach(function (m) {
         const f = mapa[m.causaId];
@@ -3181,7 +3589,7 @@ const Indicadores = (function () {
         const kg = Number(m.kg) || 0;
         const d = DB.destino(m.destinoId);
         f.kg += kg;
-        f.cajasEquivalentes += kg / peso;
+        f.gavetasEquivalentes += kg / peso;
         f.valorFruta += kg * valorKg;
         f.valorRecuperado += kg * (d ? (Number(d.valorKg) || 0) : 0);
         f.costoTransformacion += (kg * minutosPorKg / 60) * p.costoHoraHombre;
@@ -3222,7 +3630,7 @@ const Indicadores = (function () {
       costoHoraHombre: p.costoHoraHombre,
       kg: sumar("kg"),
       kgSinValorizar: sumar("kgSinValorizar"),
-      cajasEquivalentes: sumar("cajasEquivalentes"),
+      gavetasEquivalentes: sumar("gavetasEquivalentes"),
       valorFruta: sumar("valorFruta"),
       valorRecuperado: sumar("valorRecuperado"),
       costoTransformacion: sumar("costoTransformacion"),
@@ -3250,25 +3658,104 @@ const Indicadores = (function () {
   const TASA_DESCUENTO = 0.12;          // costo de oportunidad anual, supuesto
   const ANIOS_VAN = 3;
 
-  /* Medidas del diagnóstico, con una estimación inicial editable. */
-  const ESCENARIOS = [
-    { id: "esc_segregacion", nombre: "Segregar la merma en la línea",
-      causas: ["CR5"], reduccion: 0.35, valorizacion: 0.60, inversion: 1800,
-      recurrenteAnual: 900,
-      detalle: "Contenedores identificados por destino y un responsable por turno." },
-    { id: "esc_proveedores", nombre: "Estandarizar la entrega del proveedor",
-      causas: ["CR6"], reduccion: 0.30, valorizacion: 0.10, inversion: 1200,
-      recurrenteAnual: 1400,
-      detalle: "Ficha técnica, capacitación en campo y verificación de peso por caja." },
-    { id: "esc_layout", nombre: "Reordenar el layout de planta",
-      causas: ["CR7"], reduccion: 0.40, valorizacion: 0, inversion: 4500,
-      recurrenteAnual: 0,
-      detalle: "Recorrido en línea recta entre recepción, selección y empaque." },
-    { id: "esc_sopleteado", nombre: "Balancear la estación de sopleteado",
-      causas: ["CR8"], reduccion: 0.45, valorizacion: 0, inversion: 2600,
-      recurrenteAnual: 300,
-      detalle: "Reasignar operarios según el takt time y nivelar la carga." }
+  /* Las ocho causas raíz de la matriz KPI de la base maestra, con su
+     indicador actual, su meta y la pérdida ya calculada allí. No son
+     invención de la app: vienen del diagnóstico, y por eso cada una dice
+     sobre qué base se calculó. La nº 5 no se monetiza —capacidad ociosa es
+     pérdida indirecta— y se deja a propósito en cero: inflarla sería el
+     tipo de número que hace desconfiar de todo lo demás. */
+  const MEDIDAS = [
+    { id: "kpi_1", n: 1, causaId: "CR6", linea: "Pitahaya",
+      nombre: "Estandarizar la composición de los equipos",
+      indicador: "Sobre-tiempo-persona frente a la mejor mesa",
+      actual: 0.4336, meta: 0.10, reduccion: 0.7694,
+      perdidaAnual: 9279.36, proyectada: 2139.86, inversion: 600, recurrenteAnual: 0,
+      detalle: "Grupos con roles fijos según el mejor tiempo-persona medido (mesa 1).",
+      base: "Sobre-tiempo-persona × gavetas/año × costo hora. Depende de confirmar mesas 2 y 3." },
+    { id: "kpi_2", n: 2, causaId: "CR7", linea: "Tomate",
+      nombre: "Eliminar el lavado y secado del tomate",
+      indicador: "% del contenido de trabajo dedicado a limpieza y secado",
+      actual: 0.5176, meta: 0, reduccion: 1,
+      perdidaAnual: 24565.32, proyectada: 0, inversion: 0, recurrenteAnual: 0,
+      detalle: "ECRS — Eliminar: exigir fruta limpia al proveedor en el acuerdo comercial.",
+      base: "Min-persona de limpieza + secado por gaveta × gavetas/año × costo hora." },
+    { id: "kpi_3", n: 3, causaId: "CR6", linea: "Granadilla",
+      nombre: "Controlar el calibre de la granadilla en finca",
+      indicador: "% retirado en recepción",
+      actual: 0.0345, meta: 0.015, reduccion: 0.5657,
+      perdidaAnual: 5988.70, proyectada: 2600.64, inversion: 900, recurrenteAnual: 600,
+      detalle: "Muestreo de peso en finca, precio diferenciado por calibre y segunda " +
+        "calidad en vez de rechazo.",
+      base: "Pérdida neta del retiro en recepción (balance de masa), anualizada." },
+    { id: "kpi_4", n: 4, causaId: "CR7", linea: "Pitahaya",
+      nombre: "Rediseñar las mesas de sopleteado",
+      indicador: "% de daño en mesas anchas",
+      actual: 0.05, meta: 0.02, reduccion: 0.60,
+      perdidaAnual: 12960, proyectada: 5184, inversion: 4500, recurrenteAnual: 0,
+      detalle: "Ancho reducido según SLP y Guerchet, para acortar el alcance.",
+      base: "Daño extra frente a la mesa 1 × kg/año × (precio − precio local). Hipótesis a verificar." },
+    { id: "kpi_5", n: 5, causaId: "CR8", linea: "Pitahaya",
+      nombre: "Usar las estaciones de sopleteado ociosas",
+      indicador: "% de capacidad instalada sin usar",
+      actual: 0.40, meta: 0.20, reduccion: 0,
+      perdidaAnual: 0, proyectada: 0, inversion: 300, recurrenteAnual: 0,
+      detalle: "Redistribuir personal según la demanda del día (planeación agregada).",
+      base: "Capacidad ociosa: pérdida indirecta, no se monetiza." },
+    { id: "kpi_6", n: 6, causaId: "CR5", linea: "Pitahaya",
+      nombre: "Bajar la merma de pitahaya al 2%",
+      indicador: "% merma real sobre kg recibidos",
+      actual: 0.0406, meta: 0.02, reduccion: 0.5069,
+      perdidaAnual: 40440.82, proyectada: 19940.52, inversion: 1800, recurrenteAnual: 900,
+      detalle: "Clasificación de proveedores A–D, segregación en origen y destino circular.",
+      base: "Balance de masa de la línea; meta 2% = mejor caso reportado en Ecuador." },
+    { id: "kpi_7", n: 7, causaId: "CR5", linea: "Tomate",
+      nombre: "Bajar la merma de tomate al 2%",
+      indicador: "% merma real sobre kg recibidos",
+      actual: 0.0538, meta: 0.02, reduccion: 0.6284,
+      perdidaAnual: 24938.74, proyectada: 9266.92, inversion: 1200, recurrenteAnual: 600,
+      detalle: "Clasificación de proveedores A–D, segregación en origen y destino circular.",
+      base: "Balance de masa de la línea; meta 2% = mejor caso reportado en Ecuador." },
+    { id: "kpi_8", n: 8, causaId: "CR5", linea: "Granadilla",
+      nombre: "Bajar la merma de granadilla al 2%",
+      indicador: "% merma real sobre kg recibidos",
+      actual: 0.023, meta: 0.02, reduccion: 0.1388,
+      perdidaAnual: 11812.28, proyectada: 10172.47, inversion: 800, recurrenteAnual: 400,
+      detalle: "Clasificación de proveedores A–D, segregación en origen y destino circular.",
+      base: "Balance de masa de la línea; meta 2% = mejor caso reportado en Ecuador." }
   ];
+
+  /* Compatibilidad con el simulador por causa raíz: cada medida se expresa
+     como una reducción sobre la causa a la que apunta. */
+  const ESCENARIOS = MEDIDAS.map(function (m) {
+    return {
+      id: m.id, nombre: m.nombre, causas: [m.causaId],
+      reduccion: m.reduccion, valorizacion: m.causaId === "CR5" ? 0.4 : 0,
+      inversion: m.inversion, recurrenteAnual: m.recurrenteAnual,
+      detalle: m.detalle
+    };
+  });
+
+  /* Lo que la matriz KPI dice que se pierde y se puede recuperar al año,
+     sin pasar por la simulación: es la cifra del diagnóstico. */
+  function matrizKPI() {
+    const total = MEDIDAS.reduce(function (a, m) { return a + m.perdidaAnual; }, 0);
+    const proyectada = MEDIDAS.reduce(function (a, m) { return a + m.proyectada; }, 0);
+    const inversion = MEDIDAS.reduce(function (a, m) { return a + m.inversion; }, 0);
+    return {
+      medidas: MEDIDAS.map(function (m) {
+        const copia = {};
+        Object.keys(m).forEach(function (k) { copia[k] = m[k]; });
+        copia.ahorro = m.perdidaAnual - m.proyectada;
+        copia.participacion = total > 0 ? m.perdidaAnual / total : 0;
+        return copia;
+      }),
+      perdidaAnual: total,
+      proyectadaAnual: proyectada,
+      ahorroAnual: total - proyectada,
+      inversion: inversion,
+      paybackMeses: total - proyectada > 0 ? (inversion / (total - proyectada)) * 12 : null
+    };
+  }
 
   function acotar(x) { return Math.max(0, Math.min(1, Number(x) || 0)); }
 
@@ -3340,8 +3827,9 @@ const Indicadores = (function () {
 
     /* Cómo quedarían los indicadores del periodo con la mejora aplicada. */
     const ind = calcular(e.filtros);
-    const pesoCaja = DB.PESO_CAJA_KG;
-    const cajasRecuperadas = (kgEvitados / base.factorAnual) / pesoCaja;
+    /* Kilos que vuelven a ser exportables en el período, y su equivalente
+       en cajas al peso real de la caja de cada línea. */
+    const kgRecuperados = kgEvitados / base.factorAnual;
     const kgMermaConMejora = Math.max(0, ind.kgMerma - kgEvitados / base.factorAnual);
     const kgValorizadoConMejora = Math.min(
       kgMermaConMejora,
@@ -3376,14 +3864,14 @@ const Indicadores = (function () {
         tasaMerma: ind.tasaMerma,
         tasaMermaConMejora: ind.kgProcesados > 0 ? kgMermaConMejora / ind.kgProcesados : 0,
         tasaExportable: ind.tasaExportable,
-        tasaExportableConMejora: ind.cajasProcesadas > 0
-          ? Math.min(1, (ind.cajasExportables + cajasRecuperadas) / ind.cajasProcesadas)
+        tasaExportableConMejora: ind.kgProcesados > 0
+          ? Math.min(1, (ind.kgExportable + kgRecuperados) / ind.kgProcesados)
           : 0,
-        metaExportable: ind.metaExportable,
+        metaRendimiento: ind.metaRendimiento,
         tasaValorizacion: ind.tasaValorizacion,
         tasaValorizacionConMejora: kgMermaConMejora > 0
           ? kgValorizadoConMejora / kgMermaConMejora : 0,
-        cajasRecuperadas: cajasRecuperadas
+        kgRecuperados: kgRecuperados
       }
     };
   }
@@ -3422,10 +3910,14 @@ const Indicadores = (function () {
     porCalidad: porCalidad,
     serie: serie,
     planificar: planificar,
+    estudioTiempos: estudioTiempos,
+    estudioTodas: estudioTodas,
     costeo: costeo,
     simular: simular,
     escenarioDeMedidas: escenarioDeMedidas,
     ESCENARIOS: ESCENARIOS,
+    MEDIDAS: MEDIDAS,
+    matrizKPI: matrizKPI,
     fichaLote: fichaLote,
     totalMerma: totalMerma,
     mermaValorizada: mermaValorizada,
@@ -4636,7 +5128,7 @@ const Guia = (function () {
      corresponde: ve el recorrido de SU fruta, no el interior del proceso. */
   const PASO_PROVEEDOR = {
     Anunciado: "Avisaste que envías. La planta ya lo tiene en su cola y lo espera.",
-    Recibido: "Tu fruta llegó: contaron las cajas y la pesaron en báscula.",
+    Recibido: "Tu fruta llegó: contaron las gavetas y la pesaron en báscula.",
     Procesado: "La planta ya trabajó tu lote. Falta que lo revisen y lo cierren.",
     Cerrado: "Terminado. Aquí ves cuántas cajas salieron para exportación.",
     Rechazado: "La fruta no cumplió los mínimos y no entró. Verás el motivo escrito."
@@ -4710,6 +5202,11 @@ const Guia = (function () {
     html += seccion("recorrido", "El recorrido de un pedido",
       "<p>Un pedido (en el sistema, un <strong>lote</strong>) nace cuando el proveedor " +
       "anuncia el envío desde su celular y termina cuando Supervisión lo cierra.</p>" +
+      "<p class='guia-ojo'><strong>Dos unidades, no una.</strong> Del campo llega la " +
+      "<strong>gaveta</strong> (11 kg en pitahaya, 20 en tomate, 12 en granadilla). Al " +
+      "contenedor sale la <strong>caja de exportación</strong> (3 / 2,5 / 2 kg). " +
+      "Todo lo que se cuenta en recepción y en proceso son gavetas; las cajas aparecen " +
+      "al empacar. Confundirlas hace que ningún indicador signifique nada.</p>" +
       recorrido() +
       "<p class='guia-ojo'>Mientras un lote no esté <strong>Cerrado</strong>, se puede " +
       "corregir. Una vez cerrado, no: hay que reabrirlo, y eso queda anotado.</p>");
@@ -4722,7 +5219,7 @@ const Guia = (function () {
            "Arriba está <em>Esperando en el patio</em>: todo lo que los proveedores " +
            "anunciaron y aún no se ha pesado. El número rojo del menú es esa misma cola."],
           ["Pulsa «Pesar» en el lote que acaba de llegar",
-           "Verás lo que el proveedor declaró. Escribe las cajas que realmente contaste " +
+           "Verás lo que el proveedor declaró. Escribe las gavetas que realmente contaste " +
            "y los kilos de la báscula."],
           ["Mira la diferencia que calcula la pantalla",
            "Si lo pesado se aparta mucho de lo anunciado, el sistema lo señala. Esa " +
@@ -4742,17 +5239,19 @@ const Guia = (function () {
         pasos([
           ["Abre «Producción» y elige un lote recibido",
            "Solo aparecen los que Recepción ya pesó."],
-          ["Anota cajas procesadas, exportables y el tiempo real",
-           "El tiempo es el que de verdad tomó. El sistema lo compara contra el estudio " +
-           "de tiempos y de ahí sale la eficiencia."],
+          ["Anota gavetas procesadas, cajas exportables y el tiempo real",
+           "El tiempo es el que de verdad tomó. El sistema lo compara contra el " +
+           "<strong>contenido de trabajo</strong> del estudio de tiempos —minutos-persona, " +
+           "no minutos de reloj— y de ahí sale la eficiencia."],
           ["Reparte la merma por causa y por destino",
            "Cada kilo de descarte lleva dos cosas: <strong>por qué</strong> se perdió " +
            "(la causa raíz) y <strong>a dónde</strong> fue. Ese segundo dato es el que " +
            "hace posible la economía circular; sin él, todo el descarte parece basura."],
-          ["Cuadra el balance de masa",
-           "Lo exportable más la merma tiene que dar lo procesado. La pantalla no deja " +
-           "guardar si no cuadra: no es un capricho, es lo que evita que los indicadores " +
-           "salgan mentirosos."],
+          ["Cuadra el balance de masa, en kilos",
+           "Lo empacado más la merma tiene que dar lo que entró a proceso. Se cuadra en " +
+           "<strong>kilos</strong>, no en bultos, porque la gaveta que entra y la caja que " +
+           "sale pesan cosas distintas. La pantalla no deja guardar si no cuadra: es lo " +
+           "que evita que los indicadores salgan mentirosos."],
           ["Al guardar, el pedido pasa a Supervisión",
            "Queda en estado <em>Procesado</em>, esperando el cierre."]
         ]));
@@ -4782,11 +5281,33 @@ const Guia = (function () {
         "hace falta enmendarlo, usa <em>Reabrir</em> en la fila del lote: vuelve a " +
         "<em>Procesado</em> y la reapertura queda en la bitácora con tu nombre.</p>");
 
+      html += seccion("tiempos", "Estudio de tiempos y asignación",
+        "<p>En <em>Estudio de tiempos</em> está la cadena completa, actividad por " +
+        "actividad: la lectura del cronómetro (TO), la valoración del ritmo, el " +
+        "suplemento de la OIT y el tiempo estándar que sale de ahí. <strong>El estándar " +
+        "no se teclea: se calcula.</strong> Cuando se cronometren ciclos nuevos, basta " +
+        "cambiar la lectura y se recalculan solos el takt, los operarios, el costo por " +
+        "caja y el costeo de las causas.</p>" +
+        "<p><strong>Hay dos relojes y conviene no mezclarlos:</strong></p>" +
+        '<dl class="guia-defs">' +
+        "<dt>Tiempo de ciclo (min por gaveta)</dt><dd>Lo que tarda una gaveta en recorrer " +
+        "la línea. Sirve para prometer entregas y para compararse con el takt. No depende " +
+        "de cuánta gente haya.</dd>" +
+        "<dt>Contenido de trabajo (minutos-persona por gaveta)</dt><dd>La mano de obra que " +
+        "consume esa misma gaveta. Sirve para asignar personal y para costear. Sí depende: " +
+        "una actividad atendida por dos personas tarda lo mismo y cuesta el doble.</dd></dl>" +
+        "<p>La gente se asigna con el segundo dividido para el takt, y por estación, no en " +
+        "bloque. La estación que concentra más contenido es la que manda: es donde una " +
+        "mejora de método se nota, y donde un operario de más se desperdicia.</p>" +
+        "<p class='guia-ojo'>Si una lectura tiene pocas repeticiones, el estándar que sale " +
+        "de ella es frágil. La columna de origen lo dice: " + UI.origen("M") + " es " +
+        "cronometrado, " + UI.origen("E") + " es estimado y hay que confirmarlo midiendo.</p>");
+
       html += seccion("planificar", "Planificar el día",
-        "<p>En <em>Planificación diaria</em> escribes cuántas cajas hay que sacar por " +
-        "línea y el sistema responde tres cosas: cuánto tiempo toma según el estudio de " +
-        "tiempos, cuántos operarios hacen falta y cada cuántos minutos debe salir una " +
-        "caja (el <em>takt time</em>). Si el plan no cabe en el turno, lo dice y calcula " +
+        "<p>En <em>Planificación diaria</em> escribes cuántas <strong>gavetas</strong> hay " +
+        "que procesar por línea y el sistema responde tres cosas: cuánta mano de obra pide " +
+        "(el contenido de trabajo), cuántos operarios hacen falta y cada cuántos minutos " +
+        "debe salir una gaveta (el <em>takt time</em>). Si el plan no cabe en el turno, lo dice y calcula " +
         "cuánta gente falta. También avisa si no hay materia prima suficiente en cámara.</p>");
 
       html += seccion("costeo", "Costeo y simulador de mejora",
@@ -4820,17 +5341,19 @@ const Guia = (function () {
     /* --- lo común --- */
     html += seccion("indicadores", "Cómo leer los indicadores",
       '<dl class="guia-defs">' +
-      "<dt>Tasa exportable</dt><dd>De cada 100 cajas procesadas, cuántas salieron para " +
-      "exportación. Se compara contra la meta de cada línea, ponderada por lo que " +
-      "realmente se procesó.</dd>" +
+      "<dt>Rendimiento exportable</dt><dd>De cada 100 kilos que entran a proceso, cuántos " +
+      "salen empacados. Se mide <strong>en kilos</strong>, no en bultos: la gaveta que " +
+      "entra y la caja que sale pesan cosas distintas, así que contar bultos no diría " +
+      "nada. Se compara contra la meta de cada línea.</dd>" +
       "<dt>Merma</dt><dd>Kilos perdidos sobre kilos procesados. El Pareto por causa raíz " +
       "dice de dónde viene y cuáles pocas causas explican la mayor parte.</dd>" +
       "<dt>Aprovechado</dt><dd>Qué parte del descarte NO fue al relleno sanitario. Es el " +
       "indicador de economía circular.</dd>" +
-      "<dt>Eficiencia</dt><dd>Tiempo estándar dividido para tiempo real. Por debajo de " +
-      "100% la línea tardó más de lo que el estudio de tiempos dice.</dd>" +
-      "<dt>Diferencia en cajas y en kilos</dt><dd>Lo pesado contra lo que el proveedor " +
-      "declaró. Pueden llegar todas las cajas y aun así pesar menos, si vienen " +
+      "<dt>Eficiencia</dt><dd>Contenido de trabajo estándar dividido para el tiempo que " +
+      "de verdad consumió la gente. Por debajo de 100% la línea tardó más de lo que el " +
+      "estudio de tiempos dice.</dd>" +
+      "<dt>Diferencia en gavetas y en kilos</dt><dd>Lo pesado contra lo que el proveedor " +
+      "declaró. Pueden llegar todas las gavetas y aun así pesar menos, si vienen " +
       "incompletas: por eso son dos indicadores y no uno.</dd></dl>");
 
     html += seccion("origen", "La letra pequeña junto a los números", origenes());
@@ -4875,16 +5398,17 @@ const Guia = (function () {
       "<p>Para dos cosas, y las dos te ahorran llamadas:</p>" +
       "<ul><li><strong>Avisar que envías fruta</strong>, antes de que el camión llegue. " +
       "La planta ve tu envío en su cola en el mismo instante y lo espera.</li>" +
-      "<li><strong>Ver qué pasó con tu fruta</strong>: cuántas cajas se recibieron de " +
+      "<li><strong>Ver qué pasó con tu fruta</strong>: cuántas gavetas se recibieron de " +
       "verdad, cuántas salieron para exportación y cómo quedó tu lote.</li></ul>" +
       "<p>Solo ves lo tuyo. Ningún otro proveedor ve tus envíos, y tú no ves los suyos.</p>");
 
     html += seccion("anunciar", "Anunciar un envío",
       pasos([
         ["Pulsa el botón grande «Anunciar envío»", "Está en la pantalla de inicio."],
-        ["Elige la línea y escribe las cajas",
-         "Pitahaya, tomate de árbol o granadilla. Las cajas son las que vas a mandar."],
-        ["Indica el peso aproximado de cada caja",
+        ["Elige la línea y escribe las gavetas",
+         "Pitahaya, tomate de árbol o granadilla. Son las gavetas que vas a mandar, " +
+         "tal como salen de la finca —no las cajas de exportación, que las arma la planta."],
+        ["Indica el peso aproximado de cada gaveta",
          "No tiene que ser exacto. Sirve para que planta sepa cuánto peso esperar, y " +
          "para ir comparando lo declarado con la báscula."],
         ["Declara la calidad y, si quieres, deja una observación",
@@ -5081,27 +5605,27 @@ const Guia = (function () {
 
     let cajasAnun = 0, cajasRec = 0, cajasProc = 0, cajasExp = 0, valor = 0, calA = 0, rech = 0;
     lotes.forEach(function (l) {
-      cajasAnun += Number(l.cajasAnunciadas) || 0;
+      cajasAnun += Number(l.gavetasAnunciadas) || 0;
       if (l.estado === "Rechazado") { rech += 1; return; }
-      if (l.cajasRecibidas === null) return;
-      cajasRec += Number(l.cajasRecibidas) || 0;
-      valor += (Number(l.cajasRecibidas) || 0) * (Number(l.precioCaja) || 0);
-      if (l.calidadVerificada === "A") calA += Number(l.cajasRecibidas) || 0;
+      if (l.gavetasRecibidas === null) return;
+      cajasRec += Number(l.gavetasRecibidas) || 0;
+      valor += (Number(l.kgRecibidos) || 0) * (Number(l.precioKg) || 0);
+      if (l.calidadVerificada === "A") calA += Number(l.gavetasRecibidas) || 0;
       const p = produccionDe(l.id);
       if (p) {
-        cajasProc += Number(p.cajasProcesadas) || 0;
+        cajasProc += Number(p.gavetasProcesadas) || 0;
         cajasExp += Number(p.cajasExportables) || 0;
       }
     });
 
     const pesados = lotes.filter(function (l) {
-      return l.cajasRecibidas !== null && l.estado !== "Rechazado";
+      return l.gavetasRecibidas !== null && l.estado !== "Rechazado";
     });
-    const anunPesadas = pesados.reduce(function (a, l) { return a + l.cajasAnunciadas; }, 0);
+    const anunPesadas = pesados.reduce(function (a, l) { return a + l.gavetasAnunciadas; }, 0);
 
     return {
       lotes: lotes.length, enCurso: enCurso.length, rechazados: rech,
-      cajasAnunciadas: cajasAnun, cajasRecibidas: cajasRec,
+      gavetasAnunciadas: cajasAnun, gavetasRecibidas: cajasRec,
       diferencia: cajasRec - anunPesadas,
       tasaDiferencia: anunPesadas > 0 ? (cajasRec - anunPesadas) / anunPesadas : 0,
       cajasExportables: cajasExp,
@@ -5140,7 +5664,7 @@ const Guia = (function () {
     }
 
     html += '<section class="kpis kpis-portal">';
-    html += UI.kpi("Cajas entregadas", nf(r.cajasRecibidas),
+    html += UI.kpi("Cajas entregadas", nf(r.gavetasRecibidas),
       r.lotes + " envíos en total", "linea1");
     html += UI.kpi("Exactitud al declarar", UI.pctFirmado(r.tasaDiferencia),
       "Diferencia entre lo que anuncias y lo que pesa la planta",
@@ -5168,7 +5692,7 @@ const Guia = (function () {
         ? '<span class="estado estado-pendienteenvio">Pendiente de enviar</span>'
         : UI.insignia(l.estado)) + "</div>" +
       '<div class="lote-cuerpo">' + UI.etiquetaLinea(l.lineaId) +
-      "<strong>" + nf(l.cajasAnunciadas) + " cajas</strong>" +
+      "<strong>" + nf(l.gavetasAnunciadas) + " gavetas</strong>" +
       '<span class="tenue">' + UI.fechaCorta(l.fecha) + "</span></div>";
 
     /* Pasos del recorrido: el proveedor ve dónde está su fruta. */
@@ -5184,11 +5708,11 @@ const Guia = (function () {
       html += '<p class="lote-rechazo">' + esc(l.observacionesRecepcion || "Lote rechazado.") + "</p>";
     }
 
-    if (l.cajasRecibidas !== null && l.estado !== "Rechazado") {
-      const dif = l.cajasRecibidas - l.cajasAnunciadas;
-      html += '<p class="lote-dato">Pesado en planta: <strong>' + nf(l.cajasRecibidas) +
-        " cajas</strong>" + (dif !== 0
-          ? ' <span class="etq ' + (Math.abs(dif / l.cajasAnunciadas) <= 0.01 ? "etq-ok" : "etq-bajo") +
+    if (l.gavetasRecibidas !== null && l.estado !== "Rechazado") {
+      const dif = l.gavetasRecibidas - l.gavetasAnunciadas;
+      html += '<p class="lote-dato">Pesado en planta: <strong>' + nf(l.gavetasRecibidas) +
+        " gavetas</strong>" + (dif !== 0
+          ? ' <span class="etq ' + (Math.abs(dif / l.gavetasAnunciadas) <= 0.01 ? "etq-ok" : "etq-bajo") +
             '">' + (dif > 0 ? "+" : "") + nf(dif) + "</span>" : "") + "</p>";
     }
 
@@ -5208,7 +5732,7 @@ const Guia = (function () {
     if (!texto) return true;
     const t = texto.toLowerCase();
     return [l.codigoLote, l.estado, Indicadores.nombreLinea(l.lineaId),
-            UI.fechaCorta(l.fecha), String(l.cajasAnunciadas)]
+            UI.fechaCorta(l.fecha), String(l.gavetasAnunciadas)]
       .some(function (c) { return String(c).toLowerCase().indexOf(t) !== -1; });
   }
 
@@ -5287,21 +5811,21 @@ const Guia = (function () {
     /* Desempeño por línea de producto, solo del propio proveedor. */
     const porLinea = {};
     lotes.forEach(function (l) {
-      if (l.estado === "Rechazado" || l.cajasRecibidas === null) return;
+      if (l.estado === "Rechazado" || l.gavetasRecibidas === null) return;
       if (!porLinea[l.lineaId]) {
         const ln = DB.linea(l.lineaId);
         porLinea[l.lineaId] = {
           nombre: ln ? ln.nombre : "—", color: ln ? ln.color : "#888",
-          meta: ln ? ln.metaExportable : 0,
+          meta: ln ? ln.metaRendimiento : 0,
           cajas: 0, anunciadas: 0, proc: 0, exp: 0, valor: 0
         };
       }
       const b = porLinea[l.lineaId];
-      b.cajas += l.cajasRecibidas;
-      b.anunciadas += l.cajasAnunciadas;
-      b.valor += l.cajasRecibidas * l.precioCaja;
+      b.cajas += l.gavetasRecibidas;
+      b.anunciadas += l.gavetasAnunciadas;
+      b.valor += (l.kgRecibidos || 0) * (l.precioKg || 0);
       const p = produccionDe(l.id);
-      if (p) { b.proc += p.cajasProcesadas; b.exp += p.cajasExportables; }
+      if (p) { b.proc += p.kgProcesados; b.exp += p.kgExportable; }
     });
 
     const filas = Object.keys(porLinea).map(function (k) {
@@ -5316,7 +5840,7 @@ const Guia = (function () {
 
     html += '<section class="kpis kpis-portal">';
     html += UI.kpi("Exactitud al declarar", UI.pctFirmado(r.tasaDiferencia),
-      nf(Math.abs(r.diferencia)) + " cajas de diferencia acumulada",
+      nf(Math.abs(r.diferencia)) + " gavetas de diferencia acumulada",
       Math.abs(r.tasaDiferencia) <= 0.01 ? "bien" : Math.abs(r.tasaDiferencia) <= 0.03 ? "regular" : "mal");
     html += UI.kpi("Fruta exportable", pct(r.tasaExportable), "De lo que entregas",
       r.tasaExportable >= 0.78 ? "bien" : "regular");
@@ -5333,7 +5857,7 @@ const Guia = (function () {
             return '<span class="linea-tag" style="--linea:' + esc(b.color) +
               '"><span class="linea-punto"></span>' + esc(b.nombre) + "</span>";
           } },
-          { titulo: "Cajas", num: true, valor: function (b) { return nf(b.cajas); } },
+          { titulo: "Gavetas", num: true, valor: function (b) { return nf(b.cajas); } },
           { titulo: "Exactitud", num: true, valor: function (b) {
             const clase = Math.abs(b.tasaDiferencia) <= 0.01 ? "etq-ok" : "etq-bajo";
             return '<span class="etq ' + clase + '">' + UI.pctFirmado(b.tasaDiferencia) + "</span>";
@@ -5385,27 +5909,27 @@ const Guia = (function () {
     const campos = [
       { nombre: "lineaId", etiqueta: "¿Qué producto envías?", tipo: "select", requerido: true,
         vacio: "Selecciona…", valor: b.lineaId || "",
-        ayuda: "Al elegirlo se precarga el peso nominal de su caja.",
+        ayuda: "Al elegirlo se precarga el peso nominal de su gaveta.",
         opciones: lineas.map(function (l) { return { valor: l.id, texto: l.nombre }; }) },
       { nombre: "fecha", etiqueta: "Fecha del envío", tipo: "date", valor: DB.hoy(),
         requerido: true, ancho: "mitad",
         validar: function (v) { return v > DB.hoy() ? "La fecha no puede ser futura." : null; } },
-      { nombre: "cajasAnunciadas", etiqueta: "¿Cuántas cajas envías?", tipo: "number",
+      { nombre: "gavetasAnunciadas", etiqueta: "¿Cuántas gavetas envías?", tipo: "number",
         requerido: true, min: 1, max: 5000, paso: "1", ancho: "mitad",
-        valor: b.cajasAnunciadas || "",
-        ayuda: "Cajas de " + DB.PESO_CAJA_KG + " kg. Recepción las contará y pesará al llegar." },
-      { nombre: "pesoCajaDeclarado", etiqueta: "Peso estimado por caja (kg)", tipo: "number",
+        valor: b.gavetasAnunciadas || "",
+        ayuda: "Gavetas tal como salen de la finca. Recepción las contará y pesará al llegar." },
+      { nombre: "pesoGavetaDeclarado", etiqueta: "Peso estimado por gaveta (kg)", tipo: "number",
         requerido: true, min: 1, max: 60, paso: "0.1", ancho: "mitad",
-        valor: b.pesoCajaDeclarado || "",
-        ayuda: "El peso nominal es " + DB.PESO_CAJA_KG + " kg. Ajústalo si tus cajas " +
-          "van más llenas o más livianas: la planta pesará en báscula y comparará.",
+        valor: b.pesoGavetaDeclarado || "",
+        ayuda: "Ajústalo si tus gavetas van más llenas o más livianas: la planta " +
+          "pesará en báscula y comparará.",
         validar: function (v, d) {
           const l = DB.linea(d.lineaId);
           if (!l) return null;
-          const min = l.pesoCajaKg * 0.6, max = l.pesoCajaKg * 1.5;
+          const min = l.pesoGavetaKg * 0.6, max = l.pesoGavetaKg * 1.5;
           if (v < min || v > max) {
-            return "Un peso de " + nf(v, 1) + " kg por caja se aleja mucho del nominal (" +
-              nf(l.pesoCajaKg, 1) + " kg). Si es correcto, avísale a la planta en las observaciones.";
+            return "Un peso de " + nf(v, 1) + " kg por gaveta se aleja mucho del nominal (" +
+              nf(l.pesoGavetaKg, 1) + " kg). Si es correcto, avísale a la planta en las observaciones.";
           }
           return null;
         } },
@@ -5431,23 +5955,23 @@ const Guia = (function () {
         fecha: d.fecha,
         proveedorId: usuario.proveedorId,
         lineaId: d.lineaId,
-        cajasAnunciadas: Number(d.cajasAnunciadas),
-        pesoCajaDeclarado: Number(d.pesoCajaDeclarado),
-        kgAnunciados: Math.round(Number(d.cajasAnunciadas) * Number(d.pesoCajaDeclarado)),
+        gavetasAnunciadas: Number(d.gavetasAnunciadas),
+        pesoGavetaDeclarado: Number(d.pesoGavetaDeclarado),
+        kgAnunciados: Math.round(Number(d.gavetasAnunciadas) * Number(d.pesoGavetaDeclarado)),
         calidadDeclarada: d.calidadDeclarada,
-        precioCaja: linea.precioCaja,
+        precioKg: linea.valorKgProductor,
         transporte: d.transporte || "Propio",
         observacionesProveedor: d.observacionesProveedor || "",
         anunciadoPor: usuario.id,
         creadoEn: new Date().toISOString(),
-        fechaRecepcion: null, cajasRecibidas: null, kgRecibidos: null,
+        fechaRecepcion: null, gavetasRecibidas: null, kgRecibidos: null,
         calidadVerificada: null, observacionesRecepcion: "", recibidoPor: null,
         estado: "Anunciado",
         fechaCierre: null, cerradoPor: null, reporteEnviado: false, fechaReporte: null
       });
 
       DB.registrarBitacora(usuario.id, "Anuncio de envío",
-        lote.codigoLote + " · " + nf(lote.cajasAnunciadas) + " cajas de " + linea.nombre);
+        lote.codigoLote + " · " + nf(lote.gavetasAnunciadas) + " gavetas de " + linea.nombre);
       UI.aviso(DB.estaPendiente("lotes", lote.id)
         ? "Envío " + lote.codigoLote + " guardado. Se enviará solo cuando vuelva la señal."
         : "Envío " + lote.codigoLote + " anunciado. La planta ya lo ve en su cola.");
@@ -5461,21 +5985,21 @@ const Guia = (function () {
         : "La planta verá tu envío al instante y lo pesará cuando llegue.",
       alCambiar: function (d, form) {
         const linea = DB.linea(d.lineaId);
-        const campoPeso = $("#campo_pesoCajaDeclarado", form);
+        const campoPeso = $("#campo_pesoGavetaDeclarado", form);
 
         /* Al elegir la línea se sugiere su peso nominal, pero solo si el
            proveedor todavía no escribió el suyo. */
-        if (linea && campoPeso && !campoPeso.value) campoPeso.value = linea.pesoCajaKg;
+        if (linea && campoPeso && !campoPeso.value) campoPeso.value = linea.pesoGavetaKg;
 
         const out = $("#resumenCalc", form);
         if (!out) return;
-        const c = Number(d.cajasAnunciadas) || 0;
-        const peso = Number(d.pesoCajaDeclarado) || (linea ? linea.pesoCajaKg : 0);
+        const c = Number(d.gavetasAnunciadas) || 0;
+        const peso = Number(d.pesoGavetaDeclarado) || (linea ? linea.pesoGavetaKg : 0);
         if (!linea || !c) { out.textContent = "—"; return; }
         const kg = c * peso;
-        const nominal = c * linea.pesoCajaKg;
+        const nominal = c * linea.pesoGavetaKg;
         out.innerHTML = nf(kg) + " kg · " + '<span class="tenue">aprox.</span> ' +
-          money(c * linea.precioCaja) +
+          money(kg * linea.valorKgProductor) +
           (Math.abs(kg - nominal) > nominal * 0.02
             ? '<br><small class="tenue">' + (kg > nominal ? "+" : "") + nf(kg - nominal) +
               " kg respecto al peso nominal</small>" : "");
@@ -5495,7 +6019,7 @@ const Guia = (function () {
 
     cuerpo += '<div class="ficha-linea">';
     [["Anunciado", l.fecha, true],
-     [l.estado === "Rechazado" ? "Rechazado" : "Pesado", l.fechaRecepcion, l.cajasRecibidas !== null],
+     [l.estado === "Rechazado" ? "Rechazado" : "Pesado", l.fechaRecepcion, l.gavetasRecibidas !== null],
      ["Procesado", p ? p.fecha : null, !!p],
      ["Cerrado", l.fechaCierre, l.estado === "Cerrado"]].forEach(function (h, i) {
       cuerpo += '<div class="ficha-hito' + (h[2] ? " hito-hecho" : "") + '">' +
@@ -5509,24 +6033,24 @@ const Guia = (function () {
     cuerpo += "<section><h4>Tu envío</h4><dl>" +
       "<dt>Lote</dt><dd><code>" + esc(l.codigoLote) + "</code></dd>" +
       "<dt>Producto</dt><dd>" + esc(f.linea ? f.linea.nombre : "—") + "</dd>" +
-      "<dt>Cajas anunciadas</dt><dd>" + nf(l.cajasAnunciadas) + "</dd>" +
-      "<dt>Peso que declaraste</dt><dd>" + nf(l.pesoCajaDeclarado || 0, 1) + " kg/caja · " +
+      "<dt>Cajas anunciadas</dt><dd>" + nf(l.gavetasAnunciadas) + "</dd>" +
+      "<dt>Peso que declaraste</dt><dd>" + nf(l.pesoGavetaDeclarado || 0, 1) + " kg/gaveta · " +
       nf(l.kgAnunciados || 0) + " kg</dd>" +
       "<dt>Calidad declarada</dt><dd>" + esc(l.calidadDeclarada) + "</dd>" +
       "<dt>Transporte</dt><dd>" + esc(l.transporte) + "</dd></dl></section>";
 
-    if (l.cajasRecibidas !== null && l.estado !== "Rechazado") {
+    if (l.gavetasRecibidas !== null && l.estado !== "Rechazado") {
       cuerpo += "<section><h4>Lo que recibió la planta</h4><dl>" +
-        "<dt>Cajas pesadas</dt><dd><strong>" + nf(l.cajasRecibidas) + "</strong></dd>" +
+        "<dt>Gavetas pesadas</dt><dd><strong>" + nf(l.gavetasRecibidas) + "</strong></dd>" +
         "<dt>Peso real</dt><dd>" + nf(l.kgRecibidos) + " kg · " +
-        nf(f.pesoCajaReal || 0, 1) + " kg/caja</dd>" +
+        nf(f.pesoGavetaReal || 0, 1) + " kg/gaveta</dd>" +
         "<dt>Diferencia de peso</dt><dd>" + (f.tasaDiferenciaKg === null ? "—" :
           '<span class="etq ' + (Math.abs(f.tasaDiferenciaKg) <= 0.02 ? "etq-ok" : "etq-bajo") + '">' +
           (f.diferenciaKg > 0 ? "+" : "") + nf(f.diferenciaKg) + " kg · " +
           UI.pctFirmado(f.tasaDiferenciaKg) + "</span>") + "</dd>" +
-        "<dt>Diferencia</dt><dd>" + (f.diferenciaCajas === null ? "—" :
+        "<dt>Diferencia</dt><dd>" + (f.diferenciaGavetas === null ? "—" :
           '<span class="etq ' + (Math.abs(f.tasaDiferencia) <= 0.01 ? "etq-ok" : "etq-bajo") + '">' +
-          (f.diferenciaCajas > 0 ? "+" : "") + nf(f.diferenciaCajas) + " cajas · " +
+          (f.diferenciaGavetas > 0 ? "+" : "") + nf(f.diferenciaGavetas) + " gavetas · " +
           UI.pctFirmado(f.tasaDiferencia) + "</span>") + "</dd>" +
         "<dt>Calidad verificada</dt><dd>" + esc(l.calidadVerificada || "—") +
         (l.calidadVerificada && l.calidadVerificada !== l.calidadDeclarada
@@ -5536,7 +6060,7 @@ const Guia = (function () {
 
     if (p) {
       cuerpo += "<section><h4>Cómo rindió tu fruta</h4><dl>" +
-        "<dt>Cajas procesadas</dt><dd>" + nf(p.cajasProcesadas) + "</dd>" +
+        "<dt>Cajas procesadas</dt><dd>" + nf(p.gavetasProcesadas) + "</dd>" +
         "<dt>Cajas exportables</dt><dd><strong>" + nf(p.cajasExportables) + "</strong></dd>" +
         "<dt>Rendimiento</dt><dd>" +
         '<span class="etq ' + (f.tasaExportable >= f.meta ? "etq-ok" : "etq-bajo") + '">' +
@@ -6085,6 +6609,7 @@ const Guia = (function () {
     return [
       { id: "panel", texto: "Indicadores", icono: "📊", roles: "*" },
       { id: "planificador", texto: "Planificación diaria", icono: "🗓️", roles: ["supervisor"] },
+      { id: "tiempos", texto: "Estudio de tiempos", icono: "⏱️", roles: ["supervisor"] },
       { id: "recepcion", texto: "Recepción y pesaje", icono: "⚖️", roles: ["recepcion", "supervisor"] },
       { id: "produccion", texto: "Producción", icono: "🏭", roles: ["produccion", "supervisor"] },
       { id: "lotes", texto: "Lotes", icono: "📦", roles: "*" },
@@ -6199,23 +6724,23 @@ const Guia = (function () {
 
     /* --- Bloque 1: pérdidas --- */
     html += '<h2 class="seccion-titulo">Pérdidas</h2><section class="kpis">';
-    html += UI.kpi("Cajas recibidas", nf(k.cajasRecibidas),
+    html += UI.kpi("Gavetas recibidas", nf(k.gavetasRecibidas),
       k.numLotes + " lotes · " + nf(k.kgRecibidos) + " kg", "linea1");
-    html += UI.kpi("Diferencia al declarar", pctFirmado(k.tasaDiferenciaCajas),
-      nf(k.diferenciaCajas) + " cajas entre lo anunciado y lo pesado",
-      Math.abs(k.tasaDiferenciaCajas) <= 0.01 ? "bien" : Math.abs(k.tasaDiferenciaCajas) <= 0.03 ? "regular" : "mal");
+    html += UI.kpi("Diferencia al declarar", pctFirmado(k.tasaDiferenciaGavetas),
+      nf(k.diferenciaGavetas) + " gavetas entre lo anunciado y lo pesado",
+      Math.abs(k.tasaDiferenciaGavetas) <= 0.01 ? "bien" : Math.abs(k.tasaDiferenciaGavetas) <= 0.03 ? "regular" : "mal");
     html += UI.kpi("Diferencia de peso", pctFirmado(k.tasaDiferenciaKg),
       nf(k.diferenciaKg) + " kg entre lo declarado y la báscula",
       Math.abs(k.tasaDiferenciaKg) <= 0.02 ? "bien" : Math.abs(k.tasaDiferenciaKg) <= 0.05 ? "regular" : "mal");
     html += UI.kpi("Cajas exportables", nf(k.cajasExportables),
       pct(k.tasaExportable) + " de lo procesado", "bien");
     html += UI.kpi("Tasa de exportable", pct(k.tasaExportable),
-      "Meta " + pct(k.metaExportable) + " · cumplimiento " + pct(k.cumplimientoMeta),
+      "Meta " + pct(k.metaRendimiento) + " · cumplimiento " + pct(k.cumplimientoMeta),
       k.cumplimientoMeta >= 1 ? "bien" : k.cumplimientoMeta >= 0.9 ? "regular" : "mal");
     html += UI.kpi("Merma", pct(k.tasaMerma), nf(k.kgMerma) + " kg descartados",
       k.tasaMerma > 0.25 ? "mal" : "regular");
     html += UI.kpi("Pérdida económica", money(k.perdidaEconomica),
-      nf(k.cajasPerdidas) + " cajas que no llegaron a exportación", "mal");
+      nf(k.kgPerdidos) + " kg que no llegaron a exportación", "mal");
     html += "</section>";
 
     html += '<section class="panel"><h2>¿Por qué causa raíz se pierde?</h2>' +
@@ -6247,7 +6772,7 @@ const Guia = (function () {
       Graficos.barras(Indicadores.porDestino(filtros), { campo: "kg", sufijo: " kg" }) +
       "</section>";
     html += '<section class="panel"><h2>Distribución por calidad</h2>' +
-      Graficos.dona(Indicadores.porCalidad(filtros), { titulo: "Cajas por calidad" }) + "</section>";
+      Graficos.dona(Indicadores.porCalidad(filtros), { titulo: "Gavetas por calidad" }) + "</section>";
     html += "</div>";
 
     /* --- Bloque 3: proceso --- */
@@ -6255,9 +6780,9 @@ const Guia = (function () {
     html += UI.kpi("Eficiencia de tiempo", pct(k.eficienciaTiempo),
       "Tiempo estándar ÷ tiempo real",
       k.eficienciaTiempo >= 0.95 ? "bien" : k.eficienciaTiempo >= 0.85 ? "regular" : "mal");
-    html += UI.kpi("Minutos por caja", nf(k.minutosPorCaja, 2) + " min",
+    html += UI.kpi("Minutos por gaveta", nf(k.minutosPorGaveta, 2) + " min-persona",
       "Promedio real del período", "neutro");
-    html += UI.kpi("Productividad", nf(k.productividad, 2) + " cajas/HH",
+    html += UI.kpi("Productividad", nf(k.productividad, 2) + " gavetas/HH",
       nf(k.horasHombre, 1) + " horas-hombre", "linea3");
     html += UI.kpi("Ciclo del lote", nf(k.cicloPromedio, 1) + " días",
       "Del anuncio al cierre · " + k.numCerrados + " cerrados", "neutro");
@@ -6266,7 +6791,7 @@ const Guia = (function () {
     html += '<div class="grid-2">';
     html += '<section class="panel"><h2>Tendencia</h2>' +
       Graficos.lineas(Indicadores.serie(filtros, gran), {
-        titulo: "Cajas por período",
+        titulo: "Gavetas por período",
         series: [
           { campo: "recibido", nombre: "Recibido", color: "#2f6f8f" },
           { campo: "procesado", nombre: "Procesado", color: "#c85a1e" },
@@ -6274,20 +6799,21 @@ const Guia = (function () {
         ]
       }) + "</section>";
     html += '<section class="panel"><h2>Volumen por línea</h2>' +
-      Graficos.barras(Indicadores.porLinea(filtros), { campo: "cajasRecibidas", sufijo: " cajas" }) +
+      Graficos.barras(Indicadores.porLinea(filtros), { campo: "gavetasRecibidas", sufijo: " gavetas" }) +
       "</section>";
     html += "</div>";
 
     html += '<section class="panel"><h2>Desempeño por línea de producto</h2>' +
       UI.tabla([
         { titulo: "Línea", valor: function (m) { return UI.etiquetaLinea(m.lineaId); } },
-        { titulo: "T. estándar", num: true, valor: function (m) {
-          return nf(m.tiempoEstandarMin, 2) + " min " + UI.origen("M"); } },
-        { titulo: "Min/caja real", num: true, valor: function (m) { return nf(m.minutosPorCaja, 2); } },
+        { titulo: "Contenido", num: true, valor: function (m) {
+          const e = Indicadores.estudioTiempos(m.lineaId);
+          return e ? nf(e.contenidoGavetaMin, 2) + " min-pers/gav " + UI.origen("M") : "—"; } },
+        { titulo: "Real/gaveta", num: true, valor: function (m) { return nf(m.minutosPorGaveta, 2) + " min-pers"; } },
         { titulo: "Eficiencia", num: true, valor: function (m) {
           return '<span class="etq ' + (m.eficiencia >= 0.95 ? "etq-ok" : "etq-bajo") + '">' +
             pct(m.eficiencia) + "</span>"; } },
-        { titulo: "Cajas recibidas", num: true, valor: function (m) { return nf(m.cajasRecibidas); } },
+        { titulo: "Gavetas recibidas", num: true, valor: function (m) { return nf(m.gavetasRecibidas); } },
         { titulo: "Exportable", num: true, valor: function (m) {
           return '<span class="etq ' + (m.tasaExportable >= m.meta ? "etq-ok" : "etq-bajo") + '">' +
             pct(m.tasaExportable) + "</span>"; } },
@@ -6306,11 +6832,12 @@ const Guia = (function () {
     const p = DB.parametros();
     return {
       fecha: DB.hoy(),
-      horasTurno: p.horasTurno,
+      jornadaMin: p.jornadaMin,
+      pausasMin: p.pausasMin,
       operarios: p.operariosDisponibles,
       eficiencia: p.eficienciaPlanta,
       lineas: DB.all("lineas").filter(function (l) { return l.activa; })
-        .map(function (l) { return { lineaId: l.id, cajas: 0 }; })
+        .map(function (l) { return { lineaId: l.id, gavetas: 0 }; })
     };
   }
 
@@ -6330,9 +6857,12 @@ const Guia = (function () {
       '<form class="filtros" id="formPlan">' +
       '<div class="campo"><label for="pFecha">Fecha</label>' +
       '<input type="date" id="pFecha" name="fecha" value="' + esc(planActual.fecha) + '"></div>' +
-      '<div class="campo"><label for="pHoras">Horas de turno</label>' +
-      '<input type="number" inputmode="decimal" id="pHoras" name="horasTurno" min="1" max="24" step="0.5" value="' +
-      planActual.horasTurno + '"></div>' +
+      '<div class="campo"><label for="pHoras">Jornada (min)</label>' +
+      '<input type="number" inputmode="numeric" id="pHoras" name="jornadaMin" min="60" max="1440" step="10" value="' +
+      planActual.jornadaMin + '"></div>' +
+      '<div class="campo"><label for="pPausas">Pausas (min)</label>' +
+      '<input type="number" inputmode="numeric" id="pPausas" name="pausasMin" min="0" max="240" step="5" value="' +
+      planActual.pausasMin + '"></div>' +
       '<div class="campo"><label for="pOper">Operarios disponibles</label>' +
       '<input type="number" inputmode="numeric" id="pOper" name="operarios" min="1" max="200" step="1" value="' +
       planActual.operarios + '"></div>' +
@@ -6341,14 +6871,17 @@ const Guia = (function () {
       planActual.eficiencia + '"></div>' +
       '<div class="campo campo-acciones"><button type="submit" class="btn btn-sec">Recalcular</button></div>' +
       "</form>" +
-      '<p class="nota-info">Se descuentan los suplementos de la OIT (' + pct(p.suplementosOIT, 0) +
-      " " + UI.origen(p.origenSuplementos) + ") del tiempo de turno antes de calcular la capacidad.</p>" +
+      '<p class="nota-info">El reparto usa el <strong>contenido de trabajo</strong> ' +
+      "(minutos-persona por gaveta), no el tiempo de ciclo: una actividad atendida por " +
+      "dos personas tarda lo mismo y consume el doble de mano de obra. Los suplementos de " +
+      "la OIT ya están dentro de cada tiempo estándar, así que aquí no se vuelven a restar.</p>" +
       "</section>";
 
     /* --- demanda por línea --- */
     html += '<section class="panel"><h2>¿Qué hay que sacar hoy?</h2>' +
-      '<p class="sub panel-sub">Escribe las cajas comprometidas de cada línea. ' +
-      "El sistema calcula el tiempo que toman según el estudio de tiempos.</p>" +
+      '<p class="sub panel-sub">Escribe las <strong>gavetas</strong> comprometidas de cada ' +
+      "línea —que es lo que entra del campo y lo que hay en cámara. Las cajas de exportación " +
+      "salen de ahí, según el rendimiento de cada línea.</p>" +
       '<form id="formDemanda"><div class="demanda">';
     planActual.lineas.forEach(function (item) {
       const l = DB.linea(item.lineaId);
@@ -6356,10 +6889,11 @@ const Guia = (function () {
       const disp = r.detalle.find(function (d) { return d.lineaId === item.lineaId; });
       html += '<div class="demanda-fila" style="--linea:' + esc(l.color) + '">' +
         '<label for="dem_' + esc(l.id) + '"><span class="linea-punto" aria-hidden="true"></span>' +
-        esc(l.nombre) + '<small>' + nf(l.tiempoEstandarMin, 2) + " min/caja " + UI.origen(l.origenTiempo) +
-        "</small></label>" +
+        esc(l.nombre) + '<small>' + nf(disp ? disp.contenidoGavetaMin : 0, 2) +
+        " min-persona/gaveta " + UI.origen("M") + " · " +
+        nf(disp ? disp.cajas / (disp.gavetas || 1) : 0, 2) + " cajas/gaveta</small></label>" +
         '<input type="number" inputmode="numeric" id="dem_' + esc(l.id) + '" data-linea="' + esc(l.id) +
-        '" min="0" step="1" value="' + (item.cajas || "") + '" placeholder="0">' +
+        '" min="0" step="1" value="' + (item.gavetas || "") + '" placeholder="0">' +
         '<span class="demanda-disp">' + (disp ? "en cámara: " + nf(disp.disponible) : "") + "</span>" +
         "</div>";
     });
@@ -6378,8 +6912,8 @@ const Guia = (function () {
 
     const tono = !r.alcanza ? "mal" : r.carga > 0.9 ? "regular" : "bien";
     html += '<section class="kpis">';
-    html += UI.kpi("Cajas planificadas", nf(r.cajasTotales),
-      nf(r.kgTotales) + " kg · " + money(r.valorTotal), "linea1");
+    html += UI.kpi("Gavetas planificadas", nf(r.gavetasTotales),
+      nf(r.cajasTotales) + " cajas · " + nf(r.kgTotales) + " kg · " + money(r.valorTotal), "linea1");
     html += UI.kpi("Carga del turno", pct(r.carga),
       UI.minutos(r.minutosRequeridos) + " de " + UI.minutos(r.capacidadTotalMin) + " disponibles", tono);
     html += UI.kpi("Operarios necesarios", nf(r.operariosNecesarios, 1),
@@ -6387,14 +6921,15 @@ const Guia = (function () {
         : "Alcanza con los " + nf(r.operarios) + " disponibles",
       r.operariosFaltantes > 0 ? "mal" : "bien");
     html += UI.kpi("Takt time", r.taktPromedio > 0 ? nf(r.taktPromedio, 2) + " min" : "—",
-      "Una caja debe salir cada este tiempo", "neutro");
+      "Una gaveta debe salir cada este tiempo", "neutro");
     html += "</section>";
 
-    if (r.cajasTotales > 0) {
+    if (r.gavetasTotales > 0) {
       html += '<section class="panel panel-' + tono + '"><h2>' +
         (r.alcanza ? "El plan cabe en el turno" : "El plan NO cabe en el turno") + "</h2>" +
         Graficos.medidor(r.carga, 1, "Carga sobre la capacidad disponible",
-          "100 % = el turno completo de " + nf(r.operarios) + " operarios (" +
+          "100 % = " + nf(r.operarios) + " operarios × " + UI.minutos(r.disponibleMin) +
+          " disponibles (" +
           UI.minutos(r.capacidadTotalMin) + " netos)") +
         (r.alcanza
           ? "<p>Sobran " + UI.minutos(r.capacidadTotalMin - r.minutosRequeridos) +
@@ -6413,10 +6948,18 @@ const Guia = (function () {
         UI.tabla([
           { titulo: "Línea", valor: function (d) { return UI.etiquetaLinea(d.lineaId); },
             csv: function (d) { return d.nombre; } },
+          { titulo: "Gavetas", num: true, valor: function (d) { return nf(d.gavetas); },
+            csv: function (d) { return d.gavetas; } },
           { titulo: "Cajas", num: true, valor: function (d) { return nf(d.cajas); },
-            csv: function (d) { return d.cajas; } },
-          { titulo: "Min/caja", num: true, valor: function (d) { return nf(d.tiempoEstandarMin, 2); },
-            csv: function (d) { return d.tiempoEstandarMin; } },
+            csv: function (d) { return Math.round(d.cajas); } },
+          { titulo: "Ciclo", num: true, valor: function (d) { return nf(d.cicloGavetaMin, 2) + " min"; },
+            csv: function (d) { return d.cicloGavetaMin.toFixed(2); } },
+          { titulo: "Contenido", num: true, valor: function (d) {
+            return nf(d.contenidoGavetaMin, 2) + " min-pers"; },
+            csv: function (d) { return d.contenidoGavetaMin.toFixed(2); } },
+          { titulo: "Manda", valor: function (d) {
+            return esc(d.cuello) + ' <small class="tenue">' + pct(d.cuelloParticipacion, 0) + "</small>"; },
+            csv: function (d) { return d.cuello; } },
           { titulo: "Tiempo total", num: true, valor: function (d) { return UI.minutos(d.minutosRequeridos); },
             csv: function (d) { return Math.round(d.minutosRequeridos); } },
           { titulo: "Takt", num: true, valor: function (d) {
@@ -6434,11 +6977,11 @@ const Guia = (function () {
               (d.participacion * 100).toFixed(1) + '%;background:' + esc(d.color) + '"></span></span> ' +
               pct(d.participacion, 0); },
             csv: function (d) { return (d.participacion * 100).toFixed(1); } }
-        ], r.detalle, { vacio: "Escribe las cajas de cada línea para ver el reparto." }) +
+        ], r.detalle, { vacio: "Escribe las gavetas de cada línea para ver el reparto." }) +
         '<div class="acciones-fila"><button class="btn btn-plano" id="btnCsvPlan">Exportar plan a CSV</button></div>' +
         "</section>";
     } else {
-      html += '<p class="vacio">Escribe cuántas cajas hay que sacar de cada línea para ver el plan.</p>';
+      html += '<p class="vacio">Escribe cuántas gavetas hay que procesar de cada línea para ver el plan.</p>';
     }
 
     /* Planes guardados. */
@@ -6447,7 +6990,7 @@ const Guia = (function () {
       html += '<section class="panel"><h2>Planes guardados</h2>' +
         UI.tabla([
           { titulo: "Fecha", valor: function (x) { return UI.fechaLarga(x.fecha); } },
-          { titulo: "Cajas", num: true, valor: function (x) { return nf(x.cajasTotales); } },
+          { titulo: "Gavetas", num: true, valor: function (x) { return nf(x.gavetasTotales); } },
           { titulo: "Carga", num: true, valor: function (x) {
             return '<span class="etq ' + (x.carga <= 1 ? "etq-ok" : "etq-bajo") + '">' + pct(x.carga) + "</span>"; } },
           { titulo: "Operarios", num: true, valor: function (x) { return nf(x.operarios); } },
@@ -6491,11 +7034,11 @@ const Guia = (function () {
       .sort(function (a, b) { return a.fecha < b.fecha ? -1 : 1; });
     /* El turno de quien pesa no se mira por rango de fechas: se mira hoy. */
     const pesados = DB.all("lotes")
-      .filter(function (l) { return l.cajasRecibidas !== null; })
+      .filter(function (l) { return l.gavetasRecibidas !== null; })
       .sort(function (a, b) { return a.fechaRecepcion < b.fechaRecepcion ? 1 : -1; });
 
     let html = '<div class="vista-cab"><div><h1>Recepción y pesaje</h1>' +
-      '<p class="sub">Cuenta las cajas y pesa lo que llega. Lo anunciado viene del portal del proveedor.</p></div></div>';
+      '<p class="sub">Cuenta las gavetas y pesa lo que llega. Lo anunciado viene del portal del proveedor.</p></div></div>';
 
     html += '<section class="panel panel-destacado"><h2>Esperando en el patio (' +
       nf(pendientes.length) + ")</h2>";
@@ -6507,7 +7050,7 @@ const Guia = (function () {
         { titulo: "Anunciado", valor: function (l) { return UI.fechaCorta(l.fecha); } },
         { titulo: "Proveedor", valor: function (l) { return esc(Indicadores.nombreProveedor(l.proveedorId)); } },
         { titulo: "Línea", valor: function (l) { return UI.etiquetaLinea(l.lineaId); } },
-        { titulo: "Cajas anunciadas", num: true, valor: function (l) { return nf(l.cajasAnunciadas); } },
+        { titulo: "Gavetas anunciadas", num: true, valor: function (l) { return nf(l.gavetasAnunciadas); } },
         { titulo: "Calidad", valor: function (l) {
           return '<span class="etq etq-' + esc(l.calidadDeclarada) + '">' + esc(l.calidadDeclarada) + "</span>"; } },
         { titulo: "", valor: function (l) {
@@ -6531,21 +7074,21 @@ const Guia = (function () {
     html += '<h2 class="seccion-titulo">' +
       (deHoy.length ? "Lo que has pesado hoy" : "Últimos pesajes") + "</h2>";
 
-    const anun = delDia.reduce(function (a, l) { return a + l.cajasAnunciadas; }, 0);
-    const real = delDia.reduce(function (a, l) { return a + l.cajasRecibidas; }, 0);
+    const anun = delDia.reduce(function (a, l) { return a + l.gavetasAnunciadas; }, 0);
+    const real = delDia.reduce(function (a, l) { return a + l.gavetasRecibidas; }, 0);
     html += '<p class="resumen-linea"><strong>' + nf(delDia.length) + "</strong> lotes · anunciadas <strong>" +
-      nf(anun) + "</strong> cajas · pesadas <strong>" + nf(real) + "</strong> · diferencia <strong>" +
+      nf(anun) + "</strong> gavetas · pesadas <strong>" + nf(real) + "</strong> · diferencia <strong>" +
       pctFirmado(anun > 0 ? (real - anun) / anun : 0) + "</strong></p>";
 
     html += UI.tabla([
       { titulo: "Lote", valor: function (l) { return "<code>" + esc(l.codigoLote) + "</code>"; } },
       { titulo: "Proveedor", valor: function (l) { return esc(Indicadores.nombreProveedor(l.proveedorId)); } },
-      { titulo: "Anunciadas", num: true, valor: function (l) { return nf(l.cajasAnunciadas); } },
-      { titulo: "Pesadas", num: true, valor: function (l) { return nf(l.cajasRecibidas); } },
+      { titulo: "Anunciadas", num: true, valor: function (l) { return nf(l.gavetasAnunciadas); } },
+      { titulo: "Pesadas", num: true, valor: function (l) { return nf(l.gavetasRecibidas); } },
       { titulo: "Kilos", num: true, valor: function (l) { return nf(l.kgRecibidos) + " kg"; } },
       { titulo: "Diferencia", num: true, valor: function (l) {
-        if (!l.cajasAnunciadas) return '<span class="tenue">—</span>';
-        const d = (l.cajasRecibidas - l.cajasAnunciadas) / l.cajasAnunciadas;
+        if (!l.gavetasAnunciadas) return '<span class="tenue">—</span>';
+        const d = (l.gavetasRecibidas - l.gavetasAnunciadas) / l.gavetasAnunciadas;
         const clase = Math.abs(d) <= 0.01 ? "etq-ok" : Math.abs(d) <= 0.03 ? "etq-B" : "etq-bajo";
         return '<span class="etq ' + clase + '">' + pctFirmado(d) + "</span>"; } },
       { titulo: "", valor: function (l) {
@@ -6585,15 +7128,15 @@ const Guia = (function () {
             UI.fechaLarga(l.fecha) + ").";
           return null;
         } },
-      { nombre: "cajasRecibidas", etiqueta: "Cajas contadas", tipo: "number", requerido: true,
+      { nombre: "gavetasRecibidas", etiqueta: "Gavetas contadas", tipo: "number", requerido: true,
         min: 0, max: 10000, paso: "1", ancho: "mitad",
-        valor: corregir ? l.cajasRecibidas : l.cajasAnunciadas,
-        ayuda: "El proveedor anunció " + nf(l.cajasAnunciadas) + "." },
+        valor: corregir ? l.gavetasRecibidas : l.gavetasAnunciadas,
+        ayuda: "El proveedor anunció " + nf(l.gavetasAnunciadas) + "." },
       { nombre: "kgRecibidos", etiqueta: "Peso real en báscula (kg)", tipo: "number", requerido: true,
         min: 0, max: 200000, paso: "0.1", ancho: "mitad",
         valor: corregir ? l.kgRecibidos : (l.kgAnunciados || ""),
         ayuda: "El proveedor declaró " + nf(l.kgAnunciados || 0) + " kg (" +
-          nf(l.pesoCajaDeclarado || 0, 1) + " kg/caja). Corrige con lo que marque la báscula." },
+          nf(l.pesoGavetaDeclarado || 0, 1) + " kg/gaveta). Corrige con lo que marque la báscula." },
       { nombre: "calidadVerificada", etiqueta: "Calidad verificada", tipo: "select", requerido: true,
         ancho: "mitad", valor: corregir ? l.calidadVerificada : l.calidadDeclarada,
         opciones: DB.CALIDADES.map(function (c) { return { valor: c.id, texto: c.nombre }; }),
@@ -6612,14 +7155,14 @@ const Guia = (function () {
       campos, function (d) {
       if (corregir) {
         const cambios = diferencias(l, d, {
-          fechaRecepcion: "Fecha", cajasRecibidas: "Cajas", kgRecibidos: "Kilogramos",
+          fechaRecepcion: "Fecha", gavetasRecibidas: "Gavetas", kgRecibidos: "Kilogramos",
           calidadVerificada: "Calidad", observacionesRecepcion: "Observaciones"
         });
         if (!cambios.length) return { error: "No cambiaste ningún dato." };
 
         DB.update("lotes", l.id, {
           fechaRecepcion: d.fechaRecepcion,
-          cajasRecibidas: Number(d.cajasRecibidas),
+          gavetasRecibidas: Number(d.gavetasRecibidas),
           kgRecibidos: Number(d.kgRecibidos),
           calidadVerificada: d.calidadVerificada,
           observacionesRecepcion: d.observacionesRecepcion || "",
@@ -6636,16 +7179,16 @@ const Guia = (function () {
 
       DB.update("lotes", l.id, {
         fechaRecepcion: d.fechaRecepcion,
-        cajasRecibidas: Number(d.cajasRecibidas),
+        gavetasRecibidas: Number(d.gavetasRecibidas),
         kgRecibidos: Number(d.kgRecibidos),
         calidadVerificada: d.calidadVerificada,
         observacionesRecepcion: d.observacionesRecepcion || "",
         recibidoPor: usuario.id,
         estado: "Recibido"
       });
-      const dif = Number(d.cajasRecibidas) - l.cajasAnunciadas;
+      const dif = Number(d.gavetasRecibidas) - l.gavetasAnunciadas;
       DB.registrarBitacora(usuario.id, "Pesaje de lote",
-        l.codigoLote + " · " + nf(d.cajasRecibidas) + " cajas (" +
+        l.codigoLote + " · " + nf(d.gavetasRecibidas) + " gavetas (" +
         (dif >= 0 ? "+" : "") + nf(dif) + " contra lo anunciado)");
       UI.aviso("Lote " + l.codigoLote + " recibido. Producción ya puede procesarlo.");
       render();
@@ -6654,23 +7197,23 @@ const Guia = (function () {
       alCambiar: function (d, form) {
         const out = $("#difCalc", form);
         if (!out) return;
-        const c = Number(d.cajasRecibidas);
+        const c = Number(d.gavetasRecibidas);
         const kg = Number(d.kgRecibidos);
         if (!c) { out.textContent = "—"; out.className = ""; return; }
-        const dif = c - l.cajasAnunciadas;
-        const tasa = dif / l.cajasAnunciadas;
-        const kgCaja = kg > 0 ? kg / c : 0;
+        const dif = c - l.gavetasAnunciadas;
+        const tasa = dif / l.gavetasAnunciadas;
+        const kgGaveta = kg > 0 ? kg / c : 0;
         const difKg = kg - (l.kgAnunciados || 0);
         const tasaKg = l.kgAnunciados ? difKg / l.kgAnunciados : 0;
 
-        /* Dos contrastes distintos: pueden venir todas las cajas y aun así
+        /* Dos contrastes distintos: pueden venir todas las gavetas y aun así
            pesar menos, si el proveedor las llenó por debajo de lo declarado. */
         out.innerHTML =
-          "<strong>" + (dif >= 0 ? "+" : "") + nf(dif) + " cajas</strong> (" + pctFirmado(tasa) + ")" +
+          "<strong>" + (dif >= 0 ? "+" : "") + nf(dif) + " gavetas</strong> (" + pctFirmado(tasa) + ")" +
           (kg > 0
             ? '<br><strong>' + (difKg >= 0 ? "+" : "") + nf(difKg) + " kg</strong> (" +
-              pctFirmado(tasaKg) + ') <span class="tenue">· ' + nf(kgCaja, 2) +
-              " kg/caja contra " + nf(l.pesoCajaDeclarado || linea.pesoCajaKg, 1) +
+              pctFirmado(tasaKg) + ') <span class="tenue">· ' + nf(kgGaveta, 2) +
+              " kg/gaveta contra " + nf(l.pesoGavetaDeclarado || linea.pesoGavetaKg, 1) +
               " declarados</span>" : "");
         const peor = Math.max(Math.abs(tasa), Math.abs(tasaKg));
         out.className = peor <= 0.01 ? "ok" : peor <= 0.03 ? "" : "bajo";
@@ -6691,7 +7234,7 @@ const Guia = (function () {
     ], function (d) {
       DB.update("lotes", l.id, {
         estado: "Rechazado", fechaRecepcion: DB.hoy(),
-        cajasRecibidas: 0, kgRecibidos: 0, calidadVerificada: "C",
+        gavetasRecibidas: 0, kgRecibidos: 0, calidadVerificada: "C",
         observacionesRecepcion: d.motivo, recibidoPor: usuario.id
       });
       DB.registrarBitacora(usuario.id, "Rechazo de lote", l.codigoLote + " · " + d.motivo);
@@ -6723,10 +7266,11 @@ const Guia = (function () {
         { titulo: "Recibido", valor: function (l) { return UI.fechaCorta(l.fechaRecepcion); } },
         { titulo: "Proveedor", valor: function (l) { return esc(Indicadores.nombreProveedor(l.proveedorId)); } },
         { titulo: "Línea", valor: function (l) { return UI.etiquetaLinea(l.lineaId); } },
-        { titulo: "Cajas", num: true, valor: function (l) { return nf(l.cajasRecibidas); } },
+        { titulo: "Gavetas", num: true, valor: function (l) { return nf(l.gavetasRecibidas); } },
         { titulo: "T. estimado", num: true, valor: function (l) {
           const ln = DB.linea(l.lineaId);
-          return ln ? UI.minutos(l.cajasRecibidas * ln.tiempoEstandarMin) : "—"; } },
+          const e = ln ? Indicadores.estudioTiempos(ln.id) : null;
+          return e ? UI.minutos(l.gavetasRecibidas * e.contenidoGavetaMin) : "—"; } },
         { titulo: "Calidad", valor: function (l) {
           return '<span class="etq etq-' + esc(l.calidadVerificada) + '">' + esc(l.calidadVerificada) + "</span>"; } },
         { titulo: "", valor: function (l) {
@@ -6740,10 +7284,10 @@ const Guia = (function () {
     html += '<h2 class="seccion-titulo">Producción registrada</h2>';
     html += barraFiltros({});
 
-    const proc = lista.reduce(function (a, p) { return a + p.cajasProcesadas; }, 0);
+    const proc = lista.reduce(function (a, p) { return a + p.gavetasProcesadas; }, 0);
     const exp = lista.reduce(function (a, p) { return a + p.cajasExportables; }, 0);
     html += '<p class="resumen-linea"><strong>' + nf(lista.length) + "</strong> lotes · <strong>" +
-      nf(proc) + "</strong> cajas procesadas · <strong>" + nf(exp) +
+      nf(proc) + "</strong> gavetas procesadas · <strong>" + nf(exp) +
       "</strong> exportables · tasa <strong>" + pct(proc > 0 ? exp / proc : 0) + "</strong></p>";
 
     html += UI.tabla(columnasProduccion(), lista, { vacio: "No hay producción en este período." });
@@ -6764,16 +7308,16 @@ const Guia = (function () {
       { titulo: "Línea", valor: function (p) { return UI.etiquetaLinea(p.lineaId); },
         csv: function (p) { return Indicadores.nombreLinea(p.lineaId); } },
       { titulo: "Turno", valor: function (p) { return esc(p.turno); }, csv: function (p) { return p.turno; } },
-      { titulo: "Procesadas", num: true, valor: function (p) { return nf(p.cajasProcesadas); },
-        csv: function (p) { return p.cajasProcesadas; } },
+      { titulo: "Procesadas", num: true, valor: function (p) { return nf(p.gavetasProcesadas); },
+        csv: function (p) { return p.gavetasProcesadas; } },
       { titulo: "Exportables", num: true, valor: function (p) { return nf(p.cajasExportables); },
         csv: function (p) { return p.cajasExportables; } },
       { titulo: "Tasa", num: true, valor: function (p) {
-        const t = p.cajasProcesadas > 0 ? p.cajasExportables / p.cajasProcesadas : 0;
+        const t = p.kgProcesados > 0 ? p.kgExportable / p.kgProcesados : 0;
         const l = DB.linea(p.lineaId);
-        const meta = l ? l.metaExportable : 0.8;
+        const meta = l ? l.metaRendimiento : 0.98;
         return '<span class="etq ' + (t >= meta ? "etq-ok" : "etq-bajo") + '">' + pct(t) + "</span>"; },
-        csv: function (p) { return p.cajasProcesadas > 0 ? ((p.cajasExportables / p.cajasProcesadas) * 100).toFixed(2) : 0; } },
+        csv: function (p) { return p.kgProcesados > 0 ? ((p.kgExportable / p.kgProcesados) * 100).toFixed(2) : 0; } },
       { titulo: "Merma kg", num: true, valor: function (p) { return nf(Indicadores.totalMerma(p)); },
         csv: function (p) { return Indicadores.totalMerma(p); } },
       { titulo: "Aprovechado", num: true, valor: function (p) {
@@ -6811,7 +7355,13 @@ const Guia = (function () {
     }
     if (!corregir && l.estado !== "Recibido") { UI.aviso("Ese lote no está disponible.", "alerta"); return; }
     const linea = DB.linea(l.lineaId);
-    const tEstandar = l.cajasRecibidas * linea.tiempoEstandarMin;
+    const estudio = Indicadores.estudioTiempos(linea.id);
+    /* Estándar del lote en minutos-PERSONA: es con lo que se compara el
+       tiempo que de verdad consumió la gente, no con el reloj de pared. */
+    const tEstandar = l.gavetasRecibidas * estudio.contenidoGavetaMin;
+    /* Kilos que entran por gaveta en ESTE lote, según lo que pesó la
+       báscula: no se usa el peso nominal, que casi nunca se cumple. */
+    const kgPorGaveta = l.gavetasRecibidas > 0 ? l.kgRecibidos / l.gavetasRecibidas : linea.pesoGavetaKg;
 
     const campos = [
       { tipo: "html", contenido: fichaMini(l) },
@@ -6827,16 +7377,19 @@ const Guia = (function () {
       { nombre: "turno", etiqueta: "Turno", tipo: "select", ancho: "mitad",
         valor: corregir ? prodPrevia.turno : "Matutino",
         opciones: DB.TURNOS.map(function (t) { return { valor: t, texto: t }; }) },
-      { nombre: "cajasProcesadas", etiqueta: "Cajas ingresadas a proceso", tipo: "number",
-        requerido: true, min: 1, max: l.cajasRecibidas, paso: "1", ancho: "mitad",
-        valor: corregir ? prodPrevia.cajasProcesadas : l.cajasRecibidas,
-        ayuda: "El lote trajo " + nf(l.cajasRecibidas) + " cajas." },
+      { nombre: "gavetasProcesadas", etiqueta: "Gavetas ingresadas a proceso", tipo: "number",
+        requerido: true, min: 1, max: l.gavetasRecibidas, paso: "1", ancho: "mitad",
+        valor: corregir ? prodPrevia.gavetasProcesadas : l.gavetasRecibidas,
+        ayuda: "El lote trajo " + nf(l.gavetasRecibidas) + " gavetas." },
       { nombre: "cajasExportables", etiqueta: "Cajas exportables obtenidas", tipo: "number",
         requerido: true, min: 0, paso: "1", ancho: "mitad",
         valor: corregir ? prodPrevia.cajasExportables : "",
+        ayuda: "Caja de " + nf(linea.pesoCajaKg, 1) + " kg. De una gaveta salen unas " +
+          nf(estudio.cajasPorGaveta, 2) + " cajas.",
         validar: function (v, d) {
-          return Number(d.cajasProcesadas) && v > Number(d.cajasProcesadas)
-            ? "Lo exportable no puede superar las cajas ingresadas a proceso." : null;
+          const kgProc = (Number(d.gavetasProcesadas) || 0) * kgPorGaveta;
+          return kgProc > 0 && v * linea.pesoCajaKg > kgProc
+            ? "Lo empacado pesa más que lo que entró a proceso." : null;
         } },
       { nombre: "operarios", etiqueta: "Operarios en la línea", tipo: "number", requerido: true,
         min: 1, max: 100, paso: "1", ancho: "mitad",
@@ -6844,8 +7397,8 @@ const Guia = (function () {
       { nombre: "tiempoRealMin", etiqueta: "Tiempo real de proceso (min)", tipo: "number",
         requerido: true, min: 1, paso: "1", ancho: "mitad",
         valor: corregir ? prodPrevia.tiempoRealMin : "",
-        ayuda: "Estándar para este lote: " + nf(tEstandar, 0) + " min (" +
-          nf(linea.tiempoEstandarMin, 2) + " min/caja " + "M)." },
+        ayuda: "Estándar para este lote: " + nf(tEstandar, 0) + " min-persona (" +
+          nf(estudio.contenidoGavetaMin, 2) + " min-persona por gaveta " + "M)." },
       { nombre: "operador", etiqueta: "Responsable de línea", tipo: "text", requerido: true,
         valor: corregir ? prodPrevia.operador : usuario.nombre, ancho: "mitad" },
       { nombre: "tasaCalc", etiqueta: "Tasa de exportable", tipo: "calculado", ancho: "mitad" },
@@ -6870,9 +7423,9 @@ const Guia = (function () {
             } }
         ],
         validar: function (v, d) {
-          const proc = Number(d.cajasProcesadas) || 0;
+          const proc = Number(d.gavetasProcesadas) || 0;
           const expo = Number(d.cajasExportables) || 0;
-          const objetivo = (proc - expo) * linea.pesoCajaKg;
+          const objetivo = proc * kgPorGaveta - expo * linea.pesoCajaKg;
           if (objetivo <= 0) return null;
           const suma = v.reduce(function (a, m) { return a + m.kg; }, 0);
           if (Math.abs(suma - objetivo) > Math.max(1, objetivo * 0.005)) {
@@ -6902,7 +7455,7 @@ const Guia = (function () {
       if (corregir) {
         const cambios = diferencias(prodPrevia, d, {
           fecha: "Fecha", turno: "Turno",
-          cajasProcesadas: "Cajas procesadas", cajasExportables: "Cajas exportables",
+          gavetasProcesadas: "Gavetas procesadas", cajasExportables: "Cajas exportables",
           operarios: "Operarios", tiempoRealMin: "Tiempo real", operador: "Responsable"
         });
         const clave = function (lista) {
@@ -6916,8 +7469,8 @@ const Guia = (function () {
 
         DB.update("producciones", prodPrevia.id, {
           fecha: d.fecha, turno: d.turno,
-          cajasProcesadas: Number(d.cajasProcesadas),
-          kgProcesados: Math.round(Number(d.cajasProcesadas) * linea.pesoCajaKg),
+          gavetasProcesadas: Number(d.gavetasProcesadas),
+          kgProcesados: Math.round(Number(d.gavetasProcesadas) * kgPorGaveta),
           cajasExportables: Number(d.cajasExportables),
           kgExportable: Math.round(Number(d.cajasExportables) * linea.pesoCajaKg),
           mermas: d.mermas, operarios: Number(d.operarios),
@@ -6940,8 +7493,8 @@ const Guia = (function () {
         codigoLote: l.codigoLote,
         lineaId: l.lineaId,
         turno: d.turno,
-        cajasProcesadas: Number(d.cajasProcesadas),
-        kgProcesados: Math.round(Number(d.cajasProcesadas) * linea.pesoCajaKg),
+        gavetasProcesadas: Number(d.gavetasProcesadas),
+        kgProcesados: Math.round(Number(d.gavetasProcesadas) * kgPorGaveta),
         cajasExportables: Number(d.cajasExportables),
         kgExportable: Math.round(Number(d.cajasExportables) * linea.pesoCajaKg),
         mermas: d.mermas,
@@ -6955,7 +7508,7 @@ const Guia = (function () {
       DB.update("lotes", l.id, { estado: "Procesado" });
       DB.registrarBitacora(usuario.id, "Registro de producción",
         prod.folio + " · lote " + l.codigoLote + " · tasa " +
-        pct(prod.cajasProcesadas > 0 ? prod.cajasExportables / prod.cajasProcesadas : 0));
+        pct(prod.gavetasProcesadas > 0 ? prod.cajasExportables / prod.gavetasProcesadas : 0));
       UI.aviso("Producción " + prod.folio + " registrada. Pasa a Supervisión para su cierre.");
       render();
     }, {
@@ -6971,7 +7524,7 @@ const Guia = (function () {
         ]
       },
       alCambiar: function (d, form) {
-        const proc = Number(d.cajasProcesadas) || 0;
+        const proc = Number(d.gavetasProcesadas) || 0;
         const expo = Number(d.cajasExportables) || 0;
         const real = Number(d.tiempoRealMin) || 0;
 
@@ -6979,15 +7532,16 @@ const Guia = (function () {
         if (outT) {
           if (proc <= 0 || expo <= 0) { outT.textContent = "—"; outT.className = ""; }
           else {
-            const t = expo / proc;
-            outT.textContent = pct(t) + (t >= linea.metaExportable ? " ✓ sobre la meta" : " ✕ bajo la meta");
-            outT.className = t >= linea.metaExportable ? "ok" : "bajo";
+            /* Rendimiento en KILOS: cajas sobre gavetas no es una tasa. */
+            const t = (expo * linea.pesoCajaKg) / (proc * kgPorGaveta);
+            outT.textContent = pct(t) + (t >= linea.metaRendimiento ? " ✓ sobre la meta" : " ✕ bajo la meta");
+            outT.className = t >= linea.metaRendimiento ? "ok" : "bajo";
           }
         }
 
         const outE = $("#eficienciaCalc", form);
         if (outE) {
-          const est = proc * linea.tiempoEstandarMin;
+          const est = proc * estudio.contenidoGavetaMin;
           if (proc <= 0 || real <= 0) { outE.textContent = "—"; outE.className = ""; }
           else {
             const ef = est / real;
@@ -6998,7 +7552,7 @@ const Guia = (function () {
 
         const balance = $("[data-balance]", form);
         if (balance) {
-          const objetivo = (proc - expo) * linea.pesoCajaKg;
+          const objetivo = proc * kgPorGaveta - expo * linea.pesoCajaKg;
           const suma = UI.leerRepetible(form, "mermas", [
             { nombre: "causaId", tipo: "select" }, { nombre: "kg", tipo: "number" },
             { nombre: "destinoId", tipo: "select" }
@@ -7035,19 +7589,19 @@ const Guia = (function () {
         csv: function (l) { return Indicadores.nombreProveedor(l.proveedorId); } },
       { titulo: "Línea", valor: function (l) { return UI.etiquetaLinea(l.lineaId); },
         csv: function (l) { return Indicadores.nombreLinea(l.lineaId); } },
-      { titulo: "Anunciadas", num: true, valor: function (l) { return nf(l.cajasAnunciadas); },
-        csv: function (l) { return l.cajasAnunciadas; } },
+      { titulo: "Anunciadas", num: true, valor: function (l) { return nf(l.gavetasAnunciadas); },
+        csv: function (l) { return l.gavetasAnunciadas; } },
       { titulo: "Pesadas", num: true, valor: function (l) {
-        return l.cajasRecibidas === null ? '<span class="tenue">—</span>' : nf(l.cajasRecibidas); },
-        csv: function (l) { return l.cajasRecibidas === null ? "" : l.cajasRecibidas; } },
+        return l.gavetasRecibidas === null ? '<span class="tenue">—</span>' : nf(l.gavetasRecibidas); },
+        csv: function (l) { return l.gavetasRecibidas === null ? "" : l.gavetasRecibidas; } },
       { titulo: "Diferencia", num: true, valor: function (l) {
-        if (l.cajasRecibidas === null || !l.cajasAnunciadas) return '<span class="tenue">—</span>';
-        const d = (l.cajasRecibidas - l.cajasAnunciadas) / l.cajasAnunciadas;
+        if (l.gavetasRecibidas === null || !l.gavetasAnunciadas) return '<span class="tenue">—</span>';
+        const d = (l.gavetasRecibidas - l.gavetasAnunciadas) / l.gavetasAnunciadas;
         const clase = Math.abs(d) <= 0.01 ? "etq-ok" : Math.abs(d) <= 0.03 ? "etq-B" : "etq-bajo";
         return '<span class="etq ' + clase + '">' + pctFirmado(d) + "</span>"; },
         csv: function (l) {
-          if (l.cajasRecibidas === null || !l.cajasAnunciadas) return "";
-          return (((l.cajasRecibidas - l.cajasAnunciadas) / l.cajasAnunciadas) * 100).toFixed(2); } },
+          if (l.gavetasRecibidas === null || !l.gavetasAnunciadas) return "";
+          return (((l.gavetasRecibidas - l.gavetasAnunciadas) / l.gavetasAnunciadas) * 100).toFixed(2); } },
       { titulo: "Calidad", valor: function (l) {
         const c = l.calidadVerificada || l.calidadDeclarada;
         const bajo = l.calidadVerificada && l.calidadVerificada !== l.calidadDeclarada;
@@ -7072,7 +7626,7 @@ const Guia = (function () {
     if (l.estado === "Recibido" && puede("procesar")) {
       b += '<button class="btn-mini btn-mini-accion" data-procesar="' + esc(l.id) + '">Procesar</button>';
     }
-    if (l.cajasRecibidas !== null && l.estado !== "Cerrado" && l.estado !== "Rechazado" &&
+    if (l.gavetasRecibidas !== null && l.estado !== "Cerrado" && l.estado !== "Rechazado" &&
         puede("corregir_pesaje")) {
       b += '<button class="btn-mini" data-corregir-pesaje="' + esc(l.id) + '">Corregir pesaje</button>';
     }
@@ -7131,7 +7685,7 @@ const Guia = (function () {
           { titulo: "Días abierto", num: true, valor: function (l) {
             const d = Math.round((new Date(DB.hoy()) - new Date(l.fecha)) / 86400000);
             return d > 7 ? '<strong class="dias-alerta">' + nf(d) + "</strong>" : nf(d); } },
-          { titulo: "Cajas", num: true, valor: function (l) { return nf(l.cajasRecibidas); } },
+          { titulo: "Cajas", num: true, valor: function (l) { return nf(l.gavetasRecibidas); } },
           { titulo: "", valor: function (l) {
             return '<button class="btn-mini" data-ficha="' + esc(l.id) + '">Ficha</button>' +
               '<button class="btn-mini btn-mini-accion" data-cerrar="' + esc(l.id) +
@@ -7144,10 +7698,10 @@ const Guia = (function () {
 
     html += barraFiltros({ calidad: true, estado: true });
 
-    const anun = lista.reduce(function (a, l) { return a + l.cajasAnunciadas; }, 0);
-    const rec = lista.reduce(function (a, l) { return a + (l.cajasRecibidas || 0); }, 0);
+    const anun = lista.reduce(function (a, l) { return a + l.gavetasAnunciadas; }, 0);
+    const rec = lista.reduce(function (a, l) { return a + (l.gavetasRecibidas || 0); }, 0);
     html += '<p class="resumen-linea"><strong>' + nf(lista.length) + "</strong> lotes · anunciadas <strong>" +
-      nf(anun) + "</strong> cajas · pesadas <strong>" + nf(rec) + "</strong></p>";
+      nf(anun) + "</strong> gavetas · pesadas <strong>" + nf(rec) + "</strong></p>";
 
     html += UI.tabla(columnasLote({}), lista, { vacio: "No hay lotes en este período." });
     return html;
@@ -7160,12 +7714,12 @@ const Guia = (function () {
       "<div><span>Lote</span><strong>" + esc(l.codigoLote) + "</strong></div>" +
       "<div><span>Proveedor</span><strong>" + esc(Indicadores.nombreProveedor(l.proveedorId)) + "</strong></div>" +
       "<div><span>Línea</span><strong>" + esc(Indicadores.nombreLinea(l.lineaId)) + "</strong></div>" +
-      "<div><span>Anunciadas</span><strong>" + nf(l.cajasAnunciadas) + " cajas</strong></div>" +
-      "<div><span>Peso declarado</span><strong>" + nf(l.pesoCajaDeclarado || 0, 1) +
-      " kg/caja</strong></div>" +
+      "<div><span>Anunciadas</span><strong>" + nf(l.gavetasAnunciadas) + " gavetas</strong></div>" +
+      "<div><span>Peso declarado</span><strong>" + nf(l.pesoGavetaDeclarado || 0, 1) +
+      " kg/gaveta</strong></div>" +
       "<div><span>Total declarado</span><strong>" + nf(l.kgAnunciados || 0) + " kg</strong></div>" +
-      (l.cajasRecibidas !== null
-        ? "<div><span>Pesadas</span><strong>" + nf(l.cajasRecibidas) + " cajas</strong></div>" : "") +
+      (l.gavetasRecibidas !== null
+        ? "<div><span>Pesadas</span><strong>" + nf(l.gavetasRecibidas) + " gavetas</strong></div>" : "") +
       "</div>";
   }
 
@@ -7176,7 +7730,7 @@ const Guia = (function () {
 
     [["Anunciado", l.fecha, true, Indicadores.nombreUsuario(l.anunciadoPor)],
      [l.estado === "Rechazado" ? "Rechazado" : "Pesado", l.fechaRecepcion,
-      l.cajasRecibidas !== null, Indicadores.nombreUsuario(l.recibidoPor)],
+      l.gavetasRecibidas !== null, Indicadores.nombreUsuario(l.recibidoPor)],
      ["Procesado", p ? p.fecha : null, !!p, p ? p.operador : ""],
      ["Cerrado", l.fechaCierre, l.estado === "Cerrado", Indicadores.nombreUsuario(l.cerradoPor)]
     ].forEach(function (h, i) {
@@ -7198,33 +7752,33 @@ const Guia = (function () {
           esc(Indicadores.nombreUsuario(l.corregidoPor)) + "</dd>"
         : "") + "</dl></section>";
 
-    html += "<section><h4>Cajas y calidad</h4><dl>" +
-      "<dt>Anunciadas</dt><dd>" + nf(l.cajasAnunciadas) + " (calidad " + esc(l.calidadDeclarada) + ")</dd>" +
-      "<dt>Pesadas</dt><dd>" + (l.cajasRecibidas === null ? "—" :
-        nf(l.cajasRecibidas) + " (calidad " + esc(l.calidadVerificada) + ")") + "</dd>" +
-      "<dt>Peso declarado</dt><dd>" + nf(l.pesoCajaDeclarado || 0, 1) + " kg/caja · " +
+    html += "<section><h4>Gavetas y calidad</h4><dl>" +
+      "<dt>Anunciadas</dt><dd>" + nf(l.gavetasAnunciadas) + " (calidad " + esc(l.calidadDeclarada) + ")</dd>" +
+      "<dt>Pesadas</dt><dd>" + (l.gavetasRecibidas === null ? "—" :
+        nf(l.gavetasRecibidas) + " (calidad " + esc(l.calidadVerificada) + ")") + "</dd>" +
+      "<dt>Peso declarado</dt><dd>" + nf(l.pesoGavetaDeclarado || 0, 1) + " kg/gaveta · " +
       nf(l.kgAnunciados || 0) + " kg</dd>" +
       "<dt>Peso real</dt><dd>" + (l.kgRecibidos === null ? "—" :
-        nf(l.kgRecibidos) + " kg · " + nf(f.pesoCajaReal || 0, 2) + " kg/caja") + "</dd>" +
+        nf(l.kgRecibidos) + " kg · " + nf(f.pesoGavetaReal || 0, 2) + " kg/gaveta") + "</dd>" +
       "<dt>Dif. de peso</dt><dd>" + (f.tasaDiferenciaKg === null ? "—" :
         '<span class="etq ' + (Math.abs(f.tasaDiferenciaKg) <= 0.02 ? "etq-ok" : "etq-bajo") + '">' +
         (f.diferenciaKg >= 0 ? "+" : "") + nf(f.diferenciaKg) + " kg · " +
         pctFirmado(f.tasaDiferenciaKg) + "</span>") + "</dd>" +
-      "<dt>Diferencia</dt><dd>" + (f.diferenciaCajas === null ? "—" :
+      "<dt>Diferencia</dt><dd>" + (f.diferenciaGavetas === null ? "—" :
         '<span class="etq ' + (Math.abs(f.tasaDiferencia) <= 0.01 ? "etq-ok" : "etq-bajo") + '">' +
-        (f.diferenciaCajas >= 0 ? "+" : "") + nf(f.diferenciaCajas) + " · " +
+        (f.diferenciaGavetas >= 0 ? "+" : "") + nf(f.diferenciaGavetas) + " · " +
         pctFirmado(f.tasaDiferencia) + "</span>") + "</dd>" +
-      "<dt>Precio</dt><dd>" + money(l.precioCaja) + " / caja</dd>" +
+      "<dt>Precio</dt><dd>" + money(l.precioKg) + " / kg</dd>" +
       "<dt>A liquidar</dt><dd><strong>" + money(f.valor) + "</strong></dd></dl></section>";
 
     if (p) {
       html += "<section><h4>Resultado del proceso</h4><dl>" +
-        "<dt>Procesadas</dt><dd>" + nf(p.cajasProcesadas) + " cajas</dd>" +
+        "<dt>Procesadas</dt><dd>" + nf(p.gavetasProcesadas) + " gavetas</dd>" +
         "<dt>Exportables</dt><dd><strong>" + nf(p.cajasExportables) + " cajas</strong></dd>" +
         "<dt>Tasa</dt><dd>" + '<span class="etq ' + (f.tasaExportable >= f.meta ? "etq-ok" : "etq-bajo") +
         '">' + pct(f.tasaExportable) + "</span> (meta " + pct(f.meta) + ")</dd>" +
         "<dt>Tiempo real</dt><dd>" + UI.minutos(p.tiempoRealMin) + "</dd>" +
-        "<dt>Estándar</dt><dd>" + UI.minutos(f.tiempoEstandarMin) + "</dd>" +
+        "<dt>Estándar</dt><dd>" + UI.minutos(f.tiempoEstandarMin) + " persona</dd>" +
         "<dt>Eficiencia</dt><dd>" + '<span class="etq ' + (f.eficiencia >= 0.95 ? "etq-ok" : "etq-bajo") +
         '">' + pct(f.eficiencia) + "</span></dd>" +
         "<dt>Turno</dt><dd>" + esc(p.turno) + " · " + nf(p.operarios) + " operarios</dd></dl></section>";
@@ -7351,10 +7905,10 @@ const Guia = (function () {
         { titulo: "Proveedor", valor: function (m) { return "<strong>" + esc(m.nombre) + "</strong>"; },
           csv: function (m) { return m.nombre; } },
         { titulo: "Lotes", num: true, valor: function (m) { return nf(m.lotes); }, csv: function (m) { return m.lotes; } },
-        { titulo: "Anunciadas", num: true, valor: function (m) { return nf(m.cajasAnunciadas); },
-          csv: function (m) { return m.cajasAnunciadas; } },
-        { titulo: "Pesadas", num: true, valor: function (m) { return nf(m.cajasRecibidas); },
-          csv: function (m) { return m.cajasRecibidas; } },
+        { titulo: "Anunciadas", num: true, valor: function (m) { return nf(m.gavetasAnunciadas); },
+          csv: function (m) { return m.gavetasAnunciadas; } },
+        { titulo: "Pesadas", num: true, valor: function (m) { return nf(m.gavetasRecibidas); },
+          csv: function (m) { return m.gavetasRecibidas; } },
         { titulo: "Exactitud", num: true, valor: function (m) {
           const clase = Math.abs(m.tasaDiferencia) <= 0.01 ? "etq-ok" : "etq-bajo";
           return '<span class="etq ' + clase + '">' + pctFirmado(m.tasaDiferencia) + "</span>"; },
@@ -7363,8 +7917,8 @@ const Guia = (function () {
           const clase = Math.abs(m.tasaDiferenciaKg) <= 0.02 ? "etq-ok" : "etq-bajo";
           return '<span class="etq ' + clase + '">' + pctFirmado(m.tasaDiferenciaKg) + "</span>"; },
           csv: function (m) { return (m.tasaDiferenciaKg * 100).toFixed(2); } },
-        { titulo: "kg/caja real", num: true, valor: function (m) { return nf(m.pesoCajaReal, 2); },
-          csv: function (m) { return m.pesoCajaReal.toFixed(2); } },
+        { titulo: "kg/gaveta real", num: true, valor: function (m) { return nf(m.pesoGavetaReal, 2); },
+          csv: function (m) { return m.pesoGavetaReal.toFixed(2); } },
         { titulo: "% Calidad A", num: true, valor: function (m) { return pct(m.pctCalidadA); },
           csv: function (m) { return (m.pctCalidadA * 100).toFixed(2); } },
         { titulo: "% Rechazo", num: true, valor: function (m) { return pct(m.tasaRechazo); },
@@ -7428,10 +7982,10 @@ const Guia = (function () {
       columnas: [
         { titulo: "Línea", valor: function (m) { return UI.etiquetaLinea(m.lineaId); },
           csv: function (m) { return m.nombre; } },
-        { titulo: "Recibidas", num: true, valor: function (m) { return nf(m.cajasRecibidas); },
-          csv: function (m) { return m.cajasRecibidas; } },
-        { titulo: "Procesadas", num: true, valor: function (m) { return nf(m.cajasProcesadas); },
-          csv: function (m) { return m.cajasProcesadas; } },
+        { titulo: "Recibidas", num: true, valor: function (m) { return nf(m.gavetasRecibidas); },
+          csv: function (m) { return m.gavetasRecibidas; } },
+        { titulo: "Procesadas", num: true, valor: function (m) { return nf(m.gavetasProcesadas); },
+          csv: function (m) { return m.gavetasProcesadas; } },
         { titulo: "Exportables", num: true, valor: function (m) { return nf(m.cajasExportables); },
           csv: function (m) { return m.cajasExportables; } },
         { titulo: "Tasa", num: true, valor: function (m) { return pct(m.tasaExportable); },
@@ -7441,10 +7995,14 @@ const Guia = (function () {
         { titulo: "Brecha", num: true, valor: function (m) {
           return '<span class="etq ' + (m.brecha >= 0 ? "etq-ok" : "etq-bajo") + '">' + pctFirmado(m.brecha) + "</span>"; },
           csv: function (m) { return (m.brecha * 100).toFixed(2); } },
-        { titulo: "T. estándar", num: true, valor: function (m) { return nf(m.tiempoEstandarMin, 2) + " min"; },
-          csv: function (m) { return m.tiempoEstandarMin; } },
-        { titulo: "Min/caja real", num: true, valor: function (m) { return nf(m.minutosPorCaja, 2); },
-          csv: function (m) { return m.minutosPorCaja.toFixed(2); } },
+        { titulo: "Contenido", num: true, valor: function (m) {
+          const e = Indicadores.estudioTiempos(m.lineaId);
+          return e ? nf(e.contenidoGavetaMin, 2) + " min-pers" : "—"; },
+          csv: function (m) {
+            const e = Indicadores.estudioTiempos(m.lineaId);
+            return e ? e.contenidoGavetaMin.toFixed(2) : ""; } },
+        { titulo: "Min-pers/gaveta real", num: true, valor: function (m) { return nf(m.minutosPorGaveta, 2); },
+          csv: function (m) { return m.minutosPorGaveta.toFixed(2); } },
         { titulo: "Eficiencia", num: true, valor: function (m) { return pct(m.eficiencia); },
           csv: function (m) { return (m.eficiencia * 100).toFixed(2); } },
         { titulo: "Aprovechado", num: true, valor: function (m) { return pct(m.tasaValorizacion); },
@@ -7503,7 +8061,7 @@ const Guia = (function () {
       "<p><strong>Por:</strong> " + esc(usuario.nombre) + "</p></div></header>";
 
     html += '<div class="hoja-kpis">' +
-      '<div><span>Cajas recibidas</span><strong>' + nf(k.cajasRecibidas) + "</strong></div>" +
+      '<div><span>Cajas recibidas</span><strong>' + nf(k.gavetasRecibidas) + "</strong></div>" +
       '<div><span>Exportables</span><strong>' + nf(k.cajasExportables) + "</strong></div>" +
       '<div><span>Tasa exportable</span><strong>' + pct(k.tasaExportable) + "</strong></div>" +
       '<div><span>Merma</span><strong>' + pct(k.tasaMerma) + "</strong></div>" +
@@ -7562,6 +8120,189 @@ const Guia = (function () {
         if (lote) verFicha(lote);
       });
     });
+  }
+
+  /* ========================= estudio de tiempos ========================
+     La pantalla que sostiene la parte de ingeniería del documento: de la
+     lectura con cronómetro al tiempo estándar, y de ahí a cuánta gente
+     hace falta en cada estación.
+     =================================================================== */
+
+  let lineaTiempos = null;
+
+  function vistaTiempos() {
+    const lineas = DB.all("lineas").filter(function (l) { return l.activa; });
+    if (!lineas.length) return '<p class="vacio">No hay líneas activas.</p>';
+    if (!lineaTiempos || !DB.linea(lineaTiempos)) lineaTiempos = lineas[0].id;
+
+    const e = Indicadores.estudioTiempos(lineaTiempos);
+    const p = DB.parametros();
+
+    let html = '<div class="vista-cab"><div><h1>Estudio de tiempos y asignación</h1>' +
+      '<p class="sub">Del cronómetro al tiempo estándar, y del tiempo estándar a ' +
+      "cuánta gente hace falta en cada estación.</p></div>" +
+      '<div class="cab-acciones">' +
+      '<button class="btn btn-plano" id="btnCsvTiempos">Exportar CSV</button>' +
+      '<button class="btn btn-primario" id="btnImprimir">Imprimir / PDF</button></div></div>';
+
+    /* --- comparativa de las tres líneas --- */
+    html += '<section class="panel"><h2>Las tres líneas</h2>' +
+      '<p class="sub panel-sub">Dos relojes distintos. El <strong>ciclo</strong> es lo que ' +
+      "tarda una gaveta en recorrer la línea; el <strong>contenido de trabajo</strong> es la " +
+      "mano de obra que consume. Difieren en las actividades atendidas por más de una " +
+      "persona, y confundirlos es lo que hace que la asignación salga mal.</p>" +
+      UI.tabla([
+        { titulo: "Línea", valor: function (x) { return UI.etiquetaLinea(x.linea.id); },
+          csv: function (x) { return x.linea.nombre; } },
+        { titulo: "Ciclo", num: true, valor: function (x) {
+          return nf(x.cicloGavetaMin, 2) + ' <small class="tenue">min/gav</small>'; },
+          csv: function (x) { return x.cicloGavetaMin.toFixed(3); } },
+        { titulo: "Contenido", num: true, valor: function (x) {
+          return "<strong>" + nf(x.contenidoGavetaMin, 2) +
+            '</strong> <small class="tenue">min-pers/gav</small>'; },
+          csv: function (x) { return x.contenidoGavetaMin.toFixed(3); } },
+        { titulo: "Cajas/gaveta", num: true, valor: function (x) { return nf(x.cajasPorGaveta, 2); },
+          csv: function (x) { return x.cajasPorGaveta.toFixed(3); } },
+        { titulo: "Min/caja", num: true, valor: function (x) { return nf(x.cicloCajaMin, 2); },
+          csv: function (x) { return x.cicloCajaMin.toFixed(3); } },
+        { titulo: "Min-pers/kg", num: true, valor: function (x) { return nf(x.contenidoKgMin, 2); },
+          csv: function (x) { return x.contenidoKgMin.toFixed(3); } },
+        { titulo: "Takt", num: true, valor: function (x) { return nf(x.taktMin, 2) + " min"; },
+          csv: function (x) { return x.taktMin.toFixed(3); } },
+        { titulo: "Operarios", num: true, valor: function (x) {
+          return "<strong>" + nf(x.operariosMinimos) + "</strong>"; },
+          csv: function (x) { return x.operariosMinimos; } },
+        { titulo: "MO/caja", num: true, valor: function (x) { return money(x.costoManoObraCaja); },
+          csv: function (x) { return x.costoManoObraCaja.toFixed(3); } },
+        { titulo: "Manda", valor: function (x) {
+          return x.cuello ? esc(x.cuello.estacion) + ' <small class="tenue">' +
+            pct(x.cuello.participacion, 0) + "</small>" : "—"; },
+          csv: function (x) { return x.cuello ? x.cuello.estacion : ""; } }
+      ], Indicadores.estudioTodas(), {}) +
+      '<p class="nota-info">Takt calculado con ' + nf(p.jornadaMin) + " min de jornada menos " +
+      nf(p.pausasMin) + " min de pausas = <strong>" + nf(p.jornadaMin - p.pausasMin) +
+      " min disponibles</strong>, y el ingreso diario de cada línea. Mano de obra a " +
+      money(p.costoHoraHombre) + "/hora " + UI.origen(p.origenCostoHora) + ".</p></section>";
+
+    /* --- selector de línea --- */
+    html += '<div class="selector-reporte" role="tablist">';
+    lineas.forEach(function (l) {
+      html += '<button type="button" role="tab" class="chip chip-grande' +
+        (l.id === lineaTiempos ? " chip-activo" : "") + '" data-linea-tiempos="' + esc(l.id) + '"' +
+        ' aria-selected="' + (l.id === lineaTiempos) + '">' + esc(l.nombre) + "</button>";
+    });
+    html += "</div>";
+
+    /* --- cadena del cálculo --- */
+    html += '<section class="panel"><h2>' + esc(e.linea.nombre) +
+      ': de la lectura al estándar</h2>' +
+      '<p class="sub panel-sub">TN = TO × valoración · TE = TN × (1 + suplemento). ' +
+      "El tiempo estándar no se teclea: se calcula. Cuando se cronometren ciclos nuevos, " +
+      "basta cambiar el TO y se recalculan el takt, los operarios y el costo.</p>" +
+      UI.tabla(columnasActividad(), e.detalle, {}) + "</section>";
+
+    /* --- asignación por estación --- */
+    html += '<section class="panel"><h2>Cuánta gente, y dónde</h2>' +
+      '<div class="kpis">' +
+      UI.kpi("Contenido de trabajo", nf(e.contenidoGavetaMin, 2) + " min-pers",
+        "por gaveta · ciclo " + nf(e.cicloGavetaMin, 2) + " min") +
+      UI.kpi("Takt time", nf(e.taktMin, 2) + " min",
+        nf(e.gavetasDia, 0) + " gavetas/día desde " + nf(e.ingresoDiarioKg) + " kg") +
+      UI.kpi("Operarios mínimos", nf(e.operariosMinimos),
+        "contenido ÷ takt = " + nf(e.operariosExactos, 2), "bien") +
+      UI.kpi("Costo de mano de obra", money(e.costoManoObraCaja) + "/caja",
+        money(e.costoManoObraKg) + "/kg · " + money(e.costoManoObraGaveta) + "/gaveta") +
+      "</div>";
+
+    html += UI.tabla([
+      { titulo: "Estación", valor: function (x) { return "<strong>" + esc(x.estacion) + "</strong>"; },
+        csv: function (x) { return x.estacion; } },
+      { titulo: "Actividades", num: true, valor: function (x) { return nf(x.actividades); },
+        csv: function (x) { return x.actividades; } },
+      { titulo: "Ciclo", num: true, valor: function (x) { return nf(x.ciclo, 2) + " min"; },
+        csv: function (x) { return x.ciclo.toFixed(3); } },
+      { titulo: "Contenido", num: true, valor: function (x) { return nf(x.contenido, 2) + " min-pers"; },
+        csv: function (x) { return x.contenido.toFixed(3); } },
+      { titulo: "% del total", num: true, valor: function (x) {
+        return '<span class="barra-mini barra-ancha"><span style="width:' +
+          (x.participacion * 100).toFixed(1) + '%;background:' + esc(e.linea.color) + '"></span></span> ' +
+          pct(x.participacion, 0); },
+        csv: function (x) { return (x.participacion * 100).toFixed(1); } },
+      { titulo: "Operarios", num: true, valor: function (x) {
+        return "<strong>" + nf(x.operariosEnteros) + "</strong> " +
+          '<small class="tenue">(' + nf(x.operarios, 2) + ")</small>"; },
+        csv: function (x) { return x.operariosEnteros; } }
+    ], e.estaciones, { filaClase: function (x) {
+      return e.cuello && x.estacion === e.cuello.estacion ? "fila-vital" : ""; } });
+
+    html += '<p class="nota-info"><strong>' + esc(e.cuello ? e.cuello.estacion : "—") +
+      "</strong> concentra el " + pct(e.cuello ? e.cuello.participacion : 0, 0) +
+      " del contenido de trabajo: es la estación que manda, y donde cualquier mejora " +
+      "de método se nota más. Redondear operarios por estación deja la línea con " +
+      pct(e.eficienciaBalance) + " de aprovechamiento; la diferencia es gente esperando.</p>";
+
+    html += "</section>";
+    return html;
+  }
+
+  function columnasActividad() {
+    return [
+      { titulo: "Código", valor: function (a) { return "<code>" + esc(a.codigo) + "</code>"; },
+        csv: function (a) { return a.codigo; } },
+      { titulo: "Actividad", valor: function (a) {
+        return esc(a.nombre) + '<br><small class="tenue">' + esc(a.estacion) + "</small>"; },
+        csv: function (a) { return a.nombre; } },
+      { titulo: "Tipo", valor: function (a) { return simboloDAP(a.simbolo); },
+        csv: function (a) { return a.simbolo; } },
+      { titulo: "Unidad", valor: function (a) { return esc(a.unidad); },
+        csv: function (a) { return a.unidad; } },
+      { titulo: "TO", num: true, valor: function (a) {
+        return nf(a.to, 3) + " " + UI.origen(a.origen); },
+        csv: function (a) { return a.to.toFixed(4); } },
+      { titulo: "V", num: true, valor: function (a) { return nf(a.v, 2); },
+        csv: function (a) { return a.v; } },
+      { titulo: "TN", num: true, valor: function (a) { return nf(a.tn, 3); },
+        csv: function (a) { return a.tn.toFixed(4); } },
+      { titulo: "Supl.", num: true, valor: function (a) { return pct(a.suplemento, 0); },
+        csv: function (a) { return a.suplemento; } },
+      { titulo: "TE", num: true, valor: function (a) { return "<strong>" + nf(a.te, 3) + "</strong>"; },
+        csv: function (a) { return a.te.toFixed(4); } },
+      { titulo: "Pers.", num: true, valor: function (a) {
+        return a.personas > 1 ? '<span class="etq etq-B">' + nf(a.personas, 1) + "</span>" : nf(a.personas, 1); },
+        csv: function (a) { return a.personas; } },
+      { titulo: "TE/gaveta", num: true, valor: function (a) { return nf(a.tePorGaveta, 3); },
+        csv: function (a) { return a.tePorGaveta.toFixed(4); } },
+      { titulo: "Min-pers/gav", num: true, valor: function (a) {
+        return "<strong>" + nf(a.minPersonaPorGaveta, 3) + "</strong>"; },
+        csv: function (a) { return a.minPersonaPorGaveta.toFixed(4); } },
+      { titulo: "% carga", num: true, valor: function (a) { return pct(a.participacion, 1); },
+        csv: function (a) { return (a.participacion * 100).toFixed(1); } }
+    ];
+  }
+
+  /* Los símbolos del DAP: operación, transporte, inspección, demora y
+     almacenamiento. Se dibujan, porque es como se leen en el diagrama. */
+  function simboloDAP(s) {
+    const mapa = { O: ["○", "Operación"], T: ["⇨", "Transporte"], I: ["□", "Inspección"],
+                   D: ["D", "Demora"], A: ["▽", "Almacenamiento"] };
+    const m = mapa[s] || ["·", s];
+    return '<span class="dap dap-' + esc(s) + '" title="' + esc(m[1]) + '">' + m[0] + "</span>";
+  }
+
+  function enlazarTiempos() {
+    $$("[data-linea-tiempos]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        lineaTiempos = b.dataset.lineaTiempos;
+        render();
+      });
+    });
+    const csv = $("#btnCsvTiempos");
+    if (csv) {
+      csv.addEventListener("click", function () {
+        const e = Indicadores.estudioTiempos(lineaTiempos);
+        UI.descargarCSV("estudio_tiempos_" + e.linea.codigo, columnasActividad(), e.detalle);
+      });
+    }
   }
 
   /* ================================ guía =============================== */
@@ -7708,7 +8449,7 @@ const Guia = (function () {
           (x.definida ? "" : ' <span class="insignia-neutra">por definir</span>'); } },
       { titulo: "Origen", valor: function (x) { return esc(x.origen); } },
       { titulo: "kg", num: true, valor: function (x) { return nf(x.kg); } },
-      { titulo: "Cajas eq.", num: true, valor: function (x) { return nf(x.cajasEquivalentes); } },
+      { titulo: "Gavetas eq.", num: true, valor: function (x) { return nf(x.gavetasEquivalentes); } },
       { titulo: "Fruta", num: true, valor: function (x) { return money(x.valorFruta); } },
       { titulo: "Recuperado", num: true, valor: function (x) { return money(x.valorRecuperado); } },
       { titulo: "Horas-hombre", num: true, valor: function (x) { return money(x.costoTransformacion); } },
@@ -7781,12 +8522,12 @@ const Guia = (function () {
     html += '<h3 class="sub-titulo">Los indicadores, antes y después</h3>' +
       '<div class="comparativo">' +
       filaComparativo("Tasa exportable", i.tasaExportable, i.tasaExportableConMejora, true,
-        "meta ponderada " + pct(i.metaExportable)) +
+        "meta ponderada " + pct(i.metaRendimiento)) +
       filaComparativo("Merma sobre lo procesado", i.tasaMerma, i.tasaMermaConMejora, false, "") +
       filaComparativo("Descarte aprovechado", i.tasaValorizacion, i.tasaValorizacionConMejora, true, "") +
       "</div>";
 
-    html += '<p class="nota-info">Recupera ' + nf(i.cajasRecuperadas) +
+    html += '<p class="nota-info">Recupera ' + nf(i.kgRecuperados) + " kg y"
       " cajas exportables en el período mostrado. El costo de la fruta, el precio por caja y " +
       "el costo hora-hombre vienen de Parámetros; las reducciones y la tasa de descuento son " +
       "supuestos " + UI.origen("S") + " que deben discutirse con la empresa.</p>";
@@ -7908,14 +8649,19 @@ const Guia = (function () {
       UI.tabla([
         { titulo: "Línea", valor: function (l) { return UI.etiquetaLinea(l.id); } },
         { titulo: "Código", valor: function (l) { return "<code>" + esc(l.codigo) + "</code>"; } },
-        { titulo: "T. estándar", num: true, valor: function (l) {
-          return nf(l.tiempoEstandarMin, 2) + " min " + UI.origen(l.origenTiempo); } },
+        { titulo: "kg/gaveta", num: true, valor: function (l) {
+          return nf(l.pesoGavetaKg) + " " + UI.origen(l.origenPesoGaveta); } },
         { titulo: "kg/caja", num: true, valor: function (l) {
-          return nf(l.pesoCajaKg) + " " + UI.origen(l.origenPeso); } },
-        { titulo: "Meta exportable", num: true, valor: function (l) {
-          return pct(l.metaExportable) + " " + UI.origen(l.origenMeta); } },
-        { titulo: "Precio/caja", num: true, valor: function (l) {
-          return money(l.precioCaja) + " " + UI.origen(l.origenPrecio); } },
+          return nf(l.pesoCajaKg, 1) + " " + UI.origen(l.origenPesoCaja); } },
+        { titulo: "Cajas/gaveta", num: true, valor: function (l) {
+          return nf(DB.cajasPorGaveta(l), 2); } },
+        { titulo: "Rendimiento", num: true, valor: function (l) {
+          return pct(l.rendimientoExportable) + " " + UI.origen(l.origenRendimiento) +
+            ' <small class="tenue">meta ' + pct(l.metaRendimiento) + "</small>"; } },
+        { titulo: "$/kg productor", num: true, valor: function (l) {
+          return money(l.valorKgProductor) + " " + UI.origen(l.origenValorKg); } },
+        { titulo: "Ingreso/día", num: true, valor: function (l) {
+          return nf(l.ingresoDiarioKg) + " kg " + UI.origen(l.origenIngreso); } },
         { titulo: "Estado", valor: function (l) {
           return '<span class="estado estado-' + (l.activa ? "recibido" : "inactivo") + '">' +
             (l.activa ? "Activa" : "Inactiva") + "</span>"; } },
@@ -7962,13 +8708,18 @@ const Guia = (function () {
 
     /* --- parámetros de planta --- */
     html += '<section class="panel"><h2>Parámetros de planta</h2>' +
-      '<p class="sub panel-sub">Alimentan el planificador diario.</p>' +
+      '<p class="sub panel-sub">Alimentan el planificador, el estudio de tiempos y el costeo. ' +
+      "Los suplementos de la OIT ya no están aquí: cada actividad lleva el suyo, que es " +
+      "como los define la norma.</p>" +
       '<div class="conteos">' +
-      '<div><span>Horas de turno</span><strong>' + nf(p.horasTurno) + " h " + UI.origen(p.origenHorasTurno) + "</strong></div>" +
+      '<div><span>Jornada</span><strong>' + nf(p.jornadaMin) + " min " + UI.origen(p.origenJornada) + "</strong></div>" +
+      '<div><span>Pausas</span><strong>' + nf(p.pausasMin) + " min " + UI.origen(p.origenPausas) + "</strong></div>" +
+      '<div><span>Disponible</span><strong>' + nf(p.jornadaMin - p.pausasMin) + " min " + UI.origen("E") + "</strong></div>" +
+      '<div><span>Días al año</span><strong>' + nf(p.diasOperativos) + " " + UI.origen(p.origenDias) + "</strong></div>" +
       '<div><span>Operarios</span><strong>' + nf(p.operariosDisponibles) + " " + UI.origen(p.origenOperarios) + "</strong></div>" +
       '<div><span>Eficiencia</span><strong>' + pct(p.eficienciaPlanta) + " " + UI.origen(p.origenEficiencia) + "</strong></div>" +
-      '<div><span>Suplementos OIT</span><strong>' + pct(p.suplementosOIT) + " " + UI.origen(p.origenSuplementos) + "</strong></div>" +
-      '<div><span>Costo hora-hombre</span><strong>' + money(p.costoHoraHombre) + " " + UI.origen(p.origenCostoHora) + "</strong></div>" +
+      '<div><span>Salario básico</span><strong>' + money(p.salarioBasico) + " " + UI.origen(p.origenSalario) + "</strong></div>" +
+      '<div><span>Costo hora-operario</span><strong>' + money(p.costoHoraHombre) + " " + UI.origen(p.origenCostoHora) + "</strong></div>" +
       "</div>" +
       '<div class="acciones-fila"><button class="btn btn-primario" id="btnEditarParametros">Editar parámetros</button></div>' +
       "</section>";
@@ -7985,24 +8736,33 @@ const Guia = (function () {
       { nombre: "nombre", etiqueta: "Nombre", tipo: "text", requerido: true, valor: l.nombre, ancho: "mitad" },
       { nombre: "codigo", etiqueta: "Código", tipo: "text", requerido: true, valor: l.codigo, ancho: "mitad" },
       { tipo: "separador", etiqueta: "Estudio de tiempos" },
-      { nombre: "tiempoEstandarMin", etiqueta: "Tiempo estándar (min/caja)", tipo: "number",
-        requerido: true, min: 0.1, paso: "0.01", valor: l.tiempoEstandarMin, ancho: "mitad" },
-      { nombre: "origenTiempo", etiqueta: "Origen", tipo: "select", opciones: ops,
-        valor: l.origenTiempo, ancho: "mitad" },
-      { tipo: "separador", etiqueta: "Unidad de flujo" },
-      { nombre: "pesoCajaKg", etiqueta: "Peso por caja (kg)", tipo: "number", requerido: true,
-        min: 0.1, paso: "0.1", valor: l.pesoCajaKg, ancho: "mitad" },
-      { nombre: "origenPeso", etiqueta: "Origen", tipo: "select", opciones: ops,
-        valor: l.origenPeso, ancho: "mitad" },
-      { tipo: "separador", etiqueta: "Metas y precio" },
-      { nombre: "metaExportable", etiqueta: "Meta de exportable (0 a 1)", tipo: "number",
-        requerido: true, min: 0, max: 1, paso: "0.01", valor: l.metaExportable, ancho: "mitad" },
+      { nombre: "pesoGavetaKg", etiqueta: "Peso por gaveta (kg)", tipo: "number", requerido: true,
+        min: 0.1, paso: "0.1", valor: l.pesoGavetaKg, ancho: "mitad",
+        ayuda: "Lo que llega del campo." },
+      { nombre: "origenPesoGaveta", etiqueta: "Origen", tipo: "select", opciones: ops,
+        valor: l.origenPesoGaveta, ancho: "mitad" },
+      { nombre: "pesoCajaKg", etiqueta: "Peso por caja de exportación (kg)", tipo: "number",
+        requerido: true, min: 0.1, paso: "0.1", valor: l.pesoCajaKg, ancho: "mitad",
+        ayuda: "Lo que sale al contenedor." },
+      { nombre: "origenPesoCaja", etiqueta: "Origen", tipo: "select", opciones: ops,
+        valor: l.origenPesoCaja, ancho: "mitad" },
+      { tipo: "separador", etiqueta: "Rendimiento y valor" },
+      { nombre: "rendimientoExportable", etiqueta: "Rendimiento actual (0 a 1)", tipo: "number",
+        requerido: true, min: 0, max: 1, paso: "0.001", valor: l.rendimientoExportable, ancho: "mitad",
+        ayuda: "kg empacados ÷ kg que entran a proceso, del balance de masa." },
+      { nombre: "metaRendimiento", etiqueta: "Meta de rendimiento (0 a 1)", tipo: "number",
+        requerido: true, min: 0, max: 1, paso: "0.01", valor: l.metaRendimiento, ancho: "mitad" },
       { nombre: "origenMeta", etiqueta: "Origen", tipo: "select", opciones: ops,
         valor: l.origenMeta, ancho: "mitad" },
-      { nombre: "precioCaja", etiqueta: "Precio por caja ($)", tipo: "number", requerido: true,
-        min: 0, paso: "0.01", valor: l.precioCaja, ancho: "mitad" },
-      { nombre: "origenPrecio", etiqueta: "Origen", tipo: "select", opciones: ops,
-        valor: l.origenPrecio, ancho: "mitad" },
+      { nombre: "valorKgProductor", etiqueta: "Valor al productor ($/kg)", tipo: "number",
+        requerido: true, min: 0, paso: "0.01", valor: l.valorKgProductor, ancho: "mitad" },
+      { nombre: "valorKgLocal", etiqueta: "Valor en mercado local ($/kg)", tipo: "number",
+        requerido: true, min: 0, paso: "0.01", valor: l.valorKgLocal, ancho: "mitad" },
+      { nombre: "ingresoDiarioKg", etiqueta: "Ingreso diario a planta (kg)", tipo: "number",
+        requerido: true, min: 0, paso: "10", valor: l.ingresoDiarioKg, ancho: "mitad",
+        ayuda: "Con esto se calcula el takt time." },
+      { nombre: "origenValorKg", etiqueta: "Origen", tipo: "select", opciones: ops,
+        valor: l.origenValorKg, ancho: "mitad" },
       { nombre: "color", etiqueta: "Color de la línea", tipo: "color", valor: l.color, ancho: "mitad" },
       { nombre: "activa", etiqueta: "", tipo: "checkbox", textoCheck: "Línea activa", valor: l.activa }
     ], function (d) {
@@ -8067,8 +8827,12 @@ const Guia = (function () {
     const p = DB.parametros();
     const ops = DB.ORIGENES.map(function (o) { return { valor: o.id, texto: o.id + " — " + o.nombre }; });
     UI.abrirFormulario("Parámetros de planta", [
-      { nombre: "horasTurno", etiqueta: "Horas de turno", tipo: "number", requerido: true,
-        min: 1, max: 24, paso: "0.5", valor: p.horasTurno, ancho: "mitad" },
+      { nombre: "jornadaMin", etiqueta: "Jornada (min)", tipo: "number", requerido: true,
+        min: 60, max: 1440, paso: "10", valor: p.jornadaMin, ancho: "mitad" },
+      { nombre: "pausasMin", etiqueta: "Almuerzo y pausas (min)", tipo: "number", requerido: true,
+        min: 0, max: 240, paso: "5", valor: p.pausasMin, ancho: "mitad" },
+      { nombre: "diasOperativos", etiqueta: "Días operativos al año", tipo: "number",
+        requerido: true, min: 1, max: 366, paso: "1", valor: p.diasOperativos, ancho: "mitad" },
       { nombre: "origenHorasTurno", etiqueta: "Origen", tipo: "select", opciones: ops,
         valor: p.origenHorasTurno, ancho: "mitad" },
       { nombre: "operariosDisponibles", etiqueta: "Operarios disponibles", tipo: "number",
@@ -8079,8 +8843,8 @@ const Guia = (function () {
         requerido: true, min: 0.1, max: 1, paso: "0.01", valor: p.eficienciaPlanta, ancho: "mitad" },
       { nombre: "origenEficiencia", etiqueta: "Origen", tipo: "select", opciones: ops,
         valor: p.origenEficiencia, ancho: "mitad" },
-      { nombre: "suplementosOIT", etiqueta: "Suplementos OIT (0 a 1)", tipo: "number",
-        requerido: true, min: 0, max: 0.5, paso: "0.01", valor: p.suplementosOIT, ancho: "mitad",
+      { nombre: "salarioBasico", etiqueta: "Salario básico unificado ($/mes)", tipo: "number",
+        requerido: true, min: 0, paso: "1", valor: p.salarioBasico, ancho: "mitad",
         ayuda: "Se descuentan del tiempo de turno antes de calcular la capacidad." },
       { nombre: "origenSuplementos", etiqueta: "Origen", tipo: "select", opciones: ops,
         valor: p.origenSuplementos, ancho: "mitad" },
@@ -8118,7 +8882,7 @@ const Guia = (function () {
         return esc(p.contacto) + '<br><small class="tenue">' + esc(p.telefono) + "</small>"; } },
       { titulo: "Zona", valor: function (p) { return esc(p.zona); } },
       { titulo: "Cajas", num: true, valor: function (p) {
-        return nf(resumen[p.id] ? resumen[p.id].cajasRecibidas : 0); } },
+        return nf(resumen[p.id] ? resumen[p.id].gavetasRecibidas : 0); } },
       { titulo: "Exactitud", num: true, valor: function (p) {
         const m = resumen[p.id];
         if (!m || !m.cajasAnunPesadas) return '<span class="tenue">—</span>';
@@ -8529,6 +9293,7 @@ const Guia = (function () {
     }
     if (vista === "panel") html += vistaPanel();
     else if (vista === "planificador") html += vistaPlanificador();
+    else if (vista === "tiempos") html += vistaTiempos();
     else if (vista === "recepcion") html += vistaRecepcion();
     else if (vista === "produccion") html += vistaProduccion();
     else if (vista === "lotes") html += vistaLotes();
@@ -8563,8 +9328,11 @@ const Guia = (function () {
         const r = Indicadores.planificar(planActual);
         UI.descargarCSV("plan_" + planActual.fecha, [
           { titulo: "Línea", csv: function (d) { return d.nombre; } },
-          { titulo: "Cajas", csv: function (d) { return d.cajas; } },
-          { titulo: "Min por caja", csv: function (d) { return d.tiempoEstandarMin; } },
+          { titulo: "Gavetas", csv: function (d) { return d.gavetas; } },
+          { titulo: "Cajas", csv: function (d) { return Math.round(d.cajas); } },
+          { titulo: "Ciclo min por gaveta", csv: function (d) { return d.cicloGavetaMin.toFixed(2); } },
+          { titulo: "Contenido min-persona por gaveta", csv: function (d) { return d.contenidoGavetaMin.toFixed(2); } },
+          { titulo: "Estacion que manda", csv: function (d) { return d.cuello; } },
           { titulo: "Minutos requeridos", csv: function (d) { return Math.round(d.minutosRequeridos); } },
           { titulo: "Takt (min)", csv: function (d) { return d.taktMin.toFixed(2); } },
           { titulo: "Operarios", csv: function (d) { return d.operariosAsignados; } },
@@ -8579,8 +9347,9 @@ const Guia = (function () {
         const p = DB.get("planes", b.dataset.cargarPlan);
         if (!p) return;
         planActual = {
-          fecha: p.fecha, horasTurno: p.horasTurno, operarios: p.operarios,
-          eficiencia: p.eficiencia, lineas: p.lineas.slice()
+          fecha: p.fecha, jornadaMin: p.jornadaMin || DB.parametros().jornadaMin,
+          pausasMin: p.pausasMin === undefined ? DB.parametros().pausasMin : p.pausasMin,
+          operarios: p.operarios, eficiencia: p.eficiencia, lineas: p.lineas.slice()
         };
         UI.aviso("Plan del " + UI.fechaLarga(p.fecha) + " cargado.");
         render();
@@ -8762,7 +9531,9 @@ const Guia = (function () {
         e.preventDefault();
         const d = new FormData(formPlan);
         planActual.fecha = d.get("fecha") || planActual.fecha;
-        planActual.horasTurno = Number(d.get("horasTurno")) || planActual.horasTurno;
+        planActual.jornadaMin = Number(d.get("jornadaMin")) || planActual.jornadaMin;
+        const pau = d.get("pausasMin");
+        if (pau !== null && pau !== "") planActual.pausasMin = Number(pau);
         planActual.operarios = Number(d.get("operarios")) || planActual.operarios;
         planActual.eficiencia = Number(d.get("eficiencia")) || planActual.eficiencia;
         render();
@@ -8771,7 +9542,7 @@ const Guia = (function () {
     $$("[data-linea]").forEach(function (input) {
       const actualizar = function () {
         const item = planActual.lineas.find(function (x) { return x.lineaId === input.dataset.linea; });
-        if (item) item.cajas = Number(input.value) || 0;
+        if (item) item.gavetas = Number(input.value) || 0;
         refrescarPlan();
       };
       input.addEventListener("input", actualizar);
@@ -8782,20 +9553,22 @@ const Guia = (function () {
     if (btnGuardarPlan) {
       btnGuardarPlan.addEventListener("click", function () {
         const r = Indicadores.planificar(planActual);
-        if (r.cajasTotales <= 0) { UI.aviso("Escribe las cajas antes de guardar el plan.", "alerta"); return; }
+        if (r.gavetasTotales <= 0) { UI.aviso("Escribe las gavetas antes de guardar el plan.", "alerta"); return; }
         DB.insert("planes", {
           fecha: planActual.fecha,
-          horasTurno: planActual.horasTurno,
+          jornadaMin: planActual.jornadaMin,
+          pausasMin: planActual.pausasMin,
           operarios: planActual.operarios,
           eficiencia: planActual.eficiencia,
           lineas: planActual.lineas.slice(),
-          cajasTotales: r.cajasTotales,
+          gavetasTotales: r.gavetasTotales,
+          cajasTotales: Math.round(r.cajasTotales),
           carga: r.carga,
           registradoPor: usuario.id,
           creadoEn: new Date().toISOString()
         });
         DB.registrarBitacora(usuario.id, "Plan de producción guardado",
-          planActual.fecha + " · " + nf(r.cajasTotales) + " cajas · carga " + pct(r.carga));
+          planActual.fecha + " · " + nf(r.gavetasTotales) + " gavetas · carga " + pct(r.carga));
         UI.aviso("Plan guardado.");
         render();
       });
@@ -8918,6 +9691,7 @@ const Guia = (function () {
       });
     }
     enlazarNovedades();
+    if (vista === "tiempos") enlazarTiempos();
     if (vista === "costeo") enlazarCosteo();
 
     const btnReset = $("#btnReiniciar");

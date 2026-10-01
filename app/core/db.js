@@ -13,8 +13,8 @@
 const DB = (function () {
   "use strict";
 
-  const KEY = "flp.db.v5";
-  const ESQUEMA = 5;
+  const KEY = "flp.db.v6";
+  const ESQUEMA = 6;
 
   /* ---------------------------------------------------------------- utils */
 
@@ -63,7 +63,11 @@ const DB = (function () {
     confidencial: true
   };
 
-  const PESO_CAJA_KG = 11;
+  /* La unidad que llega del campo es la GAVETA; la que sale a exportación
+     es la CAJA, y pesan cosas muy distintas. Confundirlas era el error de
+     fondo de la versión anterior: daba por hecho que una caja pesaba 11 kg,
+     que es lo que pesa una gaveta de pitahaya. */
+  const PESO_GAVETA_KG = 11;
 
   /* Origen del dato — el estándar de rigor exige declararlo en todo número
      que no venga de un registro del propio sistema. */
@@ -114,29 +118,195 @@ const DB = (function () {
   function lineasBase() {
     return [
       { id: "ln_pitahaya", codigo: "PIT", nombre: "Pitahaya roja",
-        tiempoEstandarMin: 24.28, origenTiempo: "M",
-        pesoCajaKg: PESO_CAJA_KG, origenPeso: "M",
-        metaExportable: 0.82, origenMeta: "E",
-        precioCaja: 18.50, origenPrecio: "E",
+        pesoGavetaKg: 11, origenPesoGaveta: "M",
+        pesoCajaKg: 3, origenPesoCaja: "M",
+        /* Rendimiento exportable sobre lo que entra a proceso, del balance
+           de masa de la base maestra. Sustituye a la «meta» inventada. */
+        rendimientoExportable: 0.965, origenRendimiento: "M",
+        metaRendimiento: 0.98, origenMeta: "E",
+        valorKgProductor: 1.50, origenValorKg: "S",
+        valorKgLocal: 0.60, origenValorLocal: "S",
+        ingresoDiarioKg: 2000, origenIngreso: "E",
         color: "#c0246b", activa: true },
       { id: "ln_tomate", codigo: "TOM", nombre: "Tomate de árbol",
-        tiempoEstandarMin: 26.93, origenTiempo: "M",
-        pesoCajaKg: PESO_CAJA_KG, origenPeso: "M",
-        metaExportable: 0.78, origenMeta: "E",
-        precioCaja: 12.80, origenPrecio: "E",
+        pesoGavetaKg: 20, origenPesoGaveta: "M",
+        pesoCajaKg: 2.5, origenPesoCaja: "M",
+        rendimientoExportable: 0.960, origenRendimiento: "M",
+        metaRendimiento: 0.98, origenMeta: "E",
+        valorKgProductor: 1.54, origenValorKg: "S",
+        valorKgLocal: 0.90, origenValorLocal: "E",
+        ingresoDiarioKg: 1000, origenIngreso: "E",
         color: "#c85a1e", activa: true },
       { id: "ln_granadilla", codigo: "GRA", nombre: "Granadilla",
-        tiempoEstandarMin: 29.76, origenTiempo: "M",
-        pesoCajaKg: PESO_CAJA_KG, origenPeso: "M",
-        metaExportable: 0.75, origenMeta: "E",
-        precioCaja: 15.40, origenPrecio: "E",
+        pesoGavetaKg: 12, origenPesoGaveta: "M",
+        pesoCajaKg: 2, origenPesoCaja: "M",
+        rendimientoExportable: 0.975, origenRendimiento: "M",
+        metaRendimiento: 0.98, origenMeta: "E",
+        valorKgProductor: 1.40, origenValorKg: "E",
+        valorKgLocal: 0.70, origenValorLocal: "E",
+        ingresoDiarioKg: 860, origenIngreso: "E",
         color: "#b8860b", activa: true }
     ];
   }
 
-  /* Las ocho causas raíz del diagnóstico. Solo CR5-CR8 están nombradas en el
-     documento del TIC; las demás quedan por definir y se editan desde la app
-     en vez de inventarlas aquí. */
+  /* Estudio de tiempos, actividad por actividad, tal como está en la base
+     maestra del TIC. Aquí NO se guarda el tiempo estándar: se guarda la
+     lectura (TO), la valoración Westinghouse (v) y el suplemento OIT, y el
+     estándar se calcula. Así, cuando se cronometren ciclos nuevos, basta
+     cambiar el TO y se recalculan takt, operarios, costo y pérdidas.
+
+     `personas` es la clave de la asignación: una actividad con 2 personas
+     tarda lo mismo pero consume el doble de mano de obra. De ahí salen dos
+     relojes distintos —el ciclo y el contenido de trabajo— que la versión
+     anterior confundía en un solo número. */
+  function actividadesBase() {
+    return [
+      /* ---- pitahaya ---- */
+      { id: "P-REC", lineaId: "ln_pitahaya", orden: 1, codigo: "P-REC",
+        nombre: "Recepción y pesaje de gaveta",
+        simbolo: "O", estacion: "Recepción", unidad: "gaveta",
+        to: 0.5, v: 1, suplemento: 0.19, personas: 1,
+        origen: "E", base: "Pesaje y registro manual por gaveta; del orden de pesar una caja (0,25) más el registro.", activa: true },
+      { id: "P-INR", lineaId: "ln_pitahaya", orden: 2, codigo: "P-INR",
+        nombre: "Inspección de calidad en recepción",
+        simbolo: "I", estacion: "Recepción", unidad: "gaveta",
+        to: 0.4, v: 1, suplemento: 0.17, personas: 1,
+        origen: "E", base: "Muestreo visual ≈ 1/3 de la verificación completa medida en empaque (P-VER).", activa: true },
+      { id: "P-TR1", lineaId: "ln_pitahaya", orden: 3, codigo: "P-TR1",
+        nombre: "Transporte a almacenaje / categorización",
+        simbolo: "T", estacion: "Transporte", unidad: "gaveta",
+        to: 1, v: 1, suplemento: 0.19, personas: 1,
+        origen: "E", base: "~25 m (análogo a 35 pasos medidos en tomate), ida y vuelta + 10 s de carga.", activa: true },
+      { id: "P-TR2", lineaId: "ln_pitahaya", orden: 4, codigo: "P-TR2",
+        nombre: "Transporte a sopleteado",
+        simbolo: "T", estacion: "Transporte", unidad: "gaveta",
+        to: 0.6667, v: 1, suplemento: 0.19, personas: 1,
+        origen: "E", base: "~15 m estimados; medir.", activa: true },
+      { id: "P-SOP", lineaId: "ln_pitahaya", orden: 5, codigo: "P-SOP",
+        nombre: "Sopleteado: retiro de espinas/brácteas y corte de pedúnculo (mesa de 2 personas)",
+        simbolo: "O", estacion: "Sopleteado", unidad: "gaveta",
+        to: 2.675, v: 1, suplemento: 0.19, personas: 2,
+        origen: "M", base: "Promedio de mesas 2 y 3 (200 y 121 s por gaveta), pendiente confirmar alcance.", activa: true },
+      { id: "P-TR3", lineaId: "ln_pitahaya", orden: 6, codigo: "P-TR3",
+        nombre: "Transporte a empaque",
+        simbolo: "T", estacion: "Transporte", unidad: "gaveta",
+        to: 0.5, v: 1, suplemento: 0.19, personas: 1,
+        origen: "E", base: "~10 m estimados. La mesa 1 ya evita este traslado.", activa: true },
+      { id: "P-VER", lineaId: "ln_pitahaya", orden: 7, codigo: "P-VER",
+        nombre: "Verificar calidad y colocar mallón",
+        simbolo: "I", estacion: "Empaque", unidad: "gaveta",
+        to: 1.1833, v: 1, suplemento: 0.17, personas: 1,
+        origen: "M", base: "3 lecturas (Registro_Campo n° 5-7).", activa: true },
+      { id: "P-EMP", lineaId: "ln_pitahaya", orden: 8, codigo: "P-EMP",
+        nombre: "Empacar en caja de 3 kg",
+        simbolo: "O", estacion: "Empaque", unidad: "caja",
+        to: 1.3, v: 1, suplemento: 0.16, personas: 1,
+        origen: "M", base: "1 lectura (Registro_Campo n° 8). Tomar 5 ciclos.", activa: true },
+      { id: "P-PES", lineaId: "ln_pitahaya", orden: 9, codigo: "P-PES",
+        nombre: "Calibrar y pesar la caja",
+        simbolo: "I", estacion: "Empaque", unidad: "caja",
+        to: 0.25, v: 1, suplemento: 0.17, personas: 1,
+        origen: "E", base: "~15 s de pesaje y ajuste de una fruta.", activa: true },
+      { id: "P-FLE", lineaId: "ln_pitahaya", orden: 10, codigo: "P-FLE",
+        nombre: "Colocar fleje / etiqueta",
+        simbolo: "O", estacion: "Empaque", unidad: "caja",
+        to: 0.3, v: 1, suplemento: 0.16, personas: 1,
+        origen: "M", base: "1 lectura (Registro_Campo n° 9).", activa: true },
+      { id: "P-PAL", lineaId: "ln_pitahaya", orden: 11, codigo: "P-PAL",
+        nombre: "Colocar caja en pallet por calibre",
+        simbolo: "T", estacion: "Empaque", unidad: "caja",
+        to: 0.1, v: 1, suplemento: 0.16, personas: 1,
+        origen: "M", base: "1 lectura (Registro_Campo n° 10).", activa: true },
+      { id: "P-ETQ", lineaId: "ln_pitahaya", orden: 12, codigo: "P-ETQ",
+        nombre: "Etiquetado final del cliente",
+        simbolo: "O", estacion: "Empaque", unidad: "caja",
+        to: 0.15, v: 1, suplemento: 0.16, personas: 1,
+        origen: "E", base: "~9 s por caja. Confirmar si se pone sticker por fruta (en maracuyá: 0,52 min/caja).", activa: true },
+      /* ---- tomate ---- */
+      { id: "T-REC", lineaId: "ln_tomate", orden: 1, codigo: "T-REC",
+        nombre: "Recepción y pesaje de gaveta",
+        simbolo: "O", estacion: "Recepción", unidad: "gaveta",
+        to: 0.6, v: 1, suplemento: 0.24, personas: 1,
+        origen: "E", base: "Análogo a pitahaya (0,50) ajustado por gaveta de 20 kg.", activa: true },
+      { id: "T-INR", lineaId: "ln_tomate", orden: 2, codigo: "T-INR",
+        nombre: "Inspección de calidad en recepción",
+        simbolo: "I", estacion: "Recepción", unidad: "gaveta",
+        to: 0.4, v: 1, suplemento: 0.17, personas: 1,
+        origen: "E", base: "Igual a pitahaya; el DAP registra esta inspección sin tiempo.", activa: true },
+      { id: "T-TR1", lineaId: "ln_tomate", orden: 3, codigo: "T-TR1",
+        nombre: "Transporte de almacenamiento a empaque",
+        simbolo: "T", estacion: "Transporte", unidad: "gaveta",
+        to: 0.9833, v: 1, suplemento: 0.24, personas: 1,
+        origen: "E", base: "Distancia M (35 pasos × 0,7 m); tiempo estimado a 1 m/s.", activa: true },
+      { id: "T-CLL", lineaId: "ln_tomate", orden: 4, codigo: "T-CLL",
+        nombre: "Inspección, clasificación y limpieza (lavado con agente sin ficha técnica)",
+        simbolo: "O", estacion: "Clasificación y limpieza", unidad: "gaveta",
+        to: 12.09, v: 1, suplemento: 0.17, personas: 2,
+        origen: "M", base: "1 lectura con 2 personas (Registro_Campo n° 14). Separar limpieza y clasificación en la próxima visita.", activa: true },
+      { id: "T-SEC", lineaId: "ln_tomate", orden: 5, codigo: "T-SEC",
+        nombre: "Secado",
+        simbolo: "O", estacion: "Clasificación y limpieza", unidad: "gaveta",
+        to: 7.29, v: 1, suplemento: 0.17, personas: 1,
+        origen: "M", base: "1 lectura (Registro_Campo n° 15). Personas: 1 (supuesto).", activa: true },
+      { id: "T-EMP", lineaId: "ln_tomate", orden: 6, codigo: "T-EMP",
+        nombre: "Empacar en caja de 2,5 kg",
+        simbolo: "O", estacion: "Empaque", unidad: "caja",
+        to: 1.29, v: 1, suplemento: 0.16, personas: 1,
+        origen: "M", base: "1 lectura (Registro_Campo n° 16). En maracuyá, con la misma caja: 1,00 min (5 ciclos).", activa: true },
+      { id: "T-PES", lineaId: "ln_tomate", orden: 7, codigo: "T-PES",
+        nombre: "Calibrar y pesar la caja",
+        simbolo: "I", estacion: "Empaque", unidad: "caja",
+        to: 0.25, v: 1, suplemento: 0.17, personas: 1,
+        origen: "E", base: "Análogo a pitahaya.", activa: true },
+      { id: "T-FLE", lineaId: "ln_tomate", orden: 8, codigo: "T-FLE",
+        nombre: "Colocar fleje / etiqueta",
+        simbolo: "O", estacion: "Empaque", unidad: "caja",
+        to: 0.3, v: 1, suplemento: 0.16, personas: 1,
+        origen: "E", base: "Análogo al tiempo medido en pitahaya (0,30).", activa: true },
+      { id: "T-PAL", lineaId: "ln_tomate", orden: 9, codigo: "T-PAL",
+        nombre: "Transporte de caja al pallet",
+        simbolo: "T", estacion: "Empaque", unidad: "caja",
+        to: 0.2, v: 1, suplemento: 0.16, personas: 1,
+        origen: "M", base: "Distancia M (2 m); tiempo solo en versión FLP2 (verificar).", activa: true },
+      /* ---- granadilla ---- */
+      { id: "G-REC", lineaId: "ln_granadilla", orden: 1, codigo: "G-REC",
+        nombre: "Recepción y pesaje de gaveta",
+        simbolo: "O", estacion: "Recepción", unidad: "gaveta",
+        to: 0.5, v: 1, suplemento: 0.19, personas: 1,
+        origen: "E", base: "Análogo a pitahaya (gaveta de 12 kg).", activa: true },
+      { id: "G-INR", lineaId: "ln_granadilla", orden: 2, codigo: "G-INR",
+        nombre: "Inspección de calidad en recepción",
+        simbolo: "I", estacion: "Recepción", unidad: "gaveta",
+        to: 0.4, v: 1, suplemento: 0.17, personas: 1,
+        origen: "E", base: "Análogo a pitahaya.", activa: true },
+      { id: "G-TR1", lineaId: "ln_granadilla", orden: 3, codigo: "G-TR1",
+        nombre: "Traslado de almacenamiento a empaque",
+        simbolo: "T", estacion: "Transporte", unidad: "gaveta",
+        to: 0.7667, v: 1, suplemento: 0.19, personas: 1,
+        origen: "E", base: "Distancia de 18 m (FLP2); tiempo estimado a 1 m/s.", activa: true },
+      { id: "G-CLA", lineaId: "ln_granadilla", orden: 4, codigo: "G-CLA",
+        nombre: "Colocar en gaveta, verificar peso ≥ 70 g y poner mallón nuevo",
+        simbolo: "O", estacion: "Clasificación", unidad: "gaveta",
+        to: 7.86, v: 1, suplemento: 0.17, personas: 1.5,
+        origen: "M", base: "Dos métodos (Registro_Campo n° 21-22): 9,43 min (1 persona) y 6,29 min (2 personas). Actual = promedio.", activa: true },
+      { id: "G-EMP", lineaId: "ln_granadilla", orden: 5, codigo: "G-EMP",
+        nombre: "Empacar según calibre en caja de 2 kg",
+        simbolo: "O", estacion: "Empaque", unidad: "caja",
+        to: 0.885, v: 1, suplemento: 0.16, personas: 1,
+        origen: "M", base: "Dos métodos (Registro_Campo n° 23-24): 0,40 y 1,37 min. Actual = promedio.", activa: true },
+      { id: "G-PES", lineaId: "ln_granadilla", orden: 6, codigo: "G-PES",
+        nombre: "Verificar peso de la caja",
+        simbolo: "I", estacion: "Empaque", unidad: "caja",
+        to: 0.2, v: 1, suplemento: 0.17, personas: 1,
+        origen: "E", base: "Menor que en pitahaya: el empaque ya se hace por calibre.", activa: true },
+      { id: "G-PAL", lineaId: "ln_granadilla", orden: 7, codigo: "G-PAL",
+        nombre: "Traslado al pallet de exportación con etiquetado",
+        simbolo: "T", estacion: "Empaque", unidad: "caja",
+        to: 0.25, v: 1, suplemento: 0.16, personas: 1,
+        origen: "E", base: "Pallet 0,10 (medido en pitahaya) + etiqueta 0,15. El 6,29 anotado se descarta por ser copia (Registro_Campo n°", activa: true }
+    ];
+  }
+
   function causasBase() {
     return [
       { id: "CR1", codigo: "CR1", nombre: "Por definir", origen: "Por clasificar",
@@ -289,12 +459,61 @@ const DB = (function () {
   /* Parámetros de planta que alimentan el planificador diario. */
   function parametrosBase() {
     return {
-      horasTurno: 8, origenHorasTurno: "E",
+      /* Todos de la hoja LEEME_Parametros de la base maestra. */
+      diasOperativos: 240, origenDias: "E",
+      jornadaMin: 480, origenJornada: "E",
+      pausasMin: 60, origenPausas: "M",
+      /* Jornada menos pausas: es el tiempo con el que se calcula el takt. */
+      disponibleMin: 420, origenDisponible: "E",
       operariosDisponibles: 12, origenOperarios: "E",
       eficienciaPlanta: 0.85, origenEficiencia: "E",
-      suplementosOIT: 0.13, origenSuplementos: "S",
-      costoHoraHombre: 3.20, origenCostoHora: "E"
+      salarioBasico: 482, origenSalario: "S",
+      /* SBU + décimos + fondos de reserva + aporte patronal, sobre 1920 h. */
+      costoHoraHombre: 4.132, origenCostoHora: "E",
+      deshidratacion: 0.005, origenDeshidratacion: "E"
     };
+  }
+
+  /* ------------------------------------------------- tiempos derivados */
+
+  /* El tiempo estándar NO se guarda: se calcula desde la lectura.
+         TN = TO × valoración Westinghouse
+         TE = TN × (1 + suplemento OIT)
+     Es la cadena del estudio de tiempos, y dejarla a la vista es lo que
+     permite que una medición nueva se propague sola a todo lo demás. */
+  function tiempoEstandarAct(a) {
+    return (Number(a.to) || 0) * (Number(a.v) || 1) * (1 + (Number(a.suplemento) || 0));
+  }
+
+  /* Cuántas cajas de exportación salen de una gaveta: es el puente entre
+     la unidad que entra del campo y la que sale al contenedor. */
+  function cajasPorGaveta(linea) {
+    if (!linea || !linea.pesoCajaKg) return 0;
+    return (linea.pesoGavetaKg * linea.rendimientoExportable) / linea.pesoCajaKg;
+  }
+
+  function actividadesDe(lineaId, lista) {
+    return (lista || actividadesBase()).filter(function (a) {
+      return a.lineaId === lineaId && a.activa !== false;
+    });
+  }
+
+  /* Minutos de RELOJ que tarda una gaveta en recorrer la línea. */
+  function cicloGavetaMin(linea, lista) {
+    const porGaveta = cajasPorGaveta(linea);
+    return actividadesDe(linea.id, lista).reduce(function (a, act) {
+      return a + tiempoEstandarAct(act) * (act.unidad === "caja" ? porGaveta : 1);
+    }, 0);
+  }
+
+  /* Minutos-PERSONA que consume esa misma gaveta. Difiere del ciclo en las
+     actividades que ocupan a más de una persona a la vez. */
+  function contenidoGavetaMin(linea, lista) {
+    const porGaveta = cajasPorGaveta(linea);
+    return actividadesDe(linea.id, lista).reduce(function (a, act) {
+      return a + tiempoEstandarAct(act) * (act.unidad === "caja" ? porGaveta : 1) *
+        (Number(act.personas) || 1);
+    }, 0);
   }
 
   /* ---------------------------------------------------------------- semilla */
@@ -304,6 +523,7 @@ const DB = (function () {
     const historial = dias || 70;
 
     const lineas = lineasBase();
+    const actividades = actividadesBase();
     const causas = causasBase();
     const destinos = destinosBase();
     const proveedores = proveedoresBase();
@@ -325,7 +545,10 @@ const DB = (function () {
         const pv = proveedores[Math.floor(r() * 5)];
         const linea = lineas[Math.floor(r() * lineas.length)];
         const calidad = r() < 0.66 ? "A" : r() < 0.87 ? "B" : "C";
-        const cajas = 40 + Math.floor(r() * 180);
+        /* Gavetas por envío, dimensionadas sobre el ingreso diario real de
+           cada línea (2000 / 1000 / 860 kg al día). */
+        const gavetasDia = linea.ingresoDiarioKg / linea.pesoGavetaKg;
+        const gavetas = Math.max(8, Math.round(gavetasDia * (0.25 + r() * 0.55)));
         folio += 1;
 
         const lote = {
@@ -335,20 +558,21 @@ const DB = (function () {
           fecha: fecha,
           proveedorId: pv.id,
           lineaId: linea.id,
-          cajasAnunciadas: cajas,
-          /* El proveedor declara cuánto pesa su caja: no todas vienen al
+          gavetasAnunciadas: gavetas,
+          /* El proveedor declara cuánto pesa su gaveta: no todas vienen al
              peso nominal, y esa diferencia es parte de la CR6. */
-          pesoCajaDeclarado: Number((linea.pesoCajaKg * (0.97 + r() * 0.06)).toFixed(2)),
+          pesoGavetaDeclarado: Number((linea.pesoGavetaKg * (0.97 + r() * 0.06)).toFixed(2)),
           kgAnunciados: 0,
           calidadDeclarada: calidad,
-          precioCaja: Number((linea.precioCaja * (0.92 + r() * 0.18)).toFixed(2)),
+          /* Se liquida por kilo recibido, no por bulto. */
+          precioKg: Number((linea.valorKgProductor * (0.94 + r() * 0.12)).toFixed(3)),
           transporte: r() < 0.5 ? "Propio" : "Contratado",
           observacionesProveedor: "",
           anunciadoPor: "us_01",
           creadoEn: fecha + "T07:30:00",
 
           fechaRecepcion: null,
-          cajasRecibidas: null,
+          gavetasRecibidas: null,
           kgRecibidos: null,
           calidadVerificada: null,
           observacionesRecepcion: "",
@@ -361,14 +585,14 @@ const DB = (function () {
           fechaReporte: null
         };
 
-        lote.kgAnunciados = Math.round(cajas * lote.pesoCajaDeclarado);
+        lote.kgAnunciados = Math.round(gavetas * lote.pesoGavetaDeclarado);
 
         if (d > 1) {
           if (r() < 0.03) {
             lote.estado = "Rechazado";
             lote.fechaRecepcion = fecha;
             lote.recibidoPor = "us_03";
-            lote.cajasRecibidas = 0;
+            lote.gavetasRecibidas = 0;
             lote.kgRecibidos = 0;
             lote.calidadVerificada = "C";
             lote.observacionesRecepcion = "Lote rechazado: fruta fuera de los mínimos de exportación.";
@@ -376,9 +600,9 @@ const DB = (function () {
             const s = sesgo[pv.id] || 0.99;
             lote.fechaRecepcion = r() < 0.85 ? fecha : sumarDias(fecha, 1);
             lote.recibidoPor = "us_03";
-            lote.cajasRecibidas = Math.max(1, Math.round(cajas * (s + (r() - 0.5) * 0.02)));
-            /* El peso por caja también varía: no todas vienen completas. */
-            lote.kgRecibidos = Math.round(lote.cajasRecibidas * linea.pesoCajaKg * (0.97 + r() * 0.05));
+            lote.gavetasRecibidas = Math.max(1, Math.round(gavetas * (s + (r() - 0.5) * 0.02)));
+            /* El peso por gaveta también varía: no todas vienen completas. */
+            lote.kgRecibidos = Math.round(lote.gavetasRecibidas * linea.pesoGavetaKg * (0.97 + r() * 0.05));
             lote.calidadVerificada = r() < 0.18
               ? (calidad === "A" ? "B" : "C") : calidad;
             lote.estado = "Recibido";
@@ -401,11 +625,15 @@ const DB = (function () {
       const linea = lineas.find(function (l) { return l.id === lote.lineaId; });
       const cal = CALIDADES.find(function (c) { return c.id === lote.calidadVerificada; });
 
-      const cajasProcesadas = lote.cajasRecibidas;
+      const gavetasProcesadas = lote.gavetasRecibidas;
       const kgProcesados = lote.kgRecibidos;
-      const tasa = linea.metaExportable * cal.factor * (0.92 + r() * 0.15);
-      const cajasExportables = Math.round(cajasProcesadas * Math.min(tasa, 0.95));
-      const kgExportable = Math.round(cajasExportables * linea.pesoCajaKg);
+      /* Rendimiento en KILOS, que es como lo mide el balance de masa: de lo
+         que entra a proceso, qué fracción sale empacada para exportación.
+         Antes se contaba en «cajas sobre cajas», que con bultos de distinto
+         peso a la entrada y a la salida no significa nada. */
+      const rend = Math.min(0.995, linea.rendimientoExportable * cal.factor * (0.985 + r() * 0.03));
+      const kgExportable = Math.round(kgProcesados * rend);
+      const cajasExportables = Math.round(kgExportable / linea.pesoCajaKg);
       const kgMerma = kgProcesados - kgExportable;
 
       /* Reparto entre causas raíz. CR5-CR8 concentran la mayor parte, como
@@ -450,8 +678,11 @@ const DB = (function () {
       /* Tiempo real contra el estándar: la brecha alimenta el indicador de
          eficiencia y el análisis de balanceo de línea. */
       const operarios = 3 + Math.floor(r() * 4);
-      const tiempoEstandar = cajasProcesadas * linea.tiempoEstandarMin;
-      const tiempoReal = Math.round(tiempoEstandar * (0.95 + r() * 0.28));
+      /* El estándar del lote es el contenido de trabajo —minutos-persona—
+         porque es contra eso que se compara el tiempo que de verdad
+         consumió la gente. El cálculo vive en indicadores.js. */
+      const tiempoEstandar = gavetasProcesadas * contenidoGavetaMin(linea, actividades);
+      const tiempoReal = Math.round((tiempoEstandar / operarios) * (0.95 + r() * 0.28));
 
       producciones.push({
         id: uid("pr"),
@@ -461,7 +692,7 @@ const DB = (function () {
         codigoLote: lote.codigoLote,
         lineaId: lote.lineaId,
         turno: r() < 0.55 ? "Matutino" : "Vespertino",
-        cajasProcesadas: cajasProcesadas,
+        gavetasProcesadas: gavetasProcesadas,
         kgProcesados: kgProcesados,
         cajasExportables: cajasExportables,
         kgExportable: kgExportable,
@@ -490,6 +721,7 @@ const DB = (function () {
       esquema: ESQUEMA,
       creadoEn: new Date().toISOString(),
       lineas: lineas,
+      actividades: actividadesBase(),
       causas: causas,
       destinos: destinos,
       proveedores: proveedores,
@@ -512,7 +744,7 @@ const DB = (function () {
 
   const COLECCIONES = ["proveedores", "usuarios", "lotes", "producciones", "planes"];
   /* Catálogos y parámetros: pocos y pequeños, viajan en un solo documento. */
-  const CONFIG = ["lineas", "causas", "destinos", "parametros"];
+  const CONFIG = ["lineas", "actividades", "causas", "destinos", "parametros"];
 
   let remoto = null;
   let modo = "local";
@@ -936,7 +1168,12 @@ const DB = (function () {
 
   return {
     EMPRESA: EMPRESA,
-    PESO_CAJA_KG: PESO_CAJA_KG,
+    PESO_GAVETA_KG: PESO_GAVETA_KG,
+    tiempoEstandarAct: tiempoEstandarAct,
+    cajasPorGaveta: cajasPorGaveta,
+    actividadesDe: actividadesDe,
+    cicloGavetaMin: cicloGavetaMin,
+    contenidoGavetaMin: contenidoGavetaMin,
     ORIGENES: ORIGENES,
     ESTADOS: ESTADOS,
     CALIDADES: CALIDADES,

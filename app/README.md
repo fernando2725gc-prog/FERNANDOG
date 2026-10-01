@@ -132,6 +132,27 @@ envío; no se procesa más de lo recibido; lo exportable no supera lo procesado;
 **balance de masa** de las mermas debe cuadrar con `(procesado − exportable) × 11 kg`;
 un lote cerrado no admite cambios.
 
+## 4 bis. Las dos unidades, y por qué importan
+
+Del campo llega la **gaveta**; al contenedor sale la **caja de exportación**. Pesan cosas
+distintas y no son intercambiables:
+
+| Línea | kg/gaveta | kg/caja | cajas por gaveta | rendimiento |
+|---|---|---|---|---|
+| Pitahaya roja | 11 | 3 | 3,54 | 96,5 % |
+| Tomate de árbol | 20 | 2,5 | 7,68 | 96,0 % |
+| Granadilla | 12 | 2 | 5,85 | 97,5 % |
+
+Hasta la versión 4 la app creía que una caja pesaba 11 kg —que es lo que pesa una gaveta
+de pitahaya— y medía el rendimiento dividiendo «cajas entre cajas», con bultos de distinto
+peso a la entrada y a la salida. Ese número no significaba nada. Ahora:
+
+- El proveedor anuncia **gavetas**; Recepción cuenta **gavetas** y pesa kilos.
+- Producción registra **gavetas procesadas** y **cajas exportables**.
+- El rendimiento y el balance de masa se calculan **en kilos**, que es como los calcula el
+  balance de la base maestra.
+- La liquidación va por **kilo recibido** (1,50 / 1,54 / 1,40 USD/kg), no por bulto.
+
 ## 5. Indicadores
 
 Tres familias, en `core/indicadores.js`.
@@ -164,6 +185,49 @@ Tres familias, en `core/indicadores.js`.
 | Productividad | `cajas procesadas ÷ horas-hombre` |
 | Ciclo del lote | `promedio(fecha cierre − fecha anuncio)` |
 
+### Estudio de tiempos y asignación
+
+`core/db.js` guarda las **28 actividades** del estudio de tiempos del TIC —una tabla por
+línea, con su estación, su símbolo del DAP, la unidad en que se mide, la lectura, la
+valoración y el suplemento. Lo que **no** guarda es el tiempo estándar: se calcula.
+
+```
+TN = TO × valoración Westinghouse
+TE = TN × (1 + suplemento OIT)
+TE por gaveta = TE × (1 si la actividad se mide por gaveta, cajas/gaveta si se mide por caja)
+```
+
+De ahí salen **dos relojes distintos**, y confundirlos era el error de la versión anterior:
+
+| | qué mide | para qué sirve | ¿depende de la gente? |
+|---|---|---|---|
+| **Tiempo de ciclo** | min por gaveta | prometer entregas, comparar con el takt | no |
+| **Contenido de trabajo** | min-**persona** por gaveta | asignar personal, costear | sí |
+
+Difieren en las actividades atendidas por más de una persona: el sopleteado de pitahaya
+(2 personas), la clasificación de tomate (2) y la de granadilla (1,5) tardan lo mismo y
+consumen el doble —o el triple— de mano de obra. El planificador usaba el ciclo para
+repartir gente, así que subestimaba el personal justo en las estaciones que mandan.
+
+```
+takt           = tiempo disponible del turno ÷ gavetas del día
+operarios      = contenido de trabajo ÷ takt
+por estación   = contenido de esa estación ÷ takt
+```
+
+Los resultados cuadran con la base maestra hasta el tercer decimal:
+
+| | ciclo | contenido | cajas/gav | min/caja | takt | operarios | MO/caja | manda |
+|---|---|---|---|---|---|---|---|---|
+| Pitahaya | 16,83 | 20,02 | 3,54 | 4,76 | 2,31 | 9 | $0,39 | Empaque (50 %) |
+| Tomate | 43,29 | 57,44 | 7,68 | 5,64 | 8,40 | 7 | $0,52 | Clasificación (64 %) |
+| Granadilla | 20,24 | 24,84 | 5,85 | 3,46 | 5,86 | 5 | $0,29 | Clasificación (56 %) |
+
+**El estándar se recalcula solo.** Cuando en la próxima visita se cronometren cinco ciclos,
+se cambia el TO de esa actividad y se mueven con él el takt, los operarios, el costo por
+caja y el costeo de cada causa raíz. Eso es lo que hace que la app sirva para decidir y no
+solo para registrar.
+
 ### Costeo por causa raíz
 | Indicador | Fórmula |
 |---|---|
@@ -179,6 +243,14 @@ la prioriza; medida en dólares al año, sí. La proyección anual es un supuest
 pantalla lo dice.
 
 ### Simulador de escenario «con mejora»
+
+Las ocho medidas vienen de la **matriz KPI de la base maestra**, no de la app: cada una
+trae su indicador actual, su meta, la pérdida ya calculada y sobre qué base se calculó.
+Las tres de merma (causas 6 a 8) suman **77.191,85 USD/año**, que es exactamente la cifra
+del balance de masa. La causa 5 —capacidad ociosa de sopleteado— se deja en cero a
+propósito: es pérdida indirecta, y monetizarla sería el tipo de número que hace desconfiar
+de todo lo demás.
+
 Se elige cuánto se cree que baja cada causa y cuánto costaría lograrlo:
 
 ```
@@ -499,6 +571,14 @@ correcta, que el buscador no robe el foco mientras se escribe, que *Repetir* cop
 menos la fecha y no dispare la ficha al pulsarlo, que crear el repetido no toque el
 original, y —comprobado comparando las cabeceras de todas las tablas— que **ninguna
 pantalla repita la tabla de otra**.
+
+**15 comprobaciones del estudio de tiempos**, contrastadas una a una contra el Excel del
+TIC: ciclo, contenido, cajas por gaveta, minutos por caja, minutos-persona por kilo, takt,
+operarios mínimos, costo de mano de obra y estación que manda, en las tres líneas. Además:
+que TE salga de TO × V × (1 + suplemento) en cada actividad, que cambiar una lectura mueva
+el estándar y el costo, que el contenido supere al ciclo donde hay dos personas, que las
+estaciones sumen los operarios del total, y que el planificador use el contenido de trabajo
+y **no** el tiempo de ciclo.
 
 Y **9 comprobaciones** sobre el paquete publicado: las dos puertas, el almacén compartido
 activo, un envío anunciado desde el celular apareciendo en la cola de la planta, el pesaje

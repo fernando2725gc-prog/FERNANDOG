@@ -62,7 +62,7 @@ const Guia = (function () {
      corresponde: ve el recorrido de SU fruta, no el interior del proceso. */
   const PASO_PROVEEDOR = {
     Anunciado: "Avisaste que envías. La planta ya lo tiene en su cola y lo espera.",
-    Recibido: "Tu fruta llegó: contaron las cajas y la pesaron en báscula.",
+    Recibido: "Tu fruta llegó: contaron las gavetas y la pesaron en báscula.",
     Procesado: "La planta ya trabajó tu lote. Falta que lo revisen y lo cierren.",
     Cerrado: "Terminado. Aquí ves cuántas cajas salieron para exportación.",
     Rechazado: "La fruta no cumplió los mínimos y no entró. Verás el motivo escrito."
@@ -136,6 +136,11 @@ const Guia = (function () {
     html += seccion("recorrido", "El recorrido de un pedido",
       "<p>Un pedido (en el sistema, un <strong>lote</strong>) nace cuando el proveedor " +
       "anuncia el envío desde su celular y termina cuando Supervisión lo cierra.</p>" +
+      "<p class='guia-ojo'><strong>Dos unidades, no una.</strong> Del campo llega la " +
+      "<strong>gaveta</strong> (11 kg en pitahaya, 20 en tomate, 12 en granadilla). Al " +
+      "contenedor sale la <strong>caja de exportación</strong> (3 / 2,5 / 2 kg). " +
+      "Todo lo que se cuenta en recepción y en proceso son gavetas; las cajas aparecen " +
+      "al empacar. Confundirlas hace que ningún indicador signifique nada.</p>" +
       recorrido() +
       "<p class='guia-ojo'>Mientras un lote no esté <strong>Cerrado</strong>, se puede " +
       "corregir. Una vez cerrado, no: hay que reabrirlo, y eso queda anotado.</p>");
@@ -148,7 +153,7 @@ const Guia = (function () {
            "Arriba está <em>Esperando en el patio</em>: todo lo que los proveedores " +
            "anunciaron y aún no se ha pesado. El número rojo del menú es esa misma cola."],
           ["Pulsa «Pesar» en el lote que acaba de llegar",
-           "Verás lo que el proveedor declaró. Escribe las cajas que realmente contaste " +
+           "Verás lo que el proveedor declaró. Escribe las gavetas que realmente contaste " +
            "y los kilos de la báscula."],
           ["Mira la diferencia que calcula la pantalla",
            "Si lo pesado se aparta mucho de lo anunciado, el sistema lo señala. Esa " +
@@ -168,17 +173,19 @@ const Guia = (function () {
         pasos([
           ["Abre «Producción» y elige un lote recibido",
            "Solo aparecen los que Recepción ya pesó."],
-          ["Anota cajas procesadas, exportables y el tiempo real",
-           "El tiempo es el que de verdad tomó. El sistema lo compara contra el estudio " +
-           "de tiempos y de ahí sale la eficiencia."],
+          ["Anota gavetas procesadas, cajas exportables y el tiempo real",
+           "El tiempo es el que de verdad tomó. El sistema lo compara contra el " +
+           "<strong>contenido de trabajo</strong> del estudio de tiempos —minutos-persona, " +
+           "no minutos de reloj— y de ahí sale la eficiencia."],
           ["Reparte la merma por causa y por destino",
            "Cada kilo de descarte lleva dos cosas: <strong>por qué</strong> se perdió " +
            "(la causa raíz) y <strong>a dónde</strong> fue. Ese segundo dato es el que " +
            "hace posible la economía circular; sin él, todo el descarte parece basura."],
-          ["Cuadra el balance de masa",
-           "Lo exportable más la merma tiene que dar lo procesado. La pantalla no deja " +
-           "guardar si no cuadra: no es un capricho, es lo que evita que los indicadores " +
-           "salgan mentirosos."],
+          ["Cuadra el balance de masa, en kilos",
+           "Lo empacado más la merma tiene que dar lo que entró a proceso. Se cuadra en " +
+           "<strong>kilos</strong>, no en bultos, porque la gaveta que entra y la caja que " +
+           "sale pesan cosas distintas. La pantalla no deja guardar si no cuadra: es lo " +
+           "que evita que los indicadores salgan mentirosos."],
           ["Al guardar, el pedido pasa a Supervisión",
            "Queda en estado <em>Procesado</em>, esperando el cierre."]
         ]));
@@ -208,11 +215,33 @@ const Guia = (function () {
         "hace falta enmendarlo, usa <em>Reabrir</em> en la fila del lote: vuelve a " +
         "<em>Procesado</em> y la reapertura queda en la bitácora con tu nombre.</p>");
 
+      html += seccion("tiempos", "Estudio de tiempos y asignación",
+        "<p>En <em>Estudio de tiempos</em> está la cadena completa, actividad por " +
+        "actividad: la lectura del cronómetro (TO), la valoración del ritmo, el " +
+        "suplemento de la OIT y el tiempo estándar que sale de ahí. <strong>El estándar " +
+        "no se teclea: se calcula.</strong> Cuando se cronometren ciclos nuevos, basta " +
+        "cambiar la lectura y se recalculan solos el takt, los operarios, el costo por " +
+        "caja y el costeo de las causas.</p>" +
+        "<p><strong>Hay dos relojes y conviene no mezclarlos:</strong></p>" +
+        '<dl class="guia-defs">' +
+        "<dt>Tiempo de ciclo (min por gaveta)</dt><dd>Lo que tarda una gaveta en recorrer " +
+        "la línea. Sirve para prometer entregas y para compararse con el takt. No depende " +
+        "de cuánta gente haya.</dd>" +
+        "<dt>Contenido de trabajo (minutos-persona por gaveta)</dt><dd>La mano de obra que " +
+        "consume esa misma gaveta. Sirve para asignar personal y para costear. Sí depende: " +
+        "una actividad atendida por dos personas tarda lo mismo y cuesta el doble.</dd></dl>" +
+        "<p>La gente se asigna con el segundo dividido para el takt, y por estación, no en " +
+        "bloque. La estación que concentra más contenido es la que manda: es donde una " +
+        "mejora de método se nota, y donde un operario de más se desperdicia.</p>" +
+        "<p class='guia-ojo'>Si una lectura tiene pocas repeticiones, el estándar que sale " +
+        "de ella es frágil. La columna de origen lo dice: " + UI.origen("M") + " es " +
+        "cronometrado, " + UI.origen("E") + " es estimado y hay que confirmarlo midiendo.</p>");
+
       html += seccion("planificar", "Planificar el día",
-        "<p>En <em>Planificación diaria</em> escribes cuántas cajas hay que sacar por " +
-        "línea y el sistema responde tres cosas: cuánto tiempo toma según el estudio de " +
-        "tiempos, cuántos operarios hacen falta y cada cuántos minutos debe salir una " +
-        "caja (el <em>takt time</em>). Si el plan no cabe en el turno, lo dice y calcula " +
+        "<p>En <em>Planificación diaria</em> escribes cuántas <strong>gavetas</strong> hay " +
+        "que procesar por línea y el sistema responde tres cosas: cuánta mano de obra pide " +
+        "(el contenido de trabajo), cuántos operarios hacen falta y cada cuántos minutos " +
+        "debe salir una gaveta (el <em>takt time</em>). Si el plan no cabe en el turno, lo dice y calcula " +
         "cuánta gente falta. También avisa si no hay materia prima suficiente en cámara.</p>");
 
       html += seccion("costeo", "Costeo y simulador de mejora",
@@ -246,17 +275,19 @@ const Guia = (function () {
     /* --- lo común --- */
     html += seccion("indicadores", "Cómo leer los indicadores",
       '<dl class="guia-defs">' +
-      "<dt>Tasa exportable</dt><dd>De cada 100 cajas procesadas, cuántas salieron para " +
-      "exportación. Se compara contra la meta de cada línea, ponderada por lo que " +
-      "realmente se procesó.</dd>" +
+      "<dt>Rendimiento exportable</dt><dd>De cada 100 kilos que entran a proceso, cuántos " +
+      "salen empacados. Se mide <strong>en kilos</strong>, no en bultos: la gaveta que " +
+      "entra y la caja que sale pesan cosas distintas, así que contar bultos no diría " +
+      "nada. Se compara contra la meta de cada línea.</dd>" +
       "<dt>Merma</dt><dd>Kilos perdidos sobre kilos procesados. El Pareto por causa raíz " +
       "dice de dónde viene y cuáles pocas causas explican la mayor parte.</dd>" +
       "<dt>Aprovechado</dt><dd>Qué parte del descarte NO fue al relleno sanitario. Es el " +
       "indicador de economía circular.</dd>" +
-      "<dt>Eficiencia</dt><dd>Tiempo estándar dividido para tiempo real. Por debajo de " +
-      "100% la línea tardó más de lo que el estudio de tiempos dice.</dd>" +
-      "<dt>Diferencia en cajas y en kilos</dt><dd>Lo pesado contra lo que el proveedor " +
-      "declaró. Pueden llegar todas las cajas y aun así pesar menos, si vienen " +
+      "<dt>Eficiencia</dt><dd>Contenido de trabajo estándar dividido para el tiempo que " +
+      "de verdad consumió la gente. Por debajo de 100% la línea tardó más de lo que el " +
+      "estudio de tiempos dice.</dd>" +
+      "<dt>Diferencia en gavetas y en kilos</dt><dd>Lo pesado contra lo que el proveedor " +
+      "declaró. Pueden llegar todas las gavetas y aun así pesar menos, si vienen " +
       "incompletas: por eso son dos indicadores y no uno.</dd></dl>");
 
     html += seccion("origen", "La letra pequeña junto a los números", origenes());
@@ -301,16 +332,17 @@ const Guia = (function () {
       "<p>Para dos cosas, y las dos te ahorran llamadas:</p>" +
       "<ul><li><strong>Avisar que envías fruta</strong>, antes de que el camión llegue. " +
       "La planta ve tu envío en su cola en el mismo instante y lo espera.</li>" +
-      "<li><strong>Ver qué pasó con tu fruta</strong>: cuántas cajas se recibieron de " +
+      "<li><strong>Ver qué pasó con tu fruta</strong>: cuántas gavetas se recibieron de " +
       "verdad, cuántas salieron para exportación y cómo quedó tu lote.</li></ul>" +
       "<p>Solo ves lo tuyo. Ningún otro proveedor ve tus envíos, y tú no ves los suyos.</p>");
 
     html += seccion("anunciar", "Anunciar un envío",
       pasos([
         ["Pulsa el botón grande «Anunciar envío»", "Está en la pantalla de inicio."],
-        ["Elige la línea y escribe las cajas",
-         "Pitahaya, tomate de árbol o granadilla. Las cajas son las que vas a mandar."],
-        ["Indica el peso aproximado de cada caja",
+        ["Elige la línea y escribe las gavetas",
+         "Pitahaya, tomate de árbol o granadilla. Son las gavetas que vas a mandar, " +
+         "tal como salen de la finca —no las cajas de exportación, que las arma la planta."],
+        ["Indica el peso aproximado de cada gaveta",
          "No tiene que ser exacto. Sirve para que planta sepa cuánto peso esperar, y " +
          "para ir comparando lo declarado con la báscula."],
         ["Declara la calidad y, si quieres, deja una observación",

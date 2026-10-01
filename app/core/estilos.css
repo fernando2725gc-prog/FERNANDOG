@@ -1350,3 +1350,19 @@ textarea { resize: vertical; }
   background: var(--superficie-2); border: 1px dashed var(--borde);
   border-radius: var(--radio); padding: .7rem .9rem;
 }
+
+/* ========================= símbolos del DAP ============================ */
+
+/* Los cinco símbolos de la norma ASME, para leer la tabla de actividades
+   como se lee un diagrama de análisis del proceso. */
+.dap {
+  display: inline-grid; place-items: center; width: 1.5rem; height: 1.5rem;
+  border-radius: 4px; font-size: .85rem; font-weight: 700; cursor: help;
+}
+.dap-O { background: color-mix(in srgb, var(--verde) 15%, transparent); color: var(--verde); }
+.dap-T { background: color-mix(in srgb, var(--azul) 15%, transparent); color: var(--azul); }
+.dap-I { background: color-mix(in srgb, var(--ambar) 18%, transparent); color: var(--ambar); }
+.dap-D { background: color-mix(in srgb, var(--rojo) 15%, transparent); color: var(--rojo); }
+.dap-A { background: var(--borde); color: var(--texto-tenue); }
+
+.vista-tiempos .panel-destacado { border-left-color: var(--linea-3); }

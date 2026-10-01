@@ -52,12 +52,24 @@ const Indicadores = (function () {
 
   /* --------------------------------------------------------------- filtro */
 
+  /* Texto libre: busca por código de lote, proveedor, línea o estado. Es
+     un solo cuadro en vez de tres desplegables, que es como la gente busca
+     de verdad —se acuerda del código, o del proveedor, no del filtro. */
+  function coincideTexto(l, texto) {
+    const t = String(texto).trim().toLowerCase();
+    if (!t) return true;
+    return [l.codigoLote, l.folio, l.estado, nombreProveedor(l.proveedorId),
+            nombreLinea(l.lineaId), l.fecha]
+      .some(function (c) { return String(c || "").toLowerCase().indexOf(t) !== -1; });
+  }
+
   function filtrar(filtros) {
     const f = filtros || {};
     const desde = f.desde || "0000-01-01";
     const hasta = f.hasta || "9999-12-31";
 
     const lotes = DB.all("lotes").filter(function (l) {
+      if (f.texto && !coincideTexto(l, f.texto)) return false;
       if (l.fecha < desde || l.fecha > hasta) return false;
       if (f.proveedorId && l.proveedorId !== f.proveedorId) return false;
       if (f.lineaId && l.lineaId !== f.lineaId) return false;
@@ -833,6 +845,7 @@ const Indicadores = (function () {
 
   return {
     filtrar: filtrar,
+    coincideTexto: coincideTexto,
     calcular: calcular,
     porProveedor: porProveedor,
     porLinea: porLinea,

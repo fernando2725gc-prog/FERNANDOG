@@ -121,6 +121,47 @@ const UI = (function () {
       '<p class="kpi-detalle">' + (detalle || "") + "</p></article>";
   }
 
+  /* ---------------------------------------------------------- campana */
+
+  /* El botón y el panel son iguales en las dos aplicaciones; lo que cambia
+     es a dónde lleva cada aviso, y de eso se encarga quien la monta. */
+  function campana(sinVer) {
+    return '<button class="btn btn-plano campana" id="btnCampana" aria-haspopup="true" ' +
+      'aria-expanded="false" title="Novedades">' +
+      '<span aria-hidden="true">🔔</span>' +
+      (sinVer > 0
+        ? '<span class="campana-contador">' + (sinVer > 9 ? "9+" : sinVer) + "</span>" +
+          '<span class="sr">' + sinVer + " novedades sin ver</span>"
+        : '<span class="sr">Novedades</span>') + "</button>";
+  }
+
+  function panelNovedades(lista) {
+    let html = '<div class="novedades" id="panelNovedades" role="dialog" ' +
+      'aria-label="Novedades"><header class="novedades-cab"><strong>Novedades</strong>' +
+      '<button type="button" class="modal-x" id="cerrarNovedades" aria-label="Cerrar">&times;</button>' +
+      "</header>";
+
+    if (!lista.length) {
+      html += '<p class="novedades-vacio">Nada nuevo por ahora. Cuando algo cambie, ' +
+        "aparecerá aquí.</p></div>";
+      return html;
+    }
+
+    html += '<ul class="novedades-lista">';
+    lista.forEach(function (n) {
+      html += '<li class="novedad novedad-' + esc(n.tipo) + (n.nuevo ? " novedad-nueva" : "") +
+        '"><button type="button" class="novedad-btn" data-novedad="' + esc(n.ir) + '"' +
+        (n.lote ? ' data-novedad-lote="' + esc(n.lote) + '"' : "") + ">" +
+        '<span class="novedad-icono" aria-hidden="true">' + esc(n.icono) + "</span>" +
+        '<span class="novedad-texto"><strong>' + esc(n.titulo) + "</strong>" +
+        "<small>" + esc(n.detalle) + "</small></span>" +
+        '<span class="novedad-fecha">' + fechaCorta(n.fecha) + "</span>" +
+        (n.nuevo ? '<span class="novedad-punto" aria-label="sin ver"></span>' : "") +
+        "</button></li>";
+    });
+    return html + "</ul></div>";
+  }
+
   function insignia(estado) {
     return '<span class="estado estado-' + esc(String(estado).toLowerCase()) + '">' +
       esc(estado) + "</span>";
@@ -562,6 +603,7 @@ const UI = (function () {
     esc: esc, nf: nf, pct: pct, pctFirmado: pctFirmado, money: money,
     cajas: cajas, minutos: minutos, fechaLarga: fechaLarga, fechaCorta: fechaCorta,
     origen: origen, aviso: aviso, tabla: tabla, kpi: kpi, insignia: insignia,
+    campana: campana, panelNovedades: panelNovedades,
     etiquetaLinea: etiquetaLinea,
     abrirFormulario: abrirFormulario, leerRepetible: leerRepetible,
     prepararGuardado: prepararGuardado, descargar: descargar, descargarCSV: descargarCSV,

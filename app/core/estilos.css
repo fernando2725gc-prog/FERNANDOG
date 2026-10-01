@@ -1257,3 +1257,96 @@ textarea { resize: vertical; }
   .guia-faq details { break-inside: avoid; }
   .guia-seccion { break-inside: avoid; }
 }
+
+/* ============================ campana y novedades ====================== */
+
+/* Texto solo para lectores de pantalla. */
+.sr {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+
+.campana { position: relative; padding: .5rem .7rem; }
+.campana-contador {
+  position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px;
+  padding: 0 .3rem; border-radius: 999px; background: var(--linea-1); color: #fff;
+  font-size: .68rem; font-weight: 700; display: grid; place-items: center;
+}
+
+.novedades {
+  position: absolute; top: calc(100% + .4rem); right: 1rem; z-index: 50;
+  width: min(380px, calc(100vw - 2rem)); max-height: min(70vh, 520px);
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--superficie); border: 1px solid var(--borde);
+  border-radius: var(--radio); box-shadow: 0 16px 40px rgba(16, 34, 28, .2);
+}
+.novedades-cab {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .7rem .9rem; border-bottom: 1px solid var(--borde);
+}
+.novedades-vacio { margin: 0; padding: 1.6rem 1rem; text-align: center; color: var(--texto-tenue); font-size: .88rem; }
+.novedades-lista { list-style: none; margin: 0; padding: 0; overflow-y: auto; }
+
+.novedad { border-bottom: 1px solid var(--borde); }
+.novedad:last-child { border-bottom: 0; }
+.novedad-btn {
+  display: grid; width: 100%; text-align: left; cursor: pointer; font: inherit;
+  grid-template-columns: 1.6rem 1fr auto; gap: .2rem .6rem; align-items: start;
+  padding: .7rem .9rem; background: transparent; border: 0; color: inherit;
+  position: relative;
+}
+.novedad-btn:hover { background: var(--superficie-2); }
+.novedad-icono { font-size: 1.05rem; line-height: 1.3; }
+.novedad-texto { min-width: 0; }
+.novedad-texto strong { display: block; font-size: .88rem; }
+.novedad-texto small { display: block; color: var(--texto-tenue); font-size: .8rem; line-height: 1.4; }
+.novedad-fecha { font-size: .72rem; color: var(--texto-tenue); white-space: nowrap; }
+.novedad-punto {
+  position: absolute; left: .35rem; top: 1.05rem;
+  width: 7px; height: 7px; border-radius: 50%; background: var(--linea-1);
+}
+.novedad-nueva { background: color-mix(in srgb, var(--verde-suave) 55%, transparent); }
+.novedad-alerta .novedad-icono { filter: none; }
+.novedad-alerta .novedad-texto strong { color: var(--ambar); }
+.novedad-bueno .novedad-texto strong { color: var(--bien); }
+
+/* ================================ buscador ============================= */
+
+.buscador { display: flex; gap: .5rem; align-items: center; margin-bottom: .6rem; }
+.buscador input {
+  flex: 1; min-width: 0; padding: .6rem .8rem; border-radius: 999px;
+  border: 1px solid var(--borde); background: var(--superficie);
+}
+.buscador input:focus { border-color: var(--verde); }
+.buscador-cuenta { margin: -.2rem 0 .6rem; }
+
+/* El botón de repetir vive dentro de una tarjeta que ya es pulsable. */
+.lote-acciones { margin-top: .6rem; display: flex; gap: .4rem; }
+
+@media (max-width: 560px) {
+  .novedades { right: .5rem; left: .5rem; width: auto; }
+}
+
+@media print {
+  .campana, .novedades, .buscador { display: none !important; }
+}
+
+/* ===================== cada módulo con su propia cara ================== */
+
+/* Recepción, Producción y Lotes tenían la misma forma —bloque arriba,
+   tabla abajo— y el mismo color, así que se leían como la misma pantalla.
+   Un acento por módulo basta para saber dónde estás de un vistazo. */
+.vista-recepcion .panel-destacado { border-left-color: var(--ambar); }
+.vista-recepcion .panel-destacado h2 { color: var(--ambar); }
+.vista-produccion .panel-destacado { border-left-color: var(--azul); }
+.vista-produccion .panel-destacado h2 { color: var(--azul); }
+.vista-lotes .panel-destacado { border-left-color: var(--bien); }
+.vista-lotes .panel-destacado h2 { color: var(--bien); }
+
+/* «Lo que buscas está en la otra pantalla»: mejor decirlo que repetir
+   la tabla entera en los dos sitios. */
+.ir-a {
+  margin-top: .9rem; font-size: .86rem; color: var(--texto-tenue);
+  background: var(--superficie-2); border: 1px dashed var(--borde);
+  border-radius: var(--radio); padding: .7rem .9rem;
+}

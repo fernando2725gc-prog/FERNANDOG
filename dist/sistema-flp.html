@@ -1267,6 +1267,99 @@ textarea { resize: vertical; }
   .guia-seccion { break-inside: avoid; }
 }
 
+/* ============================ campana y novedades ====================== */
+
+/* Texto solo para lectores de pantalla. */
+.sr {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+
+.campana { position: relative; padding: .5rem .7rem; }
+.campana-contador {
+  position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px;
+  padding: 0 .3rem; border-radius: 999px; background: var(--linea-1); color: #fff;
+  font-size: .68rem; font-weight: 700; display: grid; place-items: center;
+}
+
+.novedades {
+  position: absolute; top: calc(100% + .4rem); right: 1rem; z-index: 50;
+  width: min(380px, calc(100vw - 2rem)); max-height: min(70vh, 520px);
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--superficie); border: 1px solid var(--borde);
+  border-radius: var(--radio); box-shadow: 0 16px 40px rgba(16, 34, 28, .2);
+}
+.novedades-cab {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .7rem .9rem; border-bottom: 1px solid var(--borde);
+}
+.novedades-vacio { margin: 0; padding: 1.6rem 1rem; text-align: center; color: var(--texto-tenue); font-size: .88rem; }
+.novedades-lista { list-style: none; margin: 0; padding: 0; overflow-y: auto; }
+
+.novedad { border-bottom: 1px solid var(--borde); }
+.novedad:last-child { border-bottom: 0; }
+.novedad-btn {
+  display: grid; width: 100%; text-align: left; cursor: pointer; font: inherit;
+  grid-template-columns: 1.6rem 1fr auto; gap: .2rem .6rem; align-items: start;
+  padding: .7rem .9rem; background: transparent; border: 0; color: inherit;
+  position: relative;
+}
+.novedad-btn:hover { background: var(--superficie-2); }
+.novedad-icono { font-size: 1.05rem; line-height: 1.3; }
+.novedad-texto { min-width: 0; }
+.novedad-texto strong { display: block; font-size: .88rem; }
+.novedad-texto small { display: block; color: var(--texto-tenue); font-size: .8rem; line-height: 1.4; }
+.novedad-fecha { font-size: .72rem; color: var(--texto-tenue); white-space: nowrap; }
+.novedad-punto {
+  position: absolute; left: .35rem; top: 1.05rem;
+  width: 7px; height: 7px; border-radius: 50%; background: var(--linea-1);
+}
+.novedad-nueva { background: color-mix(in srgb, var(--verde-suave) 55%, transparent); }
+.novedad-alerta .novedad-icono { filter: none; }
+.novedad-alerta .novedad-texto strong { color: var(--ambar); }
+.novedad-bueno .novedad-texto strong { color: var(--bien); }
+
+/* ================================ buscador ============================= */
+
+.buscador { display: flex; gap: .5rem; align-items: center; margin-bottom: .6rem; }
+.buscador input {
+  flex: 1; min-width: 0; padding: .6rem .8rem; border-radius: 999px;
+  border: 1px solid var(--borde); background: var(--superficie);
+}
+.buscador input:focus { border-color: var(--verde); }
+.buscador-cuenta { margin: -.2rem 0 .6rem; }
+
+/* El botón de repetir vive dentro de una tarjeta que ya es pulsable. */
+.lote-acciones { margin-top: .6rem; display: flex; gap: .4rem; }
+
+@media (max-width: 560px) {
+  .novedades { right: .5rem; left: .5rem; width: auto; }
+}
+
+@media print {
+  .campana, .novedades, .buscador { display: none !important; }
+}
+
+/* ===================== cada módulo con su propia cara ================== */
+
+/* Recepción, Producción y Lotes tenían la misma forma —bloque arriba,
+   tabla abajo— y el mismo color, así que se leían como la misma pantalla.
+   Un acento por módulo basta para saber dónde estás de un vistazo. */
+.vista-recepcion .panel-destacado { border-left-color: var(--ambar); }
+.vista-recepcion .panel-destacado h2 { color: var(--ambar); }
+.vista-produccion .panel-destacado { border-left-color: var(--azul); }
+.vista-produccion .panel-destacado h2 { color: var(--azul); }
+.vista-lotes .panel-destacado { border-left-color: var(--bien); }
+.vista-lotes .panel-destacado h2 { color: var(--bien); }
+
+/* «Lo que buscas está en la otra pantalla»: mejor decirlo que repetir
+   la tabla entera en los dos sitios. */
+.ir-a {
+  margin-top: .9rem; font-size: .86rem; color: var(--texto-tenue);
+  background: var(--superficie-2); border: 1px dashed var(--borde);
+  border-radius: var(--radio); padding: .7rem .9rem;
+}
+
 </style>
 
 <a class="salto" href="#contenido">Saltar al contenido</a>
@@ -2527,12 +2620,24 @@ const Indicadores = (function () {
 
   /* --------------------------------------------------------------- filtro */
 
+  /* Texto libre: busca por código de lote, proveedor, línea o estado. Es
+     un solo cuadro en vez de tres desplegables, que es como la gente busca
+     de verdad —se acuerda del código, o del proveedor, no del filtro. */
+  function coincideTexto(l, texto) {
+    const t = String(texto).trim().toLowerCase();
+    if (!t) return true;
+    return [l.codigoLote, l.folio, l.estado, nombreProveedor(l.proveedorId),
+            nombreLinea(l.lineaId), l.fecha]
+      .some(function (c) { return String(c || "").toLowerCase().indexOf(t) !== -1; });
+  }
+
   function filtrar(filtros) {
     const f = filtros || {};
     const desde = f.desde || "0000-01-01";
     const hasta = f.hasta || "9999-12-31";
 
     const lotes = DB.all("lotes").filter(function (l) {
+      if (f.texto && !coincideTexto(l, f.texto)) return false;
       if (l.fecha < desde || l.fecha > hasta) return false;
       if (f.proveedorId && l.proveedorId !== f.proveedorId) return false;
       if (f.lineaId && l.lineaId !== f.lineaId) return false;
@@ -3308,6 +3413,7 @@ const Indicadores = (function () {
 
   return {
     filtrar: filtrar,
+    coincideTexto: coincideTexto,
     calcular: calcular,
     porProveedor: porProveedor,
     porLinea: porLinea,
@@ -3780,6 +3886,47 @@ const UI = (function () {
       '<p class="kpi-detalle">' + (detalle || "") + "</p></article>";
   }
 
+  /* ---------------------------------------------------------- campana */
+
+  /* El botón y el panel son iguales en las dos aplicaciones; lo que cambia
+     es a dónde lleva cada aviso, y de eso se encarga quien la monta. */
+  function campana(sinVer) {
+    return '<button class="btn btn-plano campana" id="btnCampana" aria-haspopup="true" ' +
+      'aria-expanded="false" title="Novedades">' +
+      '<span aria-hidden="true">🔔</span>' +
+      (sinVer > 0
+        ? '<span class="campana-contador">' + (sinVer > 9 ? "9+" : sinVer) + "</span>" +
+          '<span class="sr">' + sinVer + " novedades sin ver</span>"
+        : '<span class="sr">Novedades</span>') + "</button>";
+  }
+
+  function panelNovedades(lista) {
+    let html = '<div class="novedades" id="panelNovedades" role="dialog" ' +
+      'aria-label="Novedades"><header class="novedades-cab"><strong>Novedades</strong>' +
+      '<button type="button" class="modal-x" id="cerrarNovedades" aria-label="Cerrar">&times;</button>' +
+      "</header>";
+
+    if (!lista.length) {
+      html += '<p class="novedades-vacio">Nada nuevo por ahora. Cuando algo cambie, ' +
+        "aparecerá aquí.</p></div>";
+      return html;
+    }
+
+    html += '<ul class="novedades-lista">';
+    lista.forEach(function (n) {
+      html += '<li class="novedad novedad-' + esc(n.tipo) + (n.nuevo ? " novedad-nueva" : "") +
+        '"><button type="button" class="novedad-btn" data-novedad="' + esc(n.ir) + '"' +
+        (n.lote ? ' data-novedad-lote="' + esc(n.lote) + '"' : "") + ">" +
+        '<span class="novedad-icono" aria-hidden="true">' + esc(n.icono) + "</span>" +
+        '<span class="novedad-texto"><strong>' + esc(n.titulo) + "</strong>" +
+        "<small>" + esc(n.detalle) + "</small></span>" +
+        '<span class="novedad-fecha">' + fechaCorta(n.fecha) + "</span>" +
+        (n.nuevo ? '<span class="novedad-punto" aria-label="sin ver"></span>' : "") +
+        "</button></li>";
+    });
+    return html + "</ul></div>";
+  }
+
   function insignia(estado) {
     return '<span class="estado estado-' + esc(String(estado).toLowerCase()) + '">' +
       esc(estado) + "</span>";
@@ -4221,6 +4368,7 @@ const UI = (function () {
     esc: esc, nf: nf, pct: pct, pctFirmado: pctFirmado, money: money,
     cajas: cajas, minutos: minutos, fechaLarga: fechaLarga, fechaCorta: fechaCorta,
     origen: origen, aviso: aviso, tabla: tabla, kpi: kpi, insignia: insignia,
+    campana: campana, panelNovedades: panelNovedades,
     etiquetaLinea: etiquetaLinea,
     abrirFormulario: abrirFormulario, leerRepetible: leerRepetible,
     prepararGuardado: prepararGuardado, descargar: descargar, descargarCSV: descargarCSV,
@@ -4234,6 +4382,190 @@ const UI = (function () {
     repintarSiSeguro: repintarSiSeguro,
     rutaOtraApp: rutaOtraApp,
     alArrancar: alArrancar
+  };
+})();
+
+</script>
+
+<script>
+/* =========================================================================
+   novedades.js — "¿Qué pasó desde la última vez que entré?"
+
+   Sin esto, saber si algo cambió obliga a entrar a mirar: el proveedor
+   revisa si ya pesaron su fruta, Recepción revisa si llegó un anuncio,
+   Supervisión revisa si quedó algo sin cerrar. Esta campana lo dice sola.
+
+   No se guarda una lista de avisos en ningún lado: se DEDUCEN del estado
+   actual de los lotes cada vez que hace falta. Lo único que se guarda, y
+   solo en el propio equipo, es qué avisos ya vio esta persona. Así no hay
+   nada que sincronizar, nada que se desfase y nada que limpiar.
+   ========================================================================= */
+
+const Novedades = (function () {
+  "use strict";
+
+  const TOPE = 40;          // lo que se muestra; más abajo está el historial
+  const TOPE_VISTOS = 400;  // claves recordadas antes de empezar a podar
+
+  function clave(usuarioId) { return "flp.visto." + usuarioId; }
+
+  function leerVistos(usuarioId) {
+    try {
+      const raw = localStorage.getItem(clave(usuarioId));
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  }
+
+  function guardarVistos(usuarioId, lista) {
+    try {
+      localStorage.setItem(clave(usuarioId), JSON.stringify(lista.slice(-TOPE_VISTOS)));
+    } catch (e) { /* sin espacio: se vuelve a avisar, que es el lado seguro */ }
+  }
+
+  function fechaDe(l) {
+    return l.fechaCierre || l.fechaRecepcion || l.fecha;
+  }
+
+  /* ---------------------------------------------------- qué le importa */
+
+  /* El proveedor se entera de lo que le pasó a SU fruta. Nada del interior
+     de la planta: ni causas, ni mermas, ni lo de otros proveedores. */
+  function paraProveedor(proveedorId) {
+    const out = [];
+    DB.all("lotes").forEach(function (l) {
+      if (l.proveedorId !== proveedorId) return;
+
+      if (l.estado === "Rechazado") {
+        out.push({
+          id: "rech:" + l.id, tipo: "alerta", icono: "⛔",
+          titulo: "Rechazaron el lote " + l.codigoLote,
+          detalle: l.observacionesRecepcion || "Sin motivo anotado.",
+          fecha: fechaDe(l), ir: "lotes", lote: l.id
+        });
+        return;
+      }
+      if (l.cajasRecibidas !== null) {
+        const dif = l.cajasRecibidas - l.cajasAnunciadas;
+        out.push({
+          id: "pesado:" + l.id, tipo: dif < 0 ? "alerta" : "info", icono: "⚖️",
+          titulo: "Pesaron tu lote " + l.codigoLote,
+          detalle: "Anunciaste " + l.cajasAnunciadas + " cajas y se recibieron " +
+            l.cajasRecibidas + (dif === 0 ? "." : dif > 0 ? ", " + dif + " más." : ", " + Math.abs(dif) + " menos."),
+          fecha: l.fechaRecepcion || fechaDe(l), ir: "lotes", lote: l.id
+        });
+      }
+      if (l.estado === "Cerrado" && l.reporteEnviado) {
+        out.push({
+          id: "reporte:" + l.id, tipo: "bueno", icono: "📄",
+          titulo: "Ya tienes el reporte del lote " + l.codigoLote,
+          detalle: "La planta cerró el lote. Puedes ver el resultado completo.",
+          fecha: l.fechaReporte || l.fechaCierre, ir: "lotes", lote: l.id
+        });
+      }
+    });
+    return out;
+  }
+
+  /* Cada rol de planta ve el trabajo que le está esperando a ÉL. */
+  function paraPlanta(rol) {
+    const out = [];
+    const lotes = DB.all("lotes");
+
+    if (rol === "recepcion" || rol === "supervisor") {
+      lotes.filter(function (l) { return l.estado === "Anunciado"; }).forEach(function (l) {
+        out.push({
+          id: "anuncio:" + l.id, tipo: "info", icono: "🚚",
+          titulo: "Envío anunciado: " + l.codigoLote,
+          detalle: Indicadores.nombreProveedor(l.proveedorId) + " · " +
+            l.cajasAnunciadas + " cajas de " + Indicadores.nombreLinea(l.lineaId) +
+            ". Esperando pesaje.",
+          fecha: l.fecha, ir: "recepcion", lote: l.id
+        });
+      });
+    }
+
+    if (rol === "produccion" || rol === "supervisor") {
+      lotes.filter(function (l) { return l.estado === "Recibido"; }).forEach(function (l) {
+        out.push({
+          id: "porprocesar:" + l.id, tipo: "info", icono: "🏭",
+          titulo: "Listo para procesar: " + l.codigoLote,
+          detalle: l.cajasRecibidas + " cajas en cámara · " +
+            Indicadores.nombreLinea(l.lineaId) + ".",
+          fecha: l.fechaRecepcion || l.fecha, ir: "produccion", lote: l.id
+        });
+      });
+    }
+
+    if (rol === "supervisor") {
+      lotes.filter(function (l) { return l.estado === "Procesado"; }).forEach(function (l) {
+        const dias = Math.round((new Date(DB.hoy()) - new Date(l.fecha)) / 86400000);
+        out.push({
+          id: "porcerrar:" + l.id, tipo: dias > 7 ? "alerta" : "info", icono: "✅",
+          titulo: "Esperando tu cierre: " + l.codigoLote,
+          detalle: Indicadores.nombreProveedor(l.proveedorId) +
+            (dias > 7 ? " · lleva " + dias + " días abierto." : " · terminado en planta."),
+          fecha: l.fecha, ir: "lotes", lote: l.id
+        });
+      });
+
+      /* Una cuenta entregada y nunca usada suele ser un acceso que se
+         perdió por el camino: conviene saberlo, no descubrirlo tarde. */
+      DB.all("usuarios").filter(function (u) {
+        return u.activo && u.debeCambiar && !u.ultimoAcceso;
+      }).forEach(function (u) {
+        out.push({
+          id: "sinusar:" + u.id, tipo: "alerta", icono: "🔑",
+          titulo: "Acceso sin estrenar: " + u.nombre,
+          detalle: "Se le entregó una clave temporal y todavía no ha entrado.",
+          fecha: DB.hoy(), ir: "usuarios"
+        });
+      });
+    }
+
+    return out;
+  }
+
+  /* ------------------------------------------------------------ lista */
+
+  function listar(usuario) {
+    if (!usuario) return [];
+    const lista = usuario.rol === "proveedor"
+      ? paraProveedor(usuario.proveedorId)
+      : paraPlanta(usuario.rol);
+
+    const vistos = leerVistos(usuario.id);
+    lista.forEach(function (n) { n.nuevo = vistos.indexOf(n.id) === -1; });
+
+    /* Lo nuevo primero y, dentro de cada grupo, lo más reciente arriba:
+       quien abre la campana quiere ver antes lo que no sabía. */
+    lista.sort(function (a, b) {
+      if (a.nuevo !== b.nuevo) return a.nuevo ? -1 : 1;
+      return a.fecha < b.fecha ? 1 : -1;
+    });
+    return lista.slice(0, TOPE);
+  }
+
+  function sinVer(usuario) {
+    return listar(usuario).filter(function (n) { return n.nuevo; }).length;
+  }
+
+  /* Se marcan como vistos los que de verdad se le mostraron. */
+  function marcarVistos(usuario, lista) {
+    if (!usuario) return;
+    const vistos = leerVistos(usuario.id);
+    lista.forEach(function (n) {
+      if (vistos.indexOf(n.id) === -1) vistos.push(n.id);
+    });
+    guardarVistos(usuario.id, vistos);
+  }
+
+  function olvidar(usuario) {
+    if (!usuario) return;
+    try { localStorage.removeItem(clave(usuario.id)); } catch (e) { /* noop */ }
+  }
+
+  return {
+    listar: listar, sinVer: sinVer, marcarVistos: marcarVistos, olvidar: olvidar
   };
 })();
 
@@ -4648,6 +4980,9 @@ const Guia = (function () {
 
   let usuario = null;
   let vista = "inicio";
+  let novedadesAbiertas = false;
+  /* Texto escrito en el buscador de «Mis envíos». */
+  let busqueda = "";
 
   /* ============================== sesión ============================== */
 
@@ -4695,6 +5030,8 @@ const Guia = (function () {
   }
 
   function salir() {
+    novedadesAbiertas = false;
+    busqueda = "";
     if (usuario) DB.registrarBitacora(usuario.id, "Salida del portal", usuario.nombre);
     usuario = null;
     if (repintado) { clearTimeout(repintado); repintado = null; }
@@ -4855,24 +5192,85 @@ const Guia = (function () {
             '">' + (dif > 0 ? "+" : "") + nf(dif) + "</span>" : "") + "</p>";
     }
 
+    /* Repetir: casi todos los envíos se parecen al anterior. Es el atajo
+       que convierte minuto y medio de formulario en diez segundos. */
+    html += '<div class="lote-acciones">' +
+      '<button type="button" class="btn-mini" data-repetir="' + esc(l.id) + '">' +
+      "Repetir este envío</button></div>";
+
     html += "</article>";
     return html;
   }
 
+  /* Buscar por código, por producto o por estado. Con tres meses de envíos
+     encima, desplazarse hasta encontrar uno deja de ser razonable. */
+  function coincide(l, texto) {
+    if (!texto) return true;
+    const t = texto.toLowerCase();
+    return [l.codigoLote, l.estado, Indicadores.nombreLinea(l.lineaId),
+            UI.fechaCorta(l.fecha), String(l.cajasAnunciadas)]
+      .some(function (c) { return String(c).toLowerCase().indexOf(t) !== -1; });
+  }
+
   function vistaLotes() {
-    const lotes = misLotes();
+    const todos = misLotes();
+    const lotes = todos.filter(function (l) { return coincide(l, busqueda); });
+
     let html = '<div class="vista-cab"><div><h1>Mis envíos</h1>' +
-      '<p class="sub">' + lotes.length + " lotes registrados</p></div>" +
+      '<p class="sub">' + todos.length + " lotes registrados</p></div>" +
       '<button class="btn btn-primario" data-ir="anunciar">+ Anunciar</button></div>';
 
-    if (!lotes.length) {
+    if (!todos.length) {
       return html + '<p class="vacio">Todavía no has anunciado ningún envío.</p>';
+    }
+
+    html += '<div class="buscador"><label class="sr" for="buscar">Buscar envío</label>' +
+      '<input type="search" id="buscar" value="' + esc(busqueda) + '" ' +
+      'placeholder="Buscar por código, producto o estado…" autocomplete="off">' +
+      (busqueda ? '<button type="button" class="btn btn-plano btn-sm" id="btnLimpiarBusca">Limpiar</button>' : "") +
+      "</div>";
+
+    if (!lotes.length) {
+      return html + '<p class="vacio">Ningún envío coincide con «' + esc(busqueda) + '».</p>';
+    }
+    if (busqueda) {
+      html += '<p class="sub buscador-cuenta">' + lotes.length + " de " + todos.length +
+        " envíos</p>";
     }
 
     html += '<div class="pila">';
     lotes.forEach(function (l) { html += tarjetaLote(l); });
     html += "</div>";
     return html;
+  }
+
+  function novedadesActuales() {
+    const lista = Novedades.listar(usuario);
+    Novedades.marcarVistos(usuario, lista);
+    return lista;
+  }
+
+  function enlazarNovedades() {
+    const btn = $("#btnCampana");
+    if (btn) {
+      btn.addEventListener("click", function () {
+        novedadesAbiertas = !novedadesAbiertas;
+        render();
+      });
+    }
+    const cerrar = $("#cerrarNovedades");
+    if (cerrar) {
+      cerrar.addEventListener("click", function () { novedadesAbiertas = false; render(); });
+    }
+    $$("[data-novedad]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        novedadesAbiertas = false;
+        const lote = b.dataset.novedadLote;
+        vista = b.dataset.novedad;
+        render();
+        if (lote) verFicha(lote);
+      });
+    });
   }
 
   function vistaAyuda() {
@@ -4978,21 +5376,27 @@ const Guia = (function () {
 
   /* --------------------------------------------------------- anunciar */
 
-  function formAnunciar() {
+  /* `base` es un envío anterior del que se copian los datos que suelen
+     repetirse. La fecha NO se copia: ese envío es de hoy, no de aquel día. */
+  function formAnunciar(base) {
     const lineas = DB.all("lineas").filter(function (l) { return l.activa; });
+    const b = base || {};
 
     const campos = [
       { nombre: "lineaId", etiqueta: "¿Qué producto envías?", tipo: "select", requerido: true,
-        vacio: "Selecciona…", ayuda: "Al elegirlo se precarga el peso nominal de su caja.",
+        vacio: "Selecciona…", valor: b.lineaId || "",
+        ayuda: "Al elegirlo se precarga el peso nominal de su caja.",
         opciones: lineas.map(function (l) { return { valor: l.id, texto: l.nombre }; }) },
       { nombre: "fecha", etiqueta: "Fecha del envío", tipo: "date", valor: DB.hoy(),
         requerido: true, ancho: "mitad",
         validar: function (v) { return v > DB.hoy() ? "La fecha no puede ser futura." : null; } },
       { nombre: "cajasAnunciadas", etiqueta: "¿Cuántas cajas envías?", tipo: "number",
         requerido: true, min: 1, max: 5000, paso: "1", ancho: "mitad",
+        valor: b.cajasAnunciadas || "",
         ayuda: "Cajas de " + DB.PESO_CAJA_KG + " kg. Recepción las contará y pesará al llegar." },
       { nombre: "pesoCajaDeclarado", etiqueta: "Peso estimado por caja (kg)", tipo: "number",
         requerido: true, min: 1, max: 60, paso: "0.1", ancho: "mitad",
+        valor: b.pesoCajaDeclarado || "",
         ayuda: "El peso nominal es " + DB.PESO_CAJA_KG + " kg. Ajústalo si tus cajas " +
           "van más llenas o más livianas: la planta pesará en báscula y comparará.",
         validar: function (v, d) {
@@ -5006,10 +5410,10 @@ const Guia = (function () {
           return null;
         } },
       { nombre: "calidadDeclarada", etiqueta: "Calidad que declaras", tipo: "select",
-        requerido: true, ancho: "mitad", valor: "A",
+        requerido: true, ancho: "mitad", valor: b.calidadDeclarada || "A",
         opciones: DB.CALIDADES.map(function (c) { return { valor: c.id, texto: c.nombre }; }) },
       { nombre: "transporte", etiqueta: "Transporte", tipo: "select", ancho: "mitad",
-        valor: "Propio",
+        valor: b.transporte || "Propio",
         opciones: [{ valor: "Propio", texto: "Propio" }, { valor: "Contratado", texto: "Contratado" }] },
       { nombre: "resumenCalc", etiqueta: "Equivalencia del envío", tipo: "calculado",
         ayuda: "Peso y valor estimados. Se liquidará sobre lo que pese la báscula." },
@@ -5017,7 +5421,8 @@ const Guia = (function () {
         tipo: "textarea", marcador: "Estado de la fruta, hora de salida, novedades del viaje." }
     ];
 
-    UI.abrirFormulario("Anunciar un envío", campos, function (d) {
+    UI.abrirFormulario(base ? "Repetir el envío " + base.codigoLote : "Anunciar un envío",
+      campos, function (d) {
       const linea = DB.linea(d.lineaId);
       const n = DB.all("lotes").length + 1;
       const lote = DB.insert("lotes", {
@@ -5050,7 +5455,10 @@ const Guia = (function () {
       render();
     }, {
       aceptar: "Anunciar envío",
-      nota: "La planta verá tu envío al instante y lo pesará cuando llegue.",
+      nota: base
+        ? "Copiado de <strong>" + esc(base.codigoLote) + "</strong>, con la fecha de hoy. " +
+          "Cambia lo que sea distinto antes de guardar."
+        : "La planta verá tu envío al instante y lo pesará cuando llegue.",
       alCambiar: function (d, form) {
         const linea = DB.linea(d.lineaId);
         const campoPeso = $("#campo_pesoCajaDeclarado", form);
@@ -5318,8 +5726,10 @@ const Guia = (function () {
       "<div><strong>Portal del Proveedor</strong><small>" + esc(miProveedor().nombre) +
       "</small></div></div>" +
       '<div class="portal-acciones">' +
+      UI.campana(Novedades.sinVer(usuario)) +
       '<button class="btn btn-plano btn-sm" id="btnClave" title="Cambiar contraseña">🔑</button>' +
-      '<button class="btn btn-plano btn-sm" id="btnSalir">Salir</button></div></header>';
+      '<button class="btn btn-plano btn-sm" id="btnSalir">Salir</button></div>' +
+      (novedadesAbiertas ? UI.panelNovedades(novedadesActuales()) : "") + "</header>";
 
     html += '<main id="contenido" tabindex="-1">';
     const sinEnviar = DB.pendientes();
@@ -5411,6 +5821,33 @@ const Guia = (function () {
         if (m) m.focus();
       });
     });
+
+    $$("[data-repetir]").forEach(function (b) {
+      b.addEventListener("click", function (ev) {
+        /* La tarjeta entera abre la ficha; este botón no debe hacerlo. */
+        ev.stopPropagation();
+        const l = DB.get("lotes", b.dataset.repetir);
+        if (l) formAnunciar(l);
+      });
+    });
+
+    const buscar = $("#buscar");
+    if (buscar) {
+      buscar.addEventListener("input", function () {
+        busqueda = buscar.value;
+        render();
+        /* Repintar devuelve el foco al cuadro y lo deja al final del texto,
+           para poder seguir escribiendo sin tocar la pantalla otra vez. */
+        const otra = $("#buscar");
+        if (otra) { otra.focus(); otra.setSelectionRange(otra.value.length, otra.value.length); }
+      });
+    }
+    const limpiar = $("#btnLimpiarBusca");
+    if (limpiar) {
+      limpiar.addEventListener("click", function () { busqueda = ""; render(); });
+    }
+
+    enlazarNovedades();
 
     const impGuia = $("#btnImprimirGuia");
     if (impGuia) impGuia.addEventListener("click", function () { window.print(); });
@@ -5559,10 +5996,12 @@ const Guia = (function () {
   let reporteActual = "proveedor";
   /* Escenario del simulador de mejora: vive mientras dure la sesión. */
   let escenario = null;
+  /* La campana está abierta o cerrada; se cierra sola al repintar. */
+  let novedadesAbiertas = false;
 
   let filtros = {
     desde: DB.diasAtras(30), hasta: DB.hoy(),
-    proveedorId: "", lineaId: "", calidad: "", estado: ""
+    proveedorId: "", lineaId: "", calidad: "", estado: "", texto: ""
   };
 
   const ROLES_INTERNOS = ["recepcion", "produccion", "supervisor"];
@@ -5613,6 +6052,7 @@ const Guia = (function () {
 
     Auth.limpiarFallos(login);
     usuario = u;
+    novedadesAbiertas = false;
     DB.update("usuarios", u.id, { ultimoAcceso: new Date().toISOString() });
     UI.abrirSesion(SESION, u.id, recordar);
     DB.registrarBitacora(u.id, "Inicio de sesión", u.nombre + " · " + u.rol);
@@ -5622,6 +6062,10 @@ const Guia = (function () {
   function salir() {
     if (usuario) DB.registrarBitacora(usuario.id, "Cierre de sesión", usuario.nombre);
     usuario = null;
+    /* El panel abierto no puede sobrevivir al cambio de persona: se
+       quedaba abierto y le enseñaba a la siguiente los avisos de la
+       anterior en cuanto entraba. */
+    novedadesAbiertas = false;
     if (repintado) { clearTimeout(repintado); repintado = null; }
     vista = "panel";
     UI.cerrarSesion(SESION);
@@ -5664,7 +6108,20 @@ const Guia = (function () {
 
   function barraFiltros(o) {
     o = o || {};
-    let html = '<form class="filtros" id="formFiltros">';
+    let html = "";
+
+    /* El buscador va fuera del formulario de filtros y filtra mientras se
+       escribe: buscar un lote por su código no debería costar un clic en
+       «Aplicar». */
+    if (o.buscar !== false) {
+      html += '<div class="buscador"><label class="sr" for="buscarLote">Buscar lote</label>' +
+        '<input type="search" id="buscarLote" value="' + esc(filtros.texto || "") + '" ' +
+        'placeholder="Buscar por código, proveedor, línea o estado…" autocomplete="off">' +
+        (filtros.texto ? '<button type="button" class="btn btn-plano btn-sm" id="btnLimpiarBusca">Limpiar</button>' : "") +
+        "</div>";
+    }
+
+    html += '<form class="filtros" id="formFiltros">';
     html += '<div class="campo"><label for="fDesde">Desde</label>' +
       '<input type="date" id="fDesde" name="desde" value="' + esc(filtros.desde) + '"></div>';
     html += '<div class="campo"><label for="fHasta">Hasta</label>' +
@@ -6032,7 +6489,8 @@ const Guia = (function () {
   function vistaRecepcion() {
     const pendientes = DB.all("lotes").filter(function (l) { return l.estado === "Anunciado"; })
       .sort(function (a, b) { return a.fecha < b.fecha ? -1 : 1; });
-    const pesados = Indicadores.filtrar(filtros).lotes
+    /* El turno de quien pesa no se mira por rango de fechas: se mira hoy. */
+    const pesados = DB.all("lotes")
       .filter(function (l) { return l.cajasRecibidas !== null; })
       .sort(function (a, b) { return a.fechaRecepcion < b.fechaRecepcion ? 1 : -1; });
 
@@ -6060,19 +6518,50 @@ const Guia = (function () {
     }
     html += "</section>";
 
-    html += '<h2 class="seccion-titulo">Historial de pesaje</h2>';
-    html += barraFiltros({ calidad: true });
+    /* Abajo iba el historial completo, con las mismas nueve columnas que la
+       pantalla de Lotes: dos sitios distintos enseñando exactamente lo
+       mismo. Aquí basta con el propio turno —para repasar lo hecho y
+       corregir un dedazo—; el histórico, y buscarlo, es cosa de Lotes. */
+    /* Si hoy todavía no se ha pesado nada, la pantalla no se queda muerta:
+       enseña los últimos pesajes, que es lo que se querría repasar. */
+    const hoy = DB.hoy();
+    const deHoy = pesados.filter(function (l) { return l.fechaRecepcion === hoy; });
+    const delDia = deHoy.length ? deHoy : pesados.slice(0, 10);
 
-    const anun = pesados.reduce(function (a, l) { return a + l.cajasAnunciadas; }, 0);
-    const real = pesados.reduce(function (a, l) { return a + l.cajasRecibidas; }, 0);
-    html += '<p class="resumen-linea"><strong>' + nf(pesados.length) + "</strong> lotes · anunciadas <strong>" +
+    html += '<h2 class="seccion-titulo">' +
+      (deHoy.length ? "Lo que has pesado hoy" : "Últimos pesajes") + "</h2>";
+
+    const anun = delDia.reduce(function (a, l) { return a + l.cajasAnunciadas; }, 0);
+    const real = delDia.reduce(function (a, l) { return a + l.cajasRecibidas; }, 0);
+    html += '<p class="resumen-linea"><strong>' + nf(delDia.length) + "</strong> lotes · anunciadas <strong>" +
       nf(anun) + "</strong> cajas · pesadas <strong>" + nf(real) + "</strong> · diferencia <strong>" +
       pctFirmado(anun > 0 ? (real - anun) / anun : 0) + "</strong></p>";
 
-    html += UI.tabla(columnasLote({ acciones: true }), pesados,
-      { vacio: "No se ha pesado ningún lote en este período." });
+    html += UI.tabla([
+      { titulo: "Lote", valor: function (l) { return "<code>" + esc(l.codigoLote) + "</code>"; } },
+      { titulo: "Proveedor", valor: function (l) { return esc(Indicadores.nombreProveedor(l.proveedorId)); } },
+      { titulo: "Anunciadas", num: true, valor: function (l) { return nf(l.cajasAnunciadas); } },
+      { titulo: "Pesadas", num: true, valor: function (l) { return nf(l.cajasRecibidas); } },
+      { titulo: "Kilos", num: true, valor: function (l) { return nf(l.kgRecibidos) + " kg"; } },
+      { titulo: "Diferencia", num: true, valor: function (l) {
+        if (!l.cajasAnunciadas) return '<span class="tenue">—</span>';
+        const d = (l.cajasRecibidas - l.cajasAnunciadas) / l.cajasAnunciadas;
+        const clase = Math.abs(d) <= 0.01 ? "etq-ok" : Math.abs(d) <= 0.03 ? "etq-B" : "etq-bajo";
+        return '<span class="etq ' + clase + '">' + pctFirmado(d) + "</span>"; } },
+      { titulo: "", valor: function (l) {
+        return '<button class="btn-mini" data-ficha="' + esc(l.id) + '">Ficha</button>' +
+          (puede("corregir_pesaje")
+            ? '<button class="btn-mini" data-corregir-pesaje="' + esc(l.id) + '">Corregir</button>' : ""); } }
+    ], delDia, { vacio: "Todavía no se ha pesado ningún lote." });
+
+    html += '<p class="ir-a">¿Buscas un lote de otro día? Está en ' +
+      '<button type="button" class="enlace" data-ir="lotes">Lotes</button>, ' +
+      "con buscador por código y proveedor.</p>";
+
     return html;
   }
+
+
 
   function formPesar(loteId, corregir) {
     const l = DB.get("lotes", loteId);
@@ -6258,6 +6747,9 @@ const Guia = (function () {
       "</strong> exportables · tasa <strong>" + pct(proc > 0 ? exp / proc : 0) + "</strong></p>";
 
     html += UI.tabla(columnasProduccion(), lista, { vacio: "No hay producción en este período." });
+    html += '<p class="ir-a">Esta tabla es el registro de <strong>lo producido</strong>. ' +
+      "El recorrido completo de cada pedido —anuncio, pesaje, cierre— está en " +
+      '<button type="button" class="enlace" data-ir="lotes">Lotes</button>.</p>';
     return html;
   }
 
@@ -6620,7 +7112,9 @@ const Guia = (function () {
       '<p class="sub">Recorrido completo, del anuncio del proveedor al cierre.</p></div>' +
       '<div class="cab-acciones"><button class="btn btn-plano" id="btnCsvLotes">Exportar CSV</button></div></div>';
 
-    if (puede("cerrar")) {
+    /* Mientras se busca algo concreto, la cola de cierre sobra: quien
+       escribe un código quiere ver ese lote, no otra tabla encima. */
+    if (puede("cerrar") && !filtros.texto) {
       html += '<section class="panel panel-destacado"><h2>Terminados, esperando el cierre (' +
         nf(porCerrar.length) + ")</h2>" +
         '<p class="sub panel-sub">Producción ya registró estos pedidos. Al cerrarlos ' +
@@ -7035,6 +7529,39 @@ const Guia = (function () {
       UI.origen("E") + " estimado · " + UI.origen("S") + " fuente secundaria.</p></footer>";
     html += "</section>";
     return html;
+  }
+
+  /* ============================== novedades =========================== */
+
+  function novedadesActuales() {
+    const lista = Novedades.listar(usuario);
+    /* Se marcan vistas al mostrarlas, no al pulsarlas: si la persona las
+       leyó y no hizo nada, ya se enteró, y volver a avisarle es ruido. */
+    Novedades.marcarVistos(usuario, lista);
+    return lista;
+  }
+
+  function enlazarNovedades() {
+    const btn = $("#btnCampana");
+    if (btn) {
+      btn.addEventListener("click", function () {
+        novedadesAbiertas = !novedadesAbiertas;
+        render();
+      });
+    }
+    const cerrar = $("#cerrarNovedades");
+    if (cerrar) {
+      cerrar.addEventListener("click", function () { novedadesAbiertas = false; render(); });
+    }
+    $$("[data-novedad]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        novedadesAbiertas = false;
+        const lote = b.dataset.novedadLote;
+        vista = b.dataset.novedad;
+        render();
+        if (lote) verFicha(lote);
+      });
+    });
   }
 
   /* ================================ guía =============================== */
@@ -7988,10 +8515,12 @@ const Guia = (function () {
       '<div class="barra-usuario"><div class="avatar" aria-hidden="true">' +
       esc(rol ? rol.icono : "·") + "</div><div><strong>" + esc(usuario.nombre) + "</strong>" +
       "<small>" + esc(rol ? rol.nombre : usuario.rol) + "</small></div>" +
+      UI.campana(Novedades.sinVer(usuario)) +
       '<button class="btn btn-plano" id="btnClave" title="Cambiar mi clave">🔑</button>' +
-      '<button class="btn btn-plano" id="btnSalir">Salir</button></div></header>';
+      '<button class="btn btn-plano" id="btnSalir">Salir</button></div>' +
+      (novedadesAbiertas ? UI.panelNovedades(novedadesActuales()) : "") + "</header>";
 
-    html += '<main id="contenido" tabindex="-1">';
+    html += '<main id="contenido" tabindex="-1" class="vista-' + esc(vista) + '">';
     const sinEnviar = DB.pendientes();
     if (sinEnviar > 0) {
       html += '<p class="banda-pendiente"><strong>' + sinEnviar +
@@ -8150,10 +8679,26 @@ const Guia = (function () {
         render();
       });
     }
+    const buscar = $("#buscarLote");
+    if (buscar) {
+      buscar.addEventListener("input", function () {
+        filtros.texto = buscar.value;
+        render();
+        /* Tras repintar, el foco vuelve al cuadro y al final del texto. */
+        const otra = $("#buscarLote");
+        if (otra) { otra.focus(); otra.setSelectionRange(otra.value.length, otra.value.length); }
+      });
+    }
+    const limpiarBusca = $("#btnLimpiarBusca");
+    if (limpiarBusca) {
+      limpiarBusca.addEventListener("click", function () { filtros.texto = ""; render(); });
+    }
+
     const btnLimpiar = $("#btnLimpiar");
     if (btnLimpiar) {
       btnLimpiar.addEventListener("click", function () {
-        filtros = { desde: DB.diasAtras(30), hasta: DB.hoy(), proveedorId: "", lineaId: "", calidad: "", estado: "" };
+        filtros = { desde: DB.diasAtras(30), hasta: DB.hoy(), proveedorId: "",
+          lineaId: "", calidad: "", estado: "", texto: "" };
         render();
       });
     }
@@ -8372,6 +8917,7 @@ const Guia = (function () {
         lector.readAsText(archivo);
       });
     }
+    enlazarNovedades();
     if (vista === "costeo") enlazarCosteo();
 
     const btnReset = $("#btnReiniciar");

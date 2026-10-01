@@ -29,6 +29,7 @@ const GUION = [
   "core/indicadores.js",
   "core/graficos.js",
   "core/ui.js",
+  "core/novedades.js",
   "core/guia.js",
   "proveedor/portal.js",
   "interno/planta.js"

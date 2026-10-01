@@ -20,6 +20,9 @@
 
   let usuario = null;
   let vista = "inicio";
+  let novedadesAbiertas = false;
+  /* Texto escrito en el buscador de «Mis envíos». */
+  let busqueda = "";
 
   /* ============================== sesión ============================== */
 
@@ -67,6 +70,8 @@
   }
 
   function salir() {
+    novedadesAbiertas = false;
+    busqueda = "";
     if (usuario) DB.registrarBitacora(usuario.id, "Salida del portal", usuario.nombre);
     usuario = null;
     if (repintado) { clearTimeout(repintado); repintado = null; }
@@ -227,24 +232,85 @@
             '">' + (dif > 0 ? "+" : "") + nf(dif) + "</span>" : "") + "</p>";
     }
 
+    /* Repetir: casi todos los envíos se parecen al anterior. Es el atajo
+       que convierte minuto y medio de formulario en diez segundos. */
+    html += '<div class="lote-acciones">' +
+      '<button type="button" class="btn-mini" data-repetir="' + esc(l.id) + '">' +
+      "Repetir este envío</button></div>";
+
     html += "</article>";
     return html;
   }
 
+  /* Buscar por código, por producto o por estado. Con tres meses de envíos
+     encima, desplazarse hasta encontrar uno deja de ser razonable. */
+  function coincide(l, texto) {
+    if (!texto) return true;
+    const t = texto.toLowerCase();
+    return [l.codigoLote, l.estado, Indicadores.nombreLinea(l.lineaId),
+            UI.fechaCorta(l.fecha), String(l.cajasAnunciadas)]
+      .some(function (c) { return String(c).toLowerCase().indexOf(t) !== -1; });
+  }
+
   function vistaLotes() {
-    const lotes = misLotes();
+    const todos = misLotes();
+    const lotes = todos.filter(function (l) { return coincide(l, busqueda); });
+
     let html = '<div class="vista-cab"><div><h1>Mis envíos</h1>' +
-      '<p class="sub">' + lotes.length + " lotes registrados</p></div>" +
+      '<p class="sub">' + todos.length + " lotes registrados</p></div>" +
       '<button class="btn btn-primario" data-ir="anunciar">+ Anunciar</button></div>';
 
-    if (!lotes.length) {
+    if (!todos.length) {
       return html + '<p class="vacio">Todavía no has anunciado ningún envío.</p>';
+    }
+
+    html += '<div class="buscador"><label class="sr" for="buscar">Buscar envío</label>' +
+      '<input type="search" id="buscar" value="' + esc(busqueda) + '" ' +
+      'placeholder="Buscar por código, producto o estado…" autocomplete="off">' +
+      (busqueda ? '<button type="button" class="btn btn-plano btn-sm" id="btnLimpiarBusca">Limpiar</button>' : "") +
+      "</div>";
+
+    if (!lotes.length) {
+      return html + '<p class="vacio">Ningún envío coincide con «' + esc(busqueda) + '».</p>';
+    }
+    if (busqueda) {
+      html += '<p class="sub buscador-cuenta">' + lotes.length + " de " + todos.length +
+        " envíos</p>";
     }
 
     html += '<div class="pila">';
     lotes.forEach(function (l) { html += tarjetaLote(l); });
     html += "</div>";
     return html;
+  }
+
+  function novedadesActuales() {
+    const lista = Novedades.listar(usuario);
+    Novedades.marcarVistos(usuario, lista);
+    return lista;
+  }
+
+  function enlazarNovedades() {
+    const btn = $("#btnCampana");
+    if (btn) {
+      btn.addEventListener("click", function () {
+        novedadesAbiertas = !novedadesAbiertas;
+        render();
+      });
+    }
+    const cerrar = $("#cerrarNovedades");
+    if (cerrar) {
+      cerrar.addEventListener("click", function () { novedadesAbiertas = false; render(); });
+    }
+    $$("[data-novedad]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        novedadesAbiertas = false;
+        const lote = b.dataset.novedadLote;
+        vista = b.dataset.novedad;
+        render();
+        if (lote) verFicha(lote);
+      });
+    });
   }
 
   function vistaAyuda() {
@@ -350,21 +416,27 @@
 
   /* --------------------------------------------------------- anunciar */
 
-  function formAnunciar() {
+  /* `base` es un envío anterior del que se copian los datos que suelen
+     repetirse. La fecha NO se copia: ese envío es de hoy, no de aquel día. */
+  function formAnunciar(base) {
     const lineas = DB.all("lineas").filter(function (l) { return l.activa; });
+    const b = base || {};
 
     const campos = [
       { nombre: "lineaId", etiqueta: "¿Qué producto envías?", tipo: "select", requerido: true,
-        vacio: "Selecciona…", ayuda: "Al elegirlo se precarga el peso nominal de su caja.",
+        vacio: "Selecciona…", valor: b.lineaId || "",
+        ayuda: "Al elegirlo se precarga el peso nominal de su caja.",
         opciones: lineas.map(function (l) { return { valor: l.id, texto: l.nombre }; }) },
       { nombre: "fecha", etiqueta: "Fecha del envío", tipo: "date", valor: DB.hoy(),
         requerido: true, ancho: "mitad",
         validar: function (v) { return v > DB.hoy() ? "La fecha no puede ser futura." : null; } },
       { nombre: "cajasAnunciadas", etiqueta: "¿Cuántas cajas envías?", tipo: "number",
         requerido: true, min: 1, max: 5000, paso: "1", ancho: "mitad",
+        valor: b.cajasAnunciadas || "",
         ayuda: "Cajas de " + DB.PESO_CAJA_KG + " kg. Recepción las contará y pesará al llegar." },
       { nombre: "pesoCajaDeclarado", etiqueta: "Peso estimado por caja (kg)", tipo: "number",
         requerido: true, min: 1, max: 60, paso: "0.1", ancho: "mitad",
+        valor: b.pesoCajaDeclarado || "",
         ayuda: "El peso nominal es " + DB.PESO_CAJA_KG + " kg. Ajústalo si tus cajas " +
           "van más llenas o más livianas: la planta pesará en báscula y comparará.",
         validar: function (v, d) {
@@ -378,10 +450,10 @@
           return null;
         } },
       { nombre: "calidadDeclarada", etiqueta: "Calidad que declaras", tipo: "select",
-        requerido: true, ancho: "mitad", valor: "A",
+        requerido: true, ancho: "mitad", valor: b.calidadDeclarada || "A",
         opciones: DB.CALIDADES.map(function (c) { return { valor: c.id, texto: c.nombre }; }) },
       { nombre: "transporte", etiqueta: "Transporte", tipo: "select", ancho: "mitad",
-        valor: "Propio",
+        valor: b.transporte || "Propio",
         opciones: [{ valor: "Propio", texto: "Propio" }, { valor: "Contratado", texto: "Contratado" }] },
       { nombre: "resumenCalc", etiqueta: "Equivalencia del envío", tipo: "calculado",
         ayuda: "Peso y valor estimados. Se liquidará sobre lo que pese la báscula." },
@@ -389,7 +461,8 @@
         tipo: "textarea", marcador: "Estado de la fruta, hora de salida, novedades del viaje." }
     ];
 
-    UI.abrirFormulario("Anunciar un envío", campos, function (d) {
+    UI.abrirFormulario(base ? "Repetir el envío " + base.codigoLote : "Anunciar un envío",
+      campos, function (d) {
       const linea = DB.linea(d.lineaId);
       const n = DB.all("lotes").length + 1;
       const lote = DB.insert("lotes", {
@@ -422,7 +495,10 @@
       render();
     }, {
       aceptar: "Anunciar envío",
-      nota: "La planta verá tu envío al instante y lo pesará cuando llegue.",
+      nota: base
+        ? "Copiado de <strong>" + esc(base.codigoLote) + "</strong>, con la fecha de hoy. " +
+          "Cambia lo que sea distinto antes de guardar."
+        : "La planta verá tu envío al instante y lo pesará cuando llegue.",
       alCambiar: function (d, form) {
         const linea = DB.linea(d.lineaId);
         const campoPeso = $("#campo_pesoCajaDeclarado", form);
@@ -690,8 +766,10 @@
       "<div><strong>Portal del Proveedor</strong><small>" + esc(miProveedor().nombre) +
       "</small></div></div>" +
       '<div class="portal-acciones">' +
+      UI.campana(Novedades.sinVer(usuario)) +
       '<button class="btn btn-plano btn-sm" id="btnClave" title="Cambiar contraseña">🔑</button>' +
-      '<button class="btn btn-plano btn-sm" id="btnSalir">Salir</button></div></header>';
+      '<button class="btn btn-plano btn-sm" id="btnSalir">Salir</button></div>' +
+      (novedadesAbiertas ? UI.panelNovedades(novedadesActuales()) : "") + "</header>";
 
     html += '<main id="contenido" tabindex="-1">';
     const sinEnviar = DB.pendientes();
@@ -783,6 +861,33 @@
         if (m) m.focus();
       });
     });
+
+    $$("[data-repetir]").forEach(function (b) {
+      b.addEventListener("click", function (ev) {
+        /* La tarjeta entera abre la ficha; este botón no debe hacerlo. */
+        ev.stopPropagation();
+        const l = DB.get("lotes", b.dataset.repetir);
+        if (l) formAnunciar(l);
+      });
+    });
+
+    const buscar = $("#buscar");
+    if (buscar) {
+      buscar.addEventListener("input", function () {
+        busqueda = buscar.value;
+        render();
+        /* Repintar devuelve el foco al cuadro y lo deja al final del texto,
+           para poder seguir escribiendo sin tocar la pantalla otra vez. */
+        const otra = $("#buscar");
+        if (otra) { otra.focus(); otra.setSelectionRange(otra.value.length, otra.value.length); }
+      });
+    }
+    const limpiar = $("#btnLimpiarBusca");
+    if (limpiar) {
+      limpiar.addEventListener("click", function () { busqueda = ""; render(); });
+    }
+
+    enlazarNovedades();
 
     const impGuia = $("#btnImprimirGuia");
     if (impGuia) impGuia.addEventListener("click", function () { window.print(); });

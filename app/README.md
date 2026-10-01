@@ -94,6 +94,7 @@ app/
 │   ├── graficos.js         SVG a mano: líneas, barras, dona, Pareto, medidor
 │   ├── ui.js               Formato, tablas, formularios, exportación
 │   ├── guia.js             La guía de uso, armada con los catálogos reales
+│   ├── novedades.js        Campana: qué cambió desde la última vez
 │   └── estilos.css         Sistema visual, claro/oscuro, impresión
 ├── proveedor/              Aplicación externa
 │   ├── index.html
@@ -218,6 +219,44 @@ cambia un parámetro, la guía cambia con él.
 
 Al imprimir, las preguntas plegadas se abren solas y vuelven después a como estaban: un
 `<details>` cerrado no sale en el papel y ninguna regla de CSS lo arregla.
+
+## 5 ter. Lo que hace que se use a diario
+
+Tres cosas que no añaden ningún indicador y son las que más se tocan.
+
+**Campana de novedades** (`core/novedades.js`). Saber si algo cambió obligaba a entrar a
+mirar: el proveedor revisaba si ya habían pesado su fruta, Recepción si había llegado un
+anuncio, Supervisión si quedaba algo sin cerrar. Ahora lo dice la campana. No se guarda
+ninguna lista de avisos: se **deducen** del estado actual de los lotes cada vez que hacen
+falta, y lo único que se guarda —solo en el propio equipo— es qué avisos ya vio esa
+persona. Así no hay nada que sincronizar, nada que se desfase y nada que limpiar. Cada rol
+ve lo suyo: el proveedor, lo que pasó con su fruta; Recepción, lo que tiene que pesar;
+Supervisión, lo que espera su cierre y qué accesos se entregaron y nadie estrenó.
+
+**Buscador.** Un solo cuadro que filtra mientras se escribe, por código de lote,
+proveedor, línea o estado —que es como la gente busca de verdad: se acuerda del código o
+del proveedor, no del filtro. En planta vive en `Indicadores.filtrar`, así que lo honran
+también los reportes; en el portal filtra las tarjetas de envíos.
+
+**Repetir envío.** Casi todos los envíos de un proveedor se parecen al anterior. Cada
+tarjeta trae *Repetir este envío*: abre el formulario con la línea, las cajas, el peso por
+caja, la calidad y el transporte ya puestos, y la fecha de hoy —esa no se copia—. Minuto y
+medio de formulario pasa a diez segundos.
+
+### Tres pantallas que se leían igual
+
+Recepción, Producción y Lotes tenían la misma forma (bloque arriba, tabla ancha abajo) y
+las de Recepción y Lotes eran **literalmente la misma tabla**, con las mismas nueve
+columnas. Se arregló quitando la repetición, no maquillándola:
+
+- **Recepción** es ahora solo la cola del patio y *lo pesado hoy*, con las columnas que le
+  importan a quien pesa y el botón de corregir. El histórico completo, con su buscador,
+  vive en Lotes, y un aviso al pie lo dice.
+- **Producción** conserva su propia tabla, que nunca fue igual (folio, turno, tasa,
+  eficiencia, CR principal), y remite a Lotes para el recorrido del pedido.
+- Cada módulo tiene su **acento de color** propio, para saber dónde estás de un vistazo.
+- Mientras se busca algo concreto, la cola de cierre se oculta: quien escribe un código
+  quiere ver ese lote, no otra tabla encima.
 
 ## 6. Planificación diaria
 
@@ -453,6 +492,13 @@ que un lote ya cerrado no ofrezca cerrarse otra vez, que Recepción no vea nada 
 que cada rol reciba su propia guía, que la guía se arme con los catálogos reales, que no
 se cuele marcado HTML en el texto y que al imprimir se abran las preguntas plegadas y
 luego vuelvan a su sitio.
+
+**24 comprobaciones de uso diario**: que la campana encienda y se apague sola, que los
+avisos de un proveedor no mencionen lotes ajenos, que pulsarlos lleve a la pantalla
+correcta, que el buscador no robe el foco mientras se escribe, que *Repetir* copie todo
+menos la fecha y no dispare la ficha al pulsarlo, que crear el repetido no toque el
+original, y —comprobado comparando las cabeceras de todas las tablas— que **ninguna
+pantalla repita la tabla de otra**.
 
 Y **9 comprobaciones** sobre el paquete publicado: las dos puertas, el almacén compartido
 activo, un envío anunciado desde el celular apareciendo en la cola de la planta, el pesaje

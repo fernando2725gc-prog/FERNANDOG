@@ -20,10 +20,12 @@
   let reporteActual = "proveedor";
   /* Escenario del simulador de mejora: vive mientras dure la sesión. */
   let escenario = null;
+  /* La campana está abierta o cerrada; se cierra sola al repintar. */
+  let novedadesAbiertas = false;
 
   let filtros = {
     desde: DB.diasAtras(30), hasta: DB.hoy(),
-    proveedorId: "", lineaId: "", calidad: "", estado: ""
+    proveedorId: "", lineaId: "", calidad: "", estado: "", texto: ""
   };
 
   const ROLES_INTERNOS = ["recepcion", "produccion", "supervisor"];
@@ -74,6 +76,7 @@
 
     Auth.limpiarFallos(login);
     usuario = u;
+    novedadesAbiertas = false;
     DB.update("usuarios", u.id, { ultimoAcceso: new Date().toISOString() });
     UI.abrirSesion(SESION, u.id, recordar);
     DB.registrarBitacora(u.id, "Inicio de sesión", u.nombre + " · " + u.rol);
@@ -83,6 +86,10 @@
   function salir() {
     if (usuario) DB.registrarBitacora(usuario.id, "Cierre de sesión", usuario.nombre);
     usuario = null;
+    /* El panel abierto no puede sobrevivir al cambio de persona: se
+       quedaba abierto y le enseñaba a la siguiente los avisos de la
+       anterior en cuanto entraba. */
+    novedadesAbiertas = false;
     if (repintado) { clearTimeout(repintado); repintado = null; }
     vista = "panel";
     UI.cerrarSesion(SESION);
@@ -125,7 +132,20 @@
 
   function barraFiltros(o) {
     o = o || {};
-    let html = '<form class="filtros" id="formFiltros">';
+    let html = "";
+
+    /* El buscador va fuera del formulario de filtros y filtra mientras se
+       escribe: buscar un lote por su código no debería costar un clic en
+       «Aplicar». */
+    if (o.buscar !== false) {
+      html += '<div class="buscador"><label class="sr" for="buscarLote">Buscar lote</label>' +
+        '<input type="search" id="buscarLote" value="' + esc(filtros.texto || "") + '" ' +
+        'placeholder="Buscar por código, proveedor, línea o estado…" autocomplete="off">' +
+        (filtros.texto ? '<button type="button" class="btn btn-plano btn-sm" id="btnLimpiarBusca">Limpiar</button>' : "") +
+        "</div>";
+    }
+
+    html += '<form class="filtros" id="formFiltros">';
     html += '<div class="campo"><label for="fDesde">Desde</label>' +
       '<input type="date" id="fDesde" name="desde" value="' + esc(filtros.desde) + '"></div>';
     html += '<div class="campo"><label for="fHasta">Hasta</label>' +
@@ -493,7 +513,8 @@
   function vistaRecepcion() {
     const pendientes = DB.all("lotes").filter(function (l) { return l.estado === "Anunciado"; })
       .sort(function (a, b) { return a.fecha < b.fecha ? -1 : 1; });
-    const pesados = Indicadores.filtrar(filtros).lotes
+    /* El turno de quien pesa no se mira por rango de fechas: se mira hoy. */
+    const pesados = DB.all("lotes")
       .filter(function (l) { return l.cajasRecibidas !== null; })
       .sort(function (a, b) { return a.fechaRecepcion < b.fechaRecepcion ? 1 : -1; });
 
@@ -521,19 +542,50 @@
     }
     html += "</section>";
 
-    html += '<h2 class="seccion-titulo">Historial de pesaje</h2>';
-    html += barraFiltros({ calidad: true });
+    /* Abajo iba el historial completo, con las mismas nueve columnas que la
+       pantalla de Lotes: dos sitios distintos enseñando exactamente lo
+       mismo. Aquí basta con el propio turno —para repasar lo hecho y
+       corregir un dedazo—; el histórico, y buscarlo, es cosa de Lotes. */
+    /* Si hoy todavía no se ha pesado nada, la pantalla no se queda muerta:
+       enseña los últimos pesajes, que es lo que se querría repasar. */
+    const hoy = DB.hoy();
+    const deHoy = pesados.filter(function (l) { return l.fechaRecepcion === hoy; });
+    const delDia = deHoy.length ? deHoy : pesados.slice(0, 10);
 
-    const anun = pesados.reduce(function (a, l) { return a + l.cajasAnunciadas; }, 0);
-    const real = pesados.reduce(function (a, l) { return a + l.cajasRecibidas; }, 0);
-    html += '<p class="resumen-linea"><strong>' + nf(pesados.length) + "</strong> lotes · anunciadas <strong>" +
+    html += '<h2 class="seccion-titulo">' +
+      (deHoy.length ? "Lo que has pesado hoy" : "Últimos pesajes") + "</h2>";
+
+    const anun = delDia.reduce(function (a, l) { return a + l.cajasAnunciadas; }, 0);
+    const real = delDia.reduce(function (a, l) { return a + l.cajasRecibidas; }, 0);
+    html += '<p class="resumen-linea"><strong>' + nf(delDia.length) + "</strong> lotes · anunciadas <strong>" +
       nf(anun) + "</strong> cajas · pesadas <strong>" + nf(real) + "</strong> · diferencia <strong>" +
       pctFirmado(anun > 0 ? (real - anun) / anun : 0) + "</strong></p>";
 
-    html += UI.tabla(columnasLote({ acciones: true }), pesados,
-      { vacio: "No se ha pesado ningún lote en este período." });
+    html += UI.tabla([
+      { titulo: "Lote", valor: function (l) { return "<code>" + esc(l.codigoLote) + "</code>"; } },
+      { titulo: "Proveedor", valor: function (l) { return esc(Indicadores.nombreProveedor(l.proveedorId)); } },
+      { titulo: "Anunciadas", num: true, valor: function (l) { return nf(l.cajasAnunciadas); } },
+      { titulo: "Pesadas", num: true, valor: function (l) { return nf(l.cajasRecibidas); } },
+      { titulo: "Kilos", num: true, valor: function (l) { return nf(l.kgRecibidos) + " kg"; } },
+      { titulo: "Diferencia", num: true, valor: function (l) {
+        if (!l.cajasAnunciadas) return '<span class="tenue">—</span>';
+        const d = (l.cajasRecibidas - l.cajasAnunciadas) / l.cajasAnunciadas;
+        const clase = Math.abs(d) <= 0.01 ? "etq-ok" : Math.abs(d) <= 0.03 ? "etq-B" : "etq-bajo";
+        return '<span class="etq ' + clase + '">' + pctFirmado(d) + "</span>"; } },
+      { titulo: "", valor: function (l) {
+        return '<button class="btn-mini" data-ficha="' + esc(l.id) + '">Ficha</button>' +
+          (puede("corregir_pesaje")
+            ? '<button class="btn-mini" data-corregir-pesaje="' + esc(l.id) + '">Corregir</button>' : ""); } }
+    ], delDia, { vacio: "Todavía no se ha pesado ningún lote." });
+
+    html += '<p class="ir-a">¿Buscas un lote de otro día? Está en ' +
+      '<button type="button" class="enlace" data-ir="lotes">Lotes</button>, ' +
+      "con buscador por código y proveedor.</p>";
+
     return html;
   }
+
+
 
   function formPesar(loteId, corregir) {
     const l = DB.get("lotes", loteId);
@@ -719,6 +771,9 @@
       "</strong> exportables · tasa <strong>" + pct(proc > 0 ? exp / proc : 0) + "</strong></p>";
 
     html += UI.tabla(columnasProduccion(), lista, { vacio: "No hay producción en este período." });
+    html += '<p class="ir-a">Esta tabla es el registro de <strong>lo producido</strong>. ' +
+      "El recorrido completo de cada pedido —anuncio, pesaje, cierre— está en " +
+      '<button type="button" class="enlace" data-ir="lotes">Lotes</button>.</p>';
     return html;
   }
 
@@ -1081,7 +1136,9 @@
       '<p class="sub">Recorrido completo, del anuncio del proveedor al cierre.</p></div>' +
       '<div class="cab-acciones"><button class="btn btn-plano" id="btnCsvLotes">Exportar CSV</button></div></div>';
 
-    if (puede("cerrar")) {
+    /* Mientras se busca algo concreto, la cola de cierre sobra: quien
+       escribe un código quiere ver ese lote, no otra tabla encima. */
+    if (puede("cerrar") && !filtros.texto) {
       html += '<section class="panel panel-destacado"><h2>Terminados, esperando el cierre (' +
         nf(porCerrar.length) + ")</h2>" +
         '<p class="sub panel-sub">Producción ya registró estos pedidos. Al cerrarlos ' +
@@ -1496,6 +1553,39 @@
       UI.origen("E") + " estimado · " + UI.origen("S") + " fuente secundaria.</p></footer>";
     html += "</section>";
     return html;
+  }
+
+  /* ============================== novedades =========================== */
+
+  function novedadesActuales() {
+    const lista = Novedades.listar(usuario);
+    /* Se marcan vistas al mostrarlas, no al pulsarlas: si la persona las
+       leyó y no hizo nada, ya se enteró, y volver a avisarle es ruido. */
+    Novedades.marcarVistos(usuario, lista);
+    return lista;
+  }
+
+  function enlazarNovedades() {
+    const btn = $("#btnCampana");
+    if (btn) {
+      btn.addEventListener("click", function () {
+        novedadesAbiertas = !novedadesAbiertas;
+        render();
+      });
+    }
+    const cerrar = $("#cerrarNovedades");
+    if (cerrar) {
+      cerrar.addEventListener("click", function () { novedadesAbiertas = false; render(); });
+    }
+    $$("[data-novedad]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        novedadesAbiertas = false;
+        const lote = b.dataset.novedadLote;
+        vista = b.dataset.novedad;
+        render();
+        if (lote) verFicha(lote);
+      });
+    });
   }
 
   /* ================================ guía =============================== */
@@ -2449,10 +2539,12 @@
       '<div class="barra-usuario"><div class="avatar" aria-hidden="true">' +
       esc(rol ? rol.icono : "·") + "</div><div><strong>" + esc(usuario.nombre) + "</strong>" +
       "<small>" + esc(rol ? rol.nombre : usuario.rol) + "</small></div>" +
+      UI.campana(Novedades.sinVer(usuario)) +
       '<button class="btn btn-plano" id="btnClave" title="Cambiar mi clave">🔑</button>' +
-      '<button class="btn btn-plano" id="btnSalir">Salir</button></div></header>';
+      '<button class="btn btn-plano" id="btnSalir">Salir</button></div>' +
+      (novedadesAbiertas ? UI.panelNovedades(novedadesActuales()) : "") + "</header>";
 
-    html += '<main id="contenido" tabindex="-1">';
+    html += '<main id="contenido" tabindex="-1" class="vista-' + esc(vista) + '">';
     const sinEnviar = DB.pendientes();
     if (sinEnviar > 0) {
       html += '<p class="banda-pendiente"><strong>' + sinEnviar +
@@ -2611,10 +2703,26 @@
         render();
       });
     }
+    const buscar = $("#buscarLote");
+    if (buscar) {
+      buscar.addEventListener("input", function () {
+        filtros.texto = buscar.value;
+        render();
+        /* Tras repintar, el foco vuelve al cuadro y al final del texto. */
+        const otra = $("#buscarLote");
+        if (otra) { otra.focus(); otra.setSelectionRange(otra.value.length, otra.value.length); }
+      });
+    }
+    const limpiarBusca = $("#btnLimpiarBusca");
+    if (limpiarBusca) {
+      limpiarBusca.addEventListener("click", function () { filtros.texto = ""; render(); });
+    }
+
     const btnLimpiar = $("#btnLimpiar");
     if (btnLimpiar) {
       btnLimpiar.addEventListener("click", function () {
-        filtros = { desde: DB.diasAtras(30), hasta: DB.hoy(), proveedorId: "", lineaId: "", calidad: "", estado: "" };
+        filtros = { desde: DB.diasAtras(30), hasta: DB.hoy(), proveedorId: "",
+          lineaId: "", calidad: "", estado: "", texto: "" };
         render();
       });
     }
@@ -2833,6 +2941,7 @@
         lector.readAsText(archivo);
       });
     }
+    enlazarNovedades();
     if (vista === "costeo") enlazarCosteo();
 
     const btnReset = $("#btnReiniciar");

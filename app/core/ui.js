@@ -200,7 +200,9 @@ const UI = (function () {
       '<p class="form-error" id="formError" role="alert" hidden></p>' +
       '<footer class="modal-pie">' +
       '<button type="button" class="btn btn-plano" data-cancelar>Cancelar</button>' +
-      '<button type="submit" class="btn btn-primario">' + esc(o.aceptar || "Guardar") + "</button>" +
+      /* Un formulario que borra se confirma con un botón que lo parece. */
+      '<button type="submit" class="btn ' + (o.peligro ? "btn-peligro" : "btn-primario") +
+      '">' + esc(o.aceptar || "Guardar") + "</button>" +
       "</footer></form></div>";
 
     document.body.appendChild(capa);

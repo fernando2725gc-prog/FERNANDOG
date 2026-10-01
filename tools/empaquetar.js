@@ -108,6 +108,16 @@ const partes = [];
    página sale con acentos rotos. El anfitrión del artefacto añade el suyo,
    pero el archivo tiene que sostenerse solo. */
 partes.push('<meta charset="utf-8">');
+/* Instalable en el celular: con esto, «Añadir a pantalla de inicio» deja un
+   icono propio y la app abre a pantalla completa, sin barra de navegador.
+   El manifiesto y los iconos viajan como archivos sueltos junto a la
+   página; no pueden ir dentro del HTML. */
+partes.push('<link rel="manifest" href="manifest.json">');
+partes.push('<meta name="theme-color" content="#14313f">');
+partes.push('<link rel="apple-touch-icon" href="pwa/icono-192.png">');
+partes.push('<meta name="apple-mobile-web-app-capable" content="yes">');
+partes.push('<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">');
+partes.push('<meta name="apple-mobile-web-app-title" content="Sistema FLP">');
 partes.push('<meta name="viewport" content="width=device-width, initial-scale=1">');
 partes.push("<title>Sistema FLP</title>\n");
 partes.push('<link rel="preconnect" href="https://fonts.googleapis.com">');
@@ -137,5 +147,14 @@ if (/<\/script/i.test(dentro)) {
 
 fs.mkdirSync(path.dirname(SALIDA), { recursive: true });
 fs.writeFileSync(SALIDA, html);
+
+/* Los archivos sueltos de la instalación móvil se copian junto a la página,
+   con la misma estructura que el manifiesto declara. */
+const ACOMPANAN = ["pwa/manifest.json", "pwa/icono-192.png", "pwa/icono-512.png"];
+ACOMPANAN.forEach(function (rel) {
+  const destino = path.join(path.dirname(SALIDA), rel === "pwa/manifest.json" ? "manifest.json" : rel);
+  fs.mkdirSync(path.dirname(destino), { recursive: true });
+  fs.copyFileSync(path.join(APP, rel), destino);
+});
 console.log("Paquete escrito en " + path.relative(RAIZ, SALIDA) +
   " · " + (html.length / 1024).toFixed(0) + " KB · " + (GUION.length + 1) + " bloques");

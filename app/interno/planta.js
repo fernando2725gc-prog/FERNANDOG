@@ -2722,6 +2722,56 @@
     return html;
   }
 
+  /* Pide los datos de quien queda como única cuenta, y obliga a escribir
+     una palabra antes de borrar: es irreversible y afecta a todos los
+     dispositivos a la vez, así que un «aceptar» no basta. */
+  function formArrancarLimpio() {
+    UI.abrirFormulario("Empezar de cero con datos reales", [
+      { tipo: "html", contenido:
+        '<p class="nota-aviso">Se borran <strong>todos</strong> los lotes, producciones, ' +
+        "planes, proveedores y usuarios, en todos los dispositivos. Se conservan las " +
+        "líneas, el estudio de tiempos, las causas raíz, los destinos y los parámetros.</p>" },
+      { nombre: "nombre", etiqueta: "Tu nombre completo", tipo: "text", requerido: true,
+        valor: usuario.nombre, ancho: "mitad",
+        ayuda: "Quedarás como supervisor, con la única cuenta del sistema." },
+      { nombre: "acceso", etiqueta: "Tu usuario para entrar", tipo: "text", requerido: true,
+        valor: usuario.usuario, ancho: "mitad",
+        validar: function (v) {
+          return /^[A-Za-z0-9._-]{3,}$/.test(String(v).trim())
+            ? null : "Usa al menos 3 caracteres, sin espacios ni acentos.";
+        } },
+      { nombre: "confirmacion", etiqueta: "Escribe EMPEZAR para confirmar", tipo: "text",
+        requerido: true, marcador: "EMPEZAR",
+        validar: function (v) {
+          return String(v).trim().toUpperCase() === "EMPEZAR"
+            ? null : "Escribe la palabra EMPEZAR, en mayúsculas o minúsculas.";
+        } }
+    ], async function (d) {
+      const clave = Auth.claveTemporal("supervisor");
+      const credencial = await Auth.crearCredencial(clave);
+      const nuevo = {
+        id: "us_" + Date.now().toString(36),
+        nombre: String(d.nombre).trim(),
+        usuario: String(d.acceso).trim(),
+        rol: "supervisor",
+        proveedorId: null,
+        activo: true,
+        debeCambiar: true,
+        credencial: credencial,
+        creadoEn: new Date().toISOString()
+      };
+      await DB.arrancarLimpio(nuevo);
+      /* La sesión anterior apuntaba a un usuario que ya no existe. */
+      UI.cerrarSesion(SESION);
+      usuario = null;
+      vista = "panel";
+      render();
+      mostrarCredencial(nuevo.nombre, nuevo.usuario, clave, "supervisor");
+    }, { aceptar: "Borrar y empezar", peligro: true, ancho: true,
+         nota: "Al terminar se te mostrará tu clave temporal <strong>una sola vez</strong>. " +
+           "Anótala antes de cerrar: el sistema no la guarda." });
+  }
+
   function vistaDatos() {
     const db = DB.load();
     let html = '<div class="vista-cab"><div><h1>Datos del sistema</h1>' +
@@ -2743,8 +2793,36 @@
       '<button class="btn btn-primario" id="btnExportarJSON">Descargar respaldo</button>' +
       '<label class="btn btn-sec" for="inputImportar">Restaurar desde archivo</label>' +
       '<input type="file" id="inputImportar" accept="application/json" hidden>' +
-      '<button class="btn btn-peligro" id="btnReiniciar">Reiniciar con datos de demostración</button>' +
+      (DB.esModoReal() ? ""
+        : '<button class="btn btn-plano" id="btnReiniciar">Reiniciar con datos de demostración</button>') +
       "</div></section>";
+
+    /* --- puesta en marcha con datos reales --- */
+    const real = DB.esModoReal();
+    html += '<section class="panel ' + (real ? "panel-bien" : "panel-destacado") +
+      '"><h2>Poner en marcha con datos reales</h2>';
+    if (real) {
+      html += '<p class="nota-ok"><strong>Este sistema ya está en modo real.</strong> ' +
+        "Los datos de demostración se borraron y las cuentas de ejemplo dejaron de " +
+        "existir, así que la pantalla de acceso ya no las ofrece.</p>";
+    } else {
+      html += "<p>Ahora mismo el sistema trae <strong>datos de demostración</strong>: " +
+        "proveedores inventados, lotes simulados y cuentas de ejemplo cuyas claves están " +
+        "a la vista en la pantalla de acceso. Sirven para probar y para las capturas del " +
+        "documento, no para trabajar.</p>" +
+        "<p>Al ponerlo en marcha se borra <strong>toda la operación</strong> —lotes, " +
+        "producciones, planes, proveedores y usuarios— y se conservan los " +
+        "<strong>catálogos</strong>: líneas, estudio de tiempos, causas raíz, destinos y " +
+        "parámetros, que no son demostración sino lo medido en el TIC. Queda una sola " +
+        "cuenta: la tuya.</p>" +
+        '<p class="nota-aviso"><strong>Es irreversible y afecta a todos los ' +
+        "dispositivos.</strong> Si quieres conservar lo que hay, descarga primero el " +
+        "respaldo de arriba.</p>" +
+        '<div class="acciones-fila">' +
+        '<button class="btn btn-peligro" id="btnArrancarLimpio">Empezar de cero con datos reales</button>' +
+        "</div>";
+    }
+    html += "</section>";
 
     html += '<section class="panel"><h2>Dónde se guardan los datos</h2>';
     if (DB.esCompartido()) {
@@ -3286,6 +3364,9 @@
     enlazarNovedades();
     if (vista === "tiempos") enlazarTiempos();
     if (vista === "costeo") enlazarCosteo();
+
+    const btnLimpio = $("#btnArrancarLimpio");
+    if (btnLimpio) btnLimpio.addEventListener("click", formArrancarLimpio);
 
     const btnReset = $("#btnReiniciar");
     if (btnReset) {

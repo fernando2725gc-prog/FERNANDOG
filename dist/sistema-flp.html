@@ -1,4 +1,10 @@
 <meta charset="utf-8">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14313f">
+<link rel="apple-touch-icon" href="pwa/icono-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sistema FLP">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sistema FLP</title>
 
@@ -2584,10 +2590,13 @@ const DB = (function () {
     }, []));
   }
 
-  async function sembrarRemoto() {
-    const datos = semilla(16);
-    cache = datos;
-
+  /* Sube el cache entero al almacén compartido. Lo usan la siembra de
+     demostración y el arranque en limpio: es la misma escritura. */
+  async function subirTodo(datosASubir) {
+    /* Se sube lo que se pasa, no `cache`: al borrar el almacén llegan
+       snapshots vacíos que dejan el cache en blanco, y subir desde ahí
+       escribía la nada encima de lo que acababa de prepararse. */
+    const datos = datosASubir || cache;
     const escrituras = [];
     COLECCIONES.forEach(function (c) {
       (datos[c] || []).forEach(function (reg) {
@@ -2595,9 +2604,69 @@ const DB = (function () {
       });
     });
     escrituras.push(remoto.doc("sistema/config").set(configActual()));
-    escrituras.push(remoto.doc("sistema/bitacora").set({ entradas: [] }));
-    escrituras.push(remoto.doc("sistema/meta").set({ esquema: ESQUEMA, sembradoEn: new Date().toISOString() }));
+    escrituras.push(remoto.doc("sistema/bitacora").set({ entradas: datos.bitacora || [] }));
+    escrituras.push(remoto.doc("sistema/meta").set({
+      esquema: ESQUEMA, sembradoEn: new Date().toISOString()
+    }));
     await Promise.all(escrituras);
+  }
+
+  async function sembrarRemoto() {
+    cache = semilla(16);
+    await subirTodo();
+  }
+
+  /* ------------------------------------------------- arranque en limpio */
+
+  /* Deja el sistema listo para datos REALES: se va todo lo de operación
+     —lotes, producciones, planes, proveedores y usuarios de demostración—
+     y se conservan los catálogos, que no son demostración sino el estudio
+     de tiempos y los parámetros medidos del TIC.
+
+     Queda una sola cuenta, la de quien lo pone en marcha. Con las cuentas
+     de demostración desaparecen también sus claves conocidas, así que la
+     pantalla de acceso deja de ofrecerlas sola: no hay que acordarse de
+     quitarlas. */
+  async function arrancarLimpio(supervisor) {
+    const db = load();
+    const limpio = {
+      esquema: ESQUEMA,
+      creadoEn: new Date().toISOString(),
+      modoReal: true,
+      puestoEnMarcha: new Date().toISOString(),
+      /* Catálogos: se quedan. */
+      lineas: copiar(db.lineas),
+      actividades: copiar(db.actividades),
+      causas: copiar(db.causas),
+      destinos: copiar(db.destinos),
+      parametros: copiar(db.parametros),
+      /* Operación: se va. */
+      proveedores: [],
+      usuarios: [supervisor],
+      lotes: [],
+      producciones: [],
+      planes: [],
+      bitacora: [{
+        id: uid("bt"), fecha: new Date().toISOString(), usuarioId: supervisor.id,
+        accion: "Puesta en marcha con datos reales",
+        detalle: "Se borraron los datos de demostración. Catálogos conservados."
+      }]
+    };
+
+    cola = [];
+    guardarCola();
+
+    if (remoto) {
+      await limpiarRemoto();
+      await subirTodo(limpio);
+    }
+    cache = limpio;
+    save();
+    return limpio;
+  }
+
+  function esModoReal() {
+    return !!load().modoReal;
   }
 
   function configActual() {
@@ -2820,6 +2889,8 @@ const DB = (function () {
     load: load,
     save: save,
     reset: reset,
+    arrancarLimpio: arrancarLimpio,
+    esModoReal: esModoReal,
     importar: importar,
     exportar: exportar,
     all: all,
@@ -4504,7 +4575,9 @@ const UI = (function () {
       '<p class="form-error" id="formError" role="alert" hidden></p>' +
       '<footer class="modal-pie">' +
       '<button type="button" class="btn btn-plano" data-cancelar>Cancelar</button>' +
-      '<button type="submit" class="btn btn-primario">' + esc(o.aceptar || "Guardar") + "</button>" +
+      /* Un formulario que borra se confirma con un botón que lo parece. */
+      '<button type="submit" class="btn ' + (o.peligro ? "btn-peligro" : "btn-primario") +
+      '">' + esc(o.aceptar || "Guardar") + "</button>" +
       "</footer></form></div>";
 
     document.body.appendChild(capa);
@@ -9299,6 +9372,56 @@ const Guia = (function () {
     return html;
   }
 
+  /* Pide los datos de quien queda como única cuenta, y obliga a escribir
+     una palabra antes de borrar: es irreversible y afecta a todos los
+     dispositivos a la vez, así que un «aceptar» no basta. */
+  function formArrancarLimpio() {
+    UI.abrirFormulario("Empezar de cero con datos reales", [
+      { tipo: "html", contenido:
+        '<p class="nota-aviso">Se borran <strong>todos</strong> los lotes, producciones, ' +
+        "planes, proveedores y usuarios, en todos los dispositivos. Se conservan las " +
+        "líneas, el estudio de tiempos, las causas raíz, los destinos y los parámetros.</p>" },
+      { nombre: "nombre", etiqueta: "Tu nombre completo", tipo: "text", requerido: true,
+        valor: usuario.nombre, ancho: "mitad",
+        ayuda: "Quedarás como supervisor, con la única cuenta del sistema." },
+      { nombre: "acceso", etiqueta: "Tu usuario para entrar", tipo: "text", requerido: true,
+        valor: usuario.usuario, ancho: "mitad",
+        validar: function (v) {
+          return /^[A-Za-z0-9._-]{3,}$/.test(String(v).trim())
+            ? null : "Usa al menos 3 caracteres, sin espacios ni acentos.";
+        } },
+      { nombre: "confirmacion", etiqueta: "Escribe EMPEZAR para confirmar", tipo: "text",
+        requerido: true, marcador: "EMPEZAR",
+        validar: function (v) {
+          return String(v).trim().toUpperCase() === "EMPEZAR"
+            ? null : "Escribe la palabra EMPEZAR, en mayúsculas o minúsculas.";
+        } }
+    ], async function (d) {
+      const clave = Auth.claveTemporal("supervisor");
+      const credencial = await Auth.crearCredencial(clave);
+      const nuevo = {
+        id: "us_" + Date.now().toString(36),
+        nombre: String(d.nombre).trim(),
+        usuario: String(d.acceso).trim(),
+        rol: "supervisor",
+        proveedorId: null,
+        activo: true,
+        debeCambiar: true,
+        credencial: credencial,
+        creadoEn: new Date().toISOString()
+      };
+      await DB.arrancarLimpio(nuevo);
+      /* La sesión anterior apuntaba a un usuario que ya no existe. */
+      UI.cerrarSesion(SESION);
+      usuario = null;
+      vista = "panel";
+      render();
+      mostrarCredencial(nuevo.nombre, nuevo.usuario, clave, "supervisor");
+    }, { aceptar: "Borrar y empezar", peligro: true, ancho: true,
+         nota: "Al terminar se te mostrará tu clave temporal <strong>una sola vez</strong>. " +
+           "Anótala antes de cerrar: el sistema no la guarda." });
+  }
+
   function vistaDatos() {
     const db = DB.load();
     let html = '<div class="vista-cab"><div><h1>Datos del sistema</h1>' +
@@ -9320,8 +9443,36 @@ const Guia = (function () {
       '<button class="btn btn-primario" id="btnExportarJSON">Descargar respaldo</button>' +
       '<label class="btn btn-sec" for="inputImportar">Restaurar desde archivo</label>' +
       '<input type="file" id="inputImportar" accept="application/json" hidden>' +
-      '<button class="btn btn-peligro" id="btnReiniciar">Reiniciar con datos de demostración</button>' +
+      (DB.esModoReal() ? ""
+        : '<button class="btn btn-plano" id="btnReiniciar">Reiniciar con datos de demostración</button>') +
       "</div></section>";
+
+    /* --- puesta en marcha con datos reales --- */
+    const real = DB.esModoReal();
+    html += '<section class="panel ' + (real ? "panel-bien" : "panel-destacado") +
+      '"><h2>Poner en marcha con datos reales</h2>';
+    if (real) {
+      html += '<p class="nota-ok"><strong>Este sistema ya está en modo real.</strong> ' +
+        "Los datos de demostración se borraron y las cuentas de ejemplo dejaron de " +
+        "existir, así que la pantalla de acceso ya no las ofrece.</p>";
+    } else {
+      html += "<p>Ahora mismo el sistema trae <strong>datos de demostración</strong>: " +
+        "proveedores inventados, lotes simulados y cuentas de ejemplo cuyas claves están " +
+        "a la vista en la pantalla de acceso. Sirven para probar y para las capturas del " +
+        "documento, no para trabajar.</p>" +
+        "<p>Al ponerlo en marcha se borra <strong>toda la operación</strong> —lotes, " +
+        "producciones, planes, proveedores y usuarios— y se conservan los " +
+        "<strong>catálogos</strong>: líneas, estudio de tiempos, causas raíz, destinos y " +
+        "parámetros, que no son demostración sino lo medido en el TIC. Queda una sola " +
+        "cuenta: la tuya.</p>" +
+        '<p class="nota-aviso"><strong>Es irreversible y afecta a todos los ' +
+        "dispositivos.</strong> Si quieres conservar lo que hay, descarga primero el " +
+        "respaldo de arriba.</p>" +
+        '<div class="acciones-fila">' +
+        '<button class="btn btn-peligro" id="btnArrancarLimpio">Empezar de cero con datos reales</button>' +
+        "</div>";
+    }
+    html += "</section>";
 
     html += '<section class="panel"><h2>Dónde se guardan los datos</h2>';
     if (DB.esCompartido()) {
@@ -9863,6 +10014,9 @@ const Guia = (function () {
     enlazarNovedades();
     if (vista === "tiempos") enlazarTiempos();
     if (vista === "costeo") enlazarCosteo();
+
+    const btnLimpio = $("#btnArrancarLimpio");
+    if (btnLimpio) btnLimpio.addEventListener("click", formArrancarLimpio);
 
     const btnReset = $("#btnReiniciar");
     if (btnReset) {

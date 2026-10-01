@@ -445,6 +445,49 @@ En el repositorio siguen siendo dos aplicaciones independientes (`proveedor/` e
 cada una expone `iniciar()` en vez de arrancar sola, y los enlaces entre ellas se resuelven
 con `UI.rutaOtraApp()`.
 
+## 8 bis. Poner en marcha con datos reales
+
+Lo que trae cargado es **demostración**: proveedores inventados, lotes simulados y cuentas
+de ejemplo cuyas claves están a la vista en la pantalla de acceso. Para empezar a trabajar
+de verdad: *Datos del sistema → **Empezar de cero con datos reales***.
+
+- Borra **toda la operación**: lotes, producciones, planes, proveedores y usuarios, en
+  todos los dispositivos a la vez.
+- Conserva los **catálogos**: líneas, estudio de tiempos, causas raíz, destinos y
+  parámetros. No son demostración, son lo medido en el TIC.
+- Deja **una sola cuenta**, la de quien lo pone en marcha, con una clave temporal que se
+  muestra una única vez y que hay que cambiar al entrar.
+- Con las cuentas de ejemplo desaparecen sus claves conocidas, así que la pantalla de
+  acceso **deja de ofrecerlas sola**: no hay que acordarse de quitarlas.
+
+Es irreversible, así que pide escribir la palabra `EMPEZAR` además de confirmar, y conviene
+descargar el respaldo JSON antes. A partir de ahí: *Proveedores → Nuevo* (cada proveedor
+activa su propia contraseña con su RUC) y *Usuarios → Nuevo* para la gente de planta.
+
+### Antes de poner datos reales de la empresa
+
+Lo de §12 no es retórica. Quien tenga el enlace puede leer el almacén, incluidos los
+hashes de las contraseñas, y los permisos se aplican en el cliente. Para un **piloto
+controlado** —el equipo del TIC y dos o tres proveedores de confianza— es suficiente. Para
+operación real con los datos de una empresa bajo acuerdo de confidencialidad, hace falta
+antes un servidor que verifique la contraseña y no exponga nunca los hashes.
+
+## 8 ter. Instalarlo en el celular
+
+El paquete publicado es una aplicación instalable: `manifest.json` y los iconos viajan
+como archivos sueltos junto a la página (`tools/empaquetar.js` los copia a `dist/`).
+
+- **Android / Chrome:** abrir el enlace → menú ⋮ → *Añadir a pantalla de inicio*.
+- **iPhone / Safari:** abrir el enlace → compartir → *Añadir a pantalla de inicio*.
+
+Queda un icono propio y la app abre a pantalla completa, sin barra de navegador. El
+manifiesto declara además dos atajos —*Portal del Proveedor* y *Sistema de Planta*— que en
+Android aparecen al mantener pulsado el icono.
+
+No lleva *service worker*: sin él la app necesita conexión para **cargar**, aunque una vez
+abierta siga funcionando sin señal gracias a la cola local (§10). Añadirlo es el siguiente
+paso si se quiere que abra también sin cobertura.
+
 ## 9. Cómo ejecutarlo
 
 ```bash
@@ -621,6 +664,12 @@ por gaveta se parezca al nominal. Un número imposible en pantalla es lo menos i
 que hay: quien lo ve deja de confiar en todo lo demás. Esta suite encontró tres sitios
 donde se dividían minutos-persona entre minutos de reloj, y uno donde se dividían cajas
 entre gavetas.
+
+**11 comprobaciones del arranque en limpio**: que no se borre sin escribir `EMPEZAR`, que
+se vaya la operación y se queden los catálogos, que la clave temporal se muestre una vez y
+no quede escrita, que las cuentas de ejemplo dejen de ofrecerse solas, que la cuenta nueva
+entre y deba cambiar su clave, y que la vieja ya no sirva. Y **4 de instalación móvil**:
+manifiesto válido y descargable, iconos PNG reales y los dos atajos llevando a cada puerta.
 
 Y **9 comprobaciones** sobre el paquete publicado: las dos puertas, el almacén compartido
 activo, un envío anunciado desde el celular apareciendo en la cola de la planta, el pesaje

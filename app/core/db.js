@@ -951,10 +951,13 @@ const DB = (function () {
     }, []));
   }
 
-  async function sembrarRemoto() {
-    const datos = semilla(16);
-    cache = datos;
-
+  /* Sube el cache entero al almacén compartido. Lo usan la siembra de
+     demostración y el arranque en limpio: es la misma escritura. */
+  async function subirTodo(datosASubir) {
+    /* Se sube lo que se pasa, no `cache`: al borrar el almacén llegan
+       snapshots vacíos que dejan el cache en blanco, y subir desde ahí
+       escribía la nada encima de lo que acababa de prepararse. */
+    const datos = datosASubir || cache;
     const escrituras = [];
     COLECCIONES.forEach(function (c) {
       (datos[c] || []).forEach(function (reg) {
@@ -962,9 +965,69 @@ const DB = (function () {
       });
     });
     escrituras.push(remoto.doc("sistema/config").set(configActual()));
-    escrituras.push(remoto.doc("sistema/bitacora").set({ entradas: [] }));
-    escrituras.push(remoto.doc("sistema/meta").set({ esquema: ESQUEMA, sembradoEn: new Date().toISOString() }));
+    escrituras.push(remoto.doc("sistema/bitacora").set({ entradas: datos.bitacora || [] }));
+    escrituras.push(remoto.doc("sistema/meta").set({
+      esquema: ESQUEMA, sembradoEn: new Date().toISOString()
+    }));
     await Promise.all(escrituras);
+  }
+
+  async function sembrarRemoto() {
+    cache = semilla(16);
+    await subirTodo();
+  }
+
+  /* ------------------------------------------------- arranque en limpio */
+
+  /* Deja el sistema listo para datos REALES: se va todo lo de operación
+     —lotes, producciones, planes, proveedores y usuarios de demostración—
+     y se conservan los catálogos, que no son demostración sino el estudio
+     de tiempos y los parámetros medidos del TIC.
+
+     Queda una sola cuenta, la de quien lo pone en marcha. Con las cuentas
+     de demostración desaparecen también sus claves conocidas, así que la
+     pantalla de acceso deja de ofrecerlas sola: no hay que acordarse de
+     quitarlas. */
+  async function arrancarLimpio(supervisor) {
+    const db = load();
+    const limpio = {
+      esquema: ESQUEMA,
+      creadoEn: new Date().toISOString(),
+      modoReal: true,
+      puestoEnMarcha: new Date().toISOString(),
+      /* Catálogos: se quedan. */
+      lineas: copiar(db.lineas),
+      actividades: copiar(db.actividades),
+      causas: copiar(db.causas),
+      destinos: copiar(db.destinos),
+      parametros: copiar(db.parametros),
+      /* Operación: se va. */
+      proveedores: [],
+      usuarios: [supervisor],
+      lotes: [],
+      producciones: [],
+      planes: [],
+      bitacora: [{
+        id: uid("bt"), fecha: new Date().toISOString(), usuarioId: supervisor.id,
+        accion: "Puesta en marcha con datos reales",
+        detalle: "Se borraron los datos de demostración. Catálogos conservados."
+      }]
+    };
+
+    cola = [];
+    guardarCola();
+
+    if (remoto) {
+      await limpiarRemoto();
+      await subirTodo(limpio);
+    }
+    cache = limpio;
+    save();
+    return limpio;
+  }
+
+  function esModoReal() {
+    return !!load().modoReal;
   }
 
   function configActual() {
@@ -1187,6 +1250,8 @@ const DB = (function () {
     load: load,
     save: save,
     reset: reset,
+    arrancarLimpio: arrancarLimpio,
+    esModoReal: esModoReal,
     importar: importar,
     exportar: exportar,
     all: all,

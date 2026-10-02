@@ -580,6 +580,40 @@ conviene no volver a romper:
 3. Mientras haya un cambio de catálogo sin enviar, el snapshot remoto **no** lo pisa:
    lo remoto está atrasado, no al día.
 
+## 10 bis. Capacidad: cuánto cabe y qué hacer cuando se llene
+
+El almacén compartido de un artefacto tiene límites duros, y conviene conocerlos antes de
+chocarse con ellos:
+
+| Límite | Valor |
+|---|---|
+| Documentos por artefacto | **5.000** |
+| Tamaño de un documento | **256 KiB**, 32 niveles de profundidad |
+| Archivos subidos (fotos, adjuntos) | cuota aparte; 20 MiB por archivo |
+
+La app gasta **un documento por lote, por producción, por proveedor, usuario, plan y
+resumen**, más tres de sistema (catálogos, bitácora y metadatos). El documento más grande
+es el de catálogos, con unos 12 KiB de 256: no es el tamaño lo que aprieta, es el número.
+
+**Ese techo no se puede subir.** Lo que sí se puede es verlo venir y liberar espacio sin
+perder la historia, y eso es lo que hace *Datos del sistema*:
+
+- Un **medidor de ocupación** con el número real de documentos y una proyección calculada
+  con el ritmo **medido en esa instalación** —documentos nuevos por día entre el primer
+  registro y hoy—, no con un supuesto.
+- **Archivar un mes cerrado**: guarda su resumen —kilos, rendimiento, merma por causa y
+  por destino, valor por proveedor y por línea— y borra sus lotes y producciones sueltos.
+  Un mes pasa de decenas de documentos a uno. En las pruebas, archivar un mes liberó 86.
+
+Antes de archivar se descarga el respaldo completo de ese mes con el detalle lote a lote:
+dentro de la app queda el resumen, el detalle vive en ese archivo. No se archiva un mes con
+lotes sin cerrar —se perdería trabajo a medias— y la pantalla lo dice en vez de ofrecerlo.
+
+**Lo que el archivo no hace:** los indicadores normales siguen leyendo solo los lotes
+vivos, así que una serie que cruce un mes archivado lo mostrará vacío. El resumen está
+guardado y es consultable, pero no se mezcla automáticamente con el detalle. Decir lo
+contrario sería un gráfico que miente sin avisar.
+
 ## 11. Migrar a un backend real
 
 Todo el acceso a datos pasa por `core/db.js`. Modelo relacional sugerido:
@@ -713,6 +747,12 @@ sumen el total, que el folio sea estable, que el proveedor vea exactamente la mi
 que calcula la planta y que nunca vea un lote ajeno. Y **6 de uso sin conexión**, cortando
 la red de verdad: la app abre, se entra al portal, se trabaja, y al volver la señal se
 recoge la versión nueva.
+
+**11 comprobaciones de capacidad y archivo**: que la cuenta de documentos coincida con lo
+que de verdad hay, que la proyección salga del ritmo medido, que solo se ofrezcan meses con
+todo cerrado, que el resumen conserve los indicadores del mes, que no archive sin escribir
+`ARCHIVAR`, que descargue el respaldo, que libere documentos y que nada se rompa después
+—incluida la liquidación, que deja de incluir un mes archivado.
 
 Y **9 comprobaciones** sobre el paquete publicado: las dos puertas, el almacén compartido
 activo, un envío anunciado desde el celular apareciendo en la cola de la planta, el pesaje

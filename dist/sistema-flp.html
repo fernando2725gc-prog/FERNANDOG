@@ -1702,8 +1702,8 @@ const Auth = (function () {
 const DB = (function () {
   "use strict";
 
-  const KEY = "flp.db.v6";
-  const ESQUEMA = 6;
+  const KEY = "flp.db.v7";
+  const ESQUEMA = 7;
 
   /* ---------------------------------------------------------------- utils */
 
@@ -2418,6 +2418,7 @@ const DB = (function () {
       lotes: lotes,
       producciones: producciones,
       planes: [],
+      resumenes: [],
       parametros: parametrosBase(),
       bitacora: []
     };
@@ -2431,7 +2432,7 @@ const DB = (function () {
 
   /* ------------------------------------------------- almacén compartido */
 
-  const COLECCIONES = ["proveedores", "usuarios", "lotes", "producciones", "planes"];
+  const COLECCIONES = ["proveedores", "usuarios", "lotes", "producciones", "planes", "resumenes"];
   /* Catálogos y parámetros: pocos y pequeños, viajan en un solo documento. */
   const CONFIG = ["lineas", "actividades", "causas", "destinos", "parametros"];
 
@@ -2662,8 +2663,87 @@ const DB = (function () {
   }
 
   async function sembrarRemoto() {
-    cache = semilla(16);
+    /* 60 días de historia: ahora que la capacidad se mide (≈200 documentos,
+       un 4% del tope de 5.000) se puede sembrar un trimestre corto en vez de
+       dos semanas, que es lo que hace falta para que los indicadores y el
+       Pareto digan algo en una demostración. */
+    cache = semilla(60);
     await subirTodo();
+  }
+
+  /* ------------------------------------------------------- capacidad */
+
+  /* El almacén compartido admite 5.000 documentos: uno por lote, por
+     producción, por proveedor, usuario, plan y resumen, más los tres de
+     sistema. No se puede subir ese techo, así que lo que hace falta es
+     verlo venir y poder liberar espacio sin perder la historia. */
+  const TOPE_DOCUMENTOS = 5000;
+
+  function capacidad() {
+    const db = load();
+    let usados = 3;                       // config, bitácora y meta
+    const porColeccion = {};
+    COLECCIONES.forEach(function (c) {
+      const n = (db[c] || []).length;
+      porColeccion[c] = n;
+      usados += n;
+    });
+
+    /* Ritmo medido en esta instalación, no supuesto: documentos nuevos por
+       día entre el primer registro y hoy. */
+    const fechas = (db.lotes || []).map(function (l) { return l.fecha; })
+      .concat((db.producciones || []).map(function (p) { return p.fecha; }))
+      .filter(Boolean).sort();
+    let porDia = 0;
+    if (fechas.length > 1) {
+      const dias = Math.max(1,
+        Math.round((new Date(fechas[fechas.length - 1]) - new Date(fechas[0])) / 86400000) + 1);
+      porDia = ((db.lotes || []).length + (db.producciones || []).length) / dias;
+    }
+    const libres = Math.max(0, TOPE_DOCUMENTOS - usados);
+
+    return {
+      usados: usados,
+      tope: TOPE_DOCUMENTOS,
+      libres: libres,
+      ocupacion: usados / TOPE_DOCUMENTOS,
+      porColeccion: porColeccion,
+      porDia: porDia,
+      diasRestantes: porDia > 0 ? Math.round(libres / porDia) : null
+    };
+  }
+
+  /* Archiva un mes: guarda su resumen y borra los lotes y producciones
+     sueltos de ese mes. Los indicadores de ese mes siguen consultables en
+     el resumen; el detalle lote a lote vive en el respaldo descargado. */
+  async function archivarMes(resumen) {
+    const db = load();
+    const desde = resumen.desde, hasta = resumen.hasta;
+
+    const lotesFuera = db.lotes.filter(function (l) {
+      const f = l.fechaRecepcion || l.fecha;
+      return f >= desde && f <= hasta;
+    });
+    const idsFuera = {};
+    lotesFuera.forEach(function (l) { idsFuera[l.id] = true; });
+    const produccionesFuera = db.producciones.filter(function (p) {
+      return idsFuera[p.loteId] || (p.fecha >= desde && p.fecha <= hasta);
+    });
+
+    /* Primero se guarda el resumen y solo después se borra el detalle: al
+       revés, un corte de luz a mitad dejaría el mes sin una cosa ni otra. */
+    if (get("resumenes", resumen.id)) update("resumenes", resumen.id, resumen);
+    else insert("resumenes", resumen);
+
+    produccionesFuera.forEach(function (p) { remove("producciones", p.id); });
+    lotesFuera.forEach(function (l) { remove("lotes", l.id); });
+
+    return {
+      mes: resumen.mes,
+      lotes: lotesFuera.length,
+      producciones: produccionesFuera.length,
+      liberados: lotesFuera.length + produccionesFuera.length
+    };
   }
 
   /* ------------------------------------------------- arranque en limpio */
@@ -2696,6 +2776,7 @@ const DB = (function () {
       lotes: [],
       producciones: [],
       planes: [],
+      resumenes: [],
       bitacora: [{
         id: uid("bt"), fecha: new Date().toISOString(), usuarioId: supervisor.id,
         accion: "Puesta en marcha con datos reales",
@@ -2940,6 +3021,9 @@ const DB = (function () {
     save: save,
     reset: reset,
     arrancarLimpio: arrancarLimpio,
+    capacidad: capacidad,
+    archivarMes: archivarMes,
+    TOPE_DOCUMENTOS: TOPE_DOCUMENTOS,
     esModoReal: esModoReal,
     importar: importar,
     exportar: exportar,
@@ -3651,6 +3735,90 @@ const Indicadores = (function () {
     };
   }
 
+  /* ==================================== resumen para archivar
+
+     Un mes entero comprimido en un solo documento. Conserva lo que
+     sostiene los indicadores —kilos, rendimiento, merma por causa y por
+     destino, valor— y suelta lo que ya no se consulta: el lote a lote.
+
+     No es un sustituto del respaldo. El respaldo guarda TODO y se descarga
+     antes de archivar; esto es lo que queda dentro de la app para poder
+     seguir mirando la historia sin ocupar un documento por lote.
+     ==================================================================== */
+
+  function resumenMensual(mes) {
+    const desde = mes + "-01";
+    const d = new Date(desde + "T12:00:00");
+    const fin = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+    const hasta = mes + "-" + String(fin.getDate()).padStart(2, "0");
+
+    const f = { desde: desde, hasta: hasta };
+    const k = calcular(f);
+    const datos = filtrar(f);
+
+    return {
+      id: "res_" + mes,
+      mes: mes,
+      desde: desde,
+      hasta: hasta,
+      generadoEn: new Date().toISOString(),
+      lotes: k.numLotes,
+      producciones: k.numProducciones,
+      gavetasRecibidas: k.gavetasRecibidas,
+      kgRecibidos: k.kgRecibidos,
+      kgProcesados: k.kgProcesados,
+      kgExportable: k.kgExportable,
+      cajasExportables: k.cajasExportables,
+      kgMerma: k.kgMerma,
+      kgValorizado: k.kgValorizado,
+      valorCompra: k.valorCompra,
+      valorDescarte: k.valorDescarte,
+      tasaExportable: k.tasaExportable,
+      tasaMerma: k.tasaMerma,
+      tasaValorizacion: k.tasaValorizacion,
+      eficienciaTiempo: k.eficienciaTiempo,
+      numRechazados: k.numRechazados,
+      porLinea: porLinea(f).map(function (x) {
+        return { lineaId: x.lineaId, nombre: x.nombre, gavetas: x.gavetasRecibidas,
+                 kgProcesados: x.kgProcesados, kgExportable: x.kgExportable,
+                 cajas: x.cajasExportables, kgMerma: x.kgMerma };
+      }),
+      porProveedor: porProveedor(f).map(function (x) {
+        return { proveedorId: x.proveedorId, nombre: x.nombre, lotes: x.lotes,
+                 gavetas: x.gavetasRecibidas, kg: x.kgRecibidos, valor: x.valor,
+                 rechazados: x.rechazados, tasaDiferencia: x.tasaDiferencia };
+      }),
+      porCausa: porCausaRaiz(f).map(function (x) {
+        return { causaId: x.causaId, codigo: x.codigo, kg: x.kg, valorPerdido: x.valorPerdido };
+      }),
+      porDestino: porDestino(f).map(function (x) {
+        return { destinoId: x.destinoId, nombre: x.nombre, kg: x.kg, valor: x.valor };
+      }),
+      /* Cuántos documentos sueltos representa este resumen. */
+      documentosArchivados: datos.lotes.length + datos.producciones.length
+    };
+  }
+
+  /* Meses cerrados y archivables: todo lote de ese mes tiene que estar
+     Cerrado o Rechazado. Archivar un mes con trabajo a medias perdería el
+     lote que todavía hay que terminar. */
+  function mesesArchivables(antesDe) {
+    const corte = antesDe || DB.hoy().slice(0, 7);
+    const meses = {};
+    DB.all("lotes").forEach(function (l) {
+      const mes = (l.fechaRecepcion || l.fecha).slice(0, 7);
+      if (mes >= corte) return;
+      if (!meses[mes]) meses[mes] = { mes: mes, lotes: 0, abiertos: 0 };
+      meses[mes].lotes += 1;
+      if (l.estado !== "Cerrado" && l.estado !== "Rechazado") meses[mes].abiertos += 1;
+    });
+    return Object.keys(meses).sort().map(function (m) {
+      const x = meses[m];
+      x.archivable = x.abiertos === 0;
+      return x;
+    });
+  }
+
   /* ====================================== liquidación al proveedor
 
      El documento con el que se le paga. Cierra el ciclo: el proveedor
@@ -4176,6 +4344,8 @@ const Indicadores = (function () {
     matrizKPI: matrizKPI,
     fichaLote: fichaLote,
     liquidacion: liquidacion,
+    resumenMensual: resumenMensual,
+    mesesArchivables: mesesArchivables,
     liquidaciones: liquidaciones,
     totalMerma: totalMerma,
     mermaValorizada: mermaValorizada,
@@ -9855,6 +10025,52 @@ const Guia = (function () {
            "Anótala antes de cerrar: el sistema no la guarda." });
   }
 
+  /* Archivar no es borrar: primero baja el respaldo del mes, con el detalle
+     lote a lote, y solo entonces se comprime dentro de la app. */
+  function archivarMes(mes) {
+    const resumen = Indicadores.resumenMensual(mes);
+    if (!resumen.documentosArchivados) {
+      UI.aviso("Ese mes no tiene nada que archivar.", "alerta");
+      return;
+    }
+
+    UI.abrirFormulario("Archivar " + mes, [
+      { tipo: "html", contenido:
+        '<p class="nota-info">Se guardará el resumen del mes y se borrarán <strong>' +
+        nf(resumen.documentosArchivados) + "</strong> documentos sueltos (" +
+        nf(resumen.lotes) + " lotes y " + nf(resumen.producciones) + " producciones).</p>" +
+        '<div class="conteos">' +
+        "<div><span>Kilos recibidos</span><strong>" + nf(resumen.kgRecibidos) + "</strong></div>" +
+        "<div><span>Rendimiento</span><strong>" + pct(resumen.tasaExportable) + "</strong></div>" +
+        "<div><span>Merma</span><strong>" + pct(resumen.tasaMerma) + "</strong></div>" +
+        "<div><span>Valor comprado</span><strong>" + money(resumen.valorCompra) + "</strong></div>" +
+        "</div>" },
+      { nombre: "respaldo", etiqueta: "", tipo: "checkbox", valor: true,
+        textoCheck: "Descargar el respaldo completo del mes antes de archivar" },
+      { nombre: "confirmacion", etiqueta: "Escribe ARCHIVAR para confirmar", tipo: "text",
+        requerido: true, marcador: "ARCHIVAR",
+        validar: function (v) {
+          return String(v).trim().toUpperCase() === "ARCHIVAR"
+            ? null : "Escribe la palabra ARCHIVAR.";
+        } }
+    ], async function (d) {
+      if (d.respaldo) {
+        const datos = Indicadores.filtrar({ desde: resumen.desde, hasta: resumen.hasta });
+        UI.descargar(new Blob([JSON.stringify({
+          mes: mes, generadoEn: new Date().toISOString(), resumen: resumen,
+          lotes: datos.lotes, producciones: datos.producciones
+        }, null, 2)], { type: "application/json" }), "flp_archivo_" + mes + ".json");
+      }
+      const r = await DB.archivarMes(resumen);
+      DB.registrarBitacora(usuario.id, "Mes archivado",
+        mes + " · " + r.liberados + " documentos comprimidos en un resumen");
+      UI.aviso("Mes " + mes + " archivado. Se liberaron " + nf(r.liberados) + " documentos.");
+      render();
+    }, { aceptar: "Archivar el mes", peligro: true, ancho: true,
+         nota: "El detalle lote a lote queda en el archivo descargado. Dentro de la app " +
+           "seguirás viendo los indicadores del mes a través de su resumen." });
+  }
+
   function vistaDatos() {
     const db = DB.load();
     let html = '<div class="vista-cab"><div><h1>Datos del sistema</h1>' +
@@ -9869,6 +10085,67 @@ const Guia = (function () {
       html += "<div><span>" + esc(c[0]) + "</span><strong>" + nf(c[1]) + "</strong></div>";
     });
     html += "</div></section>";
+
+    /* --- capacidad --- */
+    const cap = DB.capacidad();
+    const tono = cap.ocupacion >= 0.9 ? "mal" : cap.ocupacion >= 0.7 ? "regular" : "bien";
+    html += '<section class="panel panel-' + tono + '"><h2>Capacidad del repositorio</h2>' +
+      '<p class="sub panel-sub">El almacén compartido admite ' + nf(cap.tope) +
+      " documentos: uno por lote, por producción, por proveedor, usuario, plan y resumen. " +
+      "Ese techo no se puede subir, pero sí se puede liberar espacio sin perder la " +
+      "historia.</p>" +
+      Graficos.medidor(cap.ocupacion, 1, "Ocupación",
+        nf(cap.usados) + " de " + nf(cap.tope) + " documentos · quedan " + nf(cap.libres)) +
+      '<div class="conteos">';
+    [["Lotes", cap.porColeccion.lotes], ["Producciones", cap.porColeccion.producciones],
+     ["Proveedores", cap.porColeccion.proveedores], ["Usuarios", cap.porColeccion.usuarios],
+     ["Planes", cap.porColeccion.planes], ["Resúmenes", cap.porColeccion.resumenes || 0]
+    ].forEach(function (c) {
+      html += "<div><span>" + esc(c[0]) + "</span><strong>" + nf(c[1]) + "</strong></div>";
+    });
+    html += "</div>";
+
+    if (cap.porDia > 0) {
+      html += '<p class="nota-' +
+        (cap.diasRestantes !== null && cap.diasRestantes < 180 ? "aviso" : "info") + '">' +
+        "Al ritmo de esta planta —<strong>" + nf(cap.porDia, 1) + " documentos al día</strong>, " +
+        "medido sobre lo que ya hay registrado— el tope llegaría en <strong>" +
+        nf(cap.diasRestantes) + " días</strong>, alrededor de " +
+        nf(cap.diasRestantes / 365, 1) + " años.</p>";
+    }
+    html += "</section>";
+
+    /* --- archivo --- */
+    const meses = Indicadores.mesesArchivables();
+    html += '<section class="panel"><h2>Archivar meses cerrados</h2>' +
+      '<p class="sub panel-sub">Archivar un mes guarda su <strong>resumen</strong> —kilos, ' +
+      "rendimiento, merma por causa y por destino, valor por proveedor— y borra los lotes y " +
+      "producciones sueltos de ese mes. Un mes archivado pasa de decenas de documentos a " +
+      "uno solo.</p>";
+
+    if (!meses.length) {
+      html += '<p class="vacio">Todavía no hay meses anteriores que archivar.</p>';
+    } else {
+      html += UI.tabla([
+        { titulo: "Mes", valor: function (m) { return "<strong>" + esc(m.mes) + "</strong>"; } },
+        { titulo: "Lotes", num: true, valor: function (m) { return nf(m.lotes); } },
+        { titulo: "Estado", valor: function (m) {
+          return m.archivable
+            ? '<span class="etq etq-ok">Todo cerrado</span>'
+            : '<span class="etq etq-bajo">' + nf(m.abiertos) + " sin cerrar</span>"; } },
+        { titulo: "", valor: function (m) {
+          return m.archivable
+            ? '<button class="btn-mini btn-mini-accion" data-archivar="' + esc(m.mes) +
+              '">Archivar</button>'
+            : '<span class="tenue">Ciérralos primero</span>'; } }
+      ], meses, {});
+    }
+
+    html += '<p class="nota-aviso"><strong>Antes de archivar se descarga el respaldo ' +
+      "completo de ese mes</strong>, con el detalle lote a lote. Dentro de la app queda el " +
+      "resumen; el detalle vive en ese archivo. No se archiva un mes con lotes sin cerrar: " +
+      "se perdería trabajo a medias.</p>";
+    html += "</section>";
 
     html += '<section class="panel"><h2>Respaldo y restauración</h2>' +
       "<p>Todo el repositorio se guarda como un único archivo JSON, útil como anexo del TIC.</p>" +
@@ -10449,6 +10726,10 @@ const Guia = (function () {
     if (vista === "tiempos") enlazarTiempos();
     if (vista === "liquidacion") enlazarLiquidacion();
     if (vista === "costeo") enlazarCosteo();
+
+    $$("[data-archivar]").forEach(function (b) {
+      b.addEventListener("click", function () { archivarMes(b.dataset.archivar); });
+    });
 
     const btnLimpio = $("#btnArrancarLimpio");
     if (btnLimpio) btnLimpio.addEventListener("click", formArrancarLimpio);

@@ -13,8 +13,8 @@
 const DB = (function () {
   "use strict";
 
-  const KEY = "flp.db.v6";
-  const ESQUEMA = 6;
+  const KEY = "flp.db.v7";
+  const ESQUEMA = 7;
 
   /* ---------------------------------------------------------------- utils */
 
@@ -729,6 +729,7 @@ const DB = (function () {
       lotes: lotes,
       producciones: producciones,
       planes: [],
+      resumenes: [],
       parametros: parametrosBase(),
       bitacora: []
     };
@@ -742,7 +743,7 @@ const DB = (function () {
 
   /* ------------------------------------------------- almacén compartido */
 
-  const COLECCIONES = ["proveedores", "usuarios", "lotes", "producciones", "planes"];
+  const COLECCIONES = ["proveedores", "usuarios", "lotes", "producciones", "planes", "resumenes"];
   /* Catálogos y parámetros: pocos y pequeños, viajan en un solo documento. */
   const CONFIG = ["lineas", "actividades", "causas", "destinos", "parametros"];
 
@@ -973,8 +974,87 @@ const DB = (function () {
   }
 
   async function sembrarRemoto() {
-    cache = semilla(16);
+    /* 60 días de historia: ahora que la capacidad se mide (≈200 documentos,
+       un 4% del tope de 5.000) se puede sembrar un trimestre corto en vez de
+       dos semanas, que es lo que hace falta para que los indicadores y el
+       Pareto digan algo en una demostración. */
+    cache = semilla(60);
     await subirTodo();
+  }
+
+  /* ------------------------------------------------------- capacidad */
+
+  /* El almacén compartido admite 5.000 documentos: uno por lote, por
+     producción, por proveedor, usuario, plan y resumen, más los tres de
+     sistema. No se puede subir ese techo, así que lo que hace falta es
+     verlo venir y poder liberar espacio sin perder la historia. */
+  const TOPE_DOCUMENTOS = 5000;
+
+  function capacidad() {
+    const db = load();
+    let usados = 3;                       // config, bitácora y meta
+    const porColeccion = {};
+    COLECCIONES.forEach(function (c) {
+      const n = (db[c] || []).length;
+      porColeccion[c] = n;
+      usados += n;
+    });
+
+    /* Ritmo medido en esta instalación, no supuesto: documentos nuevos por
+       día entre el primer registro y hoy. */
+    const fechas = (db.lotes || []).map(function (l) { return l.fecha; })
+      .concat((db.producciones || []).map(function (p) { return p.fecha; }))
+      .filter(Boolean).sort();
+    let porDia = 0;
+    if (fechas.length > 1) {
+      const dias = Math.max(1,
+        Math.round((new Date(fechas[fechas.length - 1]) - new Date(fechas[0])) / 86400000) + 1);
+      porDia = ((db.lotes || []).length + (db.producciones || []).length) / dias;
+    }
+    const libres = Math.max(0, TOPE_DOCUMENTOS - usados);
+
+    return {
+      usados: usados,
+      tope: TOPE_DOCUMENTOS,
+      libres: libres,
+      ocupacion: usados / TOPE_DOCUMENTOS,
+      porColeccion: porColeccion,
+      porDia: porDia,
+      diasRestantes: porDia > 0 ? Math.round(libres / porDia) : null
+    };
+  }
+
+  /* Archiva un mes: guarda su resumen y borra los lotes y producciones
+     sueltos de ese mes. Los indicadores de ese mes siguen consultables en
+     el resumen; el detalle lote a lote vive en el respaldo descargado. */
+  async function archivarMes(resumen) {
+    const db = load();
+    const desde = resumen.desde, hasta = resumen.hasta;
+
+    const lotesFuera = db.lotes.filter(function (l) {
+      const f = l.fechaRecepcion || l.fecha;
+      return f >= desde && f <= hasta;
+    });
+    const idsFuera = {};
+    lotesFuera.forEach(function (l) { idsFuera[l.id] = true; });
+    const produccionesFuera = db.producciones.filter(function (p) {
+      return idsFuera[p.loteId] || (p.fecha >= desde && p.fecha <= hasta);
+    });
+
+    /* Primero se guarda el resumen y solo después se borra el detalle: al
+       revés, un corte de luz a mitad dejaría el mes sin una cosa ni otra. */
+    if (get("resumenes", resumen.id)) update("resumenes", resumen.id, resumen);
+    else insert("resumenes", resumen);
+
+    produccionesFuera.forEach(function (p) { remove("producciones", p.id); });
+    lotesFuera.forEach(function (l) { remove("lotes", l.id); });
+
+    return {
+      mes: resumen.mes,
+      lotes: lotesFuera.length,
+      producciones: produccionesFuera.length,
+      liberados: lotesFuera.length + produccionesFuera.length
+    };
   }
 
   /* ------------------------------------------------- arranque en limpio */
@@ -1007,6 +1087,7 @@ const DB = (function () {
       lotes: [],
       producciones: [],
       planes: [],
+      resumenes: [],
       bitacora: [{
         id: uid("bt"), fecha: new Date().toISOString(), usuarioId: supervisor.id,
         accion: "Puesta en marcha con datos reales",
@@ -1251,6 +1332,9 @@ const DB = (function () {
     save: save,
     reset: reset,
     arrancarLimpio: arrancarLimpio,
+    capacidad: capacidad,
+    archivarMes: archivarMes,
+    TOPE_DOCUMENTOS: TOPE_DOCUMENTOS,
     esModoReal: esModoReal,
     importar: importar,
     exportar: exportar,

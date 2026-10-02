@@ -674,6 +674,90 @@ const Indicadores = (function () {
     };
   }
 
+  /* ==================================== resumen para archivar
+
+     Un mes entero comprimido en un solo documento. Conserva lo que
+     sostiene los indicadores —kilos, rendimiento, merma por causa y por
+     destino, valor— y suelta lo que ya no se consulta: el lote a lote.
+
+     No es un sustituto del respaldo. El respaldo guarda TODO y se descarga
+     antes de archivar; esto es lo que queda dentro de la app para poder
+     seguir mirando la historia sin ocupar un documento por lote.
+     ==================================================================== */
+
+  function resumenMensual(mes) {
+    const desde = mes + "-01";
+    const d = new Date(desde + "T12:00:00");
+    const fin = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+    const hasta = mes + "-" + String(fin.getDate()).padStart(2, "0");
+
+    const f = { desde: desde, hasta: hasta };
+    const k = calcular(f);
+    const datos = filtrar(f);
+
+    return {
+      id: "res_" + mes,
+      mes: mes,
+      desde: desde,
+      hasta: hasta,
+      generadoEn: new Date().toISOString(),
+      lotes: k.numLotes,
+      producciones: k.numProducciones,
+      gavetasRecibidas: k.gavetasRecibidas,
+      kgRecibidos: k.kgRecibidos,
+      kgProcesados: k.kgProcesados,
+      kgExportable: k.kgExportable,
+      cajasExportables: k.cajasExportables,
+      kgMerma: k.kgMerma,
+      kgValorizado: k.kgValorizado,
+      valorCompra: k.valorCompra,
+      valorDescarte: k.valorDescarte,
+      tasaExportable: k.tasaExportable,
+      tasaMerma: k.tasaMerma,
+      tasaValorizacion: k.tasaValorizacion,
+      eficienciaTiempo: k.eficienciaTiempo,
+      numRechazados: k.numRechazados,
+      porLinea: porLinea(f).map(function (x) {
+        return { lineaId: x.lineaId, nombre: x.nombre, gavetas: x.gavetasRecibidas,
+                 kgProcesados: x.kgProcesados, kgExportable: x.kgExportable,
+                 cajas: x.cajasExportables, kgMerma: x.kgMerma };
+      }),
+      porProveedor: porProveedor(f).map(function (x) {
+        return { proveedorId: x.proveedorId, nombre: x.nombre, lotes: x.lotes,
+                 gavetas: x.gavetasRecibidas, kg: x.kgRecibidos, valor: x.valor,
+                 rechazados: x.rechazados, tasaDiferencia: x.tasaDiferencia };
+      }),
+      porCausa: porCausaRaiz(f).map(function (x) {
+        return { causaId: x.causaId, codigo: x.codigo, kg: x.kg, valorPerdido: x.valorPerdido };
+      }),
+      porDestino: porDestino(f).map(function (x) {
+        return { destinoId: x.destinoId, nombre: x.nombre, kg: x.kg, valor: x.valor };
+      }),
+      /* Cuántos documentos sueltos representa este resumen. */
+      documentosArchivados: datos.lotes.length + datos.producciones.length
+    };
+  }
+
+  /* Meses cerrados y archivables: todo lote de ese mes tiene que estar
+     Cerrado o Rechazado. Archivar un mes con trabajo a medias perdería el
+     lote que todavía hay que terminar. */
+  function mesesArchivables(antesDe) {
+    const corte = antesDe || DB.hoy().slice(0, 7);
+    const meses = {};
+    DB.all("lotes").forEach(function (l) {
+      const mes = (l.fechaRecepcion || l.fecha).slice(0, 7);
+      if (mes >= corte) return;
+      if (!meses[mes]) meses[mes] = { mes: mes, lotes: 0, abiertos: 0 };
+      meses[mes].lotes += 1;
+      if (l.estado !== "Cerrado" && l.estado !== "Rechazado") meses[mes].abiertos += 1;
+    });
+    return Object.keys(meses).sort().map(function (m) {
+      const x = meses[m];
+      x.archivable = x.abiertos === 0;
+      return x;
+    });
+  }
+
   /* ====================================== liquidación al proveedor
 
      El documento con el que se le paga. Cierra el ciclo: el proveedor
@@ -1199,6 +1283,8 @@ const Indicadores = (function () {
     matrizKPI: matrizKPI,
     fichaLote: fichaLote,
     liquidacion: liquidacion,
+    resumenMensual: resumenMensual,
+    mesesArchivables: mesesArchivables,
     liquidaciones: liquidaciones,
     totalMerma: totalMerma,
     mermaValorizada: mermaValorizada,

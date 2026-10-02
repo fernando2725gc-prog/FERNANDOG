@@ -2954,6 +2954,52 @@
            "Anótala antes de cerrar: el sistema no la guarda." });
   }
 
+  /* Archivar no es borrar: primero baja el respaldo del mes, con el detalle
+     lote a lote, y solo entonces se comprime dentro de la app. */
+  function archivarMes(mes) {
+    const resumen = Indicadores.resumenMensual(mes);
+    if (!resumen.documentosArchivados) {
+      UI.aviso("Ese mes no tiene nada que archivar.", "alerta");
+      return;
+    }
+
+    UI.abrirFormulario("Archivar " + mes, [
+      { tipo: "html", contenido:
+        '<p class="nota-info">Se guardará el resumen del mes y se borrarán <strong>' +
+        nf(resumen.documentosArchivados) + "</strong> documentos sueltos (" +
+        nf(resumen.lotes) + " lotes y " + nf(resumen.producciones) + " producciones).</p>" +
+        '<div class="conteos">' +
+        "<div><span>Kilos recibidos</span><strong>" + nf(resumen.kgRecibidos) + "</strong></div>" +
+        "<div><span>Rendimiento</span><strong>" + pct(resumen.tasaExportable) + "</strong></div>" +
+        "<div><span>Merma</span><strong>" + pct(resumen.tasaMerma) + "</strong></div>" +
+        "<div><span>Valor comprado</span><strong>" + money(resumen.valorCompra) + "</strong></div>" +
+        "</div>" },
+      { nombre: "respaldo", etiqueta: "", tipo: "checkbox", valor: true,
+        textoCheck: "Descargar el respaldo completo del mes antes de archivar" },
+      { nombre: "confirmacion", etiqueta: "Escribe ARCHIVAR para confirmar", tipo: "text",
+        requerido: true, marcador: "ARCHIVAR",
+        validar: function (v) {
+          return String(v).trim().toUpperCase() === "ARCHIVAR"
+            ? null : "Escribe la palabra ARCHIVAR.";
+        } }
+    ], async function (d) {
+      if (d.respaldo) {
+        const datos = Indicadores.filtrar({ desde: resumen.desde, hasta: resumen.hasta });
+        UI.descargar(new Blob([JSON.stringify({
+          mes: mes, generadoEn: new Date().toISOString(), resumen: resumen,
+          lotes: datos.lotes, producciones: datos.producciones
+        }, null, 2)], { type: "application/json" }), "flp_archivo_" + mes + ".json");
+      }
+      const r = await DB.archivarMes(resumen);
+      DB.registrarBitacora(usuario.id, "Mes archivado",
+        mes + " · " + r.liberados + " documentos comprimidos en un resumen");
+      UI.aviso("Mes " + mes + " archivado. Se liberaron " + nf(r.liberados) + " documentos.");
+      render();
+    }, { aceptar: "Archivar el mes", peligro: true, ancho: true,
+         nota: "El detalle lote a lote queda en el archivo descargado. Dentro de la app " +
+           "seguirás viendo los indicadores del mes a través de su resumen." });
+  }
+
   function vistaDatos() {
     const db = DB.load();
     let html = '<div class="vista-cab"><div><h1>Datos del sistema</h1>' +
@@ -2968,6 +3014,67 @@
       html += "<div><span>" + esc(c[0]) + "</span><strong>" + nf(c[1]) + "</strong></div>";
     });
     html += "</div></section>";
+
+    /* --- capacidad --- */
+    const cap = DB.capacidad();
+    const tono = cap.ocupacion >= 0.9 ? "mal" : cap.ocupacion >= 0.7 ? "regular" : "bien";
+    html += '<section class="panel panel-' + tono + '"><h2>Capacidad del repositorio</h2>' +
+      '<p class="sub panel-sub">El almacén compartido admite ' + nf(cap.tope) +
+      " documentos: uno por lote, por producción, por proveedor, usuario, plan y resumen. " +
+      "Ese techo no se puede subir, pero sí se puede liberar espacio sin perder la " +
+      "historia.</p>" +
+      Graficos.medidor(cap.ocupacion, 1, "Ocupación",
+        nf(cap.usados) + " de " + nf(cap.tope) + " documentos · quedan " + nf(cap.libres)) +
+      '<div class="conteos">';
+    [["Lotes", cap.porColeccion.lotes], ["Producciones", cap.porColeccion.producciones],
+     ["Proveedores", cap.porColeccion.proveedores], ["Usuarios", cap.porColeccion.usuarios],
+     ["Planes", cap.porColeccion.planes], ["Resúmenes", cap.porColeccion.resumenes || 0]
+    ].forEach(function (c) {
+      html += "<div><span>" + esc(c[0]) + "</span><strong>" + nf(c[1]) + "</strong></div>";
+    });
+    html += "</div>";
+
+    if (cap.porDia > 0) {
+      html += '<p class="nota-' +
+        (cap.diasRestantes !== null && cap.diasRestantes < 180 ? "aviso" : "info") + '">' +
+        "Al ritmo de esta planta —<strong>" + nf(cap.porDia, 1) + " documentos al día</strong>, " +
+        "medido sobre lo que ya hay registrado— el tope llegaría en <strong>" +
+        nf(cap.diasRestantes) + " días</strong>, alrededor de " +
+        nf(cap.diasRestantes / 365, 1) + " años.</p>";
+    }
+    html += "</section>";
+
+    /* --- archivo --- */
+    const meses = Indicadores.mesesArchivables();
+    html += '<section class="panel"><h2>Archivar meses cerrados</h2>' +
+      '<p class="sub panel-sub">Archivar un mes guarda su <strong>resumen</strong> —kilos, ' +
+      "rendimiento, merma por causa y por destino, valor por proveedor— y borra los lotes y " +
+      "producciones sueltos de ese mes. Un mes archivado pasa de decenas de documentos a " +
+      "uno solo.</p>";
+
+    if (!meses.length) {
+      html += '<p class="vacio">Todavía no hay meses anteriores que archivar.</p>';
+    } else {
+      html += UI.tabla([
+        { titulo: "Mes", valor: function (m) { return "<strong>" + esc(m.mes) + "</strong>"; } },
+        { titulo: "Lotes", num: true, valor: function (m) { return nf(m.lotes); } },
+        { titulo: "Estado", valor: function (m) {
+          return m.archivable
+            ? '<span class="etq etq-ok">Todo cerrado</span>'
+            : '<span class="etq etq-bajo">' + nf(m.abiertos) + " sin cerrar</span>"; } },
+        { titulo: "", valor: function (m) {
+          return m.archivable
+            ? '<button class="btn-mini btn-mini-accion" data-archivar="' + esc(m.mes) +
+              '">Archivar</button>'
+            : '<span class="tenue">Ciérralos primero</span>'; } }
+      ], meses, {});
+    }
+
+    html += '<p class="nota-aviso"><strong>Antes de archivar se descarga el respaldo ' +
+      "completo de ese mes</strong>, con el detalle lote a lote. Dentro de la app queda el " +
+      "resumen; el detalle vive en ese archivo. No se archiva un mes con lotes sin cerrar: " +
+      "se perdería trabajo a medias.</p>";
+    html += "</section>";
 
     html += '<section class="panel"><h2>Respaldo y restauración</h2>' +
       "<p>Todo el repositorio se guarda como un único archivo JSON, útil como anexo del TIC.</p>" +
@@ -3548,6 +3655,10 @@
     if (vista === "tiempos") enlazarTiempos();
     if (vista === "liquidacion") enlazarLiquidacion();
     if (vista === "costeo") enlazarCosteo();
+
+    $$("[data-archivar]").forEach(function (b) {
+      b.addEventListener("click", function () { archivarMes(b.dataset.archivar); });
+    });
 
     const btnLimpio = $("#btnArrancarLimpio");
     if (btnLimpio) btnLimpio.addEventListener("click", formArrancarLimpio);

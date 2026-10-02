@@ -117,6 +117,11 @@ const Indicadores = (function () {
     const cajasExportables = suma(prod, "cajasExportables");
     const kgExportable = suma(prod, "kgExportable");
 
+    /* Lo retirado al recibir no pasa por producción, así que no está en las
+       mermas: hay que sumarlo aparte o el balance no cierra. */
+    const kgRetirados = pesados.reduce(function (a, l) {
+      return a + (Number(l.kgRetirados) || 0);
+    }, 0);
     const kgMerma = prod.reduce(function (a, p) { return a + totalMerma(p); }, 0);
     const kgValorizado = prod.reduce(function (a, p) { return a + mermaValorizada(p); }, 0);
     const valorDescarte = prod.reduce(function (a, p) { return a + valorRecuperado(p); }, 0);
@@ -189,6 +194,11 @@ const Indicadores = (function () {
       cumplimientoMeta: metaPonderada > 0 ? tasaExportable / metaPonderada : 0,
       kgMerma: kgMerma,
       tasaMerma: kgProcesados > 0 ? kgMerma / kgProcesados : 0,
+      kgRetirados: kgRetirados,
+      tasaRetiro: kgRecibidos > 0 ? kgRetirados / kgRecibidos : 0,
+      /* Pérdida de verdad: desde la báscula hasta la caja, retiro incluido. */
+      perdidaTotal: kgRetirados + kgMerma,
+      rendimientoGlobal: kgRecibidos > 0 ? kgExportable / kgRecibidos : 0,
 
       /* --- economia circular --- */
       kgValorizado: kgValorizado,
@@ -372,6 +382,93 @@ const Indicadores = (function () {
       x.acumulado = acumulado;
     });
     return lista;
+  }
+
+  /* ================================= pérdida por etapa
+
+     Dónde se cae la fruta: al recibirla, al seleccionarla o al empacarla.
+     Es el balance de masa del TIC, y sin esta separación «merma» era un
+     solo número que no decía dónde actuar: retirar en recepción es un
+     problema del proveedor, caerse en selección es un problema de método.
+     ==================================================================== */
+
+  function porEtapa(filtros) {
+    const datos = filtrar(filtros);
+    const mapa = {};
+    DB.ETAPAS.forEach(function (e) {
+      mapa[e.id] = { etapaId: e.id, nombre: e.nombre, orden: e.orden, ayuda: e.ayuda,
+                     kg: 0, valorPerdido: 0, lotes: 0 };
+    });
+
+    /* Recepción: el retiro vive en el lote, no en la producción. */
+    datos.lotes.forEach(function (l) {
+      const kg = Number(l.kgRetirados) || 0;
+      if (kg <= 0) return;
+      const ln = DB.linea(l.lineaId);
+      const d = DB.destino(l.destinoRetiro);
+      mapa.recepcion.kg += kg;
+      mapa.recepcion.lotes += 1;
+      mapa.recepcion.valorPerdido += kg *
+        ((ln ? Number(ln.valorKgProductor) || 0 : 0) - (d ? Number(d.valorKg) || 0 : 0));
+    });
+
+    datos.producciones.forEach(function (p) {
+      const ln = DB.linea(p.lineaId);
+      const valorKg = ln ? Number(ln.valorKgProductor) || 0 : 0;
+      const vistas = {};
+      (p.mermas || []).forEach(function (m) {
+        /* Lo registrado antes de separar etapas se cuenta en selección, que
+           es donde ocurre la mayor parte; marcarlo como desconocido dejaría
+           un hueco en el balance. */
+        const e = mapa[m.etapa] ? m.etapa : "seleccion";
+        const kg = Number(m.kg) || 0;
+        const d = DB.destino(m.destinoId);
+        mapa[e].kg += kg;
+        mapa[e].valorPerdido += kg * (valorKg - (d ? Number(d.valorKg) || 0 : 0));
+        if (!vistas[e]) { mapa[e].lotes += 1; vistas[e] = true; }
+      });
+    });
+
+    const total = DB.ETAPAS.reduce(function (a, e) { return a + mapa[e.id].kg; }, 0);
+    return DB.ETAPAS.map(function (e) {
+      const x = mapa[e.id];
+      x.porcentaje = total > 0 ? x.kg / total : 0;
+      return x;
+    });
+  }
+
+  /* El balance de masa en cascada: cuánto entra, cuánto se cae en cada
+     etapa y cuánto sale empacado. Es la figura del documento. */
+  function balanceMasa(filtros) {
+    const datos = filtrar(filtros);
+    const etapas = porEtapa(filtros);
+    const porId = {};
+    etapas.forEach(function (e) { porId[e.etapaId] = e; });
+
+    const kgRecibidos = datos.lotes.reduce(function (a, l) {
+      return a + (Number(l.kgRecibidos) || 0);
+    }, 0);
+    const retiro = porId.recepcion.kg;
+    const aProceso = kgRecibidos - retiro;
+    const seleccion = porId.seleccion.kg;
+    const aEmpaque = aProceso - seleccion;
+    const empaque = porId.empaque.kg;
+    const exportado = aEmpaque - empaque;
+
+    return {
+      kgRecibidos: kgRecibidos,
+      pasos: [
+        { id: "recibido", nombre: "Recibido en báscula", kg: kgRecibidos, perdida: 0 },
+        { id: "recepcion", nombre: "Retirado al recibir", kg: aProceso, perdida: retiro },
+        { id: "seleccion", nombre: "Descartado en selección", kg: aEmpaque, perdida: seleccion },
+        { id: "empaque", nombre: "Perdido en empaque", kg: exportado, perdida: empaque }
+      ],
+      kgExportado: exportado,
+      perdidaTotal: retiro + seleccion + empaque,
+      rendimientoGlobal: kgRecibidos > 0 ? exportado / kgRecibidos : 0,
+      rendimientoProceso: aProceso > 0 ? exportado / aProceso : 0,
+      tasaRetiro: kgRecibidos > 0 ? retiro / kgRecibidos : 0
+    };
   }
 
   /* Reparto del descarte por destino: la foto de la economia circular. */
@@ -1270,6 +1367,8 @@ const Indicadores = (function () {
     porLinea: porLinea,
     porCausaRaiz: porCausaRaiz,
     porDestino: porDestino,
+    porEtapa: porEtapa,
+    balanceMasa: balanceMasa,
     porCalidad: porCalidad,
     serie: serie,
     planificar: planificar,

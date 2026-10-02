@@ -13,8 +13,8 @@
 const DB = (function () {
   "use strict";
 
-  const KEY = "flp.db.v7";
-  const ESQUEMA = 7;
+  const KEY = "flp.db.v8";
+  const ESQUEMA = 8;
 
   /* ---------------------------------------------------------------- utils */
 
@@ -118,6 +118,7 @@ const DB = (function () {
   function lineasBase() {
     return [
       { id: "ln_pitahaya", codigo: "PIT", nombre: "Pitahaya roja",
+        nombreSeleccion: "Sopleteado y selección",
         pesoGavetaKg: 11, origenPesoGaveta: "M",
         pesoCajaKg: 3, origenPesoCaja: "M",
         /* Rendimiento exportable sobre lo que entra a proceso, del balance
@@ -129,6 +130,7 @@ const DB = (function () {
         ingresoDiarioKg: 2000, origenIngreso: "E",
         color: "#c0246b", activa: true },
       { id: "ln_tomate", codigo: "TOM", nombre: "Tomate de árbol",
+        nombreSeleccion: "Clasificación y limpieza",
         pesoGavetaKg: 20, origenPesoGaveta: "M",
         pesoCajaKg: 2.5, origenPesoCaja: "M",
         rendimientoExportable: 0.960, origenRendimiento: "M",
@@ -138,6 +140,7 @@ const DB = (function () {
         ingresoDiarioKg: 1000, origenIngreso: "E",
         color: "#c85a1e", activa: true },
       { id: "ln_granadilla", codigo: "GRA", nombre: "Granadilla",
+        nombreSeleccion: "Clasificación por calibre",
         pesoGavetaKg: 12, origenPesoGaveta: "M",
         pesoCajaKg: 2, origenPesoCaja: "M",
         rendimientoExportable: 0.975, origenRendimiento: "M",
@@ -336,6 +339,31 @@ const DB = (function () {
   /* Destinos del descarte, en orden de valor recuperado. Es la jerarquía que
      sostiene el indicador de valorización: todo lo que no termina en relleno
      sanitario se considera aprovechado. */
+  /* Las tres etapas donde se pierde fruta, tal como las separa el balance
+     de masa del TIC. El pesaje solo comprueba CANTIDAD; la fruta se cae en
+     la selección y en el empaque, y hasta ahora todo eso iba a un mismo
+     saco llamado «merma», sin decir dónde había ocurrido.
+
+     El nombre de la etapa de selección cambia por línea porque el trabajo
+     es distinto: sopletear una pitahaya no es lavar un tomate. */
+  const ETAPAS = [
+    { id: "recepcion", nombre: "Recepción", orden: 1,
+      ayuda: "Fruta que se retira al recibir, sin llegar a entrar a proceso." },
+    { id: "seleccion", nombre: "Selección", orden: 2,
+      ayuda: "Lo que se descarta al sopletear, clasificar o limpiar." },
+    { id: "empaque", nombre: "Empaque", orden: 3,
+      ayuda: "Lo que se pierde ya en la caja: calibre, compresión, presentación." }
+  ];
+
+  function nombreEtapa(lineaId, etapaId) {
+    if (etapaId !== "seleccion") {
+      const e = ETAPAS.find(function (x) { return x.id === etapaId; });
+      return e ? e.nombre : etapaId;
+    }
+    const l = linea(lineaId);
+    return (l && l.nombreSeleccion) || "Selección";
+  }
+
   function destinosBase() {
     return [
       { id: "ds_segunda", nombre: "Segunda calidad — mercado nacional", nivel: 1,
@@ -573,6 +601,9 @@ const DB = (function () {
 
           fechaRecepcion: null,
           gavetasRecibidas: null,
+          kgRetirados: 0,
+          causaRetiro: null,
+          destinoRetiro: null,
           kgRecibidos: null,
           calidadVerificada: null,
           observacionesRecepcion: "",
@@ -594,6 +625,7 @@ const DB = (function () {
             lote.recibidoPor = "us_03";
             lote.gavetasRecibidas = 0;
             lote.kgRecibidos = 0;
+            lote.kgRetirados = 0;
             lote.calidadVerificada = "C";
             lote.observacionesRecepcion = "Lote rechazado: fruta fuera de los mínimos de exportación.";
           } else {
@@ -605,6 +637,18 @@ const DB = (function () {
             lote.kgRecibidos = Math.round(lote.gavetasRecibidas * linea.pesoGavetaKg * (0.97 + r() * 0.05));
             lote.calidadVerificada = r() < 0.18
               ? (calidad === "A" ? "B" : "C") : calidad;
+            /* Retiro en recepción: fruta que se devuelve al descargar sin
+               rechazar el lote entero. Es la primera etapa del balance de
+               masa y la causa raíz nº 3 de la matriz KPI (granadilla bajo
+               calibre). Antes no se registraba en ninguna parte. */
+            const tasaRetiro = lote.calidadVerificada === "A" ? 0.004 + r() * 0.012
+              : lote.calidadVerificada === "B" ? 0.012 + r() * 0.025
+              : 0.03 + r() * 0.05;
+            lote.kgRetirados = Math.round(lote.kgRecibidos * tasaRetiro);
+            lote.causaRetiro = lote.kgRetirados > 0
+              ? (lote.lineaId === "ln_granadilla" ? "CR6" : (r() < 0.6 ? "CR6" : "CR1")) : null;
+            lote.destinoRetiro = lote.kgRetirados > 0
+              ? (d3Reciente(lote.fechaRecepcion) ? "ds_segunda" : "ds_relleno") : null;
             lote.estado = "Recibido";
           }
         }
@@ -626,7 +670,9 @@ const DB = (function () {
       const cal = CALIDADES.find(function (c) { return c.id === lote.calidadVerificada; });
 
       const gavetasProcesadas = lote.gavetasRecibidas;
-      const kgProcesados = lote.kgRecibidos;
+      /* Lo que entra a proceso es lo recibido MENOS lo retirado al descargar:
+         esa fruta nunca llegó a la mesa de selección. */
+      const kgProcesados = lote.kgRecibidos - (lote.kgRetirados || 0);
       /* Rendimiento en KILOS, que es como lo mide el balance de masa: de lo
          que entra a proceso, qué fracción sale empacada para exportación.
          Antes se contaba en «cajas sobre cajas», que con bultos de distinto
@@ -669,7 +715,11 @@ const DB = (function () {
           const opciones = ["ds_subproducto", "ds_animal", "ds_compost", "ds_relleno"];
           destinoId = opciones[Math.floor(r() * (r() < 0.75 ? 3 : 4))];
         }
-        mermas.push({ causaId: k, kg: kg, destinoId: destinoId });
+        /* Cada kilo perdido dice EN QUÉ ETAPA se perdió. La selección se
+           lleva la mayor parte —es donde se mira la fruta una a una— y el
+           empaque el resto. */
+        const etapa = r() < 0.68 ? "seleccion" : "empaque";
+        mermas.push({ causaId: k, kg: kg, destinoId: destinoId, etapa: etapa });
       });
 
       folioP += 1;
@@ -1313,6 +1363,8 @@ const DB = (function () {
   return {
     EMPRESA: EMPRESA,
     PESO_GAVETA_KG: PESO_GAVETA_KG,
+    ETAPAS: ETAPAS,
+    nombreEtapa: nombreEtapa,
     tiempoEstandarAct: tiempoEstandarAct,
     cajasPorGaveta: cajasPorGaveta,
     actividadesDe: actividadesDe,

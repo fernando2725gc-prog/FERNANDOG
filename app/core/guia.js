@@ -164,6 +164,11 @@ const Guia = (function () {
            "Si lo pesado se aparta mucho de lo anunciado, el sistema lo señala. Esa " +
            "diferencia es la causa raíz <strong>CR6</strong> hecha número, y es la base " +
            "de la conversación con el proveedor."],
+          ["¿Se retiró fruta al descargar?",
+           "Si parte del lote no entra —bajo calibre, golpeada, podrida— se anota en " +
+           "<em>kilos retirados</em>, con su causa y su destino. Es la primera etapa del " +
+           "balance de masa y hasta ahora no se registraba en ninguna parte: esa fruta " +
+           "desaparecía entre lo pesado y lo procesado. Déjalo vacío si entró todo."],
           ["Verifica la calidad",
            "Puedes confirmar la calidad declarada o corregirla. Si la fruta no cumple, " +
            "usa <em>Rechazar</em> y escribe el motivo: el proveedor lo verá."],
@@ -186,6 +191,12 @@ const Guia = (function () {
            "Cada kilo de descarte lleva dos cosas: <strong>por qué</strong> se perdió " +
            "(la causa raíz) y <strong>a dónde</strong> fue. Ese segundo dato es el que " +
            "hace posible la economía circular; sin él, todo el descarte parece basura."],
+          ["Di DÓNDE se perdió cada kilo",
+           "Cada línea de pérdida lleva su etapa: en la <em>selección</em> —sopleteado, " +
+           "clasificación o limpieza, según la línea— o ya en el <em>empaque</em>. " +
+           "No es burocracia: caerse en selección es un problema de método y caerse en " +
+           "empaque es un problema de presentación; mezclarlos deja un solo número que " +
+           "no dice dónde actuar."],
           ["Cuadra el balance de masa, en kilos",
            "Lo empacado más la merma tiene que dar lo que entró a proceso. Se cuadra en " +
            "<strong>kilos</strong>, no en bultos, porque la gaveta que entra y la caja que " +
@@ -302,6 +313,13 @@ const Guia = (function () {
       "nada. Se compara contra la meta de cada línea.</dd>" +
       "<dt>Merma</dt><dd>Kilos perdidos sobre kilos procesados. El Pareto por causa raíz " +
       "dice de dónde viene y cuáles pocas causas explican la mayor parte.</dd>" +
+      "<dt>¿Dónde se pierde la fruta?</dt><dd>El balance de masa en cascada: de la " +
+      "báscula a la caja, cuánto se cae al <strong>recibir</strong>, cuánto en la " +
+      "<strong>selección</strong> y cuánto en el <strong>empaque</strong>. Cada etapa " +
+      "tiene un dueño distinto: el retiro al recibir es un problema del proveedor, el " +
+      "descarte en selección es de método, y la pérdida en empaque es de presentación. " +
+      "Por eso el rendimiento se da dos veces: el <em>global</em> cuenta desde la " +
+      "báscula, el <em>de proceso</em> solo desde la mesa.</dd>" +
       "<dt>Aprovechado</dt><dd>Qué parte del descarte NO fue al relleno sanitario. Es el " +
       "indicador de economía circular.</dd>" +
       "<dt>Eficiencia</dt><dd>Contenido de trabajo estándar dividido para el tiempo que " +

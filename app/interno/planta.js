@@ -256,6 +256,65 @@
           ["Por definir", "#8b96a3"]]
       }) + "</section>";
 
+    /* --- balance de masa en cascada --- */
+    const bal = Indicadores.balanceMasa(filtros);
+    const etapas = Indicadores.porEtapa(filtros);
+    html += '<section class="panel"><h2>¿Dónde se pierde la fruta?</h2>' +
+      '<p class="sub panel-sub">El balance de masa, de la báscula a la caja. El pesaje ' +
+      "solo comprueba cantidad; la fruta se cae después, y cada etapa tiene su dueño: " +
+      "retirar al recibir es un problema del proveedor, caerse en selección es un " +
+      "problema de método.</p>";
+
+    if (bal.kgRecibidos <= 0) {
+      html += '<p class="vacio">No hay fruta recibida en este período.</p></section>';
+    } else {
+      html += '<ol class="cascada">';
+      bal.pasos.forEach(function (p, i) {
+        const ancho = bal.kgRecibidos > 0 ? (p.kg / bal.kgRecibidos) * 100 : 0;
+        const perdido = bal.kgRecibidos > 0 ? (p.perdida / bal.kgRecibidos) * 100 : 0;
+        html += '<li class="cascada-paso">' +
+          '<div class="cascada-cab"><strong>' + esc(p.nombre) + "</strong>" +
+          (p.perdida > 0
+            ? '<span class="cascada-perdida">−' + nf(p.perdida) + " kg · " +
+              pct(p.perdida / bal.kgRecibidos) + "</span>"
+            : '<span class="tenue">punto de partida</span>') + "</div>" +
+          '<div class="cascada-barra"><span style="width:' + ancho.toFixed(1) + '%"></span>' +
+          (perdido > 0
+            ? '<span class="cascada-fuga" style="width:' + perdido.toFixed(1) + '%"></span>' : "") +
+          "</div>" +
+          '<div class="cascada-pie">' + nf(p.kg) + " kg siguen · " +
+          pct(bal.kgRecibidos > 0 ? p.kg / bal.kgRecibidos : 0) + " de lo recibido</div></li>";
+      });
+      html += "</ol>";
+
+      html += '<div class="kpis">' +
+        UI.kpi("Rendimiento global", pct(bal.rendimientoGlobal),
+          "de la báscula a la caja", bal.rendimientoGlobal >= 0.9 ? "bien" : "regular") +
+        UI.kpi("Rendimiento de proceso", pct(bal.rendimientoProceso),
+          "sin contar lo retirado al recibir") +
+        UI.kpi("Retirado al recibir", pct(bal.tasaRetiro),
+          nf(etapas[0].kg) + " kg que nunca entraron",
+          bal.tasaRetiro <= 0.02 ? "bien" : "mal") +
+        UI.kpi("Pérdida total", nf(bal.perdidaTotal) + " kg",
+          pct(bal.kgRecibidos > 0 ? bal.perdidaTotal / bal.kgRecibidos : 0) + " de lo recibido", "mal") +
+        "</div>";
+
+      html += UI.tabla([
+        { titulo: "Etapa", valor: function (e) {
+          return "<strong>" + esc(e.nombre) + "</strong><br><small class='tenue'>" +
+            esc(e.ayuda) + "</small>"; } },
+        { titulo: "Kilos", num: true, valor: function (e) { return nf(e.kg); } },
+        { titulo: "% de la pérdida", num: true, valor: function (e) {
+          return '<span class="barra-mini barra-ancha"><span style="width:' +
+            (e.porcentaje * 100).toFixed(1) + '%"></span></span> ' + pct(e.porcentaje, 0); } },
+        { titulo: "Sobre lo recibido", num: true, valor: function (e) {
+          return pct(bal.kgRecibidos > 0 ? e.kg / bal.kgRecibidos : 0); } },
+        { titulo: "Valor perdido", num: true, valor: function (e) {
+          return money(e.valorPerdido); } }
+      ], etapas, {});
+      html += "</section>";
+    }
+
     /* --- Bloque 2: economía circular --- */
     html += '<h2 class="seccion-titulo">Economía circular</h2><section class="kpis">';
     html += UI.kpi("Descarte aprovechado", pct(k.tasaValorizacion),
@@ -643,6 +702,21 @@
         opciones: DB.CALIDADES.map(function (c) { return { valor: c.id, texto: c.nombre }; }),
         ayuda: "El proveedor declaró " + l.calidadDeclarada + "." },
       { nombre: "difCalc", etiqueta: "Contraste con lo anunciado", tipo: "calculado" },
+      { tipo: "separador", etiqueta: "¿Se retiró fruta al descargar?" },
+      { nombre: "kgRetirados", etiqueta: "Kilos retirados (si los hubo)", tipo: "number",
+        min: 0, paso: "0.1", ancho: "mitad",
+        valor: corregir ? (l.kgRetirados || "") : "",
+        ayuda: "Fruta que no entra a proceso: bajo calibre, golpeada, podrida. " +
+          "Déjalo vacío si entró todo." },
+      { nombre: "causaRetiro", etiqueta: "¿Por qué se retiró?", tipo: "select", ancho: "mitad",
+        vacio: "—", valor: corregir ? (l.causaRetiro || "") : "",
+        opciones: DB.all("causas").filter(function (c) { return c.origen === "Campo" || !c.definida; })
+          .map(function (c) { return { valor: c.id, texto: c.codigo + " · " + c.nombre }; }) },
+      { nombre: "destinoRetiro", etiqueta: "¿A dónde va lo retirado?", tipo: "select",
+        ancho: "mitad", vacio: "—", valor: corregir ? (l.destinoRetiro || "") : "",
+        opciones: DB.all("destinos").map(function (d) {
+          return { valor: d.id, texto: d.nombre };
+        }) },
       { nombre: "observacionesRecepcion", etiqueta: "Observaciones", tipo: "textarea",
         valor: corregir ? l.observacionesRecepcion : "",
         marcador: "Temperatura, estado de los envases, novedades del transporte." },
@@ -665,6 +739,9 @@
           fechaRecepcion: d.fechaRecepcion,
           gavetasRecibidas: Number(d.gavetasRecibidas),
           kgRecibidos: Number(d.kgRecibidos),
+          kgRetirados: Number(d.kgRetirados) || 0,
+          causaRetiro: Number(d.kgRetirados) > 0 ? (d.causaRetiro || null) : null,
+          destinoRetiro: Number(d.kgRetirados) > 0 ? (d.destinoRetiro || null) : null,
           calidadVerificada: d.calidadVerificada,
           observacionesRecepcion: d.observacionesRecepcion || "",
           corregidoPor: usuario.id,
@@ -682,6 +759,9 @@
         fechaRecepcion: d.fechaRecepcion,
         gavetasRecibidas: Number(d.gavetasRecibidas),
         kgRecibidos: Number(d.kgRecibidos),
+        kgRetirados: Number(d.kgRetirados) || 0,
+        causaRetiro: Number(d.kgRetirados) > 0 ? (d.causaRetiro || null) : null,
+        destinoRetiro: Number(d.kgRetirados) > 0 ? (d.destinoRetiro || null) : null,
         calidadVerificada: d.calidadVerificada,
         observacionesRecepcion: d.observacionesRecepcion || "",
         recibidoPor: usuario.id,
@@ -875,7 +955,10 @@
     const tEstandar = l.gavetasRecibidas * estudio.contenidoGavetaMin;
     /* Kilos que entran por gaveta en ESTE lote, según lo que pesó la
        báscula: no se usa el peso nominal, que casi nunca se cumple. */
-    const kgPorGaveta = l.gavetasRecibidas > 0 ? l.kgRecibidos / l.gavetasRecibidas : linea.pesoGavetaKg;
+    /* Lo que de verdad llega a la mesa: lo pesado menos lo retirado al
+       descargar, que nunca entró a selección. */
+    const kgAProceso = (l.kgRecibidos || 0) - (l.kgRetirados || 0);
+    const kgPorGaveta = l.gavetasRecibidas > 0 ? kgAProceso / l.gavetasRecibidas : linea.pesoGavetaKg;
 
     const campos = [
       { tipo: "html", contenido: fichaMini(l) },
@@ -921,11 +1004,18 @@
         valor: corregir ? prodPrevia.operador : usuario.nombre, ancho: "mitad" },
       { nombre: "tasaCalc", etiqueta: "Rendimiento (kg empacados / kg procesados)", tipo: "calculado", ancho: "mitad" },
       { nombre: "eficienciaCalc", etiqueta: "Eficiencia de la mano de obra", tipo: "calculado", ancho: "mitad" },
-      { nombre: "mermas", etiqueta: "Reparto de la merma: causa raíz y destino", tipo: "repetible",
-        textoAgregar: "Agregar causa",
-        ayuda: "La suma debe cuadrar con la merma total (procesado − exportable). " +
-          "El destino define si el descarte se aprovecha o va a relleno.",
+      { nombre: "mermas", etiqueta: "¿Dónde se perdió la fruta?", tipo: "repetible",
+        textoAgregar: "Agregar pérdida",
+        ayuda: "Cada kilo perdido dice en qué etapa se cayó, por qué y a dónde fue. " +
+          "La suma debe cuadrar con lo que entró a la mesa menos lo que se empacó.",
         columnas: [
+          { nombre: "etapa", etiqueta: "Etapa", tipo: "select",
+            opciones: function () {
+              return DB.ETAPAS.filter(function (e) { return e.id !== "recepcion"; })
+                .map(function (e) {
+                  return { valor: e.id, texto: DB.nombreEtapa(linea.id, e.id) };
+                });
+            } },
           { nombre: "causaId", etiqueta: "Causa raíz", tipo: "select",
             opciones: function () {
               return DB.all("causas").map(function (c) {
@@ -1035,11 +1125,12 @@
       ancho: true,
       filasIniciales: {
         mermas: corregir ? (prodPrevia.mermas || []).map(function (m) {
-          return { causaId: m.causaId, kg: m.kg, destinoId: m.destinoId };
+          return { etapa: m.etapa || "seleccion", causaId: m.causaId, kg: m.kg,
+                   destinoId: m.destinoId };
         }) : [
-          { causaId: "CR5", destinoId: "ds_subproducto" },
-          { causaId: "CR6", destinoId: "ds_segunda" },
-          { causaId: "CR8", destinoId: "ds_animal" }
+          { etapa: "seleccion", causaId: "CR5", destinoId: "ds_subproducto" },
+          { etapa: "seleccion", causaId: "CR6", destinoId: "ds_segunda" },
+          { etapa: "empaque", causaId: "CR8", destinoId: "ds_animal" }
         ]
       },
       alCambiar: function (d, form) {
@@ -1088,6 +1179,7 @@
         if (balance) {
           const objetivo = proc * kgPorGaveta - expo * linea.pesoCajaKg;
           const suma = UI.leerRepetible(form, "mermas", [
+            { nombre: "etapa", tipo: "select" },
             { nombre: "causaId", tipo: "select" }, { nombre: "kg", tipo: "number" },
             { nombre: "destinoId", tipo: "select" }
           ]).reduce(function (a, m) { return a + m.kg; }, 0);
@@ -1099,8 +1191,9 @@
             const ok = Math.abs(falta) <= Math.max(1, objetivo * 0.005);
             balance.className = "balance " + (ok ? "balance-ok" : "balance-pendiente");
             balance.innerHTML = "Se perdieron <strong>" + nf(objetivo, 1) + " kg</strong> " +
-              '<span class="tenue">(' + nf(proc * kgPorGaveta, 0) + " kg entraron − " +
-              nf(expo * linea.pesoCajaKg, 0) + " kg se empacaron)</span> · repartidos: " +
+              '<span class="tenue">(' + nf(proc * kgPorGaveta, 0) + " kg entraron a la mesa" +
+              (l.kgRetirados ? ", ya sin los " + nf(l.kgRetirados, 0) + " retirados al recibir" : "") +
+              " − " + nf(expo * linea.pesoCajaKg, 0) + " kg se empacaron)</span> · repartidos: " +
               "<strong>" + nf(suma, 1) + " kg</strong> · " +
               (ok ? "balance de masa cuadrado ✓"
                   : (falta > 0 ? "faltan <strong>" + nf(falta, 1) + " kg</strong>"

@@ -171,6 +171,36 @@ Tres familias, en `core/indicadores.js`.
 | Pareto por causa raíz | kg y valor por CR, con % acumulado |
 | Índice de variabilidad | `\|dif. peso\| + tasa rechazo + brecha de rendimiento` — la **CR6** hecha número |
 
+### ¿Dónde se pierde la fruta? — balance de masa por etapa
+
+El pesaje solo comprueba **cantidad**. La fruta se cae después, y el balance de masa del
+TIC separa tres etapas que la app metía en un mismo saco llamado «merma»:
+
+| Línea | Etapa 1 | Etapa 2 | Etapa 3 |
+|---|---|---|---|
+| Pitahaya | Recepción | Sopleteado y selección | Empaque |
+| Tomate de árbol | Recepción | Clasificación y limpieza | Empaque |
+| Granadilla | Recepción | Clasificación por calibre | Empaque |
+
+Cada etapa tiene un dueño distinto, y por eso separarlas no es burocracia: **retirar al
+recibir es un problema del proveedor, caerse en selección es un problema de método, y
+perderse en empaque es un problema de presentación.** Un solo número no dice dónde actuar.
+
+- **Recepción** gana un campo: *kilos retirados al descargar*, con su causa y su destino.
+  Es la primera etapa del balance y la causa nº 3 de la matriz KPI (granadilla bajo
+  calibre). Antes esa fruta desaparecía entre lo pesado y lo procesado.
+- **Producción** pide la etapa en cada línea de pérdida —selección o empaque— y lo que
+  entra a la mesa ya descuenta lo retirado al recibir.
+- El panel muestra el **balance en cascada**: de la báscula a la caja, cuánto sigue vivo
+  después de cada etapa.
+
+El rendimiento se da dos veces y conviene no confundirlos: el **global** cuenta desde la
+báscula (incluye el retiro) y el **de proceso** solo desde la mesa de selección. Con los
+datos de demostración: 89,2% global contra 91,1% de proceso, con 2,1% retirado al recibir.
+
+Lo registrado antes de separar etapas se cuenta en selección, que es donde ocurre la mayor
+parte; marcarlo como «desconocido» dejaría un hueco en el balance.
+
 ### Economía circular
 | Indicador | Fórmula |
 |---|---|
@@ -753,6 +783,12 @@ que de verdad hay, que la proyección salga del ritmo medido, que solo se ofrezc
 todo cerrado, que el resumen conserve los indicadores del mes, que no archive sin escribir
 `ARCHIVAR`, que descargue el respaldo, que libere documentos y que nada se rompa después
 —incluida la liquidación, que deja de incluir un mes archivado.
+
+**9 comprobaciones del balance por etapa**: que recepción pregunte por lo retirado y lo
+guarde con causa y destino, que cada línea de merma pida la etapa y que la de selección
+tome el nombre de su línea, que lo que entra a la mesa descuente el retiro, que las tres
+etapas sumen exactamente la pérdida total, que recibido − pérdida sea igual a exportado, y
+que el rendimiento global quede por debajo del de proceso.
 
 Y **9 comprobaciones** sobre el paquete publicado: las dos puertas, el almacén compartido
 activo, un envío anunciado desde el celular apareciendo en la cola de la planta, el pesaje

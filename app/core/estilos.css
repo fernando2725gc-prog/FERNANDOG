@@ -1594,3 +1594,28 @@ th .ico, td .ico { color: var(--texto-tenue); }
   .ico, .ico-marca { color: #000 !important; stroke: #000 !important; }
   .login-capa::before, .acceso-capa::before { display: none; }
 }
+
+/* ---- la barra superior en un teléfono ----
+   Con el nombre completo, el rol, la campana, la llave y «Salir», la barra
+   medía 397 px en una pantalla de 390: los botones de la derecha quedaban
+   fuera. En el celular manda la acción, no la identidad: el avatar ya dice
+   quién eres —y el nombre sigue ahí, recortado— así que el rol se calla y
+   los botones recuperan su sitio. */
+@media (max-width: 560px) {
+  .barra { padding: .5rem .7rem; gap: .4rem; }
+  .barra-usuario { gap: .4rem; min-width: 0; }
+  .barra-usuario > div:not(.avatar) { min-width: 0; }
+  .barra-usuario strong {
+    font-size: .82rem; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; display: block;
+  }
+  .barra-usuario small { display: none; }
+  .avatar { width: 32px; height: 32px; flex: 0 0 auto; }
+  .barra .btn { padding: .5rem .6rem; min-height: 40px; }
+  .campana { padding: .5rem; }
+}
+
+/* Por debajo de 400 px no cabe ni el nombre: se queda el avatar. */
+@media (max-width: 400px) {
+  .barra-usuario > div:not(.avatar) { display: none; }
+}

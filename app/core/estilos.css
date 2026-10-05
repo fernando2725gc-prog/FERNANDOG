@@ -1,5 +1,5 @@
 /* =========================================================================
-   app.css — AgroRegistro
+   estilos.css — Trazafruta
    Tema claro y oscuro por tokens. Sin dependencias externas.
    ========================================================================= */
 
@@ -26,6 +26,7 @@
   --texto: #14202a;
   --texto-tenue: #5a6b75;
   --sombra: 0 1px 2px rgba(16, 34, 28, .06), 0 8px 24px rgba(16, 34, 28, .06);
+  --marca: #1d6f5c;          /* solo el simbolo de la marca */
   --radio: 10px;
   --lateral-ancho: 246px;
 }
@@ -52,6 +53,7 @@
     --borde: #2a363c;
     --texto: #e8efeb;
     --texto-tenue: #9aaaa3;
+    --marca: #5fb391;
     --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
   }
 }
@@ -67,6 +69,17 @@
   --fuente: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --fuente-datos: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
+
+/* ================================= iconos =============================
+   Un solo juego de trazos. Heredan el color del texto, asi que un icono
+   dentro de un boton activo se tiñe solo, y en la version impresa salen
+   en negro como el resto del documento. */
+.ico {
+  width: 1.15em; height: 1.15em; flex: 0 0 auto; display: inline-block;
+  vertical-align: -.18em; fill: none; stroke: currentColor; stroke-width: 1.7;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.ico-marca { color: var(--marca); stroke-width: 1.6; }
 
 body {
   margin: 0;
@@ -149,7 +162,8 @@ code { font-family: var(--fuente-datos); font-size: .86em; letter-spacing: -.01e
   border-radius: 14px; padding: 1.8rem; box-shadow: 0 20px 50px rgba(0, 0, 0, .28);
 }
 .login-marca, .marca { display: flex; align-items: center; gap: .7rem; margin-bottom: 1.4rem; }
-.login-marca .logo, .marca .logo { font-size: 2rem; line-height: 1; }
+.login-marca .logo, .marca .logo { display: inline-flex; line-height: 1; }
+.login-marca .ico, .marca .ico { width: 2.1rem; height: 2.1rem; }
 .login-marca strong, .marca strong { display: block; font-size: 1.15rem; }
 .login-marca small, .marca small { display: block; color: var(--texto-tenue); font-size: .78rem; line-height: 1.3; }
 
@@ -180,7 +194,11 @@ code { font-family: var(--fuente-datos); font-size: .86em; letter-spacing: -.01e
   font: inherit; padding: .6rem .7rem; border: 0; border-radius: 8px; cursor: pointer;
   background: transparent; color: var(--texto-tenue);
 }
+.nav-item .ico { width: 1.2rem; height: 1.2rem; color: var(--texto-tenue); }
+.nav-item > span { min-width: 0; }
 .nav-item:hover { background: var(--superficie-2); color: var(--texto); }
+.nav-item:hover .ico { color: var(--texto); }
+.nav-item.activo .ico { color: var(--verde); }
 .nav-item.activo { background: var(--verde-suave); color: var(--verde); font-weight: 650; }
 .lateral-pie { margin-top: auto; padding-top: 1rem; font-size: .75rem; }
 
@@ -192,7 +210,7 @@ code { font-family: var(--fuente-datos); font-size: .86em; letter-spacing: -.01e
   border-bottom: 1px solid var(--borde); position: sticky; top: 0; z-index: 20;
 }
 .menu-btn {
-  display: none; font-size: 1.3rem; background: transparent; border: 0;
+  display: none; background: transparent; border: 0; line-height: 1;
   color: var(--texto); cursor: pointer; padding: .2rem .5rem;
 }
 .barra-usuario { display: flex; align-items: center; gap: .7rem; margin-left: auto; }
@@ -764,7 +782,8 @@ textarea { resize: vertical; }
 .portada-app:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(20, 32, 42, .14); }
 .portada-app-ext { border-top-color: var(--linea-1); }
 .portada-app-int { border-top-color: var(--azul); }
-.portada-icono { font-size: 2.2rem; line-height: 1; }
+.portada-icono { width: 2.1rem; height: 2.1rem; color: var(--verde); stroke-width: 1.6; }
+.portada-marca { width: 3.6rem; height: 3.6rem; margin: 0 auto .7rem; display: block; }
 .portada-app h2 { margin: 0; font-size: 1.2rem; }
 .portada-app p { color: var(--texto-tenue); font-size: .9rem; margin: 0; flex: 1; }
 .portada-cta { font-weight: 650; font-size: .9rem; color: var(--verde); margin-top: .4rem; }
@@ -789,7 +808,8 @@ textarea { resize: vertical; }
   border-radius: 14px; padding: 1.8rem; box-shadow: 0 20px 50px rgba(0, 0, 0, .3);
 }
 .acceso-marca { display: flex; align-items: center; gap: .7rem; margin-bottom: 1rem; }
-.acceso-marca .logo { font-size: 2rem; line-height: 1; }
+.acceso-marca .logo { display: inline-flex; line-height: 1; }
+.acceso-marca .ico { width: 2.1rem; height: 2.1rem; }
 .acceso-marca strong { display: block; font-size: 1.1rem; }
 .acceso-marca small { display: block; color: var(--texto-tenue); font-size: .78rem; }
 .acceso-intro { color: var(--texto-tenue); font-size: .9rem; margin-bottom: 1.2rem; }
@@ -817,7 +837,8 @@ textarea { resize: vertical; }
   border-bottom: 1px solid var(--borde); position: sticky; top: 0; z-index: 20;
 }
 .portal-marca { display: flex; align-items: center; gap: .6rem; min-width: 0; }
-.portal-marca span { font-size: 1.4rem; }
+.portal-marca > span { display: inline-flex; }
+.portal-marca .ico { width: 1.75rem; height: 1.75rem; }
 .portal-marca strong { display: block; font-size: .92rem; }
 .portal-marca small { display: block; color: var(--texto-tenue); font-size: .75rem; }
 .portal main { flex: 1; padding: 1rem; padding-bottom: 5.5rem; max-width: 860px; width: 100%; margin: 0 auto; }
@@ -832,7 +853,13 @@ textarea { resize: vertical; }
   font: inherit; font-size: .72rem; padding: .6rem .3rem; min-height: 56px;
   background: transparent; border: 0; color: var(--texto-tenue); cursor: pointer;
 }
-.portal-nav-item span { font-size: 1.25rem; line-height: 1; }
+/* El <span> es la etiqueta, no el icono: el tamaño grande va en el SVG. */
+.portal-nav-item .ico { width: 1.35rem; height: 1.35rem; }
+.portal-nav-item > span {
+  font-size: .68rem; line-height: 1.15; text-align: center; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.portal-nav-item.activo .ico { stroke-width: 2; }
 .portal-nav-item.activo { color: var(--linea-1); font-weight: 650; }
 
 .portal-saludo { margin-bottom: 1.2rem; }
@@ -1204,7 +1231,8 @@ textarea { resize: vertical; }
   display: grid; gap: .15rem; padding: .7rem .85rem; border-radius: var(--radio);
   border: 1px solid var(--borde); background: var(--superficie-2);
 }
-.guia-rol-icono { font-size: 1.4rem; line-height: 1; }
+.guia-rol-icono { display: inline-flex; }
+.guia-rol-icono .ico { width: 1.5rem; height: 1.5rem; color: var(--verde); }
 .guia-rol small { color: var(--texto-tenue); font-size: .82rem; line-height: 1.4; }
 .guia-rol-tuyo { border-color: var(--verde); background: var(--verde-suave); }
 
@@ -1274,6 +1302,7 @@ textarea { resize: vertical; }
 }
 
 .campana { position: relative; padding: .5rem .7rem; }
+.campana .ico { width: 1.25rem; height: 1.25rem; }
 .campana-contador {
   position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px;
   padding: 0 .3rem; border-radius: 999px; background: var(--linea-1); color: #fff;
@@ -1303,7 +1332,8 @@ textarea { resize: vertical; }
   position: relative;
 }
 .novedad-btn:hover { background: var(--superficie-2); }
-.novedad-icono { font-size: 1.05rem; line-height: 1.3; }
+.novedad-icono { display: inline-flex; padding-top: .1rem; }
+.novedad-icono .ico { width: 1.15rem; height: 1.15rem; }
 .novedad-texto { min-width: 0; }
 .novedad-texto strong { display: block; font-size: .88rem; }
 .novedad-texto small { display: block; color: var(--texto-tenue); font-size: .8rem; line-height: 1.4; }
@@ -1385,7 +1415,8 @@ textarea { resize: vertical; }
   background: var(--verde-suave); border-left: 3px solid var(--verde);
   border-radius: var(--radio);
 }
-.siguiente-icono { font-size: 1.5rem; line-height: 1; flex: 0 0 auto; }
+.siguiente-icono { display: inline-flex; flex: 0 0 auto; }
+.siguiente-icono .ico { width: 1.6rem; height: 1.6rem; }
 .siguiente strong { display: block; font-size: .92rem; }
 .siguiente small { display: block; color: var(--texto-tenue); font-size: .84rem; line-height: 1.45; }
 .siguiente .btn {
@@ -1471,3 +1502,95 @@ textarea { resize: vertical; }
 .cascada-barra > span:first-child { background: var(--verde); }
 .cascada-fuga { background: repeating-linear-gradient(45deg, var(--rojo), var(--rojo) 4px, color-mix(in srgb, var(--rojo) 70%, transparent) 4px, color-mix(in srgb, var(--rojo) 70%, transparent) 8px); }
 .cascada-pie { margin-top: .25rem; font-size: .8rem; color: var(--texto-tenue); }
+
+/* =========================================================================
+   Ajuste visual — acabado de producto
+
+   El sistema se proyecta en reuniones de planta y se imprime como anexo de
+   un informe. Lo que sigue no cambia ninguna pantalla: ajusta la jerarquía
+   tipográfica, alinea las cifras en columna y le da a los accesos un aire
+   de herramienta de trabajo en vez de maqueta.
+   ========================================================================= */
+
+/* Titulares un punto más compactos: a tamaño grande, el interletraje
+   suelto de la fuente se nota y afea el encabezado. */
+h1, h2, h3, .kpi-valor, .portada-cab h1 { letter-spacing: -.012em; }
+h1, h2 { text-wrap: balance; }
+p, li, .acceso-intro, .portada-sub { text-wrap: pretty; }
+
+/* Cifras tabulares: en una tabla de pesos, las columnas tienen que caer a
+   plomo para poder compararlas de un vistazo. Sin esto, cada dígito ocupa
+   un ancho distinto y la columna queda en diente de sierra. */
+.kpi-valor, td, th, .medida-cifras, .liq-cifra, .dato-num,
+input[type="number"], .mono {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* ---- iconos en contexto ---- */
+.avatar .ico { width: 1.15rem; height: 1.15rem; }
+.ver-clave { display: grid; place-items: center; }
+.ver-clave .ico { width: 1.15rem; height: 1.15rem; }
+.menu-btn .ico { width: 1.4rem; height: 1.4rem; }
+.medida-marca .ico { width: .95rem; height: .95rem; stroke-width: 2.2; }
+.guia-quien { display: inline-flex; align-items: center; gap: .35rem; }
+.guia-quien .ico { width: 1rem; height: 1rem; }
+.nota-seguridad .ico { color: var(--ambar); margin-right: .3rem; }
+th .ico, td .ico { color: var(--texto-tenue); }
+
+/* ---- accesos: fondo con trama en vez de degradado plano ---- */
+.login-capa, .acceso-capa { position: relative; isolation: isolate; }
+.login-capa::before, .acceso-capa::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; opacity: .5;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, .07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, .07) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(130% 100% at 50% 0%, #000 35%, transparent 75%);
+}
+.login-caja, .acceso-caja {
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-top: 3px solid var(--marca);
+}
+.acceso-proveedor .acceso-caja { border-top-color: var(--linea-1); }
+.acceso-interno .acceso-caja { border-top-color: var(--azul); }
+
+/* El pie de los accesos lleva el nombre del producto, nunca el de la
+   planta: la identidad del cliente se configura en Parámetros y por
+   defecto ni se imprime. */
+.acceso-producto {
+  font-family: var(--fuente-datos); font-size: .7rem; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--texto-tenue);
+}
+
+/* ---- barra lateral: agrupada y con scroll propio ----
+   Con el menú completo de supervisión no caben quince entradas en la altura
+   de un portátil: la última quedaba fuera de la pantalla y era imposible
+   llegar a ella. La barra se desplaza por su cuenta y el pie queda abajo. */
+.lateral { overflow-y: auto; overscroll-behavior: contain; }
+.lateral nav { gap: .1rem; flex: 0 0 auto; }
+.nav-grupo {
+  margin: .9rem 0 .25rem; padding: 0 .7rem;
+  font-family: var(--fuente-datos); font-size: .66rem; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--texto-tenue);
+}
+.lateral nav > .nav-grupo:first-child { margin-top: .5rem; }
+.lateral-pie { flex: 0 0 auto; }
+.nav-item { transition: background .12s, color .12s; }
+.nav-item.activo { box-shadow: inset 2px 0 0 var(--verde); }
+
+/* ---- tarjetas: sombra menos difusa, borde que define ---- */
+.tarjeta, .kpi, .portada-app, .medida {
+  box-shadow: 0 1px 1px rgba(16, 34, 28, .04), 0 2px 10px rgba(16, 34, 28, .05);
+}
+@media (prefers-color-scheme: dark) {
+  .tarjeta, .kpi, .portada-app, .medida {
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .3), 0 2px 10px rgba(0, 0, 0, .25);
+  }
+}
+
+/* ---- impresión: trazos negros y nada decorativo ---- */
+@media print {
+  .ico, .ico-marca { color: #000 !important; stroke: #000 !important; }
+  .login-capa::before, .acceso-capa::before { display: none; }
+}

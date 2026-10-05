@@ -17,7 +17,7 @@
        solo serviría para enseñar datos viejos como si fueran de ahora.
    ========================================================================= */
 
-const VERSION = "flp-v1";
+const VERSION = "tf-v2";
 const ESENCIALES = ["./", "./manifest.json", "./pwa/icono-192.png", "./pwa/icono-512.png"];
 
 self.addEventListener("install", function (e) {

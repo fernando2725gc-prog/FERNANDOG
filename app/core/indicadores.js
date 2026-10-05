@@ -1,5 +1,5 @@
 /* =========================================================================
-   indicadores.js — Motor de cálculo del Sistema FLP
+   indicadores.js — Motor de cálculo del Trazafruta
    Tres familias de indicadores:
      · Pérdidas      — cuánto se pierde, dónde y por qué causa raíz
      · Economía circular — cuánto del descarte se aprovecha y con qué valor

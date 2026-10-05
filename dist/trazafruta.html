@@ -4,9 +4,9 @@
 <link rel="apple-touch-icon" href="pwa/icono-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Sistema FLP">
+<meta name="apple-mobile-web-app-title" content="Trazafruta">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sistema FLP</title>
+<title>Trazafruta</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,7 +14,7 @@
 
 <style>
 /* =========================================================================
-   app.css — AgroRegistro
+   estilos.css — Trazafruta
    Tema claro y oscuro por tokens. Sin dependencias externas.
    ========================================================================= */
 
@@ -41,6 +41,7 @@
   --texto: #14202a;
   --texto-tenue: #5a6b75;
   --sombra: 0 1px 2px rgba(16, 34, 28, .06), 0 8px 24px rgba(16, 34, 28, .06);
+  --marca: #1d6f5c;          /* solo el simbolo de la marca */
   --radio: 10px;
   --lateral-ancho: 246px;
 }
@@ -67,6 +68,7 @@
     --borde: #2a363c;
     --texto: #e8efeb;
     --texto-tenue: #9aaaa3;
+    --marca: #5fb391;
     --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
   }
 }
@@ -82,6 +84,17 @@
   --fuente: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --fuente-datos: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
+
+/* ================================= iconos =============================
+   Un solo juego de trazos. Heredan el color del texto, asi que un icono
+   dentro de un boton activo se tiñe solo, y en la version impresa salen
+   en negro como el resto del documento. */
+.ico {
+  width: 1.15em; height: 1.15em; flex: 0 0 auto; display: inline-block;
+  vertical-align: -.18em; fill: none; stroke: currentColor; stroke-width: 1.7;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.ico-marca { color: var(--marca); stroke-width: 1.6; }
 
 body {
   margin: 0;
@@ -164,7 +177,8 @@ code { font-family: var(--fuente-datos); font-size: .86em; letter-spacing: -.01e
   border-radius: 14px; padding: 1.8rem; box-shadow: 0 20px 50px rgba(0, 0, 0, .28);
 }
 .login-marca, .marca { display: flex; align-items: center; gap: .7rem; margin-bottom: 1.4rem; }
-.login-marca .logo, .marca .logo { font-size: 2rem; line-height: 1; }
+.login-marca .logo, .marca .logo { display: inline-flex; line-height: 1; }
+.login-marca .ico, .marca .ico { width: 2.1rem; height: 2.1rem; }
 .login-marca strong, .marca strong { display: block; font-size: 1.15rem; }
 .login-marca small, .marca small { display: block; color: var(--texto-tenue); font-size: .78rem; line-height: 1.3; }
 
@@ -195,7 +209,11 @@ code { font-family: var(--fuente-datos); font-size: .86em; letter-spacing: -.01e
   font: inherit; padding: .6rem .7rem; border: 0; border-radius: 8px; cursor: pointer;
   background: transparent; color: var(--texto-tenue);
 }
+.nav-item .ico { width: 1.2rem; height: 1.2rem; color: var(--texto-tenue); }
+.nav-item > span { min-width: 0; }
 .nav-item:hover { background: var(--superficie-2); color: var(--texto); }
+.nav-item:hover .ico { color: var(--texto); }
+.nav-item.activo .ico { color: var(--verde); }
 .nav-item.activo { background: var(--verde-suave); color: var(--verde); font-weight: 650; }
 .lateral-pie { margin-top: auto; padding-top: 1rem; font-size: .75rem; }
 
@@ -207,7 +225,7 @@ code { font-family: var(--fuente-datos); font-size: .86em; letter-spacing: -.01e
   border-bottom: 1px solid var(--borde); position: sticky; top: 0; z-index: 20;
 }
 .menu-btn {
-  display: none; font-size: 1.3rem; background: transparent; border: 0;
+  display: none; background: transparent; border: 0; line-height: 1;
   color: var(--texto); cursor: pointer; padding: .2rem .5rem;
 }
 .barra-usuario { display: flex; align-items: center; gap: .7rem; margin-left: auto; }
@@ -779,7 +797,8 @@ textarea { resize: vertical; }
 .portada-app:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(20, 32, 42, .14); }
 .portada-app-ext { border-top-color: var(--linea-1); }
 .portada-app-int { border-top-color: var(--azul); }
-.portada-icono { font-size: 2.2rem; line-height: 1; }
+.portada-icono { width: 2.1rem; height: 2.1rem; color: var(--verde); stroke-width: 1.6; }
+.portada-marca { width: 3.6rem; height: 3.6rem; margin: 0 auto .7rem; display: block; }
 .portada-app h2 { margin: 0; font-size: 1.2rem; }
 .portada-app p { color: var(--texto-tenue); font-size: .9rem; margin: 0; flex: 1; }
 .portada-cta { font-weight: 650; font-size: .9rem; color: var(--verde); margin-top: .4rem; }
@@ -804,7 +823,8 @@ textarea { resize: vertical; }
   border-radius: 14px; padding: 1.8rem; box-shadow: 0 20px 50px rgba(0, 0, 0, .3);
 }
 .acceso-marca { display: flex; align-items: center; gap: .7rem; margin-bottom: 1rem; }
-.acceso-marca .logo { font-size: 2rem; line-height: 1; }
+.acceso-marca .logo { display: inline-flex; line-height: 1; }
+.acceso-marca .ico { width: 2.1rem; height: 2.1rem; }
 .acceso-marca strong { display: block; font-size: 1.1rem; }
 .acceso-marca small { display: block; color: var(--texto-tenue); font-size: .78rem; }
 .acceso-intro { color: var(--texto-tenue); font-size: .9rem; margin-bottom: 1.2rem; }
@@ -832,7 +852,8 @@ textarea { resize: vertical; }
   border-bottom: 1px solid var(--borde); position: sticky; top: 0; z-index: 20;
 }
 .portal-marca { display: flex; align-items: center; gap: .6rem; min-width: 0; }
-.portal-marca span { font-size: 1.4rem; }
+.portal-marca > span { display: inline-flex; }
+.portal-marca .ico { width: 1.75rem; height: 1.75rem; }
 .portal-marca strong { display: block; font-size: .92rem; }
 .portal-marca small { display: block; color: var(--texto-tenue); font-size: .75rem; }
 .portal main { flex: 1; padding: 1rem; padding-bottom: 5.5rem; max-width: 860px; width: 100%; margin: 0 auto; }
@@ -847,7 +868,13 @@ textarea { resize: vertical; }
   font: inherit; font-size: .72rem; padding: .6rem .3rem; min-height: 56px;
   background: transparent; border: 0; color: var(--texto-tenue); cursor: pointer;
 }
-.portal-nav-item span { font-size: 1.25rem; line-height: 1; }
+/* El <span> es la etiqueta, no el icono: el tamaño grande va en el SVG. */
+.portal-nav-item .ico { width: 1.35rem; height: 1.35rem; }
+.portal-nav-item > span {
+  font-size: .68rem; line-height: 1.15; text-align: center; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.portal-nav-item.activo .ico { stroke-width: 2; }
 .portal-nav-item.activo { color: var(--linea-1); font-weight: 650; }
 
 .portal-saludo { margin-bottom: 1.2rem; }
@@ -1219,7 +1246,8 @@ textarea { resize: vertical; }
   display: grid; gap: .15rem; padding: .7rem .85rem; border-radius: var(--radio);
   border: 1px solid var(--borde); background: var(--superficie-2);
 }
-.guia-rol-icono { font-size: 1.4rem; line-height: 1; }
+.guia-rol-icono { display: inline-flex; }
+.guia-rol-icono .ico { width: 1.5rem; height: 1.5rem; color: var(--verde); }
 .guia-rol small { color: var(--texto-tenue); font-size: .82rem; line-height: 1.4; }
 .guia-rol-tuyo { border-color: var(--verde); background: var(--verde-suave); }
 
@@ -1289,6 +1317,7 @@ textarea { resize: vertical; }
 }
 
 .campana { position: relative; padding: .5rem .7rem; }
+.campana .ico { width: 1.25rem; height: 1.25rem; }
 .campana-contador {
   position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px;
   padding: 0 .3rem; border-radius: 999px; background: var(--linea-1); color: #fff;
@@ -1318,7 +1347,8 @@ textarea { resize: vertical; }
   position: relative;
 }
 .novedad-btn:hover { background: var(--superficie-2); }
-.novedad-icono { font-size: 1.05rem; line-height: 1.3; }
+.novedad-icono { display: inline-flex; padding-top: .1rem; }
+.novedad-icono .ico { width: 1.15rem; height: 1.15rem; }
 .novedad-texto { min-width: 0; }
 .novedad-texto strong { display: block; font-size: .88rem; }
 .novedad-texto small { display: block; color: var(--texto-tenue); font-size: .8rem; line-height: 1.4; }
@@ -1400,7 +1430,8 @@ textarea { resize: vertical; }
   background: var(--verde-suave); border-left: 3px solid var(--verde);
   border-radius: var(--radio);
 }
-.siguiente-icono { font-size: 1.5rem; line-height: 1; flex: 0 0 auto; }
+.siguiente-icono { display: inline-flex; flex: 0 0 auto; }
+.siguiente-icono .ico { width: 1.6rem; height: 1.6rem; }
 .siguiente strong { display: block; font-size: .92rem; }
 .siguiente small { display: block; color: var(--texto-tenue); font-size: .84rem; line-height: 1.45; }
 .siguiente .btn {
@@ -1487,6 +1518,98 @@ textarea { resize: vertical; }
 .cascada-fuga { background: repeating-linear-gradient(45deg, var(--rojo), var(--rojo) 4px, color-mix(in srgb, var(--rojo) 70%, transparent) 4px, color-mix(in srgb, var(--rojo) 70%, transparent) 8px); }
 .cascada-pie { margin-top: .25rem; font-size: .8rem; color: var(--texto-tenue); }
 
+/* =========================================================================
+   Ajuste visual — acabado de producto
+
+   El sistema se proyecta en reuniones de planta y se imprime como anexo de
+   un informe. Lo que sigue no cambia ninguna pantalla: ajusta la jerarquía
+   tipográfica, alinea las cifras en columna y le da a los accesos un aire
+   de herramienta de trabajo en vez de maqueta.
+   ========================================================================= */
+
+/* Titulares un punto más compactos: a tamaño grande, el interletraje
+   suelto de la fuente se nota y afea el encabezado. */
+h1, h2, h3, .kpi-valor, .portada-cab h1 { letter-spacing: -.012em; }
+h1, h2 { text-wrap: balance; }
+p, li, .acceso-intro, .portada-sub { text-wrap: pretty; }
+
+/* Cifras tabulares: en una tabla de pesos, las columnas tienen que caer a
+   plomo para poder compararlas de un vistazo. Sin esto, cada dígito ocupa
+   un ancho distinto y la columna queda en diente de sierra. */
+.kpi-valor, td, th, .medida-cifras, .liq-cifra, .dato-num,
+input[type="number"], .mono {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* ---- iconos en contexto ---- */
+.avatar .ico { width: 1.15rem; height: 1.15rem; }
+.ver-clave { display: grid; place-items: center; }
+.ver-clave .ico { width: 1.15rem; height: 1.15rem; }
+.menu-btn .ico { width: 1.4rem; height: 1.4rem; }
+.medida-marca .ico { width: .95rem; height: .95rem; stroke-width: 2.2; }
+.guia-quien { display: inline-flex; align-items: center; gap: .35rem; }
+.guia-quien .ico { width: 1rem; height: 1rem; }
+.nota-seguridad .ico { color: var(--ambar); margin-right: .3rem; }
+th .ico, td .ico { color: var(--texto-tenue); }
+
+/* ---- accesos: fondo con trama en vez de degradado plano ---- */
+.login-capa, .acceso-capa { position: relative; isolation: isolate; }
+.login-capa::before, .acceso-capa::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; opacity: .5;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, .07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, .07) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(130% 100% at 50% 0%, #000 35%, transparent 75%);
+}
+.login-caja, .acceso-caja {
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-top: 3px solid var(--marca);
+}
+.acceso-proveedor .acceso-caja { border-top-color: var(--linea-1); }
+.acceso-interno .acceso-caja { border-top-color: var(--azul); }
+
+/* El pie de los accesos lleva el nombre del producto, nunca el de la
+   planta: la identidad del cliente se configura en Parámetros y por
+   defecto ni se imprime. */
+.acceso-producto {
+  font-family: var(--fuente-datos); font-size: .7rem; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--texto-tenue);
+}
+
+/* ---- barra lateral: agrupada y con scroll propio ----
+   Con el menú completo de supervisión no caben quince entradas en la altura
+   de un portátil: la última quedaba fuera de la pantalla y era imposible
+   llegar a ella. La barra se desplaza por su cuenta y el pie queda abajo. */
+.lateral { overflow-y: auto; overscroll-behavior: contain; }
+.lateral nav { gap: .1rem; flex: 0 0 auto; }
+.nav-grupo {
+  margin: .9rem 0 .25rem; padding: 0 .7rem;
+  font-family: var(--fuente-datos); font-size: .66rem; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--texto-tenue);
+}
+.lateral nav > .nav-grupo:first-child { margin-top: .5rem; }
+.lateral-pie { flex: 0 0 auto; }
+.nav-item { transition: background .12s, color .12s; }
+.nav-item.activo { box-shadow: inset 2px 0 0 var(--verde); }
+
+/* ---- tarjetas: sombra menos difusa, borde que define ---- */
+.tarjeta, .kpi, .portada-app, .medida {
+  box-shadow: 0 1px 1px rgba(16, 34, 28, .04), 0 2px 10px rgba(16, 34, 28, .05);
+}
+@media (prefers-color-scheme: dark) {
+  .tarjeta, .kpi, .portada-app, .medida {
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .3), 0 2px 10px rgba(0, 0, 0, .25);
+  }
+}
+
+/* ---- impresión: trazos negros y nada decorativo ---- */
+@media print {
+  .ico, .ico-marca { color: #000 !important; stroke: #000 !important; }
+  .login-capa::before, .acceso-capa::before { display: none; }
+}
+
 </style>
 
 <a class="salto" href="#contenido">Saltar al contenido</a>
@@ -1495,7 +1618,7 @@ textarea { resize: vertical; }
 
 <script>
 /* =========================================================================
-   auth.js — Credenciales del Sistema FLP
+   auth.js — Credenciales del Trazafruta
 
    Las contraseñas NUNCA se guardan. Se guarda el resultado de derivarlas
    con PBKDF2-SHA256 y una sal distinta por persona, de modo que dos
@@ -1653,7 +1776,7 @@ const Auth = (function () {
   /* Freno simple a la adivinación: tras varios fallos seguidos, la cuenta
      espera. Vive en el propio dispositivo, así que no sustituye a un
      control del servidor; sirve contra el intento manual. */
-  const CLAVE_INTENTOS = "flp.intentos";
+  const CLAVE_INTENTOS = "tf.intentos";
   const MAX_INTENTOS = 5;
   const ESPERA_MS = 60000;
 
@@ -1708,7 +1831,7 @@ const Auth = (function () {
 
 <script>
 /* =========================================================================
-   db.js — Capa de datos del Sistema FLP
+   db.js — Capa de datos del Trazafruta
    Repositorio único de información para el control de pérdidas y la
    economía circular en las tres líneas de producto.
 
@@ -1722,8 +1845,8 @@ const Auth = (function () {
 const DB = (function () {
   "use strict";
 
-  const KEY = "flp.db.v8";
-  const ESQUEMA = 8;
+  const KEY = "tf.db.v9";
+  const ESQUEMA = 9;
 
   /* ---------------------------------------------------------------- utils */
 
@@ -1764,13 +1887,66 @@ const DB = (function () {
 
   /* ------------------------------------------------------------ constantes */
 
-  const EMPRESA = {
-    nombre: "FLP Ecuador",
-    razonSocial: "F.L.P. Latinoamerican Perishables del Ecuador S.A.",
-    sistema: "Sistema FLP",
-    descripcion: "Trazabilidad, pérdidas y economía circular",
-    confidencial: true
+  /* La identidad va en los DATOS, no en el código. La empresa del caso de
+     estudio está bajo acuerdo de confidencialidad, así que el sistema nace
+     con un nombre neutro y quien lo despliega pone el suyo desde
+     Parámetros. Mientras `confidencial` esté activo, los documentos dicen
+     «la Empresa» en vez del nombre, que es como se citan en un TIC.
+
+     El producto tampoco lleva siglas de nadie: se llama igual aunque lo
+     use otra planta. */
+  const MARCA = {
+    producto: "Trazafruta",
+    descripcion: "Trazabilidad, pérdidas y economía circular"
   };
+
+  function identidadBase() {
+    return {
+      razonSocial: "",
+      nombreCorto: "",
+      identificacion: "",
+      ciudad: "",
+      /* Con esto activo, ningún documento imprime el nombre real. */
+      confidencial: true,
+      /* Cómo se nombra a la organización cuando se oculta. */
+      aliasConfidencial: "la Empresa"
+    };
+  }
+
+  /* El nombre que se puede imprimir, según el modo. Un solo sitio decide,
+     para que no haya una pantalla que lo tape y otra que lo enseñe. */
+  function nombreEmpresa(largo) {
+    const i = identidad();
+    if (i.confidencial || !i.razonSocial) {
+      return i.aliasConfidencial || "la Empresa";
+    }
+    return largo ? i.razonSocial : (i.nombreCorto || i.razonSocial);
+  }
+
+  /* Lo que va bajo el nombre del producto en la barra y en los accesos.
+     Si la planta configuro un nombre y acepto mostrarlo, va ese; si no, va
+     la descripcion del producto. Nunca queda un «la Empresa» suelto de
+     subtitulo, que se lee como un dato sin rellenar. */
+  function subtitulo() {
+    const i = identidad();
+    if (!i.confidencial && (i.nombreCorto || i.razonSocial)) {
+      return i.nombreCorto || i.razonSocial;
+    }
+    return MARCA.descripcion;
+  }
+
+  function identidad() {
+    const db = load();
+    return Object.assign(identidadBase(), db.identidad || {});
+  }
+
+  function guardarIdentidad(cambios) {
+    const db = load();
+    db.identidad = Object.assign(identidadBase(), db.identidad || {}, cambios);
+    save();
+    empujarConfig();
+    return db.identidad;
+  }
 
   /* La unidad que llega del campo es la GAVETA; la que sale a exportación
      es la CAJA, y pesan cosas muy distintas. Confundirlas era el error de
@@ -1806,13 +1982,13 @@ const DB = (function () {
   ];
 
   const ROLES = [
-    { id: "proveedor", nombre: "Proveedor", icono: "🚜",
+    { id: "proveedor", nombre: "Proveedor", icono: "brote",
       lema: "Anuncias los envíos de fruta y recibes el reporte de cada lote." },
-    { id: "recepcion", nombre: "Recepción", icono: "⚖️",
+    { id: "recepcion", nombre: "Recepción", icono: "balanza",
       lema: "Cuentas las cajas y pesas la fruta que llega a planta." },
-    { id: "produccion", nombre: "Producción", icono: "🏭",
+    { id: "produccion", nombre: "Producción", icono: "planta",
       lema: "Registras lo procesado, lo exportable y las mermas con su causa." },
-    { id: "supervisor", nombre: "Supervisor", icono: "📋",
+    { id: "supervisor", nombre: "Supervisor", icono: "portapapeles",
       lema: "Planificas el día, cierras lotes, envías reportes y ves los indicadores." }
   ];
 
@@ -1979,7 +2155,7 @@ const DB = (function () {
         nombre: "Transporte de caja al pallet",
         simbolo: "T", estacion: "Empaque", unidad: "caja",
         to: 0.2, v: 1, suplemento: 0.16, personas: 1,
-        origen: "M", base: "Distancia M (2 m); tiempo solo en versión FLP2 (verificar).", activa: true },
+        origen: "M", base: "Distancia M (2 m); tiempo solo en versión línea 2 (verificar).", activa: true },
       /* ---- granadilla ---- */
       { id: "G-REC", lineaId: "ln_granadilla", orden: 1, codigo: "G-REC",
         nombre: "Recepción y pesaje de gaveta",
@@ -1995,7 +2171,7 @@ const DB = (function () {
         nombre: "Traslado de almacenamiento a empaque",
         simbolo: "T", estacion: "Transporte", unidad: "gaveta",
         to: 0.7667, v: 1, suplemento: 0.19, personas: 1,
-        origen: "E", base: "Distancia de 18 m (FLP2); tiempo estimado a 1 m/s.", activa: true },
+        origen: "E", base: "Distancia de 18 m (línea 2); tiempo estimado a 1 m/s.", activa: true },
       { id: "G-CLA", lineaId: "ln_granadilla", orden: 4, codigo: "G-CLA",
         nombre: "Colocar en gaveta, verificar peso ≥ 70 g y poner mallón nuevo",
         simbolo: "O", estacion: "Clasificación", unidad: "gaveta",
@@ -2490,6 +2666,7 @@ const DB = (function () {
       planes: [],
       resumenes: [],
       parametros: parametrosBase(),
+      identidad: identidadBase(),
       bitacora: []
     };
   }
@@ -2504,7 +2681,7 @@ const DB = (function () {
 
   const COLECCIONES = ["proveedores", "usuarios", "lotes", "producciones", "planes", "resumenes"];
   /* Catálogos y parámetros: pocos y pequeños, viajan en un solo documento. */
-  const CONFIG = ["lineas", "actividades", "causas", "destinos", "parametros"];
+  const CONFIG = ["lineas", "actividades", "causas", "destinos", "parametros", "identidad"];
 
   let remoto = null;
   let modo = "local";
@@ -2516,7 +2693,7 @@ const DB = (function () {
      vuelva la cobertura. Se guarda la REFERENCIA (colección + id), no una
      copia: así varias ediciones del mismo registro se envían una sola vez,
      con su último estado, y nunca se manda algo viejo. */
-  const KEY_COLA = "flp.cola.v1";
+  const KEY_COLA = "tf.cola.v1";
   let cola = [];
   let alCambiarCola = null;
 
@@ -2840,6 +3017,7 @@ const DB = (function () {
       causas: copiar(db.causas),
       destinos: copiar(db.destinos),
       parametros: copiar(db.parametros),
+      identidad: copiar(db.identidad || identidadBase()),
       /* Operación: se va. */
       proveedores: [],
       usuarios: [supervisor],
@@ -3070,7 +3248,11 @@ const DB = (function () {
   }
 
   return {
-    EMPRESA: EMPRESA,
+    MARCA: MARCA,
+    identidad: identidad,
+    guardarIdentidad: guardarIdentidad,
+    nombreEmpresa: nombreEmpresa,
+    subtitulo: subtitulo,
     PESO_GAVETA_KG: PESO_GAVETA_KG,
     ETAPAS: ETAPAS,
     nombreEtapa: nombreEtapa,
@@ -3132,7 +3314,7 @@ const DB = (function () {
 
 <script>
 /* =========================================================================
-   indicadores.js — Motor de cálculo del Sistema FLP
+   indicadores.js — Motor de cálculo del Trazafruta
    Tres familias de indicadores:
      · Pérdidas      — cuánto se pierde, dónde y por qué causa raíz
      · Economía circular — cuánto del descarte se aprovecha y con qué valor
@@ -4986,6 +5168,74 @@ const UI = (function () {
       '<p class="kpi-detalle">' + (detalle || "") + "</p></article>";
   }
 
+  /* ------------------------------------------------------------- iconos */
+
+  /* Un sistema de planta se imprime, se proyecta en una reunión y se mira
+     en un celular a pleno sol. Los emoji no sirven para eso: cada sistema
+     operativo los dibuja distinto, no heredan el color del texto y en un
+     informe impreso salen como manchas. Este juego de iconos son trazos
+     SVG de 24×24 con el mismo grosor y las mismas esquinas, que toman el
+     color de donde estén. Están dibujados aquí, sin librería: el proyecto
+     no tiene dependencias y no va a empezar a tenerlas por un icono. */
+  const ICONOS = {
+    brote: "M12 21v-7.5M12 13.5C8.4 13.5 6.5 11.6 6.5 8 10.1 8 12 9.9 12 13.5zM12 12.4c0-3.6 1.9-5.5 5.5-5.5 0 3.6-1.9 5.5-5.5 5.5z",
+    balanza: "M12 4.2v16.6M8 20.8h8M4 7.5h16M4 7.5 1.4 13h5.2zM20 7.5 17.4 13h5.2z",
+    planta: "M3 20.5h18M4.5 20.5V11l4.6 2.6V11L13.7 13.6V9l6.3 3.6v7.9M7.5 20.5v-3.2h3.2v3.2",
+    portapapeles: "M9.4 4.2h5.2a1 1 0 0 1 1 1v1.1H8.4V5.2a1 1 0 0 1 1-1zM8.4 6.3H6.6A1.6 1.6 0 0 0 5 7.9v11.5a1.6 1.6 0 0 0 1.6 1.6h10.8a1.6 1.6 0 0 0 1.6-1.6V7.9a1.6 1.6 0 0 0-1.6-1.6h-1.8M9 11.6h6M9 15.4h4",
+    grafico: "M4 20h16M7.3 20v-6.2M12 20V7.4M16.7 20v-9",
+    calendario: "M5.4 6.2h13.2a1.4 1.4 0 0 1 1.4 1.4v11.4a1.4 1.4 0 0 1-1.4 1.4H5.4A1.4 1.4 0 0 1 4 19V7.6a1.4 1.4 0 0 1 1.4-1.4zM4 10.4h16M8.6 4v4.2M15.4 4v4.2",
+    cronometro: "M12 21.2a7.8 7.8 0 1 0 0-15.6 7.8 7.8 0 0 0 0 15.6zM12 9.8v3.6l2.4 1.8M9.4 3h5.2M12 3v2.6",
+    caja: "M3.6 8.4 12 4l8.4 4.4v7.2L12 20l-8.4-4.4zM3.6 8.4 12 12.8l8.4-4.4M12 12.8V20",
+    documento: "M14 3.2H7.6A1.6 1.6 0 0 0 6 4.8v14.4a1.6 1.6 0 0 0 1.6 1.6h8.8a1.6 1.6 0 0 0 1.6-1.6V7.2zM14 3.2v4h4M9.2 13h5.6M9.2 16.6h3.6",
+    recibo: "M6.2 3.4h11.6v17l-2.9-1.5-2.9 1.5-2.9-1.5-2.9 1.5zM9.2 8.2h5.6M9.2 12.2h5.6",
+    dinero: "M4.6 7.2h14.8A1.6 1.6 0 0 1 21 8.8v6.4a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 15.2V8.8a1.6 1.6 0 0 1 1.6-1.6zM12 14.6a2.6 2.6 0 1 0 0-5.2 2.6 2.6 0 0 0 0 5.2M6.4 12h.1M17.6 12h.1",
+    engranaje: "M4 7h9M17 7h3M4 12h3M11 12h9M4 17h10M18 17h2M13 7a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM7 12a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM14 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0z",
+    personas: "M9.4 11.4a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zM2.6 20.4v-1.5c0-2.6 2.6-4.2 6.8-4.2s6.8 1.6 6.8 4.2v1.5M16.4 4.6a3.6 3.6 0 0 1 0 7.2M18.6 14.9c2.2.5 3.4 1.8 3.4 3.7v1.8",
+    reloj: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7.4V12l3 2.1",
+    archivo: "M4.6 5.4h14.8A1.6 1.6 0 0 1 21 7v3.4a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 10.4V7a1.6 1.6 0 0 1 1.6-1.6zM4.6 12h14.8A1.6 1.6 0 0 1 21 13.6V17a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 17v-3.4A1.6 1.6 0 0 1 4.6 12zM10.2 8.7h3.6M10.2 15.3h3.6",
+    libro: "M4 4.6h5.6A2.4 2.4 0 0 1 12 7v13.4a2.6 2.6 0 0 0-2.4-1.6H4zM20 4.6h-5.6A2.4 2.4 0 0 0 12 7v13.4a2.6 2.6 0 0 1 2.4-1.6H20z",
+    casa: "M3.4 10.6 12 3.4l8.6 7.2M5.6 9.4v11h12.8v-11M10 20.4v-5.2h4v5.2",
+    tendencia: "M4 20h16M5.4 16.4l4.8-5.2 3.6 2.9L19 7M14.8 7H19v4.2",
+    llave: "M8.8 9a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2zM12.2 11.6H21M18.2 11.6v3.6M15.6 11.6v2.8",
+    ojo: "M2.6 12S6.2 6.6 12 6.6 21.4 12 21.4 12 17.8 17.4 12 17.4 2.6 12 2.6 12zM12 14.8a2.8 2.8 0 1 0 0-5.6 2.8 2.8 0 0 0 0 5.6z",
+    campana: "M12 3.2A5.6 5.6 0 0 0 6.4 8.8c0 4-1.6 5.6-1.6 5.6h14.4s-1.6-1.6-1.6-5.6A5.6 5.6 0 0 0 12 3.2zM9.9 17.6a2.2 2.2 0 0 0 4.2 0",
+    veto: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM7.8 12h8.4",
+    check: "M4.8 12.6 9.6 17.4 19.2 6.8",
+    listo: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8.2 12.2l2.8 2.8 4.8-5.4",
+    bandera: "M6 3.4v17.2M6 4.4h11.2l-2 3.6 2 3.6H6z",
+    alerta: "M12 4.4 21 19.6H3zM12 10v4.2M12 17h.1",
+    menu: "M4 7.2h16M4 12h16M4 16.8h16",
+    equis: "M6.4 6.4l11.2 11.2M17.6 6.4 6.4 17.6",
+    camion: "M3 7.4h9.6v8.4H3zM12.6 10.4h4.2l3.2 3.2v2.2h-7.4M7.2 18.6a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6zM17.4 18.6a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6z",
+    mas: "M12 5.4v13.2M5.4 12h13.2",
+    reporte: "M6 3.4h12v17.2H6zM9 8h6M9 12h6M9 16h3.4"
+  };
+
+  /* El símbolo de la marca: una gaveta con un brote. Neutro a propósito,
+     no lleva iniciales de nadie. */
+  const MARCA_SVG =
+    '<svg class="ico ico-marca" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+    '<path d="M4 10.5h16l-1.3 8.6a1.7 1.7 0 0 1-1.7 1.4H7a1.7 1.7 0 0 1-1.7-1.4z"/>' +
+    '<path d="M12 10.5V6.2M12 8.4C9.8 8.4 8.2 6.8 8.2 4.6c2.2 0 3.8 1.6 3.8 3.8zM12 7.6c0-2.2 1.6-3.8 3.8-3.8 0 2.2-1.6 3.8-3.8 3.8z"/>' +
+    "</svg>";
+
+  /* `nombre` es una llave de ICONOS; si no existe, no dibuja nada en vez de
+     ensuciar la pantalla con un cuadrito. */
+  function icono(nombre, clase) {
+    if (nombre === "marca") {
+      return clase ? MARCA_SVG.replace("ico-marca", "ico-marca " + clase) : MARCA_SVG;
+    }
+    const d = ICONOS[nombre];
+    if (!d) return "";
+    return '<svg class="ico' + (clase ? " " + clase : "") + '" viewBox="0 0 24 24" ' +
+      'aria-hidden="true" focusable="false"><path d="' + d + '"/></svg>';
+  }
+
+  /* Icono + texto, que es como aparece en casi todos los menús. */
+  function iconoTexto(nombre, texto) {
+    return icono(nombre) + "<span>" + esc(texto) + "</span>";
+  }
+
   /* ---------------------------------------------------------- campana */
 
   /* El botón y el panel son iguales en las dos aplicaciones; lo que cambia
@@ -4993,7 +5243,7 @@ const UI = (function () {
   function campana(sinVer) {
     return '<button class="btn btn-plano campana" id="btnCampana" aria-haspopup="true" ' +
       'aria-expanded="false" title="Novedades">' +
-      '<span aria-hidden="true">🔔</span>' +
+      icono("campana") +
       (sinVer > 0
         ? '<span class="campana-contador">' + (sinVer > 9 ? "9+" : sinVer) + "</span>" +
           '<span class="sr">' + sinVer + " novedades sin ver</span>"
@@ -5017,7 +5267,7 @@ const UI = (function () {
       html += '<li class="novedad novedad-' + esc(n.tipo) + (n.nuevo ? " novedad-nueva" : "") +
         '"><button type="button" class="novedad-btn" data-novedad="' + esc(n.ir) + '"' +
         (n.lote ? ' data-novedad-lote="' + esc(n.lote) + '"' : "") + ">" +
-        '<span class="novedad-icono" aria-hidden="true">' + esc(n.icono) + "</span>" +
+        '<span class="novedad-icono" aria-hidden="true">' + icono(n.icono) + "</span>" +
         '<span class="novedad-texto"><strong>' + esc(n.titulo) + "</strong>" +
         "<small>" + esc(n.detalle) + "</small></span>" +
         '<span class="novedad-fecha">' + fechaCorta(n.fecha) + "</span>" +
@@ -5231,7 +5481,7 @@ const UI = (function () {
               '" value="' + esc(v) + '" aria-label="' + esc(col.etiqueta) + '">';
           }
         });
-        html += '<button type="button" class="btn-mini btn-mini-peligro rep-quitar" aria-label="Quitar fila">✕</button>';
+        html += '<button type="button" class="btn-mini btn-mini-peligro rep-quitar" aria-label="Quitar fila">' + icono("equis") + "</button>";
         div.innerHTML = html;
         div.querySelector(".rep-quitar").addEventListener("click", function () {
           div.remove();
@@ -5453,7 +5703,7 @@ const UI = (function () {
   /* Enlace a la otra aplicación. Cambia según el despliegue: carpetas
      separadas en el repositorio, o rutas con # dentro de un solo paquete. */
   function rutaOtraApp(cual) {
-    const rutas = (typeof window !== "undefined" && window.FLP_RUTAS) || null;
+    const rutas = (typeof window !== "undefined" && window.TF_RUTAS) || null;
     if (rutas && rutas[cual]) return 'href="' + rutas[cual] + '"';
     return 'href="../' + cual + '/"';
   }
@@ -5471,6 +5721,7 @@ const UI = (function () {
     cajas: cajas, minutos: minutos, fechaLarga: fechaLarga, fechaCorta: fechaCorta,
     origen: origen, aviso: aviso, tabla: tabla, kpi: kpi, insignia: insignia,
     campana: campana, panelNovedades: panelNovedades,
+    icono: icono, iconoTexto: iconoTexto, ICONOS: ICONOS,
     etiquetaLinea: etiquetaLinea,
     abrirFormulario: abrirFormulario, leerRepetible: leerRepetible,
     prepararGuardado: prepararGuardado, descargar: descargar, descargarCSV: descargarCSV,
@@ -5509,7 +5760,7 @@ const Novedades = (function () {
   const TOPE = 40;          // lo que se muestra; más abajo está el historial
   const TOPE_VISTOS = 400;  // claves recordadas antes de empezar a podar
 
-  function clave(usuarioId) { return "flp.visto." + usuarioId; }
+  function clave(usuarioId) { return "tf.visto." + usuarioId; }
 
   function leerVistos(usuarioId) {
     try {
@@ -5539,7 +5790,7 @@ const Novedades = (function () {
 
       if (l.estado === "Rechazado") {
         out.push({
-          id: "rech:" + l.id, tipo: "alerta", icono: "⛔",
+          id: "rech:" + l.id, tipo: "alerta", icono: "veto",
           titulo: "Rechazaron el lote " + l.codigoLote,
           detalle: l.observacionesRecepcion || "Sin motivo anotado.",
           fecha: fechaDe(l), ir: "lotes", lote: l.id
@@ -5549,7 +5800,7 @@ const Novedades = (function () {
       if (l.cajasRecibidas !== null) {
         const dif = l.cajasRecibidas - l.cajasAnunciadas;
         out.push({
-          id: "pesado:" + l.id, tipo: dif < 0 ? "alerta" : "info", icono: "⚖️",
+          id: "pesado:" + l.id, tipo: dif < 0 ? "alerta" : "info", icono: "balanza",
           titulo: "Pesaron tu lote " + l.codigoLote,
           detalle: "Anunciaste " + l.cajasAnunciadas + " cajas y se recibieron " +
             l.cajasRecibidas + (dif === 0 ? "." : dif > 0 ? ", " + dif + " más." : ", " + Math.abs(dif) + " menos."),
@@ -5558,7 +5809,7 @@ const Novedades = (function () {
       }
       if (l.estado === "Cerrado" && l.reporteEnviado) {
         out.push({
-          id: "reporte:" + l.id, tipo: "bueno", icono: "📄",
+          id: "reporte:" + l.id, tipo: "bueno", icono: "documento",
           titulo: "Ya tienes el reporte del lote " + l.codigoLote,
           detalle: "La planta cerró el lote. Puedes ver el resultado completo.",
           fecha: l.fechaReporte || l.fechaCierre, ir: "lotes", lote: l.id
@@ -5576,7 +5827,7 @@ const Novedades = (function () {
     if (rol === "recepcion" || rol === "supervisor") {
       lotes.filter(function (l) { return l.estado === "Anunciado"; }).forEach(function (l) {
         out.push({
-          id: "anuncio:" + l.id, tipo: "info", icono: "🚚",
+          id: "anuncio:" + l.id, tipo: "info", icono: "camion",
           titulo: "Envío anunciado: " + l.codigoLote,
           detalle: Indicadores.nombreProveedor(l.proveedorId) + " · " +
             l.cajasAnunciadas + " cajas de " + Indicadores.nombreLinea(l.lineaId) +
@@ -5589,7 +5840,7 @@ const Novedades = (function () {
     if (rol === "produccion" || rol === "supervisor") {
       lotes.filter(function (l) { return l.estado === "Recibido"; }).forEach(function (l) {
         out.push({
-          id: "porprocesar:" + l.id, tipo: "info", icono: "🏭",
+          id: "porprocesar:" + l.id, tipo: "info", icono: "planta",
           titulo: "Listo para procesar: " + l.codigoLote,
           detalle: l.cajasRecibidas + " cajas en cámara · " +
             Indicadores.nombreLinea(l.lineaId) + ".",
@@ -5602,7 +5853,7 @@ const Novedades = (function () {
       lotes.filter(function (l) { return l.estado === "Procesado"; }).forEach(function (l) {
         const dias = Math.round((new Date(DB.hoy()) - new Date(l.fecha)) / 86400000);
         out.push({
-          id: "porcerrar:" + l.id, tipo: dias > 7 ? "alerta" : "info", icono: "✅",
+          id: "porcerrar:" + l.id, tipo: dias > 7 ? "alerta" : "info", icono: "listo",
           titulo: "Esperando tu cierre: " + l.codigoLote,
           detalle: Indicadores.nombreProveedor(l.proveedorId) +
             (dias > 7 ? " · lleva " + dias + " días abierto." : " · terminado en planta."),
@@ -5616,7 +5867,7 @@ const Novedades = (function () {
         return u.activo && u.debeCambiar && !u.ultimoAcceso;
       }).forEach(function (u) {
         out.push({
-          id: "sinusar:" + u.id, tipo: "alerta", icono: "🔑",
+          id: "sinusar:" + u.id, tipo: "alerta", icono: "llave",
           titulo: "Acceso sin estrenar: " + u.nombre,
           detalle: "Se le entregó una clave temporal y todavía no ha entrado.",
           fecha: DB.hoy(), ir: "usuarios"
@@ -5726,7 +5977,7 @@ const Guia = (function () {
     let html = '<div class="guia-roles">';
     DB.ROLES.forEach(function (r) {
       html += '<div class="guia-rol' + (r.id === resaltado ? " guia-rol-tuyo" : "") + '">' +
-        '<span class="guia-rol-icono" aria-hidden="true">' + esc(r.icono) + "</span>" +
+        '<span class="guia-rol-icono" aria-hidden="true">' + UI.icono(r.icono) + "</span>" +
         "<strong>" + esc(r.nombre) + (r.id === resaltado ? " · tú" : "") + "</strong>" +
         "<small>" + esc(r.lema) + "</small></div>";
     });
@@ -5752,14 +6003,14 @@ const Guia = (function () {
       .forEach(function (e) {
         const rol = DB.ROLES.find(function (r) { return r.id === e.rol; });
         html += '<li><span class="guia-estado">' + esc(e.nombre) + "</span>" +
-          '<span class="guia-quien">' + esc(rol ? rol.icono + " " + rol.nombre : "—") + "</span>" +
+          '<span class="guia-quien">' + (rol ? UI.icono(rol.icono) + " " + esc(rol.nombre) : "—") + "</span>" +
           "<span>" + esc(paraProveedor ? (PASO_PROVEEDOR[e.id] || e.ayuda) : e.ayuda) +
           "</span></li>";
       });
     const rech = DB.ESTADOS.find(function (e) { return e.id === "Rechazado"; });
     if (rech) {
       html += '<li class="guia-recorrido-desvio"><span class="guia-estado">' + esc(rech.nombre) +
-        '</span><span class="guia-quien">⚖️ Recepción</span><span>' +
+        '</span><span class="guia-quien">' + UI.icono("balanza") + ' Recepción</span><span>' +
         esc(paraProveedor ? PASO_PROVEEDOR.Rechazado
           : rech.ayuda + " El proveedor lo ve en su portal con el motivo.") +
         "</span></li>";
@@ -5799,7 +6050,7 @@ const Guia = (function () {
 
     let html = '<div class="guia">';
 
-    html += '<header class="guia-cab"><p class="guia-eyebrow">' + esc(DB.EMPRESA.razonSocial) +
+    html += '<header class="guia-cab"><p class="guia-eyebrow">' + esc(DB.nombreEmpresa(true)) +
       '</p><h1>Guía del Sistema de Planta</h1>' +
       '<p class="sub">Qué hace cada quien, en qué orden, y qué significa lo que se ve ' +
       "en pantalla. Se puede imprimir y dejar en el escritorio de planta.</p></header>";
@@ -6034,8 +6285,8 @@ const Guia = (function () {
        "reemplazarlos por registros reales."]
     ]));
 
-    html += '<footer class="guia-pie"><p>' + esc(DB.EMPRESA.sistema) + " · " +
-      esc(DB.EMPRESA.descripcion) + " · Guía generada el " +
+    html += '<footer class="guia-pie"><p>' + esc(DB.MARCA.producto) + " · " +
+      esc(DB.MARCA.descripcion) + " · Guía generada el " +
       UI.fechaLarga(DB.hoy()) + ".</p></footer>";
 
     return html + "</div>";
@@ -6116,7 +6367,7 @@ const Guia = (function () {
     html += seccion("senal", "Si no hay señal en la finca", sinSenal());
 
     html += '<footer class="guia-pie"><p>Portal del Proveedor · ' +
-      esc(DB.EMPRESA.nombre) + " · Guía generada el " + UI.fechaLarga(DB.hoy()) +
+      esc(DB.nombreEmpresa()) + " · Guía generada el " + UI.fechaLarga(DB.hoy()) +
       ".</p></footer>";
 
     return html + "</div>";
@@ -6166,7 +6417,7 @@ const Guia = (function () {
 
   const $ = UI.$, $$ = UI.$$;
   const esc = UI.esc, nf = UI.nf, pct = UI.pct, money = UI.money;
-  const SESION = "flp.portal.sesion";
+  const SESION = "tf.portal.sesion";
 
   let usuario = null;
   let vista = "inicio";
@@ -6869,8 +7120,8 @@ const Guia = (function () {
 
   function vistaAcceso() {
     let html = '<div class="acceso-capa acceso-proveedor"><div class="acceso-caja">' +
-      '<div class="acceso-marca"><span class="logo" aria-hidden="true">🚜</span>' +
-      "<div><strong>Portal del Proveedor</strong><small>" + esc(DB.EMPRESA.nombre) +
+      '<div class="acceso-marca"><span class="logo" aria-hidden="true">' + UI.icono("marca") + '</span>' +
+      "<div><strong>Portal del Proveedor</strong><small>" + esc(DB.MARCA.producto) +
       "</small></div></div>" +
       '<p class="acceso-intro">Entra con el código que te dio la planta.</p>' +
       '<form id="formAcceso" novalidate>' +
@@ -6880,7 +7131,7 @@ const Guia = (function () {
       '<div class="campo"><label for="clave">Contraseña</label>' +
       '<div class="campo-clave">' +
       '<input type="password" id="clave" name="clave" autocomplete="current-password" required>' +
-      '<button type="button" class="ver-clave" id="verClave" aria-label="Mostrar la contraseña">👁</button>' +
+      '<button type="button" class="ver-clave" id="verClave" aria-label="Mostrar la contraseña">' + UI.icono("ojo") + '</button>' +
       "</div></div>" +
       '<label class="check check-recordar"><input type="checkbox" id="recordar" checked> ' +
       "No cerrar sesión en este teléfono</label>" +
@@ -6987,21 +7238,21 @@ const Guia = (function () {
     }
 
     const menu = [
-      { id: "inicio", texto: "Inicio", icono: "🏠" },
-      { id: "lotes", texto: "Mis envíos", icono: "📦" },
-      { id: "desempeno", texto: "Mi desempeño", icono: "📈" },
-      { id: "pagos", texto: "Pagos", icono: "🧾" },
-      { id: "ayuda", texto: "Ayuda", icono: "📘" }
+      { id: "inicio", texto: "Inicio", icono: "casa" },
+      { id: "lotes", texto: "Mis envíos", icono: "caja" },
+      { id: "desempeno", texto: "Mi desempeño", icono: "tendencia" },
+      { id: "pagos", texto: "Pagos", icono: "recibo" },
+      { id: "ayuda", texto: "Ayuda", icono: "libro" }
     ];
 
     let html = '<div class="portal">';
     html += '<header class="portal-barra">' +
-      '<div class="portal-marca"><span aria-hidden="true">🚜</span>' +
+      '<div class="portal-marca"><span aria-hidden="true">' + UI.icono("marca") + '</span>' +
       "<div><strong>Portal del Proveedor</strong><small>" + esc(miProveedor().nombre) +
       "</small></div></div>" +
       '<div class="portal-acciones">' +
       UI.campana(Novedades.sinVer(usuario)) +
-      '<button class="btn btn-plano btn-sm" id="btnClave" title="Cambiar contraseña">🔑</button>' +
+      '<button class="btn btn-plano btn-sm" id="btnClave" title="Cambiar contraseña" aria-label="Cambiar contraseña">' + UI.icono("llave") + '</button>' +
       '<button class="btn btn-plano btn-sm" id="btnSalir">Salir</button></div>' +
       (novedadesAbiertas ? UI.panelNovedades(novedadesActuales()) : "") + "</header>";
 
@@ -7025,7 +7276,7 @@ const Guia = (function () {
     menu.forEach(function (m) {
       html += '<button type="button" class="portal-nav-item' + (m.id === vista ? " activo" : "") +
         '" data-ir="' + m.id + '"' + (m.id === vista ? ' aria-current="page"' : "") + ">" +
-        '<span aria-hidden="true">' + m.icono + "</span>" + esc(m.texto) + "</button>";
+        UI.icono(m.icono) + "<span>" + esc(m.texto) + "</span></button>";
     });
     html += "</nav></div>";
 
@@ -7273,7 +7524,7 @@ const Guia = (function () {
   const $ = UI.$, $$ = UI.$$;
   const esc = UI.esc, nf = UI.nf, pct = UI.pct, money = UI.money;
   const pctFirmado = UI.pctFirmado;
-  const SESION = "flp.planta.sesion";
+  const SESION = "tf.planta.sesion";
 
   let usuario = null;
   let vista = "panel";
@@ -7365,23 +7616,44 @@ const Guia = (function () {
 
   /* ============================== navegación ========================== */
 
+  /* Quince entradas en una lista plana son quince cosas que leer antes de
+     dar con la que se busca, y la última se salía de la pantalla en un
+     portátil. Van agrupadas por el momento en que se usan: primero lo del
+     turno, después lo que se mira para decidir, y al final lo que se toca
+     una vez al mes. El orden del arreglo es el orden en pantalla. */
   function menu() {
     return [
-      { id: "panel", texto: "Indicadores", icono: "📊", roles: "*" },
-      { id: "planificador", texto: "Planificación diaria", icono: "🗓️", roles: ["supervisor"] },
-      { id: "tiempos", texto: "Estudio de tiempos", icono: "⏱️", roles: ["supervisor"] },
-      { id: "recepcion", texto: "Recepción y pesaje", icono: "⚖️", roles: ["recepcion", "supervisor"] },
-      { id: "produccion", texto: "Producción", icono: "🏭", roles: ["produccion", "supervisor"] },
-      { id: "lotes", texto: "Lotes", icono: "📦", roles: "*" },
-      { id: "reportes", texto: "Reportes", icono: "📄", roles: "*" },
-      { id: "liquidacion", texto: "Liquidaciones", icono: "🧾", roles: ["supervisor"] },
-      { id: "costeo", texto: "Costeo y mejora", icono: "💵", roles: ["supervisor"] },
-      { id: "catalogos", texto: "Parámetros", icono: "⚙️", roles: ["supervisor"] },
-      { id: "proveedores", texto: "Proveedores", icono: "🤝", roles: ["supervisor"] },
-      { id: "usuarios", texto: "Usuarios", icono: "👥", roles: ["supervisor"] },
-      { id: "bitacora", texto: "Bitácora", icono: "🕘", roles: ["supervisor"] },
-      { id: "datos", texto: "Datos del sistema", icono: "🗄️", roles: ["supervisor"] },
-      { id: "guia", texto: "Guía de uso", icono: "📘", roles: "*" }
+      { id: "panel", texto: "Indicadores", icono: "grafico", roles: "*" },
+
+      { grupo: "El turno", id: "planificador", texto: "Planificación diaria",
+        icono: "calendario", roles: ["supervisor"] },
+      { grupo: "El turno", id: "recepcion", texto: "Recepción y pesaje",
+        icono: "balanza", roles: ["recepcion", "supervisor"] },
+      { grupo: "El turno", id: "produccion", texto: "Producción",
+        icono: "planta", roles: ["produccion", "supervisor"] },
+      { grupo: "El turno", id: "lotes", texto: "Lotes", icono: "caja", roles: "*" },
+
+      { grupo: "Análisis", id: "tiempos", texto: "Estudio de tiempos",
+        icono: "cronometro", roles: ["supervisor"] },
+      { grupo: "Análisis", id: "costeo", texto: "Costeo y mejora",
+        icono: "dinero", roles: ["supervisor"] },
+      { grupo: "Análisis", id: "reportes", texto: "Reportes", icono: "reporte", roles: "*" },
+
+      { grupo: "Proveedores", id: "proveedores", texto: "Fincas y cooperativas",
+        icono: "brote", roles: ["supervisor"] },
+      { grupo: "Proveedores", id: "liquidacion", texto: "Liquidaciones",
+        icono: "recibo", roles: ["supervisor"] },
+
+      { grupo: "Administración", id: "catalogos", texto: "Parámetros",
+        icono: "engranaje", roles: ["supervisor"] },
+      { grupo: "Administración", id: "usuarios", texto: "Usuarios",
+        icono: "personas", roles: ["supervisor"] },
+      { grupo: "Administración", id: "bitacora", texto: "Bitácora",
+        icono: "reloj", roles: ["supervisor"] },
+      { grupo: "Administración", id: "datos", texto: "Datos del sistema",
+        icono: "archivo", roles: ["supervisor"] },
+      { grupo: "Administración", id: "guia", texto: "Guía de uso",
+        icono: "libro", roles: "*" }
     ].filter(function (m) { return m.roles === "*" || m.roles.indexOf(usuario.rol) !== -1; });
   }
 
@@ -8404,7 +8676,7 @@ const Guia = (function () {
           else {
             /* Rendimiento en KILOS: cajas sobre gavetas no es una tasa. */
             const t = (expo * linea.pesoCajaKg) / (proc * kgPorGaveta);
-            outT.textContent = pct(t) + (t >= linea.metaRendimiento ? " ✓ sobre la meta" : " ✕ bajo la meta");
+            outT.textContent = pct(t) + (t >= linea.metaRendimiento ? " · sobre la meta" : " · bajo la meta");
             outT.className = t >= linea.metaRendimiento ? "ok" : "bajo";
           }
         }
@@ -8455,7 +8727,7 @@ const Guia = (function () {
               (l.kgRetirados ? ", ya sin los " + nf(l.kgRetirados, 0) + " retirados al recibir" : "") +
               " − " + nf(expo * linea.pesoCajaKg, 0) + " kg se empacaron)</span> · repartidos: " +
               "<strong>" + nf(suma, 1) + " kg</strong> · " +
-              (ok ? "balance de masa cuadrado ✓"
+              (ok ? "balance de masa cuadrado"
                   : (falta > 0 ? "faltan <strong>" + nf(falta, 1) + " kg</strong>"
                                : "sobran <strong>" + nf(-falta, 1) + " kg</strong>"));
           }
@@ -8618,37 +8890,37 @@ const Guia = (function () {
   function SIGUIENTE(l) {
     if (l.estado === "Rechazado") {
       return { texto: "El lote no entró a planta. El proveedor ya ve el motivo en su portal.",
-               quien: "Nada pendiente", icono: "⛔", tono: "alerta" };
+               quien: "Nada pendiente", icono: "veto", tono: "alerta" };
     }
     if (l.estado === "Anunciado") {
       return { texto: "Falta contarlo y pesarlo. Se hace desde Recepción y pesaje, " +
                       "con el botón Pesar.",
-               quien: "Le toca a Recepción", icono: "⚖️", ir: "recepcion",
+               quien: "Le toca a Recepción", icono: "balanza", ir: "recepcion",
                puede: puede("pesar") };
     }
     if (l.estado === "Recibido") {
       return { texto: "No hay que marcarlo como procesado: el lote pasa solo a Procesado " +
                       "cuando se registra el trabajo, desde Producción, con el botón " +
                       "Registrar producción.",
-               quien: "Le toca a Producción", icono: "🏭", ir: "produccion",
+               quien: "Le toca a Producción", icono: "planta", ir: "produccion",
                puede: puede("procesar") };
     }
     if (l.estado === "Procesado") {
       return { texto: "Ya está trabajado. Falta cerrarlo, desde Lotes, en el bloque " +
                       "«Terminados, esperando el cierre».",
-               quien: "Le toca a Supervisión", icono: "✅", ir: "lotes",
+               quien: "Le toca a Supervisión", icono: "listo", ir: "lotes",
                puede: puede("cerrar") };
     }
     return { texto: l.reporteEnviado
                ? "Terminado. El proveedor ya tiene su reporte."
                : "Terminado, pero el reporte todavía no se publicó al proveedor.",
-             quien: "Nada pendiente", icono: "🏁", tono: "ok" };
+             quien: "Nada pendiente", icono: "bandera", tono: "ok" };
   }
 
   function siguientePaso(l) {
     const s = SIGUIENTE(l);
     return '<div class="siguiente siguiente-' + (s.tono || "normal") + '">' +
-      '<span class="siguiente-icono" aria-hidden="true">' + s.icono + "</span>" +
+      '<span class="siguiente-icono" aria-hidden="true">' + UI.icono(s.icono) + "</span>" +
       '<div><strong>¿Qué sigue? · ' + esc(s.quien) + "</strong>" +
       "<small>" + esc(s.texto) + "</small></div>" +
       (s.ir && s.puede
@@ -8731,7 +9003,7 @@ const Guia = (function () {
           const parte = f.kgMerma > 0 ? m.kg / f.kgMerma : 0;
           html += "<li><span><strong>" + esc(c ? c.codigo : "?") + "</strong> " +
             esc(c ? c.nombre : m.causaId) + '<br><small class="tenue">→ ' +
-            esc(d ? d.nombre : "—") + (d && !d.valoriza ? " ⚠" : "") + "</small></span>" +
+            esc(d ? d.nombre : "—") + (d && !d.valoriza ? " (sin valorizar)" : "") + "</small></span>" +
             '<span class="barra-mini"><span style="width:' + (parte * 100).toFixed(1) + '%"></span></span>' +
             "<strong>" + nf(m.kg) + " kg</strong></li>";
         });
@@ -8996,7 +9268,7 @@ const Guia = (function () {
 
     html += '<section class="hoja" id="hojaReporte">';
     html += '<header class="hoja-cab"><div>' +
-      '<p class="hoja-empresa">' + esc(DB.EMPRESA.razonSocial) + "</p>" +
+      '<p class="hoja-empresa">' + esc(DB.nombreEmpresa(true)) + "</p>" +
       "<h2>" + esc(def.titulo) + "</h2>" +
       '<p class="sub">' + esc(def.descripcion) + "</p></div>" +
       '<div class="hoja-meta"><p><strong>Período:</strong> ' + UI.fechaLarga(filtros.desde) +
@@ -9025,8 +9297,8 @@ const Guia = (function () {
     html += UI.tabla(columnasReporte(reporteActual), datos,
       { vacio: "No hay información para el filtro seleccionado." });
 
-    html += '<footer class="hoja-pie"><p>' + esc(DB.EMPRESA.sistema) + " · " +
-      esc(DB.EMPRESA.descripcion) + " · Documento generado el " + UI.fechaLarga(DB.hoy()) + ".</p>" +
+    html += '<footer class="hoja-pie"><p>' + esc(DB.MARCA.producto) + " · " +
+      esc(DB.MARCA.descripcion) + " · Documento generado el " + UI.fechaLarga(DB.hoy()) + ".</p>" +
       '<p class="hoja-origenes">Origen de los parámetros: ' + UI.origen("M") + " medido · " +
       UI.origen("E") + " estimado · " + UI.origen("S") + " fuente secundaria.</p></footer>";
     html += "</section>";
@@ -9146,7 +9418,7 @@ const Guia = (function () {
   function hojaLiquidacion(liq) {
     let html = '<div class="hoja hoja-liquidacion">' +
       '<header class="hoja-cab"><div>' +
-      '<p class="hoja-empresa">' + esc(DB.EMPRESA.razonSocial) + "</p>" +
+      '<p class="hoja-empresa">' + esc(DB.nombreEmpresa(true)) + "</p>" +
       "<h2>Liquidación de entrega</h2>" +
       '<p class="sub">' + esc(liq.proveedor.nombre) + " · " + esc(liq.proveedor.documento) +
       "</p></div>" +
@@ -9192,7 +9464,7 @@ const Guia = (function () {
     }
 
     html += '<div class="liq-firmas">' +
-      "<div><span></span><small>Por " + esc(DB.EMPRESA.nombre) + "</small></div>" +
+      "<div><span></span><small>Por " + esc(DB.nombreEmpresa()) + "</small></div>" +
       "<div><span></span><small>" + esc(liq.proveedor.contacto || liq.proveedor.nombre) +
       "<br>" + esc(liq.proveedor.documento) + "</small></div></div>";
 
@@ -9530,7 +9802,7 @@ const Guia = (function () {
       const puesta = escenario.medidas && escenario.medidas.indexOf(m.id) !== -1;
       html += '<button type="button" class="medida' + (puesta ? " medida-on" : "") +
         '" data-medida="' + esc(m.id) + '" aria-pressed="' + puesta + '">' +
-        '<span class="medida-marca" aria-hidden="true">' + (puesta ? "✓" : "+") + "</span>" +
+        '<span class="medida-marca" aria-hidden="true">' + UI.icono(puesta ? "check" : "mas") + "</span>" +
         "<strong>" + esc(m.nombre) + "</strong>" +
         "<small>" + esc(m.detalle) + "</small>" +
         '<span class="medida-cifras">' + esc(m.causas.join(", ")) + " · −" + pct(m.reduccion, 0) +
@@ -9764,6 +10036,40 @@ const Guia = (function () {
     let html = '<div class="vista-cab"><div><h1>Parámetros del sistema</h1>' +
       '<p class="sub">Los valores que alimentan todos los cálculos. Cada uno declara su origen.</p></div></div>';
 
+    /* --- identidad de quien usa el sistema ---
+       El sistema no lleva el nombre de nadie escrito en el código: se
+       configura aquí. Y nace en modo confidencial, porque el caso de
+       estudio con el que se construyó está bajo acuerdo de
+       confidencialidad y un documento no puede filtrarlo por descuido. */
+    const idn = DB.identidad();
+    html += '<section class="panel panel-identidad"><h2>Identidad de la planta</h2>' +
+      '<p class="sub panel-sub">Lo que aparece en la cabecera de los reportes, en las ' +
+      "liquidaciones y en la guía impresa. " + esc(DB.MARCA.producto) + " es el nombre del " +
+      "sistema y no cambia; esto es el nombre de quien lo usa.</p>" +
+      '<div class="conteos">' +
+      "<div><span>Razón social</span><strong>" +
+        (idn.razonSocial ? esc(idn.razonSocial) : '<em class="tenue">sin configurar</em>') +
+        "</strong></div>" +
+      "<div><span>Nombre corto</span><strong>" +
+        (idn.nombreCorto ? esc(idn.nombreCorto) : '<em class="tenue">—</em>') + "</strong></div>" +
+      "<div><span>RUC o identificación</span><strong>" +
+        (idn.identificacion ? esc(idn.identificacion) : '<em class="tenue">—</em>') + "</strong></div>" +
+      "<div><span>Ciudad</span><strong>" +
+        (idn.ciudad ? esc(idn.ciudad) : '<em class="tenue">—</em>') + "</strong></div>" +
+      "<div><span>En los documentos sale</span><strong>" + esc(DB.nombreEmpresa(true)) +
+        "</strong></div>" +
+      "</div>";
+    html += idn.confidencial
+      ? '<p class="nota-info"><strong>Modo confidencial activo.</strong> Ningún reporte, ' +
+        "liquidación ni guía imprime el nombre real: todos dicen " +
+        "«" + esc(idn.aliasConfidencial || "la Empresa") + "», que es como se cita una empresa " +
+        "bajo acuerdo de confidencialidad en un trabajo académico. Desactívalo solo si la " +
+        "planta autorizó por escrito que su nombre aparezca.</p>"
+      : '<p class="aviso-inline"><strong>Modo confidencial desactivado.</strong> Los documentos ' +
+        "que generes imprimen la razón social. Asegúrate de tener la autorización.</p>";
+    html += '<div class="acciones-fila"><button class="btn btn-primario" id="btnEditarIdentidad">' +
+      "Editar identidad</button></div></section>";
+
     html += '<p class="nota-info"><strong>Origen del dato:</strong> ' +
       UI.origen("M") + " medido en planta · " + UI.origen("E") + " estimado, pendiente de confirmar · " +
       UI.origen("S") + " tomado de fuente secundaria. Los marcados con E deben validarse con la " +
@@ -9850,6 +10156,39 @@ const Guia = (function () {
       "</section>";
 
     return html;
+  }
+
+  function formIdentidad() {
+    const i = DB.identidad();
+    UI.abrirFormulario("Identidad de la planta", [
+      { nombre: "razonSocial", etiqueta: "Razón social", tipo: "text", valor: i.razonSocial,
+        ayuda: "El nombre legal completo, tal como debe salir en una liquidación." },
+      { nombre: "nombreCorto", etiqueta: "Nombre corto", tipo: "text", valor: i.nombreCorto,
+        ancho: "mitad", ayuda: "El que cabe en la barra lateral." },
+      { nombre: "identificacion", etiqueta: "RUC o identificación", tipo: "text",
+        valor: i.identificacion, ancho: "mitad" },
+      { nombre: "ciudad", etiqueta: "Ciudad", tipo: "text", valor: i.ciudad, ancho: "mitad" },
+      { tipo: "separador", etiqueta: "Confidencialidad" },
+      { nombre: "confidencial", etiqueta: "", tipo: "checkbox", valor: i.confidencial,
+        textoCheck: "No imprimir el nombre real en ningún documento",
+        ayuda: "Déjalo marcado mientras el acuerdo de confidencialidad esté vigente." },
+      { nombre: "aliasConfidencial", etiqueta: "Cómo citarla entonces", tipo: "text",
+        valor: i.aliasConfidencial, ancho: "mitad",
+        ayuda: "Por ejemplo: la Empresa, la planta exportadora, Empresa A." }
+    ], function (d) {
+      DB.guardarIdentidad({
+        razonSocial: String(d.razonSocial || "").trim(),
+        nombreCorto: String(d.nombreCorto || "").trim(),
+        identificacion: String(d.identificacion || "").trim(),
+        ciudad: String(d.ciudad || "").trim(),
+        confidencial: !!d.confidencial,
+        aliasConfidencial: String(d.aliasConfidencial || "").trim() || "la Empresa"
+      });
+      DB.registrarBitacora(usuario.id, "Edición de identidad",
+        d.confidencial ? "modo confidencial activo" : "nombre real visible en documentos");
+      UI.aviso("Identidad actualizada.");
+      render();
+    }, { aceptar: "Guardar", ancho: true });
   }
 
   function formLinea(id) {
@@ -10217,7 +10556,7 @@ const Guia = (function () {
           : '<span class="etq etq-ok">Sistema de planta</span>'; } },
       { titulo: "Rol", valor: function (u) {
         const r = DB.ROLES.find(function (x) { return x.id === u.rol; });
-        return esc(r ? r.icono + " " + r.nombre : u.rol); } },
+        return r ? UI.icono(r.icono) + " " + esc(r.nombre) : esc(u.rol); } },
       { titulo: "Proveedor", valor: function (u) {
         return u.proveedorId ? esc(Indicadores.nombreProveedor(u.proveedorId)) : "—"; } },
       { titulo: "Estado", valor: function (u) {
@@ -10235,7 +10574,7 @@ const Guia = (function () {
       "se guarda el resultado de derivarlas con PBKDF2-SHA256 y una sal distinta por persona, " +
       "así que desde el almacén no se puede llegar a la clave. Por eso una clave olvidada se " +
       "<em>restablece</em>, nunca se consulta.</p>";
-    html += '<p class="nota-seguridad">⚠️ Límite del prototipo: la comprobación ocurre en el ' +
+    html += '<p class="nota-seguridad">' + UI.icono("alerta") + ' Límite del prototipo: la comprobación ocurre en el ' +
       "navegador, no en un servidor. Quien pueda leer el almacén ve los hashes y podría " +
       "intentar adivinarlos sin conexión. Es suficiente para que nadie entre haciéndose pasar " +
       "por otro en planta, pero un despliegue real debe verificar la clave en el servidor. " +
@@ -10341,7 +10680,7 @@ const Guia = (function () {
         UI.descargar(new Blob([JSON.stringify({
           mes: mes, generadoEn: new Date().toISOString(), resumen: resumen,
           lotes: datos.lotes, producciones: datos.producciones
-        }, null, 2)], { type: "application/json" }), "flp_archivo_" + mes + ".json");
+        }, null, 2)], { type: "application/json" }), "trazafruta_archivo_" + mes + ".json");
       }
       const r = await DB.archivarMes(resumen);
       DB.registrarBitacora(usuario.id, "Mes archivado",
@@ -10484,9 +10823,9 @@ const Guia = (function () {
 
   function vistaAcceso() {
     let html = '<div class="acceso-capa acceso-interno"><div class="acceso-caja">' +
-      '<div class="acceso-marca"><span class="logo" aria-hidden="true">🏭</span>' +
-      "<div><strong>" + esc(DB.EMPRESA.sistema) + "</strong><small>" +
-      esc(DB.EMPRESA.descripcion) + "</small></div></div>" +
+      '<div class="acceso-marca"><span class="logo" aria-hidden="true">' + UI.icono("marca") + '</span>' +
+      "<div><strong>" + esc(DB.MARCA.producto) + "</strong><small>" +
+      esc(DB.MARCA.descripcion) + "</small></div></div>" +
       '<p class="acceso-intro">Sistema interno de planta.</p>' +
       '<form id="formAcceso" novalidate>' +
       '<div class="campo"><label for="acceso">Usuario</label>' +
@@ -10495,7 +10834,7 @@ const Guia = (function () {
       '<div class="campo"><label for="clave">Contraseña o PIN</label>' +
       '<div class="campo-clave">' +
       '<input type="password" id="clave" name="clave" autocomplete="current-password" required>' +
-      '<button type="button" class="ver-clave" id="verClave" aria-label="Mostrar">👁</button>' +
+      '<button type="button" class="ver-clave" id="verClave" aria-label="Mostrar">' + UI.icono("ojo") + '</button>' +
       "</div></div>" +
       '<label class="check check-recordar"><input type="checkbox" id="recordar"> ' +
       "Mantener la sesión en este equipo</label>" +
@@ -10556,11 +10895,22 @@ const Guia = (function () {
     const porProcesar = DB.all("lotes").filter(function (l) { return l.estado === "Recibido"; }).length;
 
     let html = '<div class="capa"><aside class="lateral" id="lateral">' +
-      '<div class="marca"><span class="logo" aria-hidden="true">🏭</span>' +
-      "<div><strong>" + esc(DB.EMPRESA.sistema) + "</strong><small>" +
-      esc(DB.EMPRESA.nombre) + "</small></div></div><nav>";
+      '<div class="marca"><span class="logo" aria-hidden="true">' + UI.icono("marca") + '</span>' +
+      "<div><strong>" + esc(DB.MARCA.producto) + "</strong><small>" +
+      esc(DB.subtitulo()) + "</small></div></div><nav>";
 
+    /* El título del grupo se escribe cuando cambia, no una vez por item:
+       así un operario de recepción, que solo ve tres entradas, no se
+       encuentra con cuatro encabezados vacíos. */
+    let grupoActual = null;
     menu().forEach(function (m) {
+      if ((m.grupo || null) !== grupoActual) {
+        grupoActual = m.grupo || null;
+        if (grupoActual) {
+          html += '<p class="nav-grupo">' + esc(grupoActual) + "</p>";
+        }
+      }
+
       /* Dos contadores: lo que llega del portal externo y lo que ya se
          procesó y espera el cierre. Sin el segundo, cerrar un pedido era
          una acción escondida en una columna de una tabla. */
@@ -10574,7 +10924,7 @@ const Guia = (function () {
       }
       html += '<button type="button" class="nav-item' + (m.id === vista ? " activo" : "") +
         '" data-ir="' + m.id + '"' + (m.id === vista ? ' aria-current="page"' : "") + ">" +
-        '<span aria-hidden="true">' + m.icono + "</span>" + esc(m.texto) + pendiente + "</button>";
+        UI.icono(m.icono) + "<span>" + esc(m.texto) + "</span>" + pendiente + "</button>";
     });
 
     html += "</nav><div class='lateral-pie'>" +
@@ -10588,12 +10938,12 @@ const Guia = (function () {
       "<p class='tenue'>v4.0 · prototipo TIC</p></div></aside>";
 
     html += '<div class="principal"><header class="barra">' +
-      '<button class="menu-btn" id="btnMenu" aria-label="Abrir menú" aria-expanded="false">☰</button>' +
+      '<button class="menu-btn" id="btnMenu" aria-label="Abrir menú" aria-expanded="false">' + UI.icono("menu") + '</button>' +
       '<div class="barra-usuario"><div class="avatar" aria-hidden="true">' +
-      esc(rol ? rol.icono : "·") + "</div><div><strong>" + esc(usuario.nombre) + "</strong>" +
+      (rol ? UI.icono(rol.icono) : "") + "</div><div><strong>" + esc(usuario.nombre) + "</strong>" +
       "<small>" + esc(rol ? rol.nombre : usuario.rol) + "</small></div>" +
       UI.campana(Novedades.sinVer(usuario)) +
-      '<button class="btn btn-plano" id="btnClave" title="Cambiar mi clave">🔑</button>' +
+      '<button class="btn btn-plano" id="btnClave" title="Cambiar mi clave" aria-label="Cambiar mi clave">' + UI.icono("llave") + '</button>' +
       '<button class="btn btn-plano" id="btnSalir">Salir</button></div>' +
       (novedadesAbiertas ? UI.panelNovedades(novedadesActuales()) : "") + "</header>";
 
@@ -10899,6 +11249,8 @@ const Guia = (function () {
     $$("[data-editar-destino]").forEach(function (b) {
       b.addEventListener("click", function () { formDestino(b.dataset.editarDestino); });
     });
+    const btnIdent = $("#btnEditarIdentidad");
+    if (btnIdent) btnIdent.addEventListener("click", formIdentidad);
     const btnParam = $("#btnEditarParametros");
     if (btnParam) btnParam.addEventListener("click", formParametros);
 
@@ -10988,7 +11340,7 @@ const Guia = (function () {
     if (btnExp) {
       btnExp.addEventListener("click", function () {
         UI.descargar(new Blob([DB.exportar()], { type: "application/json" }),
-          "flp_respaldo_" + DB.hoy() + ".json");
+          "trazafruta_respaldo_" + DB.hoy() + ".json");
       });
     }
     const inputImp = $("#inputImportar");
@@ -11139,7 +11491,7 @@ const Guia = (function () {
 
   /* Se expone en vez de arrancar sola: la página propia la inicia, y el
      paquete de las dos aplicaciones decide cuál montar. */
-  window.PlantaFLP = { iniciar: function () { UI.alArrancar(iniciar); } };
+  window.PlantaApp = { iniciar: function () { UI.alArrancar(iniciar); } };
 })();
 
 </script>
@@ -11151,27 +11503,27 @@ const Guia = (function () {
 (function () {
   "use strict";
 
-  window.FLP_RUTAS = { proveedor: "#/proveedor", interno: "#/planta" };
+  window.TF_RUTAS = { proveedor: "#/proveedor", interno: "#/planta" };
 
   function portada() {
     document.getElementById("app").innerHTML =
       '<main class="portada">' +
       '<header class="portada-cab">' +
-      '<p class="portada-eyebrow">F.L.P. Latinoamerican Perishables del Ecuador S.A.</p>' +
-      "<h1>Sistema FLP</h1>" +
+      UI.icono("marca", "portada-marca") +
+      "<h1>Trazafruta</h1>" +
       '<p class="portada-sub">Trazabilidad, control de pérdidas y economía circular en las ' +
       "líneas de pitahaya roja, tomate de árbol y granadilla.</p></header>" +
 
       '<div class="portada-apps">' +
       '<a class="portada-app portada-app-ext" href="#/proveedor">' +
-      '<span class="portada-icono" aria-hidden="true">🚜</span>' +
+      UI.icono("brote", "portada-icono") +
       "<h2>Portal del Proveedor</h2>" +
       "<p>Para las fincas y cooperativas. Anuncian sus envíos desde el celular y " +
       "siguen el resultado de cada lote.</p>" +
       '<span class="portada-cta">Entrar al portal &rarr;</span></a>' +
 
       '<a class="portada-app portada-app-int" href="#/planta">' +
-      '<span class="portada-icono" aria-hidden="true">🏭</span>' +
+      UI.icono("planta", "portada-icono") +
       "<h2>Sistema de Planta</h2>" +
       "<p>Uso interno. Recepción pesa, Producción registra pérdidas por causa raíz " +
       "y Supervisión planifica el día, costea las causas y cierra los lotes.</p>" +
@@ -11196,7 +11548,7 @@ const Guia = (function () {
     if (ruta === "/proveedor" || ruta === "proveedor") {
       window.PortalProveedor.iniciar();
     } else if (ruta === "/planta" || ruta === "planta") {
-      window.PlantaFLP.iniciar();
+      window.PlantaApp.iniciar();
     } else {
       portada();
     }
@@ -11219,7 +11571,7 @@ const Guia = (function () {
   if (location.protocol !== "https:" && location.hostname !== "localhost") return;
   window.addEventListener("load", function () {
     navigator.serviceWorker.register("sw.js", { scope: "./" })
-      .then(function (reg) { window.FLP_SW = reg; })
+      .then(function (reg) { window.TF_SW = reg; })
       .catch(function (e) {
         /* Sin él la app sigue funcionando: solo necesita señal para abrir. */
         console.warn("No se pudo preparar el uso sin conexión:", e && e.message);

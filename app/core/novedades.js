@@ -17,7 +17,7 @@ const Novedades = (function () {
   const TOPE = 40;          // lo que se muestra; más abajo está el historial
   const TOPE_VISTOS = 400;  // claves recordadas antes de empezar a podar
 
-  function clave(usuarioId) { return "flp.visto." + usuarioId; }
+  function clave(usuarioId) { return "tf.visto." + usuarioId; }
 
   function leerVistos(usuarioId) {
     try {
@@ -47,7 +47,7 @@ const Novedades = (function () {
 
       if (l.estado === "Rechazado") {
         out.push({
-          id: "rech:" + l.id, tipo: "alerta", icono: "⛔",
+          id: "rech:" + l.id, tipo: "alerta", icono: "veto",
           titulo: "Rechazaron el lote " + l.codigoLote,
           detalle: l.observacionesRecepcion || "Sin motivo anotado.",
           fecha: fechaDe(l), ir: "lotes", lote: l.id
@@ -57,7 +57,7 @@ const Novedades = (function () {
       if (l.cajasRecibidas !== null) {
         const dif = l.cajasRecibidas - l.cajasAnunciadas;
         out.push({
-          id: "pesado:" + l.id, tipo: dif < 0 ? "alerta" : "info", icono: "⚖️",
+          id: "pesado:" + l.id, tipo: dif < 0 ? "alerta" : "info", icono: "balanza",
           titulo: "Pesaron tu lote " + l.codigoLote,
           detalle: "Anunciaste " + l.cajasAnunciadas + " cajas y se recibieron " +
             l.cajasRecibidas + (dif === 0 ? "." : dif > 0 ? ", " + dif + " más." : ", " + Math.abs(dif) + " menos."),
@@ -66,7 +66,7 @@ const Novedades = (function () {
       }
       if (l.estado === "Cerrado" && l.reporteEnviado) {
         out.push({
-          id: "reporte:" + l.id, tipo: "bueno", icono: "📄",
+          id: "reporte:" + l.id, tipo: "bueno", icono: "documento",
           titulo: "Ya tienes el reporte del lote " + l.codigoLote,
           detalle: "La planta cerró el lote. Puedes ver el resultado completo.",
           fecha: l.fechaReporte || l.fechaCierre, ir: "lotes", lote: l.id
@@ -84,7 +84,7 @@ const Novedades = (function () {
     if (rol === "recepcion" || rol === "supervisor") {
       lotes.filter(function (l) { return l.estado === "Anunciado"; }).forEach(function (l) {
         out.push({
-          id: "anuncio:" + l.id, tipo: "info", icono: "🚚",
+          id: "anuncio:" + l.id, tipo: "info", icono: "camion",
           titulo: "Envío anunciado: " + l.codigoLote,
           detalle: Indicadores.nombreProveedor(l.proveedorId) + " · " +
             l.cajasAnunciadas + " cajas de " + Indicadores.nombreLinea(l.lineaId) +
@@ -97,7 +97,7 @@ const Novedades = (function () {
     if (rol === "produccion" || rol === "supervisor") {
       lotes.filter(function (l) { return l.estado === "Recibido"; }).forEach(function (l) {
         out.push({
-          id: "porprocesar:" + l.id, tipo: "info", icono: "🏭",
+          id: "porprocesar:" + l.id, tipo: "info", icono: "planta",
           titulo: "Listo para procesar: " + l.codigoLote,
           detalle: l.cajasRecibidas + " cajas en cámara · " +
             Indicadores.nombreLinea(l.lineaId) + ".",
@@ -110,7 +110,7 @@ const Novedades = (function () {
       lotes.filter(function (l) { return l.estado === "Procesado"; }).forEach(function (l) {
         const dias = Math.round((new Date(DB.hoy()) - new Date(l.fecha)) / 86400000);
         out.push({
-          id: "porcerrar:" + l.id, tipo: dias > 7 ? "alerta" : "info", icono: "✅",
+          id: "porcerrar:" + l.id, tipo: dias > 7 ? "alerta" : "info", icono: "listo",
           titulo: "Esperando tu cierre: " + l.codigoLote,
           detalle: Indicadores.nombreProveedor(l.proveedorId) +
             (dias > 7 ? " · lleva " + dias + " días abierto." : " · terminado en planta."),
@@ -124,7 +124,7 @@ const Novedades = (function () {
         return u.activo && u.debeCambiar && !u.ultimoAcceso;
       }).forEach(function (u) {
         out.push({
-          id: "sinusar:" + u.id, tipo: "alerta", icono: "🔑",
+          id: "sinusar:" + u.id, tipo: "alerta", icono: "llave",
           titulo: "Acceso sin estrenar: " + u.nombre,
           detalle: "Se le entregó una clave temporal y todavía no ha entrado.",
           fecha: DB.hoy(), ir: "usuarios"

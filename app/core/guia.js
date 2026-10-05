@@ -50,7 +50,7 @@ const Guia = (function () {
     let html = '<div class="guia-roles">';
     DB.ROLES.forEach(function (r) {
       html += '<div class="guia-rol' + (r.id === resaltado ? " guia-rol-tuyo" : "") + '">' +
-        '<span class="guia-rol-icono" aria-hidden="true">' + esc(r.icono) + "</span>" +
+        '<span class="guia-rol-icono" aria-hidden="true">' + UI.icono(r.icono) + "</span>" +
         "<strong>" + esc(r.nombre) + (r.id === resaltado ? " · tú" : "") + "</strong>" +
         "<small>" + esc(r.lema) + "</small></div>";
     });
@@ -76,14 +76,14 @@ const Guia = (function () {
       .forEach(function (e) {
         const rol = DB.ROLES.find(function (r) { return r.id === e.rol; });
         html += '<li><span class="guia-estado">' + esc(e.nombre) + "</span>" +
-          '<span class="guia-quien">' + esc(rol ? rol.icono + " " + rol.nombre : "—") + "</span>" +
+          '<span class="guia-quien">' + (rol ? UI.icono(rol.icono) + " " + esc(rol.nombre) : "—") + "</span>" +
           "<span>" + esc(paraProveedor ? (PASO_PROVEEDOR[e.id] || e.ayuda) : e.ayuda) +
           "</span></li>";
       });
     const rech = DB.ESTADOS.find(function (e) { return e.id === "Rechazado"; });
     if (rech) {
       html += '<li class="guia-recorrido-desvio"><span class="guia-estado">' + esc(rech.nombre) +
-        '</span><span class="guia-quien">⚖️ Recepción</span><span>' +
+        '</span><span class="guia-quien">' + UI.icono("balanza") + ' Recepción</span><span>' +
         esc(paraProveedor ? PASO_PROVEEDOR.Rechazado
           : rech.ayuda + " El proveedor lo ve en su portal con el motivo.") +
         "</span></li>";
@@ -123,7 +123,7 @@ const Guia = (function () {
 
     let html = '<div class="guia">';
 
-    html += '<header class="guia-cab"><p class="guia-eyebrow">' + esc(DB.EMPRESA.razonSocial) +
+    html += '<header class="guia-cab"><p class="guia-eyebrow">' + esc(DB.nombreEmpresa(true)) +
       '</p><h1>Guía del Sistema de Planta</h1>' +
       '<p class="sub">Qué hace cada quien, en qué orden, y qué significa lo que se ve ' +
       "en pantalla. Se puede imprimir y dejar en el escritorio de planta.</p></header>";
@@ -358,8 +358,8 @@ const Guia = (function () {
        "reemplazarlos por registros reales."]
     ]));
 
-    html += '<footer class="guia-pie"><p>' + esc(DB.EMPRESA.sistema) + " · " +
-      esc(DB.EMPRESA.descripcion) + " · Guía generada el " +
+    html += '<footer class="guia-pie"><p>' + esc(DB.MARCA.producto) + " · " +
+      esc(DB.MARCA.descripcion) + " · Guía generada el " +
       UI.fechaLarga(DB.hoy()) + ".</p></footer>";
 
     return html + "</div>";
@@ -440,7 +440,7 @@ const Guia = (function () {
     html += seccion("senal", "Si no hay señal en la finca", sinSenal());
 
     html += '<footer class="guia-pie"><p>Portal del Proveedor · ' +
-      esc(DB.EMPRESA.nombre) + " · Guía generada el " + UI.fechaLarga(DB.hoy()) +
+      esc(DB.nombreEmpresa()) + " · Guía generada el " + UI.fechaLarga(DB.hoy()) +
       ".</p></footer>";
 
     return html + "</div>";

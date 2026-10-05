@@ -130,6 +130,74 @@ const UI = (function () {
       '<p class="kpi-detalle">' + (detalle || "") + "</p></article>";
   }
 
+  /* ------------------------------------------------------------- iconos */
+
+  /* Un sistema de planta se imprime, se proyecta en una reunión y se mira
+     en un celular a pleno sol. Los emoji no sirven para eso: cada sistema
+     operativo los dibuja distinto, no heredan el color del texto y en un
+     informe impreso salen como manchas. Este juego de iconos son trazos
+     SVG de 24×24 con el mismo grosor y las mismas esquinas, que toman el
+     color de donde estén. Están dibujados aquí, sin librería: el proyecto
+     no tiene dependencias y no va a empezar a tenerlas por un icono. */
+  const ICONOS = {
+    brote: "M12 21v-7.5M12 13.5C8.4 13.5 6.5 11.6 6.5 8 10.1 8 12 9.9 12 13.5zM12 12.4c0-3.6 1.9-5.5 5.5-5.5 0 3.6-1.9 5.5-5.5 5.5z",
+    balanza: "M12 4.2v16.6M8 20.8h8M4 7.5h16M4 7.5 1.4 13h5.2zM20 7.5 17.4 13h5.2z",
+    planta: "M3 20.5h18M4.5 20.5V11l4.6 2.6V11L13.7 13.6V9l6.3 3.6v7.9M7.5 20.5v-3.2h3.2v3.2",
+    portapapeles: "M9.4 4.2h5.2a1 1 0 0 1 1 1v1.1H8.4V5.2a1 1 0 0 1 1-1zM8.4 6.3H6.6A1.6 1.6 0 0 0 5 7.9v11.5a1.6 1.6 0 0 0 1.6 1.6h10.8a1.6 1.6 0 0 0 1.6-1.6V7.9a1.6 1.6 0 0 0-1.6-1.6h-1.8M9 11.6h6M9 15.4h4",
+    grafico: "M4 20h16M7.3 20v-6.2M12 20V7.4M16.7 20v-9",
+    calendario: "M5.4 6.2h13.2a1.4 1.4 0 0 1 1.4 1.4v11.4a1.4 1.4 0 0 1-1.4 1.4H5.4A1.4 1.4 0 0 1 4 19V7.6a1.4 1.4 0 0 1 1.4-1.4zM4 10.4h16M8.6 4v4.2M15.4 4v4.2",
+    cronometro: "M12 21.2a7.8 7.8 0 1 0 0-15.6 7.8 7.8 0 0 0 0 15.6zM12 9.8v3.6l2.4 1.8M9.4 3h5.2M12 3v2.6",
+    caja: "M3.6 8.4 12 4l8.4 4.4v7.2L12 20l-8.4-4.4zM3.6 8.4 12 12.8l8.4-4.4M12 12.8V20",
+    documento: "M14 3.2H7.6A1.6 1.6 0 0 0 6 4.8v14.4a1.6 1.6 0 0 0 1.6 1.6h8.8a1.6 1.6 0 0 0 1.6-1.6V7.2zM14 3.2v4h4M9.2 13h5.6M9.2 16.6h3.6",
+    recibo: "M6.2 3.4h11.6v17l-2.9-1.5-2.9 1.5-2.9-1.5-2.9 1.5zM9.2 8.2h5.6M9.2 12.2h5.6",
+    dinero: "M4.6 7.2h14.8A1.6 1.6 0 0 1 21 8.8v6.4a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 15.2V8.8a1.6 1.6 0 0 1 1.6-1.6zM12 14.6a2.6 2.6 0 1 0 0-5.2 2.6 2.6 0 0 0 0 5.2M6.4 12h.1M17.6 12h.1",
+    engranaje: "M4 7h9M17 7h3M4 12h3M11 12h9M4 17h10M18 17h2M13 7a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM7 12a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM14 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0z",
+    personas: "M9.4 11.4a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zM2.6 20.4v-1.5c0-2.6 2.6-4.2 6.8-4.2s6.8 1.6 6.8 4.2v1.5M16.4 4.6a3.6 3.6 0 0 1 0 7.2M18.6 14.9c2.2.5 3.4 1.8 3.4 3.7v1.8",
+    reloj: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7.4V12l3 2.1",
+    archivo: "M4.6 5.4h14.8A1.6 1.6 0 0 1 21 7v3.4a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 10.4V7a1.6 1.6 0 0 1 1.6-1.6zM4.6 12h14.8A1.6 1.6 0 0 1 21 13.6V17a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 17v-3.4A1.6 1.6 0 0 1 4.6 12zM10.2 8.7h3.6M10.2 15.3h3.6",
+    libro: "M4 4.6h5.6A2.4 2.4 0 0 1 12 7v13.4a2.6 2.6 0 0 0-2.4-1.6H4zM20 4.6h-5.6A2.4 2.4 0 0 0 12 7v13.4a2.6 2.6 0 0 1 2.4-1.6H20z",
+    casa: "M3.4 10.6 12 3.4l8.6 7.2M5.6 9.4v11h12.8v-11M10 20.4v-5.2h4v5.2",
+    tendencia: "M4 20h16M5.4 16.4l4.8-5.2 3.6 2.9L19 7M14.8 7H19v4.2",
+    llave: "M8.8 9a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2zM12.2 11.6H21M18.2 11.6v3.6M15.6 11.6v2.8",
+    ojo: "M2.6 12S6.2 6.6 12 6.6 21.4 12 21.4 12 17.8 17.4 12 17.4 2.6 12 2.6 12zM12 14.8a2.8 2.8 0 1 0 0-5.6 2.8 2.8 0 0 0 0 5.6z",
+    campana: "M12 3.2A5.6 5.6 0 0 0 6.4 8.8c0 4-1.6 5.6-1.6 5.6h14.4s-1.6-1.6-1.6-5.6A5.6 5.6 0 0 0 12 3.2zM9.9 17.6a2.2 2.2 0 0 0 4.2 0",
+    veto: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM7.8 12h8.4",
+    check: "M4.8 12.6 9.6 17.4 19.2 6.8",
+    listo: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8.2 12.2l2.8 2.8 4.8-5.4",
+    bandera: "M6 3.4v17.2M6 4.4h11.2l-2 3.6 2 3.6H6z",
+    alerta: "M12 4.4 21 19.6H3zM12 10v4.2M12 17h.1",
+    menu: "M4 7.2h16M4 12h16M4 16.8h16",
+    equis: "M6.4 6.4l11.2 11.2M17.6 6.4 6.4 17.6",
+    camion: "M3 7.4h9.6v8.4H3zM12.6 10.4h4.2l3.2 3.2v2.2h-7.4M7.2 18.6a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6zM17.4 18.6a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6z",
+    mas: "M12 5.4v13.2M5.4 12h13.2",
+    reporte: "M6 3.4h12v17.2H6zM9 8h6M9 12h6M9 16h3.4"
+  };
+
+  /* El símbolo de la marca: una gaveta con un brote. Neutro a propósito,
+     no lleva iniciales de nadie. */
+  const MARCA_SVG =
+    '<svg class="ico ico-marca" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+    '<path d="M4 10.5h16l-1.3 8.6a1.7 1.7 0 0 1-1.7 1.4H7a1.7 1.7 0 0 1-1.7-1.4z"/>' +
+    '<path d="M12 10.5V6.2M12 8.4C9.8 8.4 8.2 6.8 8.2 4.6c2.2 0 3.8 1.6 3.8 3.8zM12 7.6c0-2.2 1.6-3.8 3.8-3.8 0 2.2-1.6 3.8-3.8 3.8z"/>' +
+    "</svg>";
+
+  /* `nombre` es una llave de ICONOS; si no existe, no dibuja nada en vez de
+     ensuciar la pantalla con un cuadrito. */
+  function icono(nombre, clase) {
+    if (nombre === "marca") {
+      return clase ? MARCA_SVG.replace("ico-marca", "ico-marca " + clase) : MARCA_SVG;
+    }
+    const d = ICONOS[nombre];
+    if (!d) return "";
+    return '<svg class="ico' + (clase ? " " + clase : "") + '" viewBox="0 0 24 24" ' +
+      'aria-hidden="true" focusable="false"><path d="' + d + '"/></svg>';
+  }
+
+  /* Icono + texto, que es como aparece en casi todos los menús. */
+  function iconoTexto(nombre, texto) {
+    return icono(nombre) + "<span>" + esc(texto) + "</span>";
+  }
+
   /* ---------------------------------------------------------- campana */
 
   /* El botón y el panel son iguales en las dos aplicaciones; lo que cambia
@@ -137,7 +205,7 @@ const UI = (function () {
   function campana(sinVer) {
     return '<button class="btn btn-plano campana" id="btnCampana" aria-haspopup="true" ' +
       'aria-expanded="false" title="Novedades">' +
-      '<span aria-hidden="true">🔔</span>' +
+      icono("campana") +
       (sinVer > 0
         ? '<span class="campana-contador">' + (sinVer > 9 ? "9+" : sinVer) + "</span>" +
           '<span class="sr">' + sinVer + " novedades sin ver</span>"
@@ -161,7 +229,7 @@ const UI = (function () {
       html += '<li class="novedad novedad-' + esc(n.tipo) + (n.nuevo ? " novedad-nueva" : "") +
         '"><button type="button" class="novedad-btn" data-novedad="' + esc(n.ir) + '"' +
         (n.lote ? ' data-novedad-lote="' + esc(n.lote) + '"' : "") + ">" +
-        '<span class="novedad-icono" aria-hidden="true">' + esc(n.icono) + "</span>" +
+        '<span class="novedad-icono" aria-hidden="true">' + icono(n.icono) + "</span>" +
         '<span class="novedad-texto"><strong>' + esc(n.titulo) + "</strong>" +
         "<small>" + esc(n.detalle) + "</small></span>" +
         '<span class="novedad-fecha">' + fechaCorta(n.fecha) + "</span>" +
@@ -375,7 +443,7 @@ const UI = (function () {
               '" value="' + esc(v) + '" aria-label="' + esc(col.etiqueta) + '">';
           }
         });
-        html += '<button type="button" class="btn-mini btn-mini-peligro rep-quitar" aria-label="Quitar fila">✕</button>';
+        html += '<button type="button" class="btn-mini btn-mini-peligro rep-quitar" aria-label="Quitar fila">' + icono("equis") + "</button>";
         div.innerHTML = html;
         div.querySelector(".rep-quitar").addEventListener("click", function () {
           div.remove();
@@ -597,7 +665,7 @@ const UI = (function () {
   /* Enlace a la otra aplicación. Cambia según el despliegue: carpetas
      separadas en el repositorio, o rutas con # dentro de un solo paquete. */
   function rutaOtraApp(cual) {
-    const rutas = (typeof window !== "undefined" && window.FLP_RUTAS) || null;
+    const rutas = (typeof window !== "undefined" && window.TF_RUTAS) || null;
     if (rutas && rutas[cual]) return 'href="' + rutas[cual] + '"';
     return 'href="../' + cual + '/"';
   }
@@ -615,6 +683,7 @@ const UI = (function () {
     cajas: cajas, minutos: minutos, fechaLarga: fechaLarga, fechaCorta: fechaCorta,
     origen: origen, aviso: aviso, tabla: tabla, kpi: kpi, insignia: insignia,
     campana: campana, panelNovedades: panelNovedades,
+    icono: icono, iconoTexto: iconoTexto, ICONOS: ICONOS,
     etiquetaLinea: etiquetaLinea,
     abrirFormulario: abrirFormulario, leerRepetible: leerRepetible,
     prepararGuardado: prepararGuardado, descargar: descargar, descargarCSV: descargarCSV,

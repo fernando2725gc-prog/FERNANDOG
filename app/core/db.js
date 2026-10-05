@@ -1,5 +1,5 @@
 /* =========================================================================
-   db.js — Capa de datos del Sistema FLP
+   db.js — Capa de datos del Trazafruta
    Repositorio único de información para el control de pérdidas y la
    economía circular en las tres líneas de producto.
 
@@ -13,8 +13,8 @@
 const DB = (function () {
   "use strict";
 
-  const KEY = "flp.db.v8";
-  const ESQUEMA = 8;
+  const KEY = "tf.db.v9";
+  const ESQUEMA = 9;
 
   /* ---------------------------------------------------------------- utils */
 
@@ -55,13 +55,66 @@ const DB = (function () {
 
   /* ------------------------------------------------------------ constantes */
 
-  const EMPRESA = {
-    nombre: "FLP Ecuador",
-    razonSocial: "F.L.P. Latinoamerican Perishables del Ecuador S.A.",
-    sistema: "Sistema FLP",
-    descripcion: "Trazabilidad, pérdidas y economía circular",
-    confidencial: true
+  /* La identidad va en los DATOS, no en el código. La empresa del caso de
+     estudio está bajo acuerdo de confidencialidad, así que el sistema nace
+     con un nombre neutro y quien lo despliega pone el suyo desde
+     Parámetros. Mientras `confidencial` esté activo, los documentos dicen
+     «la Empresa» en vez del nombre, que es como se citan en un TIC.
+
+     El producto tampoco lleva siglas de nadie: se llama igual aunque lo
+     use otra planta. */
+  const MARCA = {
+    producto: "Trazafruta",
+    descripcion: "Trazabilidad, pérdidas y economía circular"
   };
+
+  function identidadBase() {
+    return {
+      razonSocial: "",
+      nombreCorto: "",
+      identificacion: "",
+      ciudad: "",
+      /* Con esto activo, ningún documento imprime el nombre real. */
+      confidencial: true,
+      /* Cómo se nombra a la organización cuando se oculta. */
+      aliasConfidencial: "la Empresa"
+    };
+  }
+
+  /* El nombre que se puede imprimir, según el modo. Un solo sitio decide,
+     para que no haya una pantalla que lo tape y otra que lo enseñe. */
+  function nombreEmpresa(largo) {
+    const i = identidad();
+    if (i.confidencial || !i.razonSocial) {
+      return i.aliasConfidencial || "la Empresa";
+    }
+    return largo ? i.razonSocial : (i.nombreCorto || i.razonSocial);
+  }
+
+  /* Lo que va bajo el nombre del producto en la barra y en los accesos.
+     Si la planta configuro un nombre y acepto mostrarlo, va ese; si no, va
+     la descripcion del producto. Nunca queda un «la Empresa» suelto de
+     subtitulo, que se lee como un dato sin rellenar. */
+  function subtitulo() {
+    const i = identidad();
+    if (!i.confidencial && (i.nombreCorto || i.razonSocial)) {
+      return i.nombreCorto || i.razonSocial;
+    }
+    return MARCA.descripcion;
+  }
+
+  function identidad() {
+    const db = load();
+    return Object.assign(identidadBase(), db.identidad || {});
+  }
+
+  function guardarIdentidad(cambios) {
+    const db = load();
+    db.identidad = Object.assign(identidadBase(), db.identidad || {}, cambios);
+    save();
+    empujarConfig();
+    return db.identidad;
+  }
 
   /* La unidad que llega del campo es la GAVETA; la que sale a exportación
      es la CAJA, y pesan cosas muy distintas. Confundirlas era el error de
@@ -97,13 +150,13 @@ const DB = (function () {
   ];
 
   const ROLES = [
-    { id: "proveedor", nombre: "Proveedor", icono: "🚜",
+    { id: "proveedor", nombre: "Proveedor", icono: "brote",
       lema: "Anuncias los envíos de fruta y recibes el reporte de cada lote." },
-    { id: "recepcion", nombre: "Recepción", icono: "⚖️",
+    { id: "recepcion", nombre: "Recepción", icono: "balanza",
       lema: "Cuentas las cajas y pesas la fruta que llega a planta." },
-    { id: "produccion", nombre: "Producción", icono: "🏭",
+    { id: "produccion", nombre: "Producción", icono: "planta",
       lema: "Registras lo procesado, lo exportable y las mermas con su causa." },
-    { id: "supervisor", nombre: "Supervisor", icono: "📋",
+    { id: "supervisor", nombre: "Supervisor", icono: "portapapeles",
       lema: "Planificas el día, cierras lotes, envías reportes y ves los indicadores." }
   ];
 
@@ -270,7 +323,7 @@ const DB = (function () {
         nombre: "Transporte de caja al pallet",
         simbolo: "T", estacion: "Empaque", unidad: "caja",
         to: 0.2, v: 1, suplemento: 0.16, personas: 1,
-        origen: "M", base: "Distancia M (2 m); tiempo solo en versión FLP2 (verificar).", activa: true },
+        origen: "M", base: "Distancia M (2 m); tiempo solo en versión línea 2 (verificar).", activa: true },
       /* ---- granadilla ---- */
       { id: "G-REC", lineaId: "ln_granadilla", orden: 1, codigo: "G-REC",
         nombre: "Recepción y pesaje de gaveta",
@@ -286,7 +339,7 @@ const DB = (function () {
         nombre: "Traslado de almacenamiento a empaque",
         simbolo: "T", estacion: "Transporte", unidad: "gaveta",
         to: 0.7667, v: 1, suplemento: 0.19, personas: 1,
-        origen: "E", base: "Distancia de 18 m (FLP2); tiempo estimado a 1 m/s.", activa: true },
+        origen: "E", base: "Distancia de 18 m (línea 2); tiempo estimado a 1 m/s.", activa: true },
       { id: "G-CLA", lineaId: "ln_granadilla", orden: 4, codigo: "G-CLA",
         nombre: "Colocar en gaveta, verificar peso ≥ 70 g y poner mallón nuevo",
         simbolo: "O", estacion: "Clasificación", unidad: "gaveta",
@@ -781,6 +834,7 @@ const DB = (function () {
       planes: [],
       resumenes: [],
       parametros: parametrosBase(),
+      identidad: identidadBase(),
       bitacora: []
     };
   }
@@ -795,7 +849,7 @@ const DB = (function () {
 
   const COLECCIONES = ["proveedores", "usuarios", "lotes", "producciones", "planes", "resumenes"];
   /* Catálogos y parámetros: pocos y pequeños, viajan en un solo documento. */
-  const CONFIG = ["lineas", "actividades", "causas", "destinos", "parametros"];
+  const CONFIG = ["lineas", "actividades", "causas", "destinos", "parametros", "identidad"];
 
   let remoto = null;
   let modo = "local";
@@ -807,7 +861,7 @@ const DB = (function () {
      vuelva la cobertura. Se guarda la REFERENCIA (colección + id), no una
      copia: así varias ediciones del mismo registro se envían una sola vez,
      con su último estado, y nunca se manda algo viejo. */
-  const KEY_COLA = "flp.cola.v1";
+  const KEY_COLA = "tf.cola.v1";
   let cola = [];
   let alCambiarCola = null;
 
@@ -1131,6 +1185,7 @@ const DB = (function () {
       causas: copiar(db.causas),
       destinos: copiar(db.destinos),
       parametros: copiar(db.parametros),
+      identidad: copiar(db.identidad || identidadBase()),
       /* Operación: se va. */
       proveedores: [],
       usuarios: [supervisor],
@@ -1361,7 +1416,11 @@ const DB = (function () {
   }
 
   return {
-    EMPRESA: EMPRESA,
+    MARCA: MARCA,
+    identidad: identidad,
+    guardarIdentidad: guardarIdentidad,
+    nombreEmpresa: nombreEmpresa,
+    subtitulo: subtitulo,
     PESO_GAVETA_KG: PESO_GAVETA_KG,
     ETAPAS: ETAPAS,
     nombreEtapa: nombreEtapa,

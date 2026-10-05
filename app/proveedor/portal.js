@@ -16,7 +16,7 @@
 
   const $ = UI.$, $$ = UI.$$;
   const esc = UI.esc, nf = UI.nf, pct = UI.pct, money = UI.money;
-  const SESION = "flp.portal.sesion";
+  const SESION = "tf.portal.sesion";
 
   let usuario = null;
   let vista = "inicio";
@@ -719,8 +719,8 @@
 
   function vistaAcceso() {
     let html = '<div class="acceso-capa acceso-proveedor"><div class="acceso-caja">' +
-      '<div class="acceso-marca"><span class="logo" aria-hidden="true">🚜</span>' +
-      "<div><strong>Portal del Proveedor</strong><small>" + esc(DB.EMPRESA.nombre) +
+      '<div class="acceso-marca"><span class="logo" aria-hidden="true">' + UI.icono("marca") + '</span>' +
+      "<div><strong>Portal del Proveedor</strong><small>" + esc(DB.MARCA.producto) +
       "</small></div></div>" +
       '<p class="acceso-intro">Entra con el código que te dio la planta.</p>' +
       '<form id="formAcceso" novalidate>' +
@@ -730,7 +730,7 @@
       '<div class="campo"><label for="clave">Contraseña</label>' +
       '<div class="campo-clave">' +
       '<input type="password" id="clave" name="clave" autocomplete="current-password" required>' +
-      '<button type="button" class="ver-clave" id="verClave" aria-label="Mostrar la contraseña">👁</button>' +
+      '<button type="button" class="ver-clave" id="verClave" aria-label="Mostrar la contraseña">' + UI.icono("ojo") + '</button>' +
       "</div></div>" +
       '<label class="check check-recordar"><input type="checkbox" id="recordar" checked> ' +
       "No cerrar sesión en este teléfono</label>" +
@@ -837,21 +837,21 @@
     }
 
     const menu = [
-      { id: "inicio", texto: "Inicio", icono: "🏠" },
-      { id: "lotes", texto: "Mis envíos", icono: "📦" },
-      { id: "desempeno", texto: "Mi desempeño", icono: "📈" },
-      { id: "pagos", texto: "Pagos", icono: "🧾" },
-      { id: "ayuda", texto: "Ayuda", icono: "📘" }
+      { id: "inicio", texto: "Inicio", icono: "casa" },
+      { id: "lotes", texto: "Mis envíos", icono: "caja" },
+      { id: "desempeno", texto: "Mi desempeño", icono: "tendencia" },
+      { id: "pagos", texto: "Pagos", icono: "recibo" },
+      { id: "ayuda", texto: "Ayuda", icono: "libro" }
     ];
 
     let html = '<div class="portal">';
     html += '<header class="portal-barra">' +
-      '<div class="portal-marca"><span aria-hidden="true">🚜</span>' +
+      '<div class="portal-marca"><span aria-hidden="true">' + UI.icono("marca") + '</span>' +
       "<div><strong>Portal del Proveedor</strong><small>" + esc(miProveedor().nombre) +
       "</small></div></div>" +
       '<div class="portal-acciones">' +
       UI.campana(Novedades.sinVer(usuario)) +
-      '<button class="btn btn-plano btn-sm" id="btnClave" title="Cambiar contraseña">🔑</button>' +
+      '<button class="btn btn-plano btn-sm" id="btnClave" title="Cambiar contraseña" aria-label="Cambiar contraseña">' + UI.icono("llave") + '</button>' +
       '<button class="btn btn-plano btn-sm" id="btnSalir">Salir</button></div>' +
       (novedadesAbiertas ? UI.panelNovedades(novedadesActuales()) : "") + "</header>";
 
@@ -875,7 +875,7 @@
     menu.forEach(function (m) {
       html += '<button type="button" class="portal-nav-item' + (m.id === vista ? " activo" : "") +
         '" data-ir="' + m.id + '"' + (m.id === vista ? ' aria-current="page"' : "") + ">" +
-        '<span aria-hidden="true">' + m.icono + "</span>" + esc(m.texto) + "</button>";
+        UI.icono(m.icono) + "<span>" + esc(m.texto) + "</span></button>";
     });
     html += "</nav></div>";
 

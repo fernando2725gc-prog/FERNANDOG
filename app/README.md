@@ -1,10 +1,18 @@
-# Sistema FLP — dos aplicaciones conectadas
+# Trazafruta — dos aplicaciones conectadas
 
-Sistema de trazabilidad, control de pérdidas y economía circular para
-**F.L.P. Latinoamerican Perishables del Ecuador S.A.**, sobre las tres líneas del
-alcance del TIC: **pitahaya roja, tomate de árbol y granadilla**.
+Sistema de trazabilidad, control de pérdidas y economía circular para una
+planta exportadora de fruta fresca, sobre las tres líneas del alcance del
+TIC: **pitahaya roja, tomate de árbol y granadilla**.
 
-Unidad de flujo estándar: **caja de 11 kg**.
+La empresa del caso de estudio está bajo acuerdo de confidencialidad, así
+que **su nombre no aparece en ninguna parte del código ni de la interfaz**.
+El sistema se llama **Trazafruta** y nace en modo confidencial: quien lo
+despliegue configura su propia identidad en *Parámetros → Identidad de la
+planta*, y mientras ese modo siga activo los documentos citan a «la
+Empresa» en vez del nombre real. Ver §12 bis.
+
+Unidades: lo que llega del campo es la **gaveta**; lo que sale a
+exportación es la **caja**. Cada línea declara el peso de las dos.
 
 ---
 
@@ -480,7 +488,7 @@ Los reportes impresos llevan la leyenda al pie.
 - **Metas de exportable, precios por caja y valores de los destinos están marcados como
   estimados (E).** Son valores de trabajo para que el sistema calcule; hay que
   reemplazarlos por los reales de la empresa.
-- Los **destinos del descarte** son una jerarquía de valorización razonable, no la de FLP.
+- Los **destinos del descarte** son una jerarquía de valorización razonable, no la de la Empresa.
   Edítalos en *Parámetros*.
 
 ## 8. Versión publicada
@@ -591,11 +599,11 @@ proveedor, usuario y plan; catálogos y parámetros en un documento de configura
 bitácora agregada y podada a 200 movimientos.
 
 **Modo local** (archivos abiertos directamente): `localStorage` del navegador, clave
-`flp.db.v5`. Persiste en ese equipo pero no se comparte. El pie del menú indica siempre
+`tf.db.v9`. Persiste en ese equipo pero no se comparte. El pie del menú indica siempre
 en qué modo está.
 
 **Sin señal**: en la finca la cobertura se cae, y el trabajo no puede caerse con ella.
-Lo que no se logra enviar queda en una cola local (`flp.cola.v1`) que guarda la
+Lo que no se logra enviar queda en una cola local (`tf.cola.v1`) que guarda la
 *referencia* —colección e id—, no una copia: varias ediciones del mismo registro salen
 una sola vez, con su último estado. La pantalla lo dice en lugar de fingir que se guardó,
 y la cola se vacía sola al volver la red (evento `online` y un reintento cada 20 s, porque
@@ -698,6 +706,57 @@ debe replicarse en el servidor: la validación del navegador no basta.
 7. **Confidencialidad.** La empresa está bajo acuerdo de confidencialidad: cuidado con
    dónde se publica una versión que lleve su nombre y sus parámetros reales.
 
+## 12 bis. Identidad, marca y confidencialidad
+
+La empresa del caso de estudio firmó un acuerdo de confidencialidad. Eso no se
+resuelve recordando no mencionarla: se resuelve haciendo que el sistema no
+tenga dónde guardarla sin que alguien la escriba a propósito.
+
+**El código no conoce ninguna empresa.** No hay constante con su nombre, ni
+sus iniciales en el nombre del producto, ni en las claves de almacenamiento,
+ni en el nombre del archivo publicado, ni en el caché del *service worker*.
+El producto se llama **Trazafruta** y se llamaría igual en otra planta.
+
+**La identidad vive en los datos**, en el catálogo `identidad`, que se edita
+en *Parámetros → Identidad de la planta* y se sincroniza como cualquier otro
+catálogo:
+
+| campo | para qué sirve |
+|---|---|
+| `razonSocial` | el nombre legal, para la cabecera de reportes y liquidaciones |
+| `nombreCorto` | el que cabe bajo el logo en la barra lateral |
+| `identificacion` | RUC o equivalente |
+| `ciudad` | pie de los documentos |
+| `confidencial` | si está activo, **ningún** documento imprime el nombre real |
+| `aliasConfidencial` | con qué se lo reemplaza: «la Empresa» por defecto |
+
+**Nace en modo confidencial** (`confidencial: true`, sin razón social). Una
+sola función decide qué nombre es imprimible —`DB.nombreEmpresa(largo)`— y
+todas las pantallas y documentos pasan por ella, para que no haya una que lo
+tape y otra que lo enseñe. El subtítulo de la barra usa `DB.subtitulo()`, que
+cae en la descripción del producto cuando no hay nombre publicable.
+
+La prueba `identidad` (ver §13) recorre el paquete publicado y las dos
+aplicaciones en pantalla, y **falla** si encuentra el nombre o las iniciales
+de la empresa en cualquier parte. Es el guardián: si alguien vuelve a
+escribirlo en el código, la suite lo dice antes de que se publique.
+
+### Iconografía
+
+La interfaz no usa emoji. Cada sistema operativo los dibuja distinto, no
+heredan el color del texto y en un anexo impreso salen como manchas de color.
+En su lugar hay un juego propio de iconos SVG de 24×24 en `UI.icono(nombre)`,
+todos con el mismo grosor de trazo y las mismas esquinas, que toman el color
+de donde estén y se imprimen en negro. Están dibujados dentro de `ui.js`: el
+proyecto no tiene dependencias y no va a empezar a tenerlas por un icono.
+
+Las únicas figuras que no son iconos son los símbolos **ASME** del diagrama
+de análisis del proceso (○ operación, ⇨ transporte, □ inspección, D demora,
+▽ almacenamiento), que son notación normalizada de ingeniería de métodos y
+deben verse exactamente así.
+
+---
+
 ## 13. Pruebas
 
 Dos suites en Chromium con Playwright. **22 comprobaciones** sobre las aplicaciones
@@ -790,6 +849,16 @@ tome el nombre de su línea, que lo que entra a la mesa descuente el retiro, que
 etapas sumen exactamente la pérdida total, que recibido − pérdida sea igual a exportado, y
 que el rendimiento global quede por debajo del de proceso.
 
+**34 comprobaciones de identidad y confidencialidad**, que son el guardián del acuerdo:
+recorren los diecinueve archivos del proyecto, el paquete publicado y **las veinte
+pantallas de las dos aplicaciones ya pintadas**, y fallan si encuentran el nombre, la
+razón social o las iniciales de la empresa en cualquiera de ellos. Además: que el sistema
+nazca en modo confidencial y sin razón social escrita, que una razón social configurada
+**no** se filtre a ningún documento mientras ese modo siga activo, que el reporte impreso
+cite «la Empresa», que al desactivarlo —y solo entonces— aparezca el nombre real, que al
+volver a activarlo se oculte sin perder lo configurado, y que no quede un solo emoji en
+pantalla (los símbolos ASME del diagrama de proceso sí, que son notación normalizada).
+
 Y **9 comprobaciones** sobre el paquete publicado: las dos puertas, el almacén compartido
 activo, un envío anunciado desde el celular apareciendo en la cola de la planta, el pesaje
 llegando en vivo al portal, la navegación entre puertas, y el costeo y la guía funcionando
@@ -798,7 +867,7 @@ dentro del archivo único.
 ### Empaquetar
 
 ```bash
-node tools/empaquetar.js      # → dist/sistema-flp.html
+node tools/empaquetar.js      # → dist/trazafruta.html
 ```
 
 Concatena los mismos archivos de `app/` que usa el desarrollo, en el orden que exigen las

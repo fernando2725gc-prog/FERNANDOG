@@ -13,7 +13,7 @@
   const $ = UI.$, $$ = UI.$$;
   const esc = UI.esc, nf = UI.nf, pct = UI.pct, money = UI.money;
   const pctFirmado = UI.pctFirmado;
-  const SESION = "flp.planta.sesion";
+  const SESION = "tf.planta.sesion";
 
   let usuario = null;
   let vista = "panel";
@@ -105,23 +105,44 @@
 
   /* ============================== navegación ========================== */
 
+  /* Quince entradas en una lista plana son quince cosas que leer antes de
+     dar con la que se busca, y la última se salía de la pantalla en un
+     portátil. Van agrupadas por el momento en que se usan: primero lo del
+     turno, después lo que se mira para decidir, y al final lo que se toca
+     una vez al mes. El orden del arreglo es el orden en pantalla. */
   function menu() {
     return [
-      { id: "panel", texto: "Indicadores", icono: "📊", roles: "*" },
-      { id: "planificador", texto: "Planificación diaria", icono: "🗓️", roles: ["supervisor"] },
-      { id: "tiempos", texto: "Estudio de tiempos", icono: "⏱️", roles: ["supervisor"] },
-      { id: "recepcion", texto: "Recepción y pesaje", icono: "⚖️", roles: ["recepcion", "supervisor"] },
-      { id: "produccion", texto: "Producción", icono: "🏭", roles: ["produccion", "supervisor"] },
-      { id: "lotes", texto: "Lotes", icono: "📦", roles: "*" },
-      { id: "reportes", texto: "Reportes", icono: "📄", roles: "*" },
-      { id: "liquidacion", texto: "Liquidaciones", icono: "🧾", roles: ["supervisor"] },
-      { id: "costeo", texto: "Costeo y mejora", icono: "💵", roles: ["supervisor"] },
-      { id: "catalogos", texto: "Parámetros", icono: "⚙️", roles: ["supervisor"] },
-      { id: "proveedores", texto: "Proveedores", icono: "🤝", roles: ["supervisor"] },
-      { id: "usuarios", texto: "Usuarios", icono: "👥", roles: ["supervisor"] },
-      { id: "bitacora", texto: "Bitácora", icono: "🕘", roles: ["supervisor"] },
-      { id: "datos", texto: "Datos del sistema", icono: "🗄️", roles: ["supervisor"] },
-      { id: "guia", texto: "Guía de uso", icono: "📘", roles: "*" }
+      { id: "panel", texto: "Indicadores", icono: "grafico", roles: "*" },
+
+      { grupo: "El turno", id: "planificador", texto: "Planificación diaria",
+        icono: "calendario", roles: ["supervisor"] },
+      { grupo: "El turno", id: "recepcion", texto: "Recepción y pesaje",
+        icono: "balanza", roles: ["recepcion", "supervisor"] },
+      { grupo: "El turno", id: "produccion", texto: "Producción",
+        icono: "planta", roles: ["produccion", "supervisor"] },
+      { grupo: "El turno", id: "lotes", texto: "Lotes", icono: "caja", roles: "*" },
+
+      { grupo: "Análisis", id: "tiempos", texto: "Estudio de tiempos",
+        icono: "cronometro", roles: ["supervisor"] },
+      { grupo: "Análisis", id: "costeo", texto: "Costeo y mejora",
+        icono: "dinero", roles: ["supervisor"] },
+      { grupo: "Análisis", id: "reportes", texto: "Reportes", icono: "reporte", roles: "*" },
+
+      { grupo: "Proveedores", id: "proveedores", texto: "Fincas y cooperativas",
+        icono: "brote", roles: ["supervisor"] },
+      { grupo: "Proveedores", id: "liquidacion", texto: "Liquidaciones",
+        icono: "recibo", roles: ["supervisor"] },
+
+      { grupo: "Administración", id: "catalogos", texto: "Parámetros",
+        icono: "engranaje", roles: ["supervisor"] },
+      { grupo: "Administración", id: "usuarios", texto: "Usuarios",
+        icono: "personas", roles: ["supervisor"] },
+      { grupo: "Administración", id: "bitacora", texto: "Bitácora",
+        icono: "reloj", roles: ["supervisor"] },
+      { grupo: "Administración", id: "datos", texto: "Datos del sistema",
+        icono: "archivo", roles: ["supervisor"] },
+      { grupo: "Administración", id: "guia", texto: "Guía de uso",
+        icono: "libro", roles: "*" }
     ].filter(function (m) { return m.roles === "*" || m.roles.indexOf(usuario.rol) !== -1; });
   }
 
@@ -1144,7 +1165,7 @@
           else {
             /* Rendimiento en KILOS: cajas sobre gavetas no es una tasa. */
             const t = (expo * linea.pesoCajaKg) / (proc * kgPorGaveta);
-            outT.textContent = pct(t) + (t >= linea.metaRendimiento ? " ✓ sobre la meta" : " ✕ bajo la meta");
+            outT.textContent = pct(t) + (t >= linea.metaRendimiento ? " · sobre la meta" : " · bajo la meta");
             outT.className = t >= linea.metaRendimiento ? "ok" : "bajo";
           }
         }
@@ -1195,7 +1216,7 @@
               (l.kgRetirados ? ", ya sin los " + nf(l.kgRetirados, 0) + " retirados al recibir" : "") +
               " − " + nf(expo * linea.pesoCajaKg, 0) + " kg se empacaron)</span> · repartidos: " +
               "<strong>" + nf(suma, 1) + " kg</strong> · " +
-              (ok ? "balance de masa cuadrado ✓"
+              (ok ? "balance de masa cuadrado"
                   : (falta > 0 ? "faltan <strong>" + nf(falta, 1) + " kg</strong>"
                                : "sobran <strong>" + nf(-falta, 1) + " kg</strong>"));
           }
@@ -1358,37 +1379,37 @@
   function SIGUIENTE(l) {
     if (l.estado === "Rechazado") {
       return { texto: "El lote no entró a planta. El proveedor ya ve el motivo en su portal.",
-               quien: "Nada pendiente", icono: "⛔", tono: "alerta" };
+               quien: "Nada pendiente", icono: "veto", tono: "alerta" };
     }
     if (l.estado === "Anunciado") {
       return { texto: "Falta contarlo y pesarlo. Se hace desde Recepción y pesaje, " +
                       "con el botón Pesar.",
-               quien: "Le toca a Recepción", icono: "⚖️", ir: "recepcion",
+               quien: "Le toca a Recepción", icono: "balanza", ir: "recepcion",
                puede: puede("pesar") };
     }
     if (l.estado === "Recibido") {
       return { texto: "No hay que marcarlo como procesado: el lote pasa solo a Procesado " +
                       "cuando se registra el trabajo, desde Producción, con el botón " +
                       "Registrar producción.",
-               quien: "Le toca a Producción", icono: "🏭", ir: "produccion",
+               quien: "Le toca a Producción", icono: "planta", ir: "produccion",
                puede: puede("procesar") };
     }
     if (l.estado === "Procesado") {
       return { texto: "Ya está trabajado. Falta cerrarlo, desde Lotes, en el bloque " +
                       "«Terminados, esperando el cierre».",
-               quien: "Le toca a Supervisión", icono: "✅", ir: "lotes",
+               quien: "Le toca a Supervisión", icono: "listo", ir: "lotes",
                puede: puede("cerrar") };
     }
     return { texto: l.reporteEnviado
                ? "Terminado. El proveedor ya tiene su reporte."
                : "Terminado, pero el reporte todavía no se publicó al proveedor.",
-             quien: "Nada pendiente", icono: "🏁", tono: "ok" };
+             quien: "Nada pendiente", icono: "bandera", tono: "ok" };
   }
 
   function siguientePaso(l) {
     const s = SIGUIENTE(l);
     return '<div class="siguiente siguiente-' + (s.tono || "normal") + '">' +
-      '<span class="siguiente-icono" aria-hidden="true">' + s.icono + "</span>" +
+      '<span class="siguiente-icono" aria-hidden="true">' + UI.icono(s.icono) + "</span>" +
       '<div><strong>¿Qué sigue? · ' + esc(s.quien) + "</strong>" +
       "<small>" + esc(s.texto) + "</small></div>" +
       (s.ir && s.puede
@@ -1471,7 +1492,7 @@
           const parte = f.kgMerma > 0 ? m.kg / f.kgMerma : 0;
           html += "<li><span><strong>" + esc(c ? c.codigo : "?") + "</strong> " +
             esc(c ? c.nombre : m.causaId) + '<br><small class="tenue">→ ' +
-            esc(d ? d.nombre : "—") + (d && !d.valoriza ? " ⚠" : "") + "</small></span>" +
+            esc(d ? d.nombre : "—") + (d && !d.valoriza ? " (sin valorizar)" : "") + "</small></span>" +
             '<span class="barra-mini"><span style="width:' + (parte * 100).toFixed(1) + '%"></span></span>' +
             "<strong>" + nf(m.kg) + " kg</strong></li>";
         });
@@ -1736,7 +1757,7 @@
 
     html += '<section class="hoja" id="hojaReporte">';
     html += '<header class="hoja-cab"><div>' +
-      '<p class="hoja-empresa">' + esc(DB.EMPRESA.razonSocial) + "</p>" +
+      '<p class="hoja-empresa">' + esc(DB.nombreEmpresa(true)) + "</p>" +
       "<h2>" + esc(def.titulo) + "</h2>" +
       '<p class="sub">' + esc(def.descripcion) + "</p></div>" +
       '<div class="hoja-meta"><p><strong>Período:</strong> ' + UI.fechaLarga(filtros.desde) +
@@ -1765,8 +1786,8 @@
     html += UI.tabla(columnasReporte(reporteActual), datos,
       { vacio: "No hay información para el filtro seleccionado." });
 
-    html += '<footer class="hoja-pie"><p>' + esc(DB.EMPRESA.sistema) + " · " +
-      esc(DB.EMPRESA.descripcion) + " · Documento generado el " + UI.fechaLarga(DB.hoy()) + ".</p>" +
+    html += '<footer class="hoja-pie"><p>' + esc(DB.MARCA.producto) + " · " +
+      esc(DB.MARCA.descripcion) + " · Documento generado el " + UI.fechaLarga(DB.hoy()) + ".</p>" +
       '<p class="hoja-origenes">Origen de los parámetros: ' + UI.origen("M") + " medido · " +
       UI.origen("E") + " estimado · " + UI.origen("S") + " fuente secundaria.</p></footer>";
     html += "</section>";
@@ -1886,7 +1907,7 @@
   function hojaLiquidacion(liq) {
     let html = '<div class="hoja hoja-liquidacion">' +
       '<header class="hoja-cab"><div>' +
-      '<p class="hoja-empresa">' + esc(DB.EMPRESA.razonSocial) + "</p>" +
+      '<p class="hoja-empresa">' + esc(DB.nombreEmpresa(true)) + "</p>" +
       "<h2>Liquidación de entrega</h2>" +
       '<p class="sub">' + esc(liq.proveedor.nombre) + " · " + esc(liq.proveedor.documento) +
       "</p></div>" +
@@ -1932,7 +1953,7 @@
     }
 
     html += '<div class="liq-firmas">' +
-      "<div><span></span><small>Por " + esc(DB.EMPRESA.nombre) + "</small></div>" +
+      "<div><span></span><small>Por " + esc(DB.nombreEmpresa()) + "</small></div>" +
       "<div><span></span><small>" + esc(liq.proveedor.contacto || liq.proveedor.nombre) +
       "<br>" + esc(liq.proveedor.documento) + "</small></div></div>";
 
@@ -2270,7 +2291,7 @@
       const puesta = escenario.medidas && escenario.medidas.indexOf(m.id) !== -1;
       html += '<button type="button" class="medida' + (puesta ? " medida-on" : "") +
         '" data-medida="' + esc(m.id) + '" aria-pressed="' + puesta + '">' +
-        '<span class="medida-marca" aria-hidden="true">' + (puesta ? "✓" : "+") + "</span>" +
+        '<span class="medida-marca" aria-hidden="true">' + UI.icono(puesta ? "check" : "mas") + "</span>" +
         "<strong>" + esc(m.nombre) + "</strong>" +
         "<small>" + esc(m.detalle) + "</small>" +
         '<span class="medida-cifras">' + esc(m.causas.join(", ")) + " · −" + pct(m.reduccion, 0) +
@@ -2504,6 +2525,40 @@
     let html = '<div class="vista-cab"><div><h1>Parámetros del sistema</h1>' +
       '<p class="sub">Los valores que alimentan todos los cálculos. Cada uno declara su origen.</p></div></div>';
 
+    /* --- identidad de quien usa el sistema ---
+       El sistema no lleva el nombre de nadie escrito en el código: se
+       configura aquí. Y nace en modo confidencial, porque el caso de
+       estudio con el que se construyó está bajo acuerdo de
+       confidencialidad y un documento no puede filtrarlo por descuido. */
+    const idn = DB.identidad();
+    html += '<section class="panel panel-identidad"><h2>Identidad de la planta</h2>' +
+      '<p class="sub panel-sub">Lo que aparece en la cabecera de los reportes, en las ' +
+      "liquidaciones y en la guía impresa. " + esc(DB.MARCA.producto) + " es el nombre del " +
+      "sistema y no cambia; esto es el nombre de quien lo usa.</p>" +
+      '<div class="conteos">' +
+      "<div><span>Razón social</span><strong>" +
+        (idn.razonSocial ? esc(idn.razonSocial) : '<em class="tenue">sin configurar</em>') +
+        "</strong></div>" +
+      "<div><span>Nombre corto</span><strong>" +
+        (idn.nombreCorto ? esc(idn.nombreCorto) : '<em class="tenue">—</em>') + "</strong></div>" +
+      "<div><span>RUC o identificación</span><strong>" +
+        (idn.identificacion ? esc(idn.identificacion) : '<em class="tenue">—</em>') + "</strong></div>" +
+      "<div><span>Ciudad</span><strong>" +
+        (idn.ciudad ? esc(idn.ciudad) : '<em class="tenue">—</em>') + "</strong></div>" +
+      "<div><span>En los documentos sale</span><strong>" + esc(DB.nombreEmpresa(true)) +
+        "</strong></div>" +
+      "</div>";
+    html += idn.confidencial
+      ? '<p class="nota-info"><strong>Modo confidencial activo.</strong> Ningún reporte, ' +
+        "liquidación ni guía imprime el nombre real: todos dicen " +
+        "«" + esc(idn.aliasConfidencial || "la Empresa") + "», que es como se cita una empresa " +
+        "bajo acuerdo de confidencialidad en un trabajo académico. Desactívalo solo si la " +
+        "planta autorizó por escrito que su nombre aparezca.</p>"
+      : '<p class="aviso-inline"><strong>Modo confidencial desactivado.</strong> Los documentos ' +
+        "que generes imprimen la razón social. Asegúrate de tener la autorización.</p>";
+    html += '<div class="acciones-fila"><button class="btn btn-primario" id="btnEditarIdentidad">' +
+      "Editar identidad</button></div></section>";
+
     html += '<p class="nota-info"><strong>Origen del dato:</strong> ' +
       UI.origen("M") + " medido en planta · " + UI.origen("E") + " estimado, pendiente de confirmar · " +
       UI.origen("S") + " tomado de fuente secundaria. Los marcados con E deben validarse con la " +
@@ -2590,6 +2645,39 @@
       "</section>";
 
     return html;
+  }
+
+  function formIdentidad() {
+    const i = DB.identidad();
+    UI.abrirFormulario("Identidad de la planta", [
+      { nombre: "razonSocial", etiqueta: "Razón social", tipo: "text", valor: i.razonSocial,
+        ayuda: "El nombre legal completo, tal como debe salir en una liquidación." },
+      { nombre: "nombreCorto", etiqueta: "Nombre corto", tipo: "text", valor: i.nombreCorto,
+        ancho: "mitad", ayuda: "El que cabe en la barra lateral." },
+      { nombre: "identificacion", etiqueta: "RUC o identificación", tipo: "text",
+        valor: i.identificacion, ancho: "mitad" },
+      { nombre: "ciudad", etiqueta: "Ciudad", tipo: "text", valor: i.ciudad, ancho: "mitad" },
+      { tipo: "separador", etiqueta: "Confidencialidad" },
+      { nombre: "confidencial", etiqueta: "", tipo: "checkbox", valor: i.confidencial,
+        textoCheck: "No imprimir el nombre real en ningún documento",
+        ayuda: "Déjalo marcado mientras el acuerdo de confidencialidad esté vigente." },
+      { nombre: "aliasConfidencial", etiqueta: "Cómo citarla entonces", tipo: "text",
+        valor: i.aliasConfidencial, ancho: "mitad",
+        ayuda: "Por ejemplo: la Empresa, la planta exportadora, Empresa A." }
+    ], function (d) {
+      DB.guardarIdentidad({
+        razonSocial: String(d.razonSocial || "").trim(),
+        nombreCorto: String(d.nombreCorto || "").trim(),
+        identificacion: String(d.identificacion || "").trim(),
+        ciudad: String(d.ciudad || "").trim(),
+        confidencial: !!d.confidencial,
+        aliasConfidencial: String(d.aliasConfidencial || "").trim() || "la Empresa"
+      });
+      DB.registrarBitacora(usuario.id, "Edición de identidad",
+        d.confidencial ? "modo confidencial activo" : "nombre real visible en documentos");
+      UI.aviso("Identidad actualizada.");
+      render();
+    }, { aceptar: "Guardar", ancho: true });
   }
 
   function formLinea(id) {
@@ -2957,7 +3045,7 @@
           : '<span class="etq etq-ok">Sistema de planta</span>'; } },
       { titulo: "Rol", valor: function (u) {
         const r = DB.ROLES.find(function (x) { return x.id === u.rol; });
-        return esc(r ? r.icono + " " + r.nombre : u.rol); } },
+        return r ? UI.icono(r.icono) + " " + esc(r.nombre) : esc(u.rol); } },
       { titulo: "Proveedor", valor: function (u) {
         return u.proveedorId ? esc(Indicadores.nombreProveedor(u.proveedorId)) : "—"; } },
       { titulo: "Estado", valor: function (u) {
@@ -2975,7 +3063,7 @@
       "se guarda el resultado de derivarlas con PBKDF2-SHA256 y una sal distinta por persona, " +
       "así que desde el almacén no se puede llegar a la clave. Por eso una clave olvidada se " +
       "<em>restablece</em>, nunca se consulta.</p>";
-    html += '<p class="nota-seguridad">⚠️ Límite del prototipo: la comprobación ocurre en el ' +
+    html += '<p class="nota-seguridad">' + UI.icono("alerta") + ' Límite del prototipo: la comprobación ocurre en el ' +
       "navegador, no en un servidor. Quien pueda leer el almacén ve los hashes y podría " +
       "intentar adivinarlos sin conexión. Es suficiente para que nadie entre haciéndose pasar " +
       "por otro en planta, pero un despliegue real debe verificar la clave en el servidor. " +
@@ -3081,7 +3169,7 @@
         UI.descargar(new Blob([JSON.stringify({
           mes: mes, generadoEn: new Date().toISOString(), resumen: resumen,
           lotes: datos.lotes, producciones: datos.producciones
-        }, null, 2)], { type: "application/json" }), "flp_archivo_" + mes + ".json");
+        }, null, 2)], { type: "application/json" }), "trazafruta_archivo_" + mes + ".json");
       }
       const r = await DB.archivarMes(resumen);
       DB.registrarBitacora(usuario.id, "Mes archivado",
@@ -3224,9 +3312,9 @@
 
   function vistaAcceso() {
     let html = '<div class="acceso-capa acceso-interno"><div class="acceso-caja">' +
-      '<div class="acceso-marca"><span class="logo" aria-hidden="true">🏭</span>' +
-      "<div><strong>" + esc(DB.EMPRESA.sistema) + "</strong><small>" +
-      esc(DB.EMPRESA.descripcion) + "</small></div></div>" +
+      '<div class="acceso-marca"><span class="logo" aria-hidden="true">' + UI.icono("marca") + '</span>' +
+      "<div><strong>" + esc(DB.MARCA.producto) + "</strong><small>" +
+      esc(DB.MARCA.descripcion) + "</small></div></div>" +
       '<p class="acceso-intro">Sistema interno de planta.</p>' +
       '<form id="formAcceso" novalidate>' +
       '<div class="campo"><label for="acceso">Usuario</label>' +
@@ -3235,7 +3323,7 @@
       '<div class="campo"><label for="clave">Contraseña o PIN</label>' +
       '<div class="campo-clave">' +
       '<input type="password" id="clave" name="clave" autocomplete="current-password" required>' +
-      '<button type="button" class="ver-clave" id="verClave" aria-label="Mostrar">👁</button>' +
+      '<button type="button" class="ver-clave" id="verClave" aria-label="Mostrar">' + UI.icono("ojo") + '</button>' +
       "</div></div>" +
       '<label class="check check-recordar"><input type="checkbox" id="recordar"> ' +
       "Mantener la sesión en este equipo</label>" +
@@ -3296,11 +3384,22 @@
     const porProcesar = DB.all("lotes").filter(function (l) { return l.estado === "Recibido"; }).length;
 
     let html = '<div class="capa"><aside class="lateral" id="lateral">' +
-      '<div class="marca"><span class="logo" aria-hidden="true">🏭</span>' +
-      "<div><strong>" + esc(DB.EMPRESA.sistema) + "</strong><small>" +
-      esc(DB.EMPRESA.nombre) + "</small></div></div><nav>";
+      '<div class="marca"><span class="logo" aria-hidden="true">' + UI.icono("marca") + '</span>' +
+      "<div><strong>" + esc(DB.MARCA.producto) + "</strong><small>" +
+      esc(DB.subtitulo()) + "</small></div></div><nav>";
 
+    /* El título del grupo se escribe cuando cambia, no una vez por item:
+       así un operario de recepción, que solo ve tres entradas, no se
+       encuentra con cuatro encabezados vacíos. */
+    let grupoActual = null;
     menu().forEach(function (m) {
+      if ((m.grupo || null) !== grupoActual) {
+        grupoActual = m.grupo || null;
+        if (grupoActual) {
+          html += '<p class="nav-grupo">' + esc(grupoActual) + "</p>";
+        }
+      }
+
       /* Dos contadores: lo que llega del portal externo y lo que ya se
          procesó y espera el cierre. Sin el segundo, cerrar un pedido era
          una acción escondida en una columna de una tabla. */
@@ -3314,7 +3413,7 @@
       }
       html += '<button type="button" class="nav-item' + (m.id === vista ? " activo" : "") +
         '" data-ir="' + m.id + '"' + (m.id === vista ? ' aria-current="page"' : "") + ">" +
-        '<span aria-hidden="true">' + m.icono + "</span>" + esc(m.texto) + pendiente + "</button>";
+        UI.icono(m.icono) + "<span>" + esc(m.texto) + "</span>" + pendiente + "</button>";
     });
 
     html += "</nav><div class='lateral-pie'>" +
@@ -3328,12 +3427,12 @@
       "<p class='tenue'>v4.0 · prototipo TIC</p></div></aside>";
 
     html += '<div class="principal"><header class="barra">' +
-      '<button class="menu-btn" id="btnMenu" aria-label="Abrir menú" aria-expanded="false">☰</button>' +
+      '<button class="menu-btn" id="btnMenu" aria-label="Abrir menú" aria-expanded="false">' + UI.icono("menu") + '</button>' +
       '<div class="barra-usuario"><div class="avatar" aria-hidden="true">' +
-      esc(rol ? rol.icono : "·") + "</div><div><strong>" + esc(usuario.nombre) + "</strong>" +
+      (rol ? UI.icono(rol.icono) : "") + "</div><div><strong>" + esc(usuario.nombre) + "</strong>" +
       "<small>" + esc(rol ? rol.nombre : usuario.rol) + "</small></div>" +
       UI.campana(Novedades.sinVer(usuario)) +
-      '<button class="btn btn-plano" id="btnClave" title="Cambiar mi clave">🔑</button>' +
+      '<button class="btn btn-plano" id="btnClave" title="Cambiar mi clave" aria-label="Cambiar mi clave">' + UI.icono("llave") + '</button>' +
       '<button class="btn btn-plano" id="btnSalir">Salir</button></div>' +
       (novedadesAbiertas ? UI.panelNovedades(novedadesActuales()) : "") + "</header>";
 
@@ -3639,6 +3738,8 @@
     $$("[data-editar-destino]").forEach(function (b) {
       b.addEventListener("click", function () { formDestino(b.dataset.editarDestino); });
     });
+    const btnIdent = $("#btnEditarIdentidad");
+    if (btnIdent) btnIdent.addEventListener("click", formIdentidad);
     const btnParam = $("#btnEditarParametros");
     if (btnParam) btnParam.addEventListener("click", formParametros);
 
@@ -3728,7 +3829,7 @@
     if (btnExp) {
       btnExp.addEventListener("click", function () {
         UI.descargar(new Blob([DB.exportar()], { type: "application/json" }),
-          "flp_respaldo_" + DB.hoy() + ".json");
+          "trazafruta_respaldo_" + DB.hoy() + ".json");
       });
     }
     const inputImp = $("#inputImportar");
@@ -3879,5 +3980,5 @@
 
   /* Se expone en vez de arrancar sola: la página propia la inicia, y el
      paquete de las dos aplicaciones decide cuál montar. */
-  window.PlantaFLP = { iniciar: function () { UI.alArrancar(iniciar); } };
+  window.PlantaApp = { iniciar: function () { UI.alArrancar(iniciar); } };
 })();

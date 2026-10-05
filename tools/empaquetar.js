@@ -6,7 +6,7 @@
    desarrollo, en el orden en que las dependencias lo exigen, para que lo
    publicado y lo versionado no puedan separarse.
 
-       node tools/empaquetar.js            → dist/trazafruta.html
+       node tools/empaquetar.js            → dist/acopia.html
 
    Las dos aplicaciones comparten dirección a propósito: el almacén de datos
    pertenece a la página, así que separarlas en dos direcciones les daría dos
@@ -18,7 +18,7 @@ const path = require("path");
 
 const RAIZ = path.join(__dirname, "..");
 const APP = path.join(RAIZ, "app");
-const SALIDA = path.join(RAIZ, "dist", "trazafruta.html");
+const SALIDA = path.join(RAIZ, "dist", "acopia.html");
 
 /* El orden importa: auth y db no dependen de nadie; indicadores necesita db;
    ui es transversal; las dos aplicaciones van al final, y el enrutador
@@ -43,14 +43,14 @@ const ENRUTADOR = `/* ==========================================================
 (function () {
   "use strict";
 
-  window.TF_RUTAS = { proveedor: "#/proveedor", interno: "#/planta" };
+  window.AC_RUTAS = { proveedor: "#/proveedor", interno: "#/planta" };
 
   function portada() {
     document.getElementById("app").innerHTML =
       '<main class="portada">' +
       '<header class="portada-cab">' +
       UI.icono("marca", "portada-marca") +
-      "<h1>Trazafruta</h1>" +
+      "<h1>Acopia</h1>" +
       '<p class="portada-sub">Trazabilidad, control de pérdidas y economía circular en las ' +
       "líneas de pitahaya roja, tomate de árbol y granadilla.</p></header>" +
 
@@ -112,7 +112,7 @@ const REGISTRO_SW = `(function () {
   if (location.protocol !== "https:" && location.hostname !== "localhost") return;
   window.addEventListener("load", function () {
     navigator.serviceWorker.register("sw.js", { scope: "./" })
-      .then(function (reg) { window.TF_SW = reg; })
+      .then(function (reg) { window.AC_SW = reg; })
       .catch(function (e) {
         /* Sin él la app sigue funcionando: solo necesita señal para abrir. */
         console.warn("No se pudo preparar el uso sin conexión:", e && e.message);
@@ -134,9 +134,9 @@ partes.push('<meta name="theme-color" content="#14313f">');
 partes.push('<link rel="apple-touch-icon" href="pwa/icono-192.png">');
 partes.push('<meta name="apple-mobile-web-app-capable" content="yes">');
 partes.push('<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">');
-partes.push('<meta name="apple-mobile-web-app-title" content="Trazafruta">');
+partes.push('<meta name="apple-mobile-web-app-title" content="Acopia">');
 partes.push('<meta name="viewport" content="width=device-width, initial-scale=1">');
-partes.push("<title>Trazafruta</title>\n");
+partes.push("<title>Acopia</title>\n");
 partes.push('<link rel="preconnect" href="https://fonts.googleapis.com">');
 partes.push('<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>');
 partes.push('<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700' +

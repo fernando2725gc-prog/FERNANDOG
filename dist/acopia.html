@@ -4,9 +4,9 @@
 <link rel="apple-touch-icon" href="pwa/icono-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Trazafruta">
+<meta name="apple-mobile-web-app-title" content="Acopia">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Trazafruta</title>
+<title>Acopia</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1618,7 +1618,7 @@ th .ico, td .ico { color: var(--texto-tenue); }
 
 <script>
 /* =========================================================================
-   auth.js — Credenciales del Trazafruta
+   auth.js — Credenciales de Acopia
 
    Las contraseñas NUNCA se guardan. Se guarda el resultado de derivarlas
    con PBKDF2-SHA256 y una sal distinta por persona, de modo que dos
@@ -1776,7 +1776,7 @@ const Auth = (function () {
   /* Freno simple a la adivinación: tras varios fallos seguidos, la cuenta
      espera. Vive en el propio dispositivo, así que no sustituye a un
      control del servidor; sirve contra el intento manual. */
-  const CLAVE_INTENTOS = "tf.intentos";
+  const CLAVE_INTENTOS = "acopia.intentos";
   const MAX_INTENTOS = 5;
   const ESPERA_MS = 60000;
 
@@ -1831,7 +1831,7 @@ const Auth = (function () {
 
 <script>
 /* =========================================================================
-   db.js — Capa de datos del Trazafruta
+   db.js — Capa de datos de Acopia
    Repositorio único de información para el control de pérdidas y la
    economía circular en las tres líneas de producto.
 
@@ -1845,7 +1845,7 @@ const Auth = (function () {
 const DB = (function () {
   "use strict";
 
-  const KEY = "tf.db.v9";
+  const KEY = "acopia.db.v9";
   const ESQUEMA = 9;
 
   /* ---------------------------------------------------------------- utils */
@@ -1896,7 +1896,7 @@ const DB = (function () {
      El producto tampoco lleva siglas de nadie: se llama igual aunque lo
      use otra planta. */
   const MARCA = {
-    producto: "Trazafruta",
+    producto: "Acopia",
     descripcion: "Trazabilidad, pérdidas y economía circular"
   };
 
@@ -2693,7 +2693,7 @@ const DB = (function () {
      vuelva la cobertura. Se guarda la REFERENCIA (colección + id), no una
      copia: así varias ediciones del mismo registro se envían una sola vez,
      con su último estado, y nunca se manda algo viejo. */
-  const KEY_COLA = "tf.cola.v1";
+  const KEY_COLA = "acopia.cola.v1";
   let cola = [];
   let alCambiarCola = null;
 
@@ -3314,7 +3314,7 @@ const DB = (function () {
 
 <script>
 /* =========================================================================
-   indicadores.js — Motor de cálculo del Trazafruta
+   indicadores.js — Motor de cálculo de Acopia
    Tres familias de indicadores:
      · Pérdidas      — cuánto se pierde, dónde y por qué causa raíz
      · Economía circular — cuánto del descarte se aprovecha y con qué valor
@@ -5703,7 +5703,7 @@ const UI = (function () {
   /* Enlace a la otra aplicación. Cambia según el despliegue: carpetas
      separadas en el repositorio, o rutas con # dentro de un solo paquete. */
   function rutaOtraApp(cual) {
-    const rutas = (typeof window !== "undefined" && window.TF_RUTAS) || null;
+    const rutas = (typeof window !== "undefined" && window.AC_RUTAS) || null;
     if (rutas && rutas[cual]) return 'href="' + rutas[cual] + '"';
     return 'href="../' + cual + '/"';
   }
@@ -5760,7 +5760,7 @@ const Novedades = (function () {
   const TOPE = 40;          // lo que se muestra; más abajo está el historial
   const TOPE_VISTOS = 400;  // claves recordadas antes de empezar a podar
 
-  function clave(usuarioId) { return "tf.visto." + usuarioId; }
+  function clave(usuarioId) { return "acopia.visto." + usuarioId; }
 
   function leerVistos(usuarioId) {
     try {
@@ -6417,7 +6417,7 @@ const Guia = (function () {
 
   const $ = UI.$, $$ = UI.$$;
   const esc = UI.esc, nf = UI.nf, pct = UI.pct, money = UI.money;
-  const SESION = "tf.portal.sesion";
+  const SESION = "acopia.portal.sesion";
 
   let usuario = null;
   let vista = "inicio";
@@ -7524,7 +7524,7 @@ const Guia = (function () {
   const $ = UI.$, $$ = UI.$$;
   const esc = UI.esc, nf = UI.nf, pct = UI.pct, money = UI.money;
   const pctFirmado = UI.pctFirmado;
-  const SESION = "tf.planta.sesion";
+  const SESION = "acopia.planta.sesion";
 
   let usuario = null;
   let vista = "panel";
@@ -10680,7 +10680,7 @@ const Guia = (function () {
         UI.descargar(new Blob([JSON.stringify({
           mes: mes, generadoEn: new Date().toISOString(), resumen: resumen,
           lotes: datos.lotes, producciones: datos.producciones
-        }, null, 2)], { type: "application/json" }), "trazafruta_archivo_" + mes + ".json");
+        }, null, 2)], { type: "application/json" }), "acopia_archivo_" + mes + ".json");
       }
       const r = await DB.archivarMes(resumen);
       DB.registrarBitacora(usuario.id, "Mes archivado",
@@ -11340,7 +11340,7 @@ const Guia = (function () {
     if (btnExp) {
       btnExp.addEventListener("click", function () {
         UI.descargar(new Blob([DB.exportar()], { type: "application/json" }),
-          "trazafruta_respaldo_" + DB.hoy() + ".json");
+          "acopia_respaldo_" + DB.hoy() + ".json");
       });
     }
     const inputImp = $("#inputImportar");
@@ -11503,14 +11503,14 @@ const Guia = (function () {
 (function () {
   "use strict";
 
-  window.TF_RUTAS = { proveedor: "#/proveedor", interno: "#/planta" };
+  window.AC_RUTAS = { proveedor: "#/proveedor", interno: "#/planta" };
 
   function portada() {
     document.getElementById("app").innerHTML =
       '<main class="portada">' +
       '<header class="portada-cab">' +
       UI.icono("marca", "portada-marca") +
-      "<h1>Trazafruta</h1>" +
+      "<h1>Acopia</h1>" +
       '<p class="portada-sub">Trazabilidad, control de pérdidas y economía circular en las ' +
       "líneas de pitahaya roja, tomate de árbol y granadilla.</p></header>" +
 
@@ -11571,7 +11571,7 @@ const Guia = (function () {
   if (location.protocol !== "https:" && location.hostname !== "localhost") return;
   window.addEventListener("load", function () {
     navigator.serviceWorker.register("sw.js", { scope: "./" })
-      .then(function (reg) { window.TF_SW = reg; })
+      .then(function (reg) { window.AC_SW = reg; })
       .catch(function (e) {
         /* Sin él la app sigue funcionando: solo necesita señal para abrir. */
         console.warn("No se pudo preparar el uso sin conexión:", e && e.message);

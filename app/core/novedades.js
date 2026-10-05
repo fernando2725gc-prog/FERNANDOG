@@ -17,7 +17,7 @@ const Novedades = (function () {
   const TOPE = 40;          // lo que se muestra; más abajo está el historial
   const TOPE_VISTOS = 400;  // claves recordadas antes de empezar a podar
 
-  function clave(usuarioId) { return "tf.visto." + usuarioId; }
+  function clave(usuarioId) { return "acopia.visto." + usuarioId; }
 
   function leerVistos(usuarioId) {
     try {

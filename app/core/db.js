@@ -1,5 +1,5 @@
 /* =========================================================================
-   db.js — Capa de datos del Trazafruta
+   db.js — Capa de datos de Acopia
    Repositorio único de información para el control de pérdidas y la
    economía circular en las tres líneas de producto.
 
@@ -13,7 +13,7 @@
 const DB = (function () {
   "use strict";
 
-  const KEY = "tf.db.v9";
+  const KEY = "acopia.db.v9";
   const ESQUEMA = 9;
 
   /* ---------------------------------------------------------------- utils */
@@ -64,7 +64,7 @@ const DB = (function () {
      El producto tampoco lleva siglas de nadie: se llama igual aunque lo
      use otra planta. */
   const MARCA = {
-    producto: "Trazafruta",
+    producto: "Acopia",
     descripcion: "Trazabilidad, pérdidas y economía circular"
   };
 
@@ -861,7 +861,7 @@ const DB = (function () {
      vuelva la cobertura. Se guarda la REFERENCIA (colección + id), no una
      copia: así varias ediciones del mismo registro se envían una sola vez,
      con su último estado, y nunca se manda algo viejo. */
-  const KEY_COLA = "tf.cola.v1";
+  const KEY_COLA = "acopia.cola.v1";
   let cola = [];
   let alCambiarCola = null;
 

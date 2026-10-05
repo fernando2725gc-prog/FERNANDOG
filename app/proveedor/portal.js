@@ -16,7 +16,7 @@
 
   const $ = UI.$, $$ = UI.$$;
   const esc = UI.esc, nf = UI.nf, pct = UI.pct, money = UI.money;
-  const SESION = "tf.portal.sesion";
+  const SESION = "acopia.portal.sesion";
 
   let usuario = null;
   let vista = "inicio";

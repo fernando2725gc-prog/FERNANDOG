@@ -665,7 +665,7 @@ const UI = (function () {
   /* Enlace a la otra aplicación. Cambia según el despliegue: carpetas
      separadas en el repositorio, o rutas con # dentro de un solo paquete. */
   function rutaOtraApp(cual) {
-    const rutas = (typeof window !== "undefined" && window.TF_RUTAS) || null;
+    const rutas = (typeof window !== "undefined" && window.AC_RUTAS) || null;
     if (rutas && rutas[cual]) return 'href="' + rutas[cual] + '"';
     return 'href="../' + cual + '/"';
   }

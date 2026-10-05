@@ -1,5 +1,5 @@
 /* =========================================================================
-   auth.js — Credenciales del Trazafruta
+   auth.js — Credenciales de Acopia
 
    Las contraseñas NUNCA se guardan. Se guarda el resultado de derivarlas
    con PBKDF2-SHA256 y una sal distinta por persona, de modo que dos
@@ -157,7 +157,7 @@ const Auth = (function () {
   /* Freno simple a la adivinación: tras varios fallos seguidos, la cuenta
      espera. Vive en el propio dispositivo, así que no sustituye a un
      control del servidor; sirve contra el intento manual. */
-  const CLAVE_INTENTOS = "tf.intentos";
+  const CLAVE_INTENTOS = "acopia.intentos";
   const MAX_INTENTOS = 5;
   const ESPERA_MS = 60000;
 

@@ -13,7 +13,7 @@
   const $ = UI.$, $$ = UI.$$;
   const esc = UI.esc, nf = UI.nf, pct = UI.pct, money = UI.money;
   const pctFirmado = UI.pctFirmado;
-  const SESION = "tf.planta.sesion";
+  const SESION = "acopia.planta.sesion";
 
   let usuario = null;
   let vista = "panel";
@@ -3169,7 +3169,7 @@
         UI.descargar(new Blob([JSON.stringify({
           mes: mes, generadoEn: new Date().toISOString(), resumen: resumen,
           lotes: datos.lotes, producciones: datos.producciones
-        }, null, 2)], { type: "application/json" }), "trazafruta_archivo_" + mes + ".json");
+        }, null, 2)], { type: "application/json" }), "acopia_archivo_" + mes + ".json");
       }
       const r = await DB.archivarMes(resumen);
       DB.registrarBitacora(usuario.id, "Mes archivado",
@@ -3829,7 +3829,7 @@
     if (btnExp) {
       btnExp.addEventListener("click", function () {
         UI.descargar(new Blob([DB.exportar()], { type: "application/json" }),
-          "trazafruta_respaldo_" + DB.hoy() + ".json");
+          "acopia_respaldo_" + DB.hoy() + ".json");
       });
     }
     const inputImp = $("#inputImportar");

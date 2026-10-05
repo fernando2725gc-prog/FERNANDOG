@@ -1,4 +1,4 @@
-# Trazafruta — dos aplicaciones conectadas
+# Acopia — dos aplicaciones conectadas
 
 Sistema de trazabilidad, control de pérdidas y economía circular para una
 planta exportadora de fruta fresca, sobre las tres líneas del alcance del
@@ -6,7 +6,7 @@ TIC: **pitahaya roja, tomate de árbol y granadilla**.
 
 La empresa del caso de estudio está bajo acuerdo de confidencialidad, así
 que **su nombre no aparece en ninguna parte del código ni de la interfaz**.
-El sistema se llama **Trazafruta** y nace en modo confidencial: quien lo
+El sistema se llama **Acopia** y nace en modo confidencial: quien lo
 despliegue configura su propia identidad en *Parámetros → Identidad de la
 planta*, y mientras ese modo siga activo los documentos citan a «la
 Empresa» en vez del nombre real. Ver §12 bis.
@@ -599,11 +599,11 @@ proveedor, usuario y plan; catálogos y parámetros en un documento de configura
 bitácora agregada y podada a 200 movimientos.
 
 **Modo local** (archivos abiertos directamente): `localStorage` del navegador, clave
-`tf.db.v9`. Persiste en ese equipo pero no se comparte. El pie del menú indica siempre
+`acopia.db.v9`. Persiste en ese equipo pero no se comparte. El pie del menú indica siempre
 en qué modo está.
 
 **Sin señal**: en la finca la cobertura se cae, y el trabajo no puede caerse con ella.
-Lo que no se logra enviar queda en una cola local (`tf.cola.v1`) que guarda la
+Lo que no se logra enviar queda en una cola local (`acopia.cola.v1`) que guarda la
 *referencia* —colección e id—, no una copia: varias ediciones del mismo registro salen
 una sola vez, con su último estado. La pantalla lo dice en lugar de fingir que se guardó,
 y la cola se vacía sola al volver la red (evento `online` y un reintento cada 20 s, porque
@@ -715,7 +715,7 @@ tenga dónde guardarla sin que alguien la escriba a propósito.
 **El código no conoce ninguna empresa.** No hay constante con su nombre, ni
 sus iniciales en el nombre del producto, ni en las claves de almacenamiento,
 ni en el nombre del archivo publicado, ni en el caché del *service worker*.
-El producto se llama **Trazafruta** y se llamaría igual en otra planta.
+El producto se llama **Acopia** y se llamaría igual en otra planta.
 
 **La identidad vive en los datos**, en el catálogo `identidad`, que se edita
 en *Parámetros → Identidad de la planta* y se sincroniza como cualquier otro
@@ -867,7 +867,7 @@ dentro del archivo único.
 ### Empaquetar
 
 ```bash
-node tools/empaquetar.js      # → dist/trazafruta.html
+node tools/empaquetar.js      # → dist/acopia.html
 ```
 
 Concatena los mismos archivos de `app/` que usa el desarrollo, en el orden que exigen las

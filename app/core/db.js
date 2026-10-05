@@ -948,13 +948,34 @@ const DB = (function () {
   function esCompartido() { return modo === "compartido"; }
   function modoActual() { return modo; }
 
-  async function conectar(alCambiar) {
-    if (typeof window === "undefined" || !window.claude ||
-        typeof window.claude.use !== "function") return modo;
+  /* Dos almacenes posibles, una sola interfaz. Manda el propio: si la
+     planta configuró su base de datos, la app se usa desde su dirección,
+     se instala en el celular y abre sin señal. El del artefacto queda como
+     alternativa, que es lo que sostiene la demostración mientras tanto. */
+  async function abrirAlmacen() {
+    if (typeof Nube !== "undefined" && Nube.configurada()) {
+      try {
+        const propio = await Nube.abrir();
+        if (propio) { origenAlmacen = "nube"; return propio; }
+      } catch (e) {
+        console.warn("El almacén propio no respondió; se intenta el del artefacto:", e);
+      }
+    }
+    if (typeof window !== "undefined" && window.claude &&
+        typeof window.claude.use === "function") {
+      try {
+        const artefacto = await window.claude.use("db");
+        if (artefacto) { origenAlmacen = "artefacto"; return artefacto; }
+      } catch (e) { return null; }
+    }
+    return null;
+  }
 
-    let almacen;
-    try { almacen = await window.claude.use("db"); }
-    catch (e) { return modo; }
+  let origenAlmacen = "local";
+  function origen() { return origenAlmacen; }
+
+  async function conectar(alCambiar) {
+    const almacen = await abrirAlmacen();
     if (!almacen) return modo;
 
     remoto = almacen;
@@ -1468,6 +1489,7 @@ const DB = (function () {
     registrarBitacora: registrarBitacora,
     conectar: conectar,
     pendientes: pendientes,
+    origen: origen,
     estaPendiente: estaPendiente,
     vaciarCola: vaciarCola,
     vigilarRed: vigilarRed,

@@ -3421,8 +3421,13 @@
       '<span class="sincro-punto" aria-hidden="true"></span>' +
       (DB.pendientes() > 0 ? DB.pendientes() + " sin enviar"
         : compartido ? "Datos compartidos" : "Solo este equipo") + "</p>" +
+      /* Decir CUÁL almacén está vivo, no solo que hay uno. Cuando algo no
+         se sincroniza, la primera pregunta es siempre esta, y hasta ahora
+         había que abrir la consola del navegador para contestarla. */
       '<p class="tenue sincro-ayuda">' + (compartido
-        ? "Conectado con el portal del proveedor."
+        ? (DB.origen() === "nube"
+            ? "Base de datos propia. Se instala en el celular y abre sin señal."
+            : "Almacén del artefacto. Para instalarlo en el celular hace falta publicarlo como sitio.")
         : "Sin conexión con el portal externo.") + "</p>" +
       "<p class='tenue'>v4.0 · prototipo TIC</p></div></aside>";
 

@@ -537,8 +537,38 @@ antes un servidor que verifique la contraseña y no exponga nunca los hashes.
 
 ## 8 ter. Instalarlo en el celular
 
-El paquete publicado es una aplicación instalable: `manifest.json` y los iconos viajan
-como archivos sueltos junto a la página (`tools/empaquetar.js` los copia a `dist/`).
+> **El artefacto de Claude no sirve para esto.** La app vive ahí dentro de un
+> marco sobre el que el navegador no deja registrar un service worker ni
+> dejar un icono propio: *Añadir a pantalla de inicio* guardaría un acceso a
+> Claude, no a Acopia. Para instalarla de verdad hace falta una dirección
+> web propia, y para eso está `docs/`.
+
+### Publicar el sitio (GitHub Pages, gratis)
+
+`node tools/empaquetar.js` escribe **dos** salidas de los mismos archivos:
+
+| | para qué |
+|---|---|
+| `dist/acopia.html` + acompañantes | el artefacto de Claude |
+| `docs/index.html` + acompañantes | un sitio web de verdad |
+
+La única diferencia es el nombre de la página: un sitio sirve `index.html`
+cuando se le pide la carpeta, y el service worker necesita exactamente eso
+para poder devolver la app sin conexión. El `.nojekyll` evita que GitHub
+procese la carpeta y se coma archivos por el camino.
+
+Para publicarla: en GitHub, **Settings → Pages → Source: Deploy from a
+branch**, elegir la rama y la carpeta `/docs`. En un par de minutos queda
+en `https://<usuario>.github.io/<repositorio>/`.
+
+Ese enlace es público: lo abre cualquiera, sin cuenta de nadie. Que la app
+no lleve el nombre de la empresa (§12 bis) es justamente lo que lo hace
+posible.
+
+### Instalarla
+
+El sitio publicado es una aplicación instalable: `manifest.json` y los iconos viajan
+como archivos sueltos junto a la página.
 
 - **Android / Chrome:** abrir el enlace → menú ⋮ → *Añadir a pantalla de inicio*.
 - **iPhone / Safari:** abrir el enlace → compartir → *Añadir a pantalla de inicio*.
@@ -559,8 +589,11 @@ abierta. En la finca es la diferencia entre poder usarla y no.
   propia cola para trabajar sin señal; cachear sus respuestas solo serviría para enseñar
   datos viejos como si fueran de ahora.
 
-Probado cortando la red de verdad (`setOffline`): la app abre, se entra al portal y se
-trabaja; al volver la señal se recoge la versión nueva.
+Probado cortando la red de verdad (`setOffline`) **sobre el sitio servido como lo
+servirá GitHub Pages**, no sobre una maqueta: la app abre, se entra al portal y se
+trabaja; al volver la señal se recoge la versión nueva. Ver la suite `sitio` en §13.
+
+Para que además **sincronice** fuera de Claude hace falta el almacén propio: §11.
 
 ## 9. Cómo ejecutarlo
 
@@ -652,35 +685,116 @@ vivos, así que una serie que cruce un mes archivado lo mostrará vacío. El res
 guardado y es consultable, pero no se mezcla automáticamente con el detalle. Decir lo
 contrario sería un gráfico que miente sin avisar.
 
-## 11. Migrar a un backend real
+## 11. El almacén compartido: dos implementaciones, una interfaz
 
-Todo el acceso a datos pasa por `core/db.js`. Modelo relacional sugerido:
+Todo el acceso a datos pasa por `core/db.js`, que habla con un objeto `remoto`
+con esta forma —la del almacén de Claude, que fue la primera:
+
+```js
+remoto.doc("sistema/config").get() / .set(o) / .onSnapshot(fn, err)
+remoto.collection("lotes").get()
+remoto.collection("lotes").doc(id).set(o) / .delete()
+remoto.collection("lotes").onSnapshot(fn, err)
+```
+
+Esa forma es el **seam** del sistema. Detrás hay dos implementaciones, y
+`db.js` no sabe con cuál está hablando:
+
+| | Almacén del artefacto | Almacén propio (`core/nube.js`) |
+|---|---|---|
+| Dónde vive | dentro del visor de Claude | en una dirección web propia |
+| Sincroniza | sí | sí |
+| Se instala en el celular | **no** | **sí** |
+| Abre sin señal | **no** | **sí** |
+| Quién puede entrar | con cuenta de Claude | cualquiera con el enlace |
+| Hace falta configurar | nada | `core/nube-config.js` |
+
+`DB.origen()` dice cuál está activo (`"nube"`, `"artefacto"` o `"local"`), y
+el pie de la barra lateral lo escribe en castellano. Se elige el propio si
+está configurado y responde; si no, el del artefacto; si tampoco, la app
+guarda solo en el equipo y encola lo que no pudo enviar.
+
+### Por qué el almacén propio no usa WebSockets
+
+Supabase los ofrece. Aquí se pregunta cada 4 segundos por un **resumen** —
+cuántos documentos hay en cada colección y cuál es el más reciente, siete
+filas— y solo se descarga una colección cuando su huella cambió. Un alta o
+una baja mueven la cuenta; una edición mueve la fecha.
+
+Es más tosco que un socket y mucho más difícil de romper, que es lo que hace
+falta en una planta donde la señal se cae y vuelve cada rato: un socket roto
+deja de avisar **sin decirlo**, y entonces la pantalla miente. La prueba
+`nube` comprueba además que, si nada cambia, no se descarga nada.
+
+La fecha la pone la base de datos con un *trigger*, no el navegador: los
+relojes de los celulares de planta no están sincronizados, y un reloj
+atrasado haría que un cambio nuevo pareciera viejo y no llegara a los demás.
+
+### Poner en marcha el almacén propio
+
+1. Crear una cuenta gratuita en <https://supabase.com> y un proyecto nuevo
+   (región *South America (São Paulo)* para Ecuador).
+2. En el **SQL Editor**, pegar `tools/supabase.sql` y ejecutarlo. Crea la
+   tabla `documentos`, el *trigger* de fecha, la vista `resumen_documentos`
+   y las políticas de acceso.
+3. En **Project Settings → API**, copiar *Project URL* y la clave
+   *anon public* a `app/core/nube-config.js`.
+4. `node tools/empaquetar.js` y publicar `docs/` (ver §8 ter).
+
+La clave `anon public` está pensada para vivir en el navegador, a la vista;
+no es un secreto ni da acceso de administrador. Lo que **sí** hay que
+entender es el siguiente punto.
+
+### Lo que todavía falta para los datos reales
+
+Con las políticas de `supabase.sql`, cualquiera que tenga la dirección de la
+app puede leer y escribir en el almacén. Es el mismo nivel de exposición que
+ya tenía la app dentro de Claude, y es aceptable para la demostración y para
+un piloto con datos de prueba. **No lo es para los datos reales de la planta
+bajo acuerdo de confidencialidad.**
+
+El paso que falta es **Supabase Auth**: cada persona entra con su propia
+cuenta y las políticas se escriben contra `auth.uid()` en vez de contra
+`anon`. Eso cierra también la limitación 1 de §12 —la contraseña pasaría a
+comprobarse en el servidor— porque es exactamente el mismo cambio.
+
+### Modelo relacional, si algún día se normaliza
+
+`documentos (coleccion, id, datos jsonb, actualizado)` guarda los registros
+tal como los produce la app. Una tabla por colección obligaría a migrar la
+base cada vez que el TIC añade un campo, y eso en mitad de un piloto es
+justo lo que no se quiere. Cuando el modelo se estabilice:
 
 ```sql
 proveedores  (id, codigo, nombre, documento, contacto, telefono, email, zona, activo)
 usuarios     (id, nombre, clave_hash, rol, proveedor_id FK, activo)
-lineas       (id, codigo, nombre, tiempo_estandar_min, origen_tiempo, peso_caja_kg,
-              meta_exportable, precio_caja, color, activa)
+lineas       (id, codigo, nombre, peso_gaveta_kg, peso_caja_kg, rendimiento_exportable,
+              meta_rendimiento, valor_kg_productor, valor_kg_local, ingreso_diario_kg,
+              color, activa)
+actividades  (id, linea_id FK, codigo, nombre, estacion, simbolo, to_min, v, suplemento,
+              personas, origen, base, activa)
 causas_raiz  (id, codigo, nombre, origen, definida, principal, descripcion)
 destinos     (id, nombre, nivel, valoriza, valor_kg)
 
 lotes        (id, folio, codigo_lote, fecha, proveedor_id FK, linea_id FK,
-              cajas_anunciadas, kg_anunciados, calidad_declarada, precio_caja,
+              gavetas_anunciadas, peso_gaveta_declarado, calidad_declarada, precio_kg,
               transporte, anunciado_por FK,
-              fecha_recepcion, cajas_recibidas, kg_recibidos, calidad_verificada,
-              recibido_por FK, estado, fecha_cierre, cerrado_por FK, reporte_enviado)
+              fecha_recepcion, gavetas_recibidas, kg_recibidos, kg_retirados,
+              causa_retiro FK, destino_retiro FK, calidad_verificada, recibido_por FK,
+              estado, fecha_cierre, cerrado_por FK, reporte_enviado)
 
-producciones (id, folio, fecha, lote_id FK, linea_id FK, turno, cajas_procesadas,
+producciones (id, folio, fecha, lote_id FK, linea_id FK, turno, kg_a_proceso,
               cajas_exportables, operarios, tiempo_real_min, operador, registrado_por FK)
 
-merma_detalle(id, produccion_id FK, causa_id FK, destino_id FK, kg)
-planes       (id, fecha, horas_turno, operarios, eficiencia, registrado_por FK)
+merma_detalle(id, produccion_id FK, etapa, causa_id FK, destino_id FK, kg)
+planes       (id, fecha, jornada_min, pausas_min, operarios, eficiencia, registrado_por FK)
+resumenes    (id, mes, indicadores jsonb, archivado_en, archivado_por FK)
 bitacora     (id, fecha, usuario_id FK, accion, detalle)
 ```
 
-La restricción del balance de masa
-(`Σ merma_detalle.kg = (cajas_procesadas − cajas_exportables) × peso_caja_kg`)
-debe replicarse en el servidor: la validación del navegador no basta.
+La restricción del balance de masa —lo que entra a la mesa menos lo empacado
+tiene que ser igual a la suma de las mermas, en las tres etapas— debe
+replicarse en el servidor: la validación del navegador no basta.
 
 ## 12. Limitaciones conocidas
 
@@ -858,6 +972,25 @@ nazca en modo confidencial y sin razón social escrita, que una razón social co
 cite «la Empresa», que al desactivarlo —y solo entonces— aparezca el nombre real, que al
 volver a activarlo se oculte sin perder lo configurado, y que no quede un solo emoji en
 pantalla (los símbolos ASME del diagrama de proceso sí, que son notación normalizada).
+
+**16 comprobaciones del almacén propio**, contra un servidor PostgREST de
+mentira que implementa la misma semántica que Supabase —*upsert* por clave
+compuesta, vista de resumen, CORS— y con **dos navegadores independientes**
+que no comparten nada salvo la base: que la app siembre una base vacía, que
+el segundo navegador lea lo que ya hay en vez de volver a sembrar, que un
+anuncio hecho en uno aparezca en el otro **sin recargar**, que el pesaje
+vuelva al proveedor igual, que sin red el registro quede en la cola y **no**
+llegue a la base, que al volver la señal suba solo, que si nada cambia **no
+se descargue nada**, y que una base caída no tumbe la app.
+
+**10 comprobaciones del sitio publicado**, servido exactamente como lo
+servirá GitHub Pages: que la portada cargue con las dos puertas, que el
+manifiesto declare una app instalable con sus dos atajos, que los iconos
+sean PNG del tamaño que dicen, que el service worker quede **activo**, que
+guarde lo esencial en el cache, que **con la red cortada recargar siga
+abriendo la app** y se pueda entrar al portal, que con señal sincronice
+contra su propia base, y que el nombre de la empresa tampoco aparezca en el
+HTML servido.
 
 Y **9 comprobaciones** sobre el paquete publicado: las dos puertas, el almacén compartido
 activo, un envío anunciado desde el celular apareciendo en la cola de la planta, el pesaje

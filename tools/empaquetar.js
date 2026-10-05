@@ -24,6 +24,8 @@ const SALIDA = path.join(RAIZ, "dist", "acopia.html");
    ui es transversal; las dos aplicaciones van al final, y el enrutador
    después de las dos, porque las monta. */
 const GUION = [
+  "core/nube-config.js",
+  "core/nube.js",
   "core/auth.js",
   "core/db.js",
   "core/indicadores.js",
@@ -179,3 +181,25 @@ ACOMPANAN.forEach(function (rel) {
 });
 console.log("Paquete escrito en " + path.relative(RAIZ, SALIDA) +
   " · " + (html.length / 1024).toFixed(0) + " KB · " + (GUION.length + 1) + " bloques");
+
+/* ------------------------------------------------- despliegue a la web
+
+   `dist/` es lo que se sube como artefacto de Claude. `docs/` es lo mismo
+   para un sitio web de verdad, que es lo que hace falta para instalar la
+   app en el celular: un artefacto no puede registrar un service worker ni
+   dejar un icono en la pantalla de inicio.
+
+   La única diferencia es el nombre de la página: un sitio sirve `index.html`
+   cuando se pide la carpeta, y el service worker necesita exactamente eso
+   para poder devolver la app sin conexión.
+
+   GitHub Pages publica esta carpeta tal cual. El `.nojekyll` evita que
+   Jekyll se meta a procesarla y se coma archivos por el camino. */
+const WEB = path.join(RAIZ, "docs");
+fs.mkdirSync(path.join(WEB, "pwa"), { recursive: true });
+fs.writeFileSync(path.join(WEB, "index.html"), html);
+fs.writeFileSync(path.join(WEB, ".nojekyll"), "");
+ACOMPANAN.forEach(function (rel) {
+  fs.copyFileSync(path.join(APP, rel), path.join(WEB, EN_RAIZ[rel] || rel));
+});
+console.log("Sitio web escrito en docs/ (index.html + manifiesto + sw + iconos)");

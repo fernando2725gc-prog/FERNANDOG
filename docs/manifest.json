@@ -1,0 +1,25 @@
+{
+  "name": "Acopia · Trazabilidad y pérdidas",
+  "short_name": "Acopia",
+  "description": "Portal del proveedor y sistema de planta: anuncio de envíos, recepción, producción, indicadores y costeo.",
+  "lang": "es-EC",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#14313f",
+  "theme_color": "#14313f",
+  "categories": ["productivity", "business"],
+  "icons": [
+    { "src": "pwa/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "pwa/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "pwa/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Portal del Proveedor", "short_name": "Proveedor", "url": "./#/proveedor",
+      "icons": [{ "src": "pwa/icono-192.png", "sizes": "192x192" }] },
+    { "name": "Sistema de Planta", "short_name": "Planta", "url": "./#/planta",
+      "icons": [{ "src": "pwa/icono-192.png", "sizes": "192x192" }] }
+  ]
+}

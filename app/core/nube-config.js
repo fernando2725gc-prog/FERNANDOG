@@ -32,6 +32,6 @@
    prueba automatizada— se respetan. Así este archivo nunca pisa una
    configuración buena con dos cadenas vacías. */
 window.ACOPIA_NUBE = window.ACOPIA_NUBE || {
-  url: "",
+  url: "https://pfnioopjtybjkbuxwxao.supabase.co",
   clave: ""
 };

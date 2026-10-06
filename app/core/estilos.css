@@ -1630,3 +1630,49 @@ th .ico, td .ico { color: var(--texto-tenue); }
   border-radius: 7px; font-family: var(--fuente-datos); font-size: .78rem;
   white-space: pre-wrap; word-break: break-word;
 }
+
+/* ======================== teclado de báscula ==========================
+   Teclas de 56 px: el dedo con guante necesita 48 como mínimo, y en una
+   pantalla de 390 px caben tres columnas de 56 con aire de sobra. */
+/* Nada de `position: sticky` aqui. El pie del modal ya se pega abajo en el
+   movil, asi que un teclado pegado tambien tapaba dos cosas a la vez: el
+   aviso de desviacion, que es lo que hay que leer, y el boton de confirmar,
+   que es lo que hay que pulsar. Va al final del formulario y se trae a la
+   vista al abrirlo: queda bajo el pulgar igual, sin esconder nada. */
+.teclado {
+  background: var(--superficie); border-top: 1px solid var(--borde);
+  padding-top: .6rem; margin-top: .2rem;
+}
+.teclado-cab {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .6rem; margin-bottom: .5rem;
+}
+.teclado-destino {
+  font-size: .82rem; font-weight: 650; color: var(--verde);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.teclado-rejilla {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem;
+}
+.tecla {
+  font: inherit; font-family: var(--fuente-datos); font-size: 1.35rem; font-weight: 600;
+  min-height: 56px; cursor: pointer; color: var(--texto);
+  background: var(--superficie-2); border: 1px solid var(--borde); border-radius: 10px;
+  touch-action: manipulation; user-select: none;
+}
+.tecla:active { background: var(--verde-suave); border-color: var(--verde); transform: translateY(1px); }
+.tecla-borrar { color: var(--rojo); font-size: 1.15rem; }
+
+/* Un campo apuntado por el teclado se marca, para que no haya duda de
+   dónde van a caer los números. */
+[data-teclado]:focus { border-color: var(--verde); box-shadow: 0 0 0 2px var(--verde-suave); }
+
+@media print { .teclado { display: none !important; } }
+
+/* ---- aviso de desviación en el pesaje ---- */
+.desvio {
+  display: block; margin-top: .45rem; padding: .5rem .7rem;
+  border-radius: 7px; font-size: .84rem; font-weight: 400; line-height: 1.4;
+}
+.desvio-aviso { background: rgba(168, 114, 15, .14); color: var(--ambar); border-left: 3px solid var(--ambar); }
+.desvio-grave { background: rgba(178, 58, 46, .13); color: var(--rojo); border-left: 3px solid var(--rojo); }

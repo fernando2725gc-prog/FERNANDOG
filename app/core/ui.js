@@ -265,6 +265,7 @@ const UI = (function () {
       '<form class="modal-cuerpo" novalidate>' +
       (o.nota ? '<p class="modal-nota">' + o.nota + "</p>" : "") +
       campos.map(campoHTML).join("") +
+      tecladoHTML(campos) +
       '<p class="form-error" id="formError" role="alert" hidden></p>' +
       '<footer class="modal-pie">' +
       '<button type="button" class="btn btn-plano" data-cancelar>Cancelar</button>' +
@@ -292,6 +293,7 @@ const UI = (function () {
     capa.addEventListener("mousedown", function (e) { if (e.target === capa) cerrar(); });
 
     enlazarRepetibles(form, campos, o);
+    enlazarTeclado(form);
 
     if (o.alCambiar) {
       const refrescar = function () { o.alCambiar(leer(form, campos), form); };
@@ -401,7 +403,15 @@ const UI = (function () {
       /* inputmode saca el teclado correcto en el móvil sin cambiar el tipo. */
       const modo = c.tipo === "number" ? ' inputmode="decimal"'
         : c.tipo === "tel" ? ' inputmode="tel"' : "";
-      control = '<input type="' + (c.tipo || "text") + '"' + modo + " " + base +
+      /* Un campo con teclado de báscula se dibuja como texto aunque sea un
+         número. Un `input[type=number]` rechaza los estados intermedios: al
+         escribir «10,» el navegador no puede guardar «10.» y vacía el campo,
+         de modo que el siguiente dígito empezaba de cero y «10,5» acababa
+         siendo «5». El tipo de dato no cambia —`leer()` sigue convirtiendo a
+         número y la validación sigue siendo la misma—, solo el control. */
+      const tipoHTML = c.teclado && c.tipo === "number" ? "text" : (c.tipo || "text");
+      control = '<input type="' + tipoHTML + '"' + modo + " " + base +
+        (c.teclado ? ' data-teclado="' + esc(c.etiqueta) + '"' : "") +
         ' value="' + esc(c.valor === undefined || c.valor === null ? "" : c.valor) + '"' +
         (c.min !== undefined ? ' min="' + c.min + '"' : "") +
         (c.max !== undefined ? ' max="' + c.max + '"' : "") +
@@ -414,6 +424,82 @@ const UI = (function () {
         (c.requerido ? ' <span class="req" aria-hidden="true">*</span>' : "") + "</label>") +
       control +
       textoAyuda(c) + "</div>";
+  }
+
+  /* ------------------------------------------------- teclado de báscula
+
+     Quien pesa en el patio lo hace de pie, con guantes y a veces a contraluz,
+     y el teclado del celular saca teclas de 7 mm pensadas para escribir
+     mensajes. Este saca diez teclas grandes, y una sola para todo el
+     formulario: va cambiando al campo que se esté usando, como el visor de
+     una balanza industrial. Dos teclados a la vez ocuparían la pantalla
+     entera sin añadir nada.
+
+     No reemplaza al teclado del sistema: el campo sigue siendo un input
+     normal y se puede teclear a mano, que es lo que hará quien esté en una
+     computadora. */
+  function tecladoHTML(campos) {
+    if (!campos.some(function (c) { return c.teclado; })) return "";
+    const teclas = ["7", "8", "9", "4", "5", "6", "1", "2", "3", ",", "0", "⌫"];
+    return '<div class="campo campo-full teclado" data-teclado-panel hidden>' +
+      '<div class="teclado-cab"><span class="teclado-destino"></span>' +
+      '<button type="button" class="btn-mini" data-teclado-cerrar>Ocultar</button></div>' +
+      '<div class="teclado-rejilla">' +
+      teclas.map(function (t) {
+        return '<button type="button" class="tecla' +
+          (t === "⌫" ? " tecla-borrar" : "") + '" data-tecla="' + esc(t) + '">' +
+          esc(t) + "</button>";
+      }).join("") + "</div></div>";
+  }
+
+  function enlazarTeclado(form) {
+    const panel = $("[data-teclado-panel]", form);
+    if (!panel) return;
+    const destino = $(".teclado-destino", panel);
+    let campo = null;
+
+    function apuntar(input) {
+      campo = input;
+      destino.textContent = input.dataset.teclado || "";
+      const estaba = panel.hidden;
+      panel.hidden = false;
+      /* Al abrirlo se trae a la vista; al cambiar de campo no, porque mover
+         la pantalla bajo el dedo de alguien que está tecleando es la mejor
+         manera de que apunte mal el siguiente número. */
+      if (estaba) panel.scrollIntoView({ block: "end", behavior: "smooth" });
+    }
+
+    $$("[data-teclado]", form).forEach(function (input) {
+      input.addEventListener("focus", function () { apuntar(input); });
+      /* En el móvil el teclado del sistema taparía el nuestro. Se le quita
+         el foco al toque, pero dejando el campo apuntado: así la persona ve
+         las teclas grandes en vez de las del sistema. */
+      input.addEventListener("pointerdown", function (e) {
+        if (!window.matchMedia || !window.matchMedia("(pointer: coarse)").matches) return;
+        e.preventDefault();
+        apuntar(input);
+      });
+    });
+
+    $(".teclado-rejilla", panel).addEventListener("click", function (e) {
+      const b = e.target.closest("[data-tecla]");
+      if (!b) return;
+      if (!campo) campo = $("[data-teclado]", form);
+      if (!campo) return;
+      const t = b.dataset.tecla;
+      let v = String(campo.value);
+      if (t === "⌫") v = v.slice(0, -1);
+      else if (t === ",") { if (v.indexOf(".") === -1) v = (v || "0") + "."; }
+      else v += t;
+      campo.value = v;
+      /* `input` para que los campos calculados y las alertas se recalculen
+         igual que si lo hubiera tecleado una persona. */
+      campo.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    $("[data-teclado-cerrar]", panel).addEventListener("click", function () {
+      panel.hidden = true;
+    });
   }
 
   /* Filas dinámicas de un campo repetible. */
@@ -551,19 +637,18 @@ const UI = (function () {
     aviso("Archivo descargado.");
   }
 
-  function descargarCSV(nombre, columnas, filas) {
-    const sep = ";";                       // Excel en español separa con ";"
-    const lineas = [columnas.map(function (c) { return c.titulo; }).join(sep)];
-    filas.forEach(function (f) {
-      lineas.push(columnas.map(function (c) {
-        const v = c.csv ? c.csv(f) : "";
-        const s = String(v === null || v === undefined ? "" : v);
-        return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-      }).join(sep));
-    });
-    descargar(new Blob(["﻿" + lineas.join("\r\n")], { type: "text/csv;charset=utf-8;" }),
-      nombre + "_" + DB.hoy() + ".csv");
+  /* El mismo contrato de columnas que el CSV, pero en un libro de Excel:
+     varias hojas si hacen falta, numeros que se pueden sumar y la cabecera
+     congelada. `hojas` es [{nombre, columnas, filas}]. */
+  function descargarExcel(nombre, hojas) {
+    descargar(Excel.libro(hojas), nombre + "_" + DB.hoy() + ".xlsx");
   }
+
+  /* Un atajo para el caso corriente: una sola tabla. */
+  function descargarTabla(nombre, titulo, columnas, filas) {
+    descargarExcel(nombre, [{ nombre: titulo, columnas: columnas, filas: filas }]);
+  }
+
 
   /* ------------------------------------------------------------- sesión */
 
@@ -686,7 +771,8 @@ const UI = (function () {
     icono: icono, iconoTexto: iconoTexto, ICONOS: ICONOS,
     etiquetaLinea: etiquetaLinea,
     abrirFormulario: abrirFormulario, leerRepetible: leerRepetible,
-    prepararGuardado: prepararGuardado, descargar: descargar, descargarCSV: descargarCSV,
+    prepararGuardado: prepararGuardado, descargar: descargar,
+    descargarExcel: descargarExcel, descargarTabla: descargarTabla,
     abrirSesion: abrirSesion,
     sesionAbierta: sesionAbierta,
     cerrarSesion: cerrarSesion,

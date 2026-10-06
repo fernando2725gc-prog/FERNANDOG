@@ -411,6 +411,80 @@ El documento es imprimible, lleva el detalle lote por lote y dos espacios de fir
 folio es estable —mismo período y mismo proveedor dan siempre el mismo número— así que
 reimprimirlo no crea un documento distinto.
 
+## 5 quinquies. El momento del pesaje
+
+Es el único punto del sistema donde alguien, de pie en el patio y con
+guantes, teclea un número que luego vale dinero. Tres cosas lo protegen:
+
+### Teclado de báscula
+
+Diez teclas de 56 px —el dedo con guante necesita 48 como mínimo— en vez del
+teclado del celular, que saca teclas de 7 mm pensadas para escribir mensajes.
+Hay **uno solo** para todo el formulario: va cambiando al campo que se esté
+usando, como el visor de una balanza industrial. Dos teclados a la vez
+ocuparían la pantalla entera sin añadir nada.
+
+No reemplaza al teclado del sistema: el campo sigue siendo un `input` normal
+y se puede teclear a mano, que es lo que hará quien esté en una computadora.
+
+Un detalle que costó un error: el campo con teclado se dibuja como `text`
+aunque el dato sea numérico. Un `input[type=number]` rechaza los estados
+intermedios —al escribir «10,» el navegador no puede guardar `10.` y vacía el
+campo—, de modo que el siguiente dígito empezaba de cero y **«10,5» acababa
+siendo «5»**. Lo encontró la prueba `bascula`.
+
+### Aviso de desviación
+
+Mientras se teclea, el sistema contrasta con lo que el proveedor anunció —en
+gavetas **y** en kilos, porque pueden llegar todas las gavetas y aun así
+pesar un 15% menos si venían a medio llenar—. Por encima del 3% avisa; por
+encima del 10% **no deja confirmar sin escribir qué pasó**.
+
+Los dos umbrales son parámetros (`toleranciaAviso`, `toleranciaGrave`). La
+desviación se guarda en el lote (`desviacionRecepcion`), así que es
+consultable después, no solo un color en pantalla.
+
+Que haya que explicarlo *en el momento* no es burocracia: un mes después
+nadie recuerda qué pasó con ese camión, y un dato que dice «algo raro
+ocurrió» sin decir qué no sirve para decidir nada.
+
+### Dos personas pesando el mismo lote
+
+El almacén es «gana el último» y no hay transacciones (§12.5). Lo que sí se
+puede es **mirar el estado justo antes de escribir**: si otra persona ya pesó
+el lote mientras se llenaba el formulario, el sistema se niega, dice quién lo
+hizo y con qué valores, y remite a *Corregir pesaje*, que sí deja rastro de
+los dos valores. Antes se pisaba en silencio.
+
+---
+
+## 5 sexies. Exportar a Excel
+
+Los informes bajan como `.xlsx` de verdad, no como CSV: varias hojas, los
+números **como números** —no como texto que parece número—, la cabecera
+destacada y congelada, y los anchos de columna puestos.
+
+En *Reportes* hay además **«Libro completo»**: un solo archivo con una hoja
+por informe más una por línea del estudio de tiempos. Es lo que de verdad
+hace falta para los anexos del TIC —exportar siete veces y pegar siete
+archivos es donde se cuelan los errores de copiado— y todas las hojas
+respetan el filtro de fechas de la pantalla, así que el libro entero habla
+del mismo periodo.
+
+`core/excel.js` escribe el ZIP y el OOXML a mano, sin librerías, igual que
+todo lo demás. Las entradas del ZIP van **sin comprimir**, que el formato
+admite y evita implementar DEFLATE; un libro de mil filas pesa unos cientos
+de kilobytes y comprimirlo ahorraría un tiempo de descarga que aquí no le
+importa a nadie.
+
+El detalle que más cuesta ver: `«1.234»` en es-EC es **mil doscientos treinta
+y cuatro**, no uno coma doscientos treinta y cuatro. Convertirlo mal exporta
+una cifra mil veces más pequeña, y en una columna de kilos eso pasa
+desapercibido justo hasta que alguien la suma. La prueba `excel` cubre
+diecisiete formas distintas de escribir un número.
+
+---
+
 ## 6. Planificación diaria
 
 El módulo que se demuestra en la defensa. Entradas: fecha, horas de turno, operarios y
@@ -813,8 +887,11 @@ replicarse en el servidor: la validación del navegador no basta.
    RUC de un proveedor podría activar su cuenta antes que él. En un despliegue real
    convendría añadir un segundo factor (un código al teléfono registrado) o que
    Supervisión confirme la activación.
-5. **Escrituras «gana el último».** Sin bloqueo de registros: si dos personas pesan el
-   mismo lote a la vez, queda el valor del que guardó después.
+5. **Escrituras «gana el último».** Sin bloqueo de registros ni transacciones. En el
+   pesaje —el caso que de verdad ocurre— el sistema mira el estado justo antes de
+   escribir y se niega si otra persona se le adelantó (§5 quinquies), pero esa
+   comprobación no es atómica: dos guardados en el mismo instante seguirían pisándose.
+   El resto de pantallas no la tienen.
 6. **Los datos de demostración son simulados**, con semilla fija para que las capturas del
    documento sean reproducibles. Reemplazar por datos reales antes de concluir nada.
 7. **Confidencialidad.** La empresa está bajo acuerdo de confidencialidad: cuidado con
@@ -962,6 +1039,24 @@ guarde con causa y destino, que cada línea de merma pida la etapa y que la de s
 tome el nombre de su línea, que lo que entra a la mesa descuente el retiro, que las tres
 etapas sumen exactamente la pérdida total, que recibido − pérdida sea igual a exportado, y
 que el rendimiento global quede por debajo del de proceso.
+
+**10 comprobaciones del momento del pesaje**, en una pantalla de 390 px: que
+el teclado de báscula aparezca al tocar un campo y diga a cuál apunta, que
+sus teclas midan al menos 48 px, que escriba y borre en el campo apuntado,
+que la coma decimal funcione, que haya **uno solo** para todo el formulario;
+que una diferencia pequeña no alarme y una grande avise en el momento; que no
+deje confirmar una desviación grave sin explicarla y sí con ella; y que si
+otra persona pesó el lote mientras tanto, el sistema se niegue, lo explique y
+**no pierda el dato ajeno**.
+
+**11 comprobaciones de la exportación a Excel**, descargando los archivos
+desde la app de verdad y abriéndolos como los abrirá Excel —un ZIP con su XML
+dentro—: que las siete vistas produzcan un `.xlsx` válido con datos, que el
+libro completo traiga una hoja por informe y una por línea de tiempos, que no
+haya hojas repetidas ni nombres con caracteres prohibidos (las dos cosas
+hacen que Excel declare el libro dañado y no abra nada), que los números
+vayan como números y que la cabecera quede congelada y con estilo. Más
+diecisiete formas de escribir un número contrastadas una a una.
 
 **34 comprobaciones de identidad y confidencialidad**, que son el guardián del acuerdo:
 recorren los diecinueve archivos del proyecto, el paquete publicado y **las veinte

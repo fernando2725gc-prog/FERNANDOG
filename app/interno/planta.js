@@ -559,7 +559,7 @@
               pct(d.participacion, 0); },
             csv: function (d) { return (d.participacion * 100).toFixed(1); } }
         ], r.detalle, { vacio: "Escribe las gavetas de cada línea para ver el reparto." }) +
-        '<div class="acciones-fila"><button class="btn btn-plano" id="btnCsvPlan">Exportar plan a CSV</button></div>' +
+        '<div class="acciones-fila"><button class="btn btn-plano" id="btnCsvPlan">Exportar a Excel</button></div>' +
         "</section>";
     } else {
       html += '<p class="vacio">Escribe cuántas gavetas hay que procesar de cada línea para ver el plan.</p>';
@@ -710,11 +710,11 @@
           return null;
         } },
       { nombre: "gavetasRecibidas", etiqueta: "Gavetas contadas", tipo: "number", requerido: true,
-        min: 0, max: 10000, paso: "1", ancho: "mitad",
+        min: 0, max: 10000, paso: "1", ancho: "mitad", teclado: true,
         valor: corregir ? l.gavetasRecibidas : l.gavetasAnunciadas,
         ayuda: "El proveedor anunció " + nf(l.gavetasAnunciadas) + "." },
       { nombre: "kgRecibidos", etiqueta: "Peso real en báscula (kg)", tipo: "number", requerido: true,
-        min: 0, max: 200000, paso: "0.1", ancho: "mitad",
+        min: 0, max: 200000, paso: "0.1", ancho: "mitad", teclado: true,
         valor: corregir ? l.kgRecibidos : (l.kgAnunciados || ""),
         ayuda: "El proveedor declaró " + nf(l.kgAnunciados || 0) + " kg (" +
           nf(l.pesoGavetaDeclarado || 0, 1) + " kg/gaveta). Corrige con lo que marque la báscula." },
@@ -776,6 +776,21 @@
         return;
       }
 
+      const conflicto = yaLoPesaronOtros(l);
+      if (conflicto) return { error: conflicto };
+
+      /* Una desviación grave sin explicación es un dato que no sirve: dice
+         que algo pasó y no dice qué. Se pide antes de guardar, que es el
+         único momento en que alguien lo recuerda. */
+      const p = DB.parametros();
+      const desvio = desviacionPesaje(l, d);
+      if (desvio >= p.toleranciaGrave && !String(d.observacionesRecepcion || "").trim()) {
+        return { error: "La diferencia con lo anunciado es del <strong>" + pct(desvio) +
+          "</strong>, por encima del " + pct(p.toleranciaGrave) + " admitido. Escribe en " +
+          "<strong>Observaciones</strong> qué pasó —gavetas incompletas, fruta mojada, " +
+          "error del proveedor— antes de confirmar." };
+      }
+
       DB.update("lotes", l.id, {
         fechaRecepcion: d.fechaRecepcion,
         gavetasRecibidas: Number(d.gavetasRecibidas),
@@ -785,6 +800,7 @@
         destinoRetiro: Number(d.kgRetirados) > 0 ? (d.destinoRetiro || null) : null,
         calidadVerificada: d.calidadVerificada,
         observacionesRecepcion: d.observacionesRecepcion || "",
+        desviacionRecepcion: desvio,
         recibidoPor: usuario.id,
         estado: "Recibido"
       });
@@ -817,10 +833,61 @@
               pctFirmado(tasaKg) + ') <span class="tenue">· ' + nf(kgGaveta, 2) +
               " kg/gaveta contra " + nf(l.pesoGavetaDeclarado || linea.pesoGavetaKg, 1) +
               " declarados</span>" : "");
-        const peor = Math.max(Math.abs(tasa), Math.abs(tasaKg));
-        out.className = peor <= 0.01 ? "ok" : peor <= 0.03 ? "" : "bajo";
+        /* La desviación no es un adorno de color: es el primer indicio de
+           una pérdida, y si nadie la escribe en el momento, un mes después
+           ya no hay quien reconstruya qué pasó con ese camión. */
+        /* El contraste en kilos solo cuenta si ya hay un peso tecleado. Sin
+           esta guarda, un campo todavía vacío valía cero y se leía como una
+           desviación del 100%: el formulario se pintaba en rojo nada más
+           abrirlo, y una alerta que salta siempre no la mira nadie. */
+        const p = DB.parametros();
+        const peor = kg > 0 ? Math.max(Math.abs(tasa), Math.abs(tasaKg)) : Math.abs(tasa);
+        out.className = peor <= 0.01 ? "ok" : peor < p.toleranciaAviso ? "" : "bajo";
+        if (peor >= p.toleranciaAviso) {
+          const grave = peor >= p.toleranciaGrave;
+          out.innerHTML += '<span class="desvio desvio-' + (grave ? "grave" : "aviso") + '">' +
+            (grave
+              ? "Desviación del " + pct(peor) + ", por encima del " + pct(p.toleranciaGrave) +
+                " admitido. <strong>Escribe en Observaciones qué pasó</strong> antes de confirmar."
+              : "Desviación del " + pct(peor) + ". Revisa el conteo antes de confirmar.") +
+            "</span>";
+        }
       }
     });
+  }
+
+  /* Dos personas pesando el mismo lote: el almacén es «gana el último», así
+     que no hay transacción que lo impida. Lo que sí se puede es mirar el
+     estado justo antes de escribir y negarse, en vez de pisar en silencio el
+     trabajo de la otra persona. */
+  /* La peor de las dos desviaciones, en gavetas y en kilos. Pueden llegar
+     todas las gavetas y aun así pesar un 15% menos, si venían a medio
+     llenar: mirar solo una de las dos deja pasar justo ese caso. */
+  function desviacionPesaje(l, d) {
+    const gav = Number(d.gavetasRecibidas);
+    const kg = Number(d.kgRecibidos);
+    const dGav = l.gavetasAnunciadas ? Math.abs(gav - l.gavetasAnunciadas) / l.gavetasAnunciadas : 0;
+    /* Igual que en el aviso: sin peso tecleado no hay desviación en kilos
+       que medir, solo un campo vacío. */
+    const dKg = (kg > 0 && l.kgAnunciados) ? Math.abs(kg - l.kgAnunciados) / l.kgAnunciados : 0;
+    return Math.max(dGav, dKg);
+  }
+
+  function yaLoPesaronOtros(l) {
+    const ahora = DB.get("lotes", l.id);
+    if (!ahora) return "Ese lote ya no existe. Alguien pudo borrarlo.";
+    if (ahora.estado === "Rechazado") {
+      return "Mientras llenabas el formulario, otra persona <strong>rechazó</strong> este lote.";
+    }
+    if (ahora.estado !== "Anunciado") {
+      const quien = DB.get("usuarios", ahora.recibidoPor);
+      return "Mientras llenabas el formulario, <strong>" +
+        esc(quien ? quien.nombre : "otra persona") + "</strong> ya pesó este lote: " +
+        nf(ahora.gavetasRecibidas) + " gavetas y " + nf(ahora.kgRecibidos) + " kg. " +
+        "Cierra esto y, si el dato está mal, usa <em>Corregir pesaje</em> para que quede " +
+        "el rastro de los dos valores.";
+    }
+    return null;
   }
 
   function formRechazar(loteId) {
@@ -856,7 +923,7 @@
 
     let html = '<div class="vista-cab"><div><h1>Producción</h1>' +
       '<p class="sub">Registra lo exportable, las mermas con su causa raíz y el destino del descarte.</p></div>' +
-      '<div class="cab-acciones"><button class="btn btn-plano" id="btnCsvProduccion">Exportar CSV</button></div></div>';
+      '<div class="cab-acciones"><button class="btn btn-plano" id="btnCsvProduccion">Exportar a Excel</button></div></div>';
 
     html += '<section class="panel panel-destacado"><h2>En cámara, listos para procesar (' +
       nf(enCamara.length) + ")</h2>";
@@ -1314,7 +1381,7 @@
 
     let html = '<div class="vista-cab"><div><h1>Lotes</h1>' +
       '<p class="sub">Recorrido completo, del anuncio del proveedor al cierre.</p></div>' +
-      '<div class="cab-acciones"><button class="btn btn-plano" id="btnCsvLotes">Exportar CSV</button></div></div>';
+      '<div class="cab-acciones"><button class="btn btn-plano" id="btnCsvLotes">Exportar a Excel</button></div></div>';
 
     /* Mientras se busca algo concreto, la cola de cierre sobra: quien
        escribe un código quiere ver ese lote, no otra tabla encima. */
@@ -1742,7 +1809,8 @@
     let html = '<div class="vista-cab"><div><h1>Reportes</h1>' +
       '<p class="sub">Consolidados para el documento y para la empresa.</p></div>' +
       '<div class="cab-acciones">' +
-      '<button class="btn btn-plano" id="btnCsvReporte">Exportar CSV</button>' +
+      '<button class="btn btn-plano" id="btnCsvReporte">Exportar a Excel</button>' +
+      '<button class="btn btn-sec" id="btnLibroCompleto">Libro completo</button>' +
       '<button class="btn btn-primario" id="btnImprimir">Imprimir / PDF</button></div></div>';
 
     html += '<div class="selector-reporte" role="tablist">';
@@ -1841,7 +1909,7 @@
       '<p class="sub">Lo que hay que pagarle a cada proveedor por el período, ' +
       "sobre el kilo de báscula.</p></div>" +
       '<div class="cab-acciones">' +
-      '<button class="btn btn-plano" id="btnCsvLiquidacion">Exportar CSV</button>' +
+      '<button class="btn btn-plano" id="btnCsvLiquidacion">Exportar a Excel</button>' +
       '<button class="btn btn-primario" id="btnImprimir">Imprimir / PDF</button></div></div>';
 
     html += barraFiltros({ buscar: false });
@@ -1989,7 +2057,7 @@
             });
           });
         });
-        UI.descargarCSV("liquidaciones_" + filtros.desde + "_" + filtros.hasta, [
+        UI.descargarTabla("liquidaciones_" + filtros.desde + "_" + filtros.hasta, "Liquidaciones", [
           { titulo: "Proveedor", csv: function (x) { return x.proveedor; } },
           { titulo: "RUC", csv: function (x) { return x.documento; } },
           { titulo: "Documento", csv: function (x) { return x.folio; } },
@@ -2028,7 +2096,7 @@
       '<p class="sub">Del cronómetro al tiempo estándar, y del tiempo estándar a ' +
       "cuánta gente hace falta en cada estación.</p></div>" +
       '<div class="cab-acciones">' +
-      '<button class="btn btn-plano" id="btnCsvTiempos">Exportar CSV</button>' +
+      '<button class="btn btn-plano" id="btnCsvTiempos">Exportar a Excel</button>' +
       '<button class="btn btn-primario" id="btnImprimir">Imprimir / PDF</button></div></div>';
 
     /* --- comparativa de las tres líneas --- */
@@ -2186,7 +2254,8 @@
     if (csv) {
       csv.addEventListener("click", function () {
         const e = Indicadores.estudioTiempos(lineaTiempos);
-        UI.descargarCSV("estudio_tiempos_" + e.linea.codigo, columnasActividad(), e.detalle);
+        UI.descargarTabla("estudio_tiempos_" + e.linea.codigo,
+          "Tiempos " + e.linea.codigo, columnasActividad(), e.detalle);
       });
     }
   }
@@ -2224,7 +2293,7 @@
     let html = '<div class="vista-cab"><div><h1>Costeo y mejora</h1>' +
       '<p class="sub">Cuánto cuesta cada causa raíz al año y qué pasaría si se ataca.</p></div>' +
       '<div class="cab-acciones">' +
-      '<button class="btn btn-plano" id="btnCsvCosteo">Exportar CSV</button>' +
+      '<button class="btn btn-plano" id="btnCsvCosteo">Exportar a Excel</button>' +
       '<button class="btn btn-primario" id="btnImprimir">Imprimir / PDF</button></div></div>';
 
     html += barraFiltros({});
@@ -2487,7 +2556,7 @@
         const s = Indicadores.simular(escenario);
         const porCausa = {};
         s.detalle.forEach(function (d) { porCausa[d.causaId] = d; });
-        UI.descargarCSV("costeo_causas_" + filtros.desde + "_" + filtros.hasta, [
+        UI.descargarTabla("costeo_causas_" + filtros.desde + "_" + filtros.hasta, "Costeo por causa", [
           { titulo: "Causa", csv: function (x) { return x.codigo + " " + x.nombre; } },
           { titulo: "Origen", csv: function (x) { return x.origen; } },
           { titulo: "kg", csv: function (x) { return x.kg.toFixed(1); } },
@@ -2825,7 +2894,7 @@
       '<p class="sub">Padrón único. La variabilidad entre proveedores es la causa raíz CR6.</p></div>' +
       '<div class="cab-acciones">' +
       '<button class="btn btn-primario" id="btnNuevoProveedor">+ Nuevo proveedor</button>' +
-      '<button class="btn btn-plano" id="btnCsvProveedores">Exportar CSV</button></div></div>';
+      '<button class="btn btn-plano" id="btnCsvProveedores">Exportar a Excel</button></div></div>';
 
     html += UI.tabla([
       { titulo: "Código", valor: function (p) { return "<code>" + esc(p.codigo) + "</code>"; } },
@@ -3528,7 +3597,7 @@
     if (btnCsv) {
       btnCsv.addEventListener("click", function () {
         const r = Indicadores.planificar(planActual);
-        UI.descargarCSV("plan_" + planActual.fecha, [
+        UI.descargarTabla("plan_" + planActual.fecha, "Plan del dia", [
           { titulo: "Línea", csv: function (d) { return d.nombre; } },
           { titulo: "Gavetas", csv: function (d) { return d.gavetas; } },
           { titulo: "Cajas", csv: function (d) { return Math.round(d.cajas); } },
@@ -3836,26 +3905,59 @@
     const btnCsvLotes = $("#btnCsvLotes");
     if (btnCsvLotes) {
       btnCsvLotes.addEventListener("click", function () {
-        UI.descargarCSV("lotes", columnasLote({ acciones: false }), Indicadores.filtrar(filtros).lotes);
+        UI.descargarTabla("lotes", "Lotes", columnasLote({ acciones: false }),
+          Indicadores.filtrar(filtros).lotes);
       });
     }
     const btnCsvProd = $("#btnCsvProduccion");
     if (btnCsvProd) {
       btnCsvProd.addEventListener("click", function () {
-        UI.descargarCSV("produccion", columnasProduccion(), Indicadores.filtrar(filtros).producciones);
+        UI.descargarTabla("produccion", "Produccion", columnasProduccion(),
+          Indicadores.filtrar(filtros).producciones);
       });
     }
+    /* Un solo archivo con TODAS las tablas, una por hoja. Es lo que de
+       verdad hace falta para los anexos: exportar siete veces y pegar siete
+       archivos en el documento es donde se cuelan los errores de copiado, y
+       además cada hoja respeta el filtro de fechas que haya en pantalla, así
+       que el libro entero habla del mismo periodo. */
+    const btnLibro = $("#btnLibroCompleto");
+    if (btnLibro) {
+      btnLibro.addEventListener("click", function () {
+        const hojas = [];
+
+        /* Los informes ya traen «Detalle de lotes» y «Detalle de producción»;
+           añadirlos otra vez por su cuenta dejaba el libro con dos hojas
+           iguales y a quien lo abre preguntándose cuál es la buena. */
+        Object.keys(REPORTES).forEach(function (id) {
+          hojas.push({ nombre: REPORTES[id].titulo,
+            columnas: columnasReporte(id), filas: REPORTES[id].datos() });
+        });
+
+        /* El estudio de tiempos no depende del filtro —son los estándares de
+           la planta, no lo que pasó estos días— y va una hoja por línea. */
+        DB.all("lineas").filter(function (l) { return l.activa; }).forEach(function (l) {
+          const e = Indicadores.estudioTiempos(l.id);
+          if (e) hojas.push({ nombre: "Tiempos " + l.codigo,
+            columnas: columnasActividad(), filas: e.detalle });
+        });
+
+        UI.descargarExcel("acopia_libro_" + filtros.desde + "_" + filtros.hasta, hojas);
+        UI.aviso("Libro con " + hojas.length + " hojas descargado.");
+      });
+    }
+
     const btnCsvRep = $("#btnCsvReporte");
     if (btnCsvRep) {
       btnCsvRep.addEventListener("click", function () {
-        UI.descargarCSV("reporte_" + reporteActual, columnasReporte(reporteActual),
-          REPORTES[reporteActual].datos());
+        UI.descargarTabla("reporte_" + reporteActual, REPORTES[reporteActual].titulo,
+          columnasReporte(reporteActual), REPORTES[reporteActual].datos());
       });
     }
     const btnCsvProv = $("#btnCsvProveedores");
     if (btnCsvProv) {
       btnCsvProv.addEventListener("click", function () {
-        UI.descargarCSV("proveedores", [
+        UI.descargarTabla("proveedores", "Proveedores", [
           { titulo: "Código", csv: function (p) { return p.codigo; } },
           { titulo: "Proveedor", csv: function (p) { return p.nombre; } },
           { titulo: "Documento", csv: function (p) { return p.documento; } },

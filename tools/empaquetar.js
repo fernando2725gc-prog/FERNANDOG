@@ -26,6 +26,7 @@ const SALIDA = path.join(RAIZ, "dist", "acopia.html");
 const GUION = [
   "core/nube-config.js",
   "core/nube.js",
+  "core/excel.js",
   "core/auth.js",
   "core/db.js",
   "core/indicadores.js",

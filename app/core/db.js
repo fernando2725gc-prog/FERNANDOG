@@ -551,7 +551,16 @@ const DB = (function () {
       salarioBasico: 482, origenSalario: "S",
       /* SBU + décimos + fondos de reserva + aporte patronal, sobre 1920 h. */
       costoHoraHombre: 4.132, origenCostoHora: "E",
-      deshidratacion: 0.005, origenDeshidratacion: "E"
+      deshidratacion: 0.005, origenDeshidratacion: "E",
+
+      /* Hasta dónde puede diferir lo pesado de lo que el proveedor anunció
+         antes de que el sistema se plante. Por debajo del aviso es ruido
+         normal: gavetas desparejas, fruta que transpira en el camión. Por
+         encima del límite grave ya no es ruido, y eso hay que escribirlo en
+         el momento —no reconstruirlo un mes después, cuando nadie recuerda
+         qué pasó con ese camión. */
+      toleranciaAviso: 0.03, origenToleranciaAviso: "E",
+      toleranciaGrave: 0.10, origenToleranciaGrave: "E"
     };
   }
 

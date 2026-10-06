@@ -33,5 +33,5 @@
    configuración buena con dos cadenas vacías. */
 window.ACOPIA_NUBE = window.ACOPIA_NUBE || {
   url: "https://pfnioopjtybjkbuxwxao.supabase.co",
-  clave: ""
+  clave: "sb_publishable_m0jtJnc49kLW-vfD0zFJBw_e-IsNBde"
 };

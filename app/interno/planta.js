@@ -3186,6 +3186,50 @@
     let html = '<div class="vista-cab"><div><h1>Datos del sistema</h1>' +
       '<p class="sub">Respaldo, restauración y reinicio del repositorio.</p></div></div>';
 
+    /* --- de dónde salen los datos ---
+       Primero esto y no el contenido: si la base no está conectada, el
+       recuento de abajo es el de este equipo y no el de la planta, y leerlo
+       creyendo otra cosa es peor que no leerlo. */
+    const dg = DB.diagnostico();
+    const conectada = dg.origen === "nube";
+    const tonoAlm = conectada ? "bien" : dg.nube.configurada ? "mal" : "regular";
+    html += '<section class="panel panel-' + tonoAlm + '"><h2>Dónde se guardan los datos</h2>';
+
+    if (conectada) {
+      html += '<p class="nota-info"><strong>Base de datos propia, conectada.</strong> ' +
+        "Todo lo que se registra aquí lo ven al instante el portal del proveedor y " +
+        "cualquier celular con la app instalada. Es el almacén que permite instalar " +
+        "la app y abrirla sin señal.</p>";
+    } else if (dg.nube.configurada) {
+      html += '<p class="aviso-inline"><strong>La base de datos propia no respondió.</strong> ' +
+        esc(dg.nube.explicacion || "") + " Mientras tanto el sistema sigue funcionando " +
+        (dg.origen === "artefacto"
+          ? "con el almacén del artefacto, que sincroniza pero no se puede instalar en el celular."
+          : "solo en este equipo: lo que registres no lo verá nadie más todavía.") + "</p>";
+    } else {
+      html += '<p class="nota-info">No hay base de datos propia configurada. El sistema usa ' +
+        (dg.origen === "artefacto"
+          ? "el almacén del artefacto: sincroniza, pero no se puede instalar en el celular ni abrir sin señal."
+          : "solo este equipo.") + "</p>";
+    }
+
+    html += '<div class="conteos">' +
+      "<div><span>Almacén activo</span><strong>" +
+        esc({ nube: "Base propia", artefacto: "Artefacto", local: "Solo este equipo" }[dg.origen] ||
+            dg.origen) + "</strong></div>" +
+      "<div><span>Dirección</span><strong>" +
+        (dg.nube.url
+          ? '<code class="dir-nube">' + esc(dg.nube.url.replace(/^https:\/\//, "")) + "</code>"
+          : '<em class="tenue">sin configurar</em>') + "</strong></div>" +
+      "<div><span>Sin enviar</span><strong>" + nf(dg.pendientes) + "</strong></div>" +
+      "</div>";
+
+    if (dg.nube.fallo && dg.nube.fallo.detalle) {
+      html += '<details class="detalle-tecnico"><summary>Detalle técnico</summary><pre>' +
+        esc(dg.nube.fallo.codigo + " · " + dg.nube.fallo.detalle) + "</pre></details>";
+    }
+    html += "</section>";
+
     html += '<section class="panel"><h2>Contenido actual</h2><div class="conteos">';
     [["Proveedores", db.proveedores.length], ["Usuarios", db.usuarios.length],
      ["Líneas", db.lineas.length], ["Causas raíz", db.causas.length],

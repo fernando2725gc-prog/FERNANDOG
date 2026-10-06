@@ -1619,3 +1619,14 @@ th .ico, td .ico { color: var(--texto-tenue); }
 @media (max-width: 400px) {
   .barra-usuario > div:not(.avatar) { display: none; }
 }
+
+/* ---- diagnóstico del almacén ---- */
+.dir-nube { font-size: .78rem; word-break: break-all; }
+.detalle-tecnico { margin-top: .8rem; font-size: .84rem; }
+.detalle-tecnico summary { cursor: pointer; color: var(--texto-tenue); }
+.detalle-tecnico pre {
+  margin: .5rem 0 0; padding: .6rem .8rem; overflow-x: auto;
+  background: var(--superficie-2); border: 1px solid var(--borde);
+  border-radius: 7px; font-family: var(--fuente-datos); font-size: .78rem;
+  white-space: pre-wrap; word-break: break-word;
+}

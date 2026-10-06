@@ -74,10 +74,16 @@ const Nube = (function () {
     const c = config();
     const h = {
       apikey: c.clave,
-      Authorization: "Bearer " + c.clave,
       "Content-Type": "application/json",
       Accept: "application/json"
     };
+    /* Supabase tiene dos formatos de clave pública. La antigua (`anon`) es un
+       JWT y empieza por «eyJ»: ahí el `Authorization` lleva el mismo token, y
+       es de donde PostgREST saca el rol. La nueva (`sb_publishable_...`) no es
+       un JWT, y mandarla como Bearer es pedirle al servidor que descodifique
+       algo que no se puede descodificar. El `apikey` basta en los dos casos;
+       el Bearer solo se añade cuando de verdad hay un token que leer. */
+    if (/^eyJ/.test(c.clave)) h.Authorization = "Bearer " + c.clave;
     if (extra) Object.keys(extra).forEach(function (k) { h[k] = extra[k]; });
     return h;
   }
@@ -179,6 +185,7 @@ const Nube = (function () {
   const oyentesColeccion = {};      // { lotes: [fn, fn] }
   const oyentesDoc = {};            // { "sistema/config": [fn] }
   let resumenPrevio = null;         // { lotes: "3|2026-10-05T...", ... }
+  let ultimoFallo = null;           // por qué no se pudo abrir, para poder decirlo
 
   /* `oyente` es {fn, err}: la pareja que onSnapshot recibe. Se guardan
      juntas para poder avisar del fallo a quien corresponda. */
@@ -346,10 +353,12 @@ const Nube = (function () {
      y deja tomada la huella inicial para que el primer sondeo compare
      contra algo real en vez de avisar de todo como si fuera nuevo. */
   async function abrir() {
-    if (!configurada()) return null;
+    if (!configurada()) { ultimoFallo = null; return null; }
     try {
       resumenPrevio = await leerResumen();
+      ultimoFallo = null;
     } catch (e) {
+      ultimoFallo = { codigo: e.code, detalle: String(e.message || "").slice(0, 300) };
       console.warn("El almacén en la nube no respondió:", e.code, e.message);
       return null;
     }
@@ -357,8 +366,33 @@ const Nube = (function () {
     return almacen();
   }
 
+  /* Un diagnóstico legible. Cuando algo no sincroniza la pregunta es siempre
+     la misma, y hasta ahora había que abrir la consola del navegador para
+     contestarla: en un celular, imposible. */
+  const EXPLICACION = {
+    "sin-red": "No hay salida a internet, o la base de datos no está respondiendo.",
+    "permiso-denegado": "La base rechazó la clave. Revisa la clave pública en " +
+      "Supabase y que las políticas de acceso de supabase.sql estén aplicadas.",
+    "tabla-no-encontrada": "La base responde, pero no encuentra la tabla. Falta " +
+      "ejecutar tools/supabase.sql en el editor SQL de Supabase.",
+    "sin-configurar": "No hay base de datos propia configurada."
+  };
+
+  function diagnostico() {
+    const c = config();
+    return {
+      configurada: configurada(),
+      url: c.url,
+      fallo: ultimoFallo,
+      explicacion: ultimoFallo
+        ? (EXPLICACION[ultimoFallo.codigo] || "Error inesperado: " + ultimoFallo.codigo)
+        : null
+    };
+  }
+
   return {
     configurada: configurada,
+    diagnostico: diagnostico,
     abrir: abrir,
     /* Para las pruebas y para el panel de datos del sistema. */
     INTERVALO_MS: INTERVALO_MS,

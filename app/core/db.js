@@ -974,6 +974,18 @@ const DB = (function () {
   let origenAlmacen = "local";
   function origen() { return origenAlmacen; }
 
+  /* Qué almacén está vivo y, si el propio no lo está, por qué no. */
+  function diagnostico() {
+    return {
+      origen: origenAlmacen,
+      modo: modo,
+      pendientes: cola.length,
+      nube: (typeof Nube !== "undefined" && Nube.diagnostico)
+        ? Nube.diagnostico()
+        : { configurada: false, url: "", fallo: null, explicacion: null }
+    };
+  }
+
   async function conectar(alCambiar) {
     const almacen = await abrirAlmacen();
     if (!almacen) return modo;
@@ -1490,6 +1502,7 @@ const DB = (function () {
     conectar: conectar,
     pendientes: pendientes,
     origen: origen,
+    diagnostico: diagnostico,
     estaPendiente: estaPendiente,
     vaciarCola: vaciarCola,
     vigilarRed: vigilarRed,

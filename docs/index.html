@@ -1635,6 +1635,17 @@ th .ico, td .ico { color: var(--texto-tenue); }
   .barra-usuario > div:not(.avatar) { display: none; }
 }
 
+/* ---- diagnóstico del almacén ---- */
+.dir-nube { font-size: .78rem; word-break: break-all; }
+.detalle-tecnico { margin-top: .8rem; font-size: .84rem; }
+.detalle-tecnico summary { cursor: pointer; color: var(--texto-tenue); }
+.detalle-tecnico pre {
+  margin: .5rem 0 0; padding: .6rem .8rem; overflow-x: auto;
+  background: var(--superficie-2); border: 1px solid var(--borde);
+  border-radius: 7px; font-family: var(--fuente-datos); font-size: .78rem;
+  white-space: pre-wrap; word-break: break-word;
+}
+
 </style>
 
 <a class="salto" href="#contenido">Saltar al contenido</a>
@@ -1759,10 +1770,16 @@ const Nube = (function () {
     const c = config();
     const h = {
       apikey: c.clave,
-      Authorization: "Bearer " + c.clave,
       "Content-Type": "application/json",
       Accept: "application/json"
     };
+    /* Supabase tiene dos formatos de clave pública. La antigua (`anon`) es un
+       JWT y empieza por «eyJ»: ahí el `Authorization` lleva el mismo token, y
+       es de donde PostgREST saca el rol. La nueva (`sb_publishable_...`) no es
+       un JWT, y mandarla como Bearer es pedirle al servidor que descodifique
+       algo que no se puede descodificar. El `apikey` basta en los dos casos;
+       el Bearer solo se añade cuando de verdad hay un token que leer. */
+    if (/^eyJ/.test(c.clave)) h.Authorization = "Bearer " + c.clave;
     if (extra) Object.keys(extra).forEach(function (k) { h[k] = extra[k]; });
     return h;
   }
@@ -1864,6 +1881,7 @@ const Nube = (function () {
   const oyentesColeccion = {};      // { lotes: [fn, fn] }
   const oyentesDoc = {};            // { "sistema/config": [fn] }
   let resumenPrevio = null;         // { lotes: "3|2026-10-05T...", ... }
+  let ultimoFallo = null;           // por qué no se pudo abrir, para poder decirlo
 
   /* `oyente` es {fn, err}: la pareja que onSnapshot recibe. Se guardan
      juntas para poder avisar del fallo a quien corresponda. */
@@ -2031,10 +2049,12 @@ const Nube = (function () {
      y deja tomada la huella inicial para que el primer sondeo compare
      contra algo real en vez de avisar de todo como si fuera nuevo. */
   async function abrir() {
-    if (!configurada()) return null;
+    if (!configurada()) { ultimoFallo = null; return null; }
     try {
       resumenPrevio = await leerResumen();
+      ultimoFallo = null;
     } catch (e) {
+      ultimoFallo = { codigo: e.code, detalle: String(e.message || "").slice(0, 300) };
       console.warn("El almacén en la nube no respondió:", e.code, e.message);
       return null;
     }
@@ -2042,8 +2062,33 @@ const Nube = (function () {
     return almacen();
   }
 
+  /* Un diagnóstico legible. Cuando algo no sincroniza la pregunta es siempre
+     la misma, y hasta ahora había que abrir la consola del navegador para
+     contestarla: en un celular, imposible. */
+  const EXPLICACION = {
+    "sin-red": "No hay salida a internet, o la base de datos no está respondiendo.",
+    "permiso-denegado": "La base rechazó la clave. Revisa la clave pública en " +
+      "Supabase y que las políticas de acceso de supabase.sql estén aplicadas.",
+    "tabla-no-encontrada": "La base responde, pero no encuentra la tabla. Falta " +
+      "ejecutar tools/supabase.sql en el editor SQL de Supabase.",
+    "sin-configurar": "No hay base de datos propia configurada."
+  };
+
+  function diagnostico() {
+    const c = config();
+    return {
+      configurada: configurada(),
+      url: c.url,
+      fallo: ultimoFallo,
+      explicacion: ultimoFallo
+        ? (EXPLICACION[ultimoFallo.codigo] || "Error inesperado: " + ultimoFallo.codigo)
+        : null
+    };
+  }
+
   return {
     configurada: configurada,
+    diagnostico: diagnostico,
     abrir: abrir,
     /* Para las pruebas y para el panel de datos del sistema. */
     INTERVALO_MS: INTERVALO_MS,
@@ -3245,6 +3290,18 @@ const DB = (function () {
   let origenAlmacen = "local";
   function origen() { return origenAlmacen; }
 
+  /* Qué almacén está vivo y, si el propio no lo está, por qué no. */
+  function diagnostico() {
+    return {
+      origen: origenAlmacen,
+      modo: modo,
+      pendientes: cola.length,
+      nube: (typeof Nube !== "undefined" && Nube.diagnostico)
+        ? Nube.diagnostico()
+        : { configurada: false, url: "", fallo: null, explicacion: null }
+    };
+  }
+
   async function conectar(alCambiar) {
     const almacen = await abrirAlmacen();
     if (!almacen) return modo;
@@ -3761,6 +3818,7 @@ const DB = (function () {
     conectar: conectar,
     pendientes: pendientes,
     origen: origen,
+    diagnostico: diagnostico,
     estaPendiente: estaPendiente,
     vaciarCola: vaciarCola,
     vigilarRed: vigilarRed,
@@ -11157,6 +11215,50 @@ const Guia = (function () {
     const db = DB.load();
     let html = '<div class="vista-cab"><div><h1>Datos del sistema</h1>' +
       '<p class="sub">Respaldo, restauración y reinicio del repositorio.</p></div></div>';
+
+    /* --- de dónde salen los datos ---
+       Primero esto y no el contenido: si la base no está conectada, el
+       recuento de abajo es el de este equipo y no el de la planta, y leerlo
+       creyendo otra cosa es peor que no leerlo. */
+    const dg = DB.diagnostico();
+    const conectada = dg.origen === "nube";
+    const tonoAlm = conectada ? "bien" : dg.nube.configurada ? "mal" : "regular";
+    html += '<section class="panel panel-' + tonoAlm + '"><h2>Dónde se guardan los datos</h2>';
+
+    if (conectada) {
+      html += '<p class="nota-info"><strong>Base de datos propia, conectada.</strong> ' +
+        "Todo lo que se registra aquí lo ven al instante el portal del proveedor y " +
+        "cualquier celular con la app instalada. Es el almacén que permite instalar " +
+        "la app y abrirla sin señal.</p>";
+    } else if (dg.nube.configurada) {
+      html += '<p class="aviso-inline"><strong>La base de datos propia no respondió.</strong> ' +
+        esc(dg.nube.explicacion || "") + " Mientras tanto el sistema sigue funcionando " +
+        (dg.origen === "artefacto"
+          ? "con el almacén del artefacto, que sincroniza pero no se puede instalar en el celular."
+          : "solo en este equipo: lo que registres no lo verá nadie más todavía.") + "</p>";
+    } else {
+      html += '<p class="nota-info">No hay base de datos propia configurada. El sistema usa ' +
+        (dg.origen === "artefacto"
+          ? "el almacén del artefacto: sincroniza, pero no se puede instalar en el celular ni abrir sin señal."
+          : "solo este equipo.") + "</p>";
+    }
+
+    html += '<div class="conteos">' +
+      "<div><span>Almacén activo</span><strong>" +
+        esc({ nube: "Base propia", artefacto: "Artefacto", local: "Solo este equipo" }[dg.origen] ||
+            dg.origen) + "</strong></div>" +
+      "<div><span>Dirección</span><strong>" +
+        (dg.nube.url
+          ? '<code class="dir-nube">' + esc(dg.nube.url.replace(/^https:\/\//, "")) + "</code>"
+          : '<em class="tenue">sin configurar</em>') + "</strong></div>" +
+      "<div><span>Sin enviar</span><strong>" + nf(dg.pendientes) + "</strong></div>" +
+      "</div>";
+
+    if (dg.nube.fallo && dg.nube.fallo.detalle) {
+      html += '<details class="detalle-tecnico"><summary>Detalle técnico</summary><pre>' +
+        esc(dg.nube.fallo.codigo + " · " + dg.nube.fallo.detalle) + "</pre></details>";
+    }
+    html += "</section>";
 
     html += '<section class="panel"><h2>Contenido actual</h2><div class="conteos">';
     [["Proveedores", db.proveedores.length], ["Usuarios", db.usuarios.length],

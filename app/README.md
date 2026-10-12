@@ -870,23 +870,118 @@ La restricción del balance de masa —lo que entra a la mesa menos lo empacado
 tiene que ser igual a la suma de las mermas, en las tres etapas— debe
 replicarse en el servidor: la validación del navegador no basta.
 
+## 11 bis. Autenticación real: quién entra, y qué le deja ver la base
+
+Este es el cambio con más peso del sistema, y el que conviene saber contar en
+la defensa. Antes, dos cosas eran de mentira sin parecerlo:
+
+- La contraseña se comprobaba **en el navegador**, contra un hash guardado
+  junto a los demás datos.
+- Los permisos se aplicaban **en el navegador**. Ordenaban el trabajo —cada
+  rol veía sus pantallas— pero no contenían a nadie: quien abriera la consola
+  podía pedir lo que quisiera, porque quien decidía era el navegador.
+
+Ahora la contraseña la verifica **Supabase Auth** y su hash no sale de allí
+nunca; lo que el navegador recibe es un token firmado. Y con ese token
+**Postgres** decide qué puede ver cada quien. Un proveedor que pida los lotes
+de otro no recibe un error de la aplicación: recibe **cero filas** de la base.
+
+### Las tres piezas
+
+| | dónde | qué hace |
+|---|---|---|
+| `tools/supabase-auth.sql` | la base | perfiles, invitaciones y las políticas |
+| `app/core/sesion.js` | el navegador | entrar, activar, renovar el token |
+| `app/core/nube.js` | el navegador | manda el token en cada petición |
+
+### Nadie se inventa su propio rol
+
+Cualquiera puede registrarse en Supabase con la clave pública —así funciona—,
+pero **una cuenta sin perfil no ve absolutamente nada**. Y un perfil solo
+puede crearse si Supervisión dejó antes una **invitación** que coincide en
+usuario, rol y finca. Eso no se comprueba en el navegador: se comprueba en la
+política de `INSERT`, porque lo que decide el navegador lo decide quien
+controle el navegador.
+
+El usuario es único, así que una invitación se gasta una sola vez: la segunda
+persona que lo intente se queda fuera.
+
+### El correo es un identificador, no un buzón
+
+La gente de planta entra con un usuario y un PIN; no tiene un correo que
+pueda abrir, y pedirle uno sería inventar un trámite. Supabase nombra las
+cuentas por correo, así que se compone uno a partir del usuario bajo
+`acopia.invalid`: el **RFC 2606** reserva ese dominio precisamente para esto,
+de modo que ningún mensaje puede acabar por error en el buzón de alguien.
+
+### Lo que cada rol puede hacer, según la base
+
+| | ve | escribe |
+|---|---|---|
+| Supervisión | todo | todo, y es la única que borra |
+| Recepción | todo | lotes, y la bitácora |
+| Producción | todo | lotes y producciones, y la bitácora |
+| Proveedor | **sus** lotes, la producción de sus lotes, su ficha y los catálogos | solo lotes **suyos** y solo mientras sigan «Anunciado» |
+
+Un proveedor no anuncia a nombre de otra finca, no se da por recibido a sí
+mismo y no toca un lote que Recepción ya pesó. No ve la bitácora ni la lista
+de usuarios.
+
+### Dos cosas que costaron
+
+**El resumen delataba.** La vista que la app sondea cada pocos segundos para
+saber si algo cambió se ejecutaba con los permisos de quien la creó, así que
+contaba los lotes de todos aunque no se pudieran leer. Pasó a
+`security_invoker`.
+
+**Una errata dejaba fuera para siempre.** Leer una invitación exige estar
+autenticado —la política no se la enseña a un desconocido—, así que la
+primera versión creaba la cuenta y *después* comprobaba el dato de
+verificación. Quien se equivocaba al teclear su RUC se quedaba con una cuenta
+a medias, y el segundo intento moría con «esa cuenta ya existe». Ahora la
+base publica una función que contesta solo sí o no —sin decir a quién invitó
+la planta— y la cuenta se crea únicamente si la invitación cuadra.
+
+### Sigue funcionando sin servidor
+
+Si no hay almacén propio configurado, todo se comporta como antes: el
+artefacto y un equipo suelto siguen usando el acceso local. Las 21 suites
+anteriores lo comprueban en cada cambio. La aplicación no sabe cuál de los
+dos está usando; lo decide `Sesion.disponible()`.
+
+### Ponerlo en marcha
+
+1. En Supabase, **Authentication → Providers → Email**: desactivar
+   **«Confirm email»**. La gente de planta no tiene un correo que abrir.
+2. En el **SQL Editor**, ejecutar `tools/supabase-auth.sql`. Deja escrita una
+   invitación para `supervision`, que es por donde se entra la primera vez.
+3. Abrir la app, pulsar **«Activa tu cuenta aquí»**, usuario `supervision`, y
+   elegir ahí la contraseña.
+4. Desde **Usuarios → + Nuevo acceso**, dar de alta a los demás. Tú creas el
+   acceso; cada persona elige su contraseña al activarlo. **Nunca tecleas la
+   contraseña de otro.**
+
+---
+
 ## 12. Limitaciones conocidas
 
-1. **La contraseña se comprueba en el navegador, no en un servidor.** El hash es real
-   (PBKDF2-SHA256, sal por persona), pero quien pueda leer el almacén ve los hashes y
-   podría intentar adivinarlos sin conexión. Basta para que nadie entre haciéndose pasar
-   por otro en planta —que es el problema práctico— pero un despliegue real debe verificar
-   la contraseña en el servidor y no exponer nunca los hashes al cliente.
-2. **Los permisos se aplican en el cliente.** Guían el proceso; no contienen a un usuario
-   malintencionado. El aislamiento entre proveedores está en la capa de datos, pero
-   también del lado del navegador.
+1. **Sin servidor, la contraseña se comprueba en el navegador.** Con el almacén propio
+   configurado (§11 bis) la verifica Supabase y su hash no sale de allí; en el artefacto
+   o en un equipo suelto se sigue comprobando aquí, contra un hash que está a la vista.
+   El hash es real (PBKDF2-SHA256, sal por persona), pero quien pueda leer el almacén
+   podría intentar adivinarlo sin conexión.
+2. **Sin servidor, los permisos se aplican en el cliente.** Con servidor los impone
+   Postgres y están probados contra un Postgres de verdad (§11 bis). Sin él, guían el
+   proceso pero no contienen a nadie.
 3. **Sin recuperación automática de contraseña.** No hay correo ni SMS: Supervisión
    habilita la reactivación y el proveedor elige una nueva. Es una decisión, no un olvido
    — en planta es más fiable que un enlace que nadie abre.
-4. **La identidad se prueba con el documento registrado.** Quien conozca el código y el
-   RUC de un proveedor podría activar su cuenta antes que él. En un despliegue real
-   convendría añadir un segundo factor (un código al teléfono registrado) o que
-   Supervisión confirme la activación.
+4. **La identidad se prueba con el documento registrado.** Quien conozca el usuario y el
+   dato de verificación de un proveedor podría activar su cuenta antes que él. Convendría
+   un segundo factor (un código al teléfono registrado) o que Supervisión confirme la
+   activación. Lo que sí está cerrado: el dato de verificación se comprueba **antes** de
+   crear nada, así que una errata ya no deja a nadie fuera para siempre, y cada acceso
+   sirve una sola vez.
 5. **Escrituras «gana el último».** Sin bloqueo de registros ni transacciones. En el
    pesaje —el caso que de verdad ocurre— el sistema mira el estado justo antes de
    escribir y se niega si otra persona se le adelantó (§5 quinquies), pero esa
@@ -1039,6 +1134,32 @@ guarde con causa y destino, que cada línea de merma pida la etapa y que la de s
 tome el nombre de su línea, que lo que entra a la mesa descuente el retiro, que las tres
 etapas sumen exactamente la pérdida total, que recibido − pérdida sea igual a exportado, y
 que el rendimiento global quede por debajo del de proceso.
+
+**40 comprobaciones de las políticas de seguridad**, contra un PostgreSQL de
+verdad y no contra una imitación: unas políticas escritas en SQL solo se
+pueden verificar ejecutándolas. `tools/pruebas-rls/` levanta la base, recrea
+el andamiaje que Supabase da por hecho y entra como entraría alguien con la
+consola del navegador abierta. Encontraron un agujero real: Recepción y
+Producción podían escribir en la colección `sistema` entera «para poder
+anotar en la bitácora», y con eso **sobrescribir los catálogos** —los pesos
+por gaveta, los precios por kilo y los rendimientos de las tres líneas, que
+es de donde sale cada cifra del documento—.
+
+**27 comprobaciones de autenticación de punta a punta**: la aplicación tal
+cual se publica, hablando con ese mismo PostgreSQL; lo único simulado es el
+reparto de tokens. Que sin cuenta no se ve nada ni forzándolo desde la
+consola; que sin invitación no hay manera de entrar; que la primera
+supervisión se activa y puede sembrar; que la sesión se retoma sola al
+reabrir; que un proveedor ve solo sus lotes **y pedir el ajeno por su id
+devuelve cero**; que no ve la bitácora ni los usuarios; que no anuncia a
+nombre de otra finca ni se da por recibido a sí mismo; que Recepción no toca
+los catálogos, no borra lotes y no se sube el rol; que desactivar a alguien
+le cierra la puerta; y que las pantallas de activación y de alta funcionan
+con el ratón, incluido que un acceso ya usado no sirve para nadie más.
+
+Esta suite encontró un fallo de diseño: comprobar el dato de verificación
+**después** de crear la cuenta dejaba fuera para siempre a quien se
+equivocara una vez al teclear su RUC.
 
 **10 comprobaciones del momento del pesaje**, en una pantalla de 390 px: que
 el teclado de báscula aparezca al tocar un campo y diga a cuál apunta, que

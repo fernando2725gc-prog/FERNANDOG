@@ -105,6 +105,27 @@ returns boolean language sql stable security definer set search_path = public, p
 $$;
 
 
+-- ¿Hay una invitación con este código y este dato de verificación, y sigue
+-- sin gastarse? Devuelve sí o no, nunca el contenido: un desconocido no se
+-- entera de a quién invitó la planta ni con qué RUC.
+--
+-- Hace falta que la pueda llamar alguien SIN cuenta. Sin esto, la única
+-- manera de comprobar una invitación era crear antes la cuenta en Supabase,
+-- y entonces quien se equivocaba al teclear su RUC se quedaba con una cuenta
+-- a medias y sin poder volver a intentarlo nunca: el segundo intento moría
+-- con «esa cuenta ya existe».
+create or replace function acopia_invitacion_valida(p_acceso text, p_verificacion text)
+returns boolean language sql stable security definer set search_path = public, pg_temp as $$
+  select exists (
+    select 1 from invitaciones i
+    where i.acceso = p_acceso
+      and (i.verificacion is null or i.verificacion = p_verificacion)
+      and not exists (select 1 from perfiles p where p.acceso = i.acceso)
+  )
+$$;
+grant execute on function acopia_invitacion_valida(text, text) to anon, authenticated;
+
+
 -- ========================= 3. Perfiles e invitaciones =====================
 
 drop policy if exists perfil_leer on perfiles;

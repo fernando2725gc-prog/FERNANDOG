@@ -465,7 +465,15 @@ const DB = (function () {
   /* Deriva las credenciales de la demostración al arrancar. Es asíncrono, así
      que hasta que termina esos usuarios no pueden entrar: la interfaz lo
      refleja con el estado de conexión. */
+  /* Las contraseñas locales no existen cuando las comprueba el servidor:
+     sembrarlas sería volver a dejar hashes a la vista, que es justo lo que
+     se quitó de en medio. */
+  function hayServidorDeAcceso() {
+    return typeof Sesion !== "undefined" && Sesion.disponible();
+  }
+
   async function sembrarCredenciales() {
+    if (hayServidorDeAcceso()) return;
     const db = load();
     const pendientes = db.usuarios.filter(function (u) {
       return CLAVES_DEMO[u.id] && !u.credencial;
@@ -486,6 +494,9 @@ const DB = (function () {
      esa cuenta deja de aparecer en vez de mostrar una clave que ya no sirve.
      En un despliegue con usuarios reales la lista sale vacía sola. */
   async function cuentasDemo(rolesPermitidos) {
+    /* Ofrecer cuentas de ejemplo en una instalación con servidor sería
+       enseñar contraseñas que ya no abren nada. */
+    if (hayServidorDeAcceso()) return [];
     const candidatos = all("usuarios").filter(function (u) {
       return CLAVES_DEMO[u.id] && u.credencial && u.activo &&
         (!rolesPermitidos || rolesPermitidos.indexOf(u.rol) !== -1);
@@ -1005,6 +1016,16 @@ const DB = (function () {
       const meta = await remoto.doc("sistema/meta").get();
       const esquemaRemoto = meta.exists ? (meta.data().esquema || 0) : 0;
 
+      /* Con servidor, sembrar es escribir doscientos documentos: solo
+         Supervisión puede. Si entra Recepción a una base recién creada, lo
+         que corresponde no es intentarlo y fallar doscientas veces, sino
+         decir que falta prepararla. */
+      if (esquemaRemoto !== ESQUEMA && !puedeSembrar()) {
+        modo = "compartido";
+        escuchar(alCambiar);
+        return modo;
+      }
+
       if (esquemaRemoto !== ESQUEMA) {
         /* El modelo cambió o el almacén está vacío: se vuelve a sembrar.
            Pero lo que la persona registró sin señal NO es descartable, así
@@ -1084,6 +1105,26 @@ const DB = (function () {
       console.warn("No se pudo conectar el almacén compartido:", e);
     }
     return modo;
+  }
+
+  /* Sin servidor, siembra quien sea: es una demostración en un equipo. Con
+     servidor, solo Supervisión, que es la única que la base deja escribir. */
+  function puedeSembrar() {
+    if (typeof Sesion === "undefined" || !Sesion.disponible()) return true;
+    const p = Sesion.actual();
+    return !!p && p.rol === "supervisor";
+  }
+
+  /* Entrar y salir cambian lo que la base deja ver, así que hay que volver
+     a preguntarlo todo. Sin esto, quien acaba de entrar sigue viendo la
+     pantalla vacía de cuando era un desconocido. */
+  async function reconectar(alCambiar) {
+    suscripciones.forEach(function (fn) { try { fn(); } catch (e) { /* ya estaba */ } });
+    suscripciones.length = 0;
+    remoto = null;
+    modo = "local";
+    if (typeof Nube !== "undefined" && Nube.olvidarResumen) Nube.olvidarResumen();
+    return conectar(alCambiar);
   }
 
   async function limpiarRemoto() {
@@ -1444,7 +1485,18 @@ const DB = (function () {
   function destino(id) { return get("destinos", id); }
   function linea(id) { return get("lineas", id); }
 
+  /* En modo servidor, la bitácora es un documento de planta: un proveedor
+     no puede leerla, así que tampoco puede añadirle una línea sin borrar el
+     resto. Antes de esta comprobación, cada anuncio desde el portal dejaba
+     una escritura condenada a reintentarse para siempre en la cola. */
+  function puedeEscribirBitacora() {
+    if (typeof Sesion === "undefined" || !Sesion.disponible()) return true;
+    const p = Sesion.actual();
+    return !!p && p.rol !== "proveedor";
+  }
+
   function registrarBitacora(usuarioId, accion, detalle) {
+    if (!puedeEscribirBitacora()) return;
     const db = load();
     db.bitacora = [{
       id: uid("bt"),
@@ -1508,7 +1560,11 @@ const DB = (function () {
     comprobarActivacion: comprobarActivacion,
     accesoLibre: accesoLibre,
     registrarBitacora: registrarBitacora,
+    puedeEscribirBitacora: puedeEscribirBitacora,
     conectar: conectar,
+    reconectar: reconectar,
+    puedeSembrar: puedeSembrar,
+    hayServidorDeAcceso: hayServidorDeAcceso,
     pendientes: pendientes,
     origen: origen,
     diagnostico: diagnostico,

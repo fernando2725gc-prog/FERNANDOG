@@ -45,8 +45,42 @@ const Sesion = (function () {
   let perfil = null;     // { uid, acceso, rol, nombre, proveedorId, activo }
   let renovando = null;
 
+  /* Que haya una base configurada no significa que haya autenticación. Hay
+     tres situaciones distintas y confundirlas deja a todo el mundo fuera:
+
+       · La base existe y tiene el esquema de acceso  → se entra por servidor.
+       · La base existe pero sin `supabase-auth.sql`  → acceso local, como antes.
+       · No se alcanza la base (el artefacto, una caída) → acceso local.
+
+     La primera versión solo miraba si había configuración, y entonces dentro
+     del artefacto —donde la red de salida está restringida— la pantalla pedía
+     una contraseña que ningún servidor iba a comprobar: no entraba nadie.
+
+     Se resuelve preguntándoselo a la base una vez, al arrancar. Un 401 o un
+     403 cuentan como «sí»: la tabla está ahí, lo que falta es la sesión, que
+     es justo lo que este módulo sirve para abrir. */
+  let soportado = null;
+  let comprobando = null;
+
+  function comprobar() {
+    if (soportado !== null) return Promise.resolve(soportado);
+    if (comprobando) return comprobando;
+    if (typeof Nube === "undefined" || !Nube.configurada()) {
+      soportado = false;
+      return Promise.resolve(false);
+    }
+    comprobando = Nube.rest("perfiles?select=uid&limit=1")
+      .then(function () { soportado = true; return true; })
+      .catch(function (e) {
+        soportado = (e && (e.code === "permiso-denegado" || e.codigo === "permiso-denegado"));
+        return soportado;
+      })
+      .then(function (r) { comprobando = null; return r; });
+    return comprobando;
+  }
+
   function disponible() {
-    return typeof Nube !== "undefined" && Nube.configurada();
+    return typeof Nube !== "undefined" && Nube.configurada() && soportado === true;
   }
 
   /* El usuario se escribe como se quiera —PRV-001, dandrade— y siempre da el
@@ -235,19 +269,40 @@ const Sesion = (function () {
 
     let creada = false;
     try {
-      /* Hace falta estar autenticado para poder leer la invitación: la
-         política no se la enseña a un desconocido. Así que primero se crea
-         la cuenta y después se comprueba que había invitación; si no la
-         había, la cuenta queda sin perfil y no sirve para nada. */
+      /* PRIMERO se comprueba la invitación, y solo después se crea la cuenta.
+         Al revés —que fue como estuvo escrito— quien se equivocaba una vez al
+         teclear su RUC se quedaba con una cuenta creada y sin perfil, y el
+         segundo intento moría con «esa cuenta ya existe»: una errata lo
+         dejaba fuera para siempre. La comprobación la hace la base y solo
+         contesta sí o no, así que no delata a quién invitó la planta. */
+      const vale = await Nube.rest("rpc/acopia_invitacion_valida", {
+        method: "POST",
+        body: { p_acceso: acceso, p_verificacion: String(verificacion || "") }
+      });
+      if (vale !== true) {
+        return { error: "No hay ninguna invitación disponible con ese código, o el " +
+          "dato de verificación no coincide. Si ya activaste tu cuenta antes, entra " +
+          "con tu contraseña." };
+      }
+
       let d;
       try {
         d = await auth("/signup", { email: correoDe(acceso), password: String(clave) });
         creada = true;
       } catch (e) {
+        /* La invitación está libre pero la cuenta existe: alguien se quedó a
+           medias antes de que existiera la comprobación de arriba, o se cortó
+           la red entre el registro y el perfil. Se retoma con la contraseña
+           que acaba de escribir en vez de dejarlo encallado. */
         if (e.codigo === "user_already_exists") {
-          return { error: traducir("user_already_exists") };
-        }
-        throw e;
+          try {
+            d = await auth("/token?grant_type=password",
+              { email: correoDe(acceso), password: String(clave) });
+          } catch (e2) {
+            return { error: "Esa cuenta ya existe y la contraseña no coincide. " +
+              "Pídele a Supervisión que la vuelva a habilitar." };
+          }
+        } else { throw e; }
       }
       /* Con «Confirm email» activo, signup no devuelve sesión. */
       if (!d.access_token) {
@@ -308,6 +363,7 @@ const Sesion = (function () {
      pedir nada. Es lo que hace que la app instalada en el celular no vuelva
      a preguntar cada mañana. */
   async function retomar() {
+    await comprobar();
     if (!disponible()) return null;
     const guardada = leerGuardada();
     if (!guardada) return null;
@@ -404,6 +460,7 @@ const Sesion = (function () {
 
   return {
     disponible: disponible,
+    comprobar: comprobar,
     correoDe: correoDe,
     entrar: entrar,
     activar: activar,

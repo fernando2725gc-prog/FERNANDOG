@@ -1800,6 +1800,17 @@ const Nube = (function () {
     return !!(c.url && c.clave);
   }
 
+  /* Quién está dentro lo sabe `sesion.js`, que a su vez necesita a este
+     módulo para hablar con Supabase. Para no atarlos en círculo, aquí solo
+     se guarda una función que devuelve el token del momento; si nadie la
+     registra, las peticiones salen sin sesión y la base responde lo que
+     corresponde a un desconocido, que es nada. */
+  let dameToken = null;
+  function usarToken(fn) { dameToken = fn; }
+  function token() {
+    try { return dameToken ? (dameToken() || "") : ""; } catch (e) { return ""; }
+  }
+
   /* ------------------------------------------------------------ errores */
 
   /* db.js lee `e.code` para decidir si reencola y qué avisar. Se le da uno
@@ -1819,13 +1830,15 @@ const Nube = (function () {
       "Content-Type": "application/json",
       Accept: "application/json"
     };
-    /* Supabase tiene dos formatos de clave pública. La antigua (`anon`) es un
-       JWT y empieza por «eyJ»: ahí el `Authorization` lleva el mismo token, y
-       es de donde PostgREST saca el rol. La nueva (`sb_publishable_...`) no es
-       un JWT, y mandarla como Bearer es pedirle al servidor que descodifique
-       algo que no se puede descodificar. El `apikey` basta en los dos casos;
-       el Bearer solo se añade cuando de verdad hay un token que leer. */
-    if (/^eyJ/.test(c.clave)) h.Authorization = "Bearer " + c.clave;
+    /* El `apikey` dice QUÉ proyecto es; el `Authorization` dice QUIÉN pide.
+       Cuando hay sesión abierta manda el token de la persona, que es lo que
+       Postgres lee para decidir qué puede ver. Sin sesión, y solo si la clave
+       pública es del formato antiguo (un JWT, que empieza por «eyJ»), se
+       manda ella: el formato nuevo `sb_publishable_...` no es descodificable
+       y mandarlo como Bearer solo provoca un error. */
+    const t = token();
+    if (t) h.Authorization = "Bearer " + t;
+    else if (/^eyJ/.test(c.clave)) h.Authorization = "Bearer " + c.clave;
     if (extra) Object.keys(extra).forEach(function (k) { h[k] = extra[k]; });
     return h;
   }
@@ -1860,6 +1873,22 @@ const Nube = (function () {
   /* PostgREST escapa con comillas dobles; los identificadores del sistema
      son códigos sin espacios, pero no se da por supuesto. */
   function val(v) { return encodeURIComponent(String(v)); }
+
+  /* Acceso suelto a la API, para las tablas que no son `documentos`:
+     perfiles e invitaciones, que `sesion.js` necesita consultar. */
+  async function rest(ruta, opciones) {
+    const o = opciones || {};
+    return pedir(ruta, {
+      method: o.method || "GET",
+      headers: cabeceras(o.headers),
+      body: o.body === undefined ? undefined : JSON.stringify(o.body)
+    });
+  }
+
+  /* La dirección base de Supabase, que `sesion.js` necesita para hablar con
+     la API de autenticación, que no vive bajo /rest/v1. */
+  function base() { return config().url; }
+  function clavePublica() { return config().clave; }
 
   /* -------------------------------------------------------- lectura */
 
@@ -2136,6 +2165,13 @@ const Nube = (function () {
     configurada: configurada,
     diagnostico: diagnostico,
     abrir: abrir,
+    usarToken: usarToken,
+    rest: rest,
+    base: base,
+    clavePublica: clavePublica,
+    /* Tras entrar o salir, lo que se puede ver cambia de golpe: hay que
+       volver a mirar sin esperar al turno del sondeo. */
+    olvidarResumen: function () { resumenPrevio = null; },
     /* Para las pruebas y para el panel de datos del sistema. */
     INTERVALO_MS: INTERVALO_MS,
     sondearAhora: sondear
@@ -2143,6 +2179,493 @@ const Nube = (function () {
 })();
 
 if (typeof module !== "undefined" && module.exports) { module.exports = Nube; }
+
+</script>
+
+<script>
+/* =========================================================================
+   sesion.js — Quién entra, comprobado en el servidor
+
+   Lo que había antes, y por qué no bastaba: la contraseña se comprobaba en
+   el navegador contra un hash guardado junto a los demás datos. El hash era
+   real (PBKDF2-SHA256, sal por persona), pero estaba a la vista de cualquiera
+   que pudiera leer el almacén, y los permisos eran una guía: ordenaban el
+   trabajo, no contenían a nadie. Quien abriera la consola del navegador podía
+   pedir lo que quisiera.
+
+   Ahora la contraseña la verifica Supabase Auth y su hash no sale de allí
+   nunca. Lo que el navegador recibe es un token firmado, y con ese token
+   Postgres decide qué puede ver cada quien (`tools/supabase-auth.sql`). Un
+   proveedor que pida los lotes de otro no recibe un error de la aplicación:
+   recibe cero filas de la base de datos.
+
+   Dos decisiones que conviene entender:
+
+   · **El correo es un identificador, no un buzón.** La gente de planta entra
+     con un usuario y un PIN; no tiene un correo que pueda abrir, y pedirle
+     uno sería inventar un trámite. Supabase nombra las cuentas por correo,
+     así que se compone uno a partir del usuario, bajo `acopia.invalid`: el
+     RFC 2606 reserva ese dominio precisamente para esto, de modo que ningún
+     mensaje puede acabar por error en el buzón de un desconocido.
+
+   · **Nadie se inventa su propio rol.** Cualquiera puede registrarse en
+     Supabase con la clave pública —así funciona—, pero una cuenta sin perfil
+     no ve absolutamente nada. Y un perfil solo puede crearse si Supervisión
+     dejó antes una invitación que coincide en usuario, rol y finca. Eso no se
+     comprueba aquí: se comprueba en la base, porque lo que decide el
+     navegador lo decide quien controle el navegador.
+   ========================================================================= */
+
+const Sesion = (function () {
+  "use strict";
+
+  const LLAVE = "acopia.sesion.v1";
+  /* Reservado por el RFC 2606 para que nunca exista de verdad. */
+  const DOMINIO = "acopia.invalid";
+  /* Margen para renovar antes de que caduque: si se apura al límite, una
+     petición lanzada justo en el cambio sale con un token muerto. */
+  const MARGEN_MS = 120000;
+
+  let sesion = null;     // { token, refresco, expira, uid }
+  let perfil = null;     // { uid, acceso, rol, nombre, proveedorId, activo }
+  let renovando = null;
+
+  /* Que haya una base configurada no significa que haya autenticación. Hay
+     tres situaciones distintas y confundirlas deja a todo el mundo fuera:
+
+       · La base existe y tiene el esquema de acceso  → se entra por servidor.
+       · La base existe pero sin `supabase-auth.sql`  → acceso local, como antes.
+       · No se alcanza la base (el artefacto, una caída) → acceso local.
+
+     La primera versión solo miraba si había configuración, y entonces dentro
+     del artefacto —donde la red de salida está restringida— la pantalla pedía
+     una contraseña que ningún servidor iba a comprobar: no entraba nadie.
+
+     Se resuelve preguntándoselo a la base una vez, al arrancar. Un 401 o un
+     403 cuentan como «sí»: la tabla está ahí, lo que falta es la sesión, que
+     es justo lo que este módulo sirve para abrir. */
+  let soportado = null;
+  let comprobando = null;
+
+  function comprobar() {
+    if (soportado !== null) return Promise.resolve(soportado);
+    if (comprobando) return comprobando;
+    if (typeof Nube === "undefined" || !Nube.configurada()) {
+      soportado = false;
+      return Promise.resolve(false);
+    }
+    comprobando = Nube.rest("perfiles?select=uid&limit=1")
+      .then(function () { soportado = true; return true; })
+      .catch(function (e) {
+        soportado = (e && (e.code === "permiso-denegado" || e.codigo === "permiso-denegado"));
+        return soportado;
+      })
+      .then(function (r) { comprobando = null; return r; });
+    return comprobando;
+  }
+
+  function disponible() {
+    return typeof Nube !== "undefined" && Nube.configurada() && soportado === true;
+  }
+
+  /* El usuario se escribe como se quiera —PRV-001, dandrade— y siempre da el
+     mismo correo. Sin esto, «DAndrade» y «dandrade» serían dos cuentas. */
+  function correoDe(acceso) {
+    const limpio = String(acceso || "").trim().toLowerCase()
+      .replace(/[^a-z0-9._-]/g, "-").replace(/^-+|-+$/g, "");
+    return limpio + "@" + DOMINIO;
+  }
+
+  /* ------------------------------------------------------------ errores */
+
+  const MENSAJES = {
+    "invalid_credentials": "Usuario o contraseña incorrectos.",
+    "email_not_confirmed": "La cuenta existe pero está sin confirmar. " +
+      "Supervisión debe desactivar «Confirm email» en Supabase.",
+    "user_already_exists": "Esa cuenta ya fue activada. Si la contraseña se " +
+      "perdió, Supervisión puede volver a habilitarla.",
+    "weak_password": "La contraseña es demasiado corta.",
+    "over_request_rate_limit": "Demasiados intentos seguidos. Espera un minuto.",
+    "sin-red": "Sin conexión con el servidor de acceso."
+  };
+
+  function traducir(codigo, respaldo) {
+    return MENSAJES[codigo] || respaldo || "No se pudo completar la operación.";
+  }
+
+  /* ------------------------------------------------- llamadas a GoTrue */
+
+  async function auth(ruta, cuerpo, conToken) {
+    const base = Nube.base();
+    const cab = {
+      apikey: Nube.clavePublica(),
+      "Content-Type": "application/json"
+    };
+    if (conToken && sesion) cab.Authorization = "Bearer " + sesion.token;
+
+    let res;
+    try {
+      res = await fetch(base + "/auth/v1" + ruta, {
+        method: cuerpo ? "POST" : "GET",
+        headers: cab,
+        body: cuerpo ? JSON.stringify(cuerpo) : undefined
+      });
+    } catch (e) {
+      const err = new Error(MENSAJES["sin-red"]);
+      err.codigo = "sin-red";
+      throw err;
+    }
+
+    const texto = await res.text();
+    const datos = texto ? JSON.parse(texto) : {};
+    if (!res.ok) {
+      const codigo = datos.error_code || datos.error || "";
+      const err = new Error(traducir(codigo, datos.msg || datos.error_description));
+      err.codigo = codigo;
+      err.estado = res.status;
+      throw err;
+    }
+    return datos;
+  }
+
+  async function authPut(ruta, cuerpo) {
+    const res = await fetch(Nube.base() + "/auth/v1" + ruta, {
+      method: "PUT",
+      headers: {
+        apikey: Nube.clavePublica(),
+        Authorization: "Bearer " + (sesion ? sesion.token : ""),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(cuerpo)
+    });
+    const texto = await res.text();
+    const datos = texto ? JSON.parse(texto) : {};
+    if (!res.ok) {
+      const err = new Error(traducir(datos.error_code || datos.error, datos.msg));
+      err.codigo = datos.error_code || datos.error;
+      throw err;
+    }
+    return datos;
+  }
+
+  /* -------------------------------------------------------- guardado */
+
+  function guardar(datos) {
+    sesion = datos
+      ? {
+          token: datos.access_token,
+          refresco: datos.refresh_token,
+          /* `expires_at` viene en segundos desde época; si falta, se calcula
+             con `expires_in`, que siempre llega. */
+          expira: (datos.expires_at
+            ? datos.expires_at * 1000
+            : Date.now() + (datos.expires_in || 3600) * 1000),
+          uid: datos.user ? datos.user.id : (sesion && sesion.uid)
+        }
+      : null;
+    try {
+      if (sesion) localStorage.setItem(LLAVE, JSON.stringify(sesion));
+      else localStorage.removeItem(LLAVE);
+    } catch (e) { /* modo privado: la sesión vive solo en memoria */ }
+    if (typeof Nube !== "undefined" && Nube.olvidarResumen) Nube.olvidarResumen();
+  }
+
+  function leerGuardada() {
+    try {
+      const crudo = localStorage.getItem(LLAVE);
+      return crudo ? JSON.parse(crudo) : null;
+    } catch (e) { return null; }
+  }
+
+  /* ------------------------------------------------------- renovación */
+
+  /* El token dura una hora. Se renueva antes de que caduque y una sola vez
+     aunque lo pidan diez peticiones a la vez: diez renovaciones simultáneas
+     invalidan el refresco y echan a la persona de su propia sesión. */
+  async function vigente() {
+    if (!sesion) return false;
+    if (Date.now() < sesion.expira - MARGEN_MS) return true;
+    if (renovando) return renovando;
+    renovando = (async function () {
+      try {
+        const d = await auth("/token?grant_type=refresh_token", { refresh_token: sesion.refresco });
+        guardar(d);
+        return true;
+      } catch (e) {
+        /* El refresco caducó o fue revocado: hay que volver a entrar. */
+        guardar(null); perfil = null;
+        return false;
+      } finally { renovando = null; }
+    })();
+    return renovando;
+  }
+
+  function token() { return sesion ? sesion.token : ""; }
+
+  /* ---------------------------------------------------------- perfil */
+
+  async function leerPerfil(uid) {
+    const filas = await Nube.rest("perfiles?uid=eq." + encodeURIComponent(uid) +
+      "&select=uid,acceso,rol,proveedor_id,nombre,activo");
+    const f = filas && filas[0];
+    if (!f) return null;
+    return {
+      uid: f.uid, acceso: f.acceso, rol: f.rol,
+      proveedorId: f.proveedor_id, nombre: f.nombre, activo: f.activo
+    };
+  }
+
+  /* --------------------------------------------------------- entrar */
+
+  async function entrar(acceso, clave) {
+    if (!disponible()) return { error: "No hay servidor de acceso configurado." };
+    try {
+      const d = await auth("/token?grant_type=password",
+        { email: correoDe(acceso), password: String(clave) });
+      guardar(d);
+
+      const p = await leerPerfil(sesion.uid);
+      if (!p) {
+        /* La cuenta existe en Supabase pero nadie le dio un papel. Sin perfil
+           no ve nada, así que es mejor decirlo que dejarla dentro mirando una
+           pantalla vacía. */
+        await salir();
+        return { error: "Esa cuenta no tiene un rol asignado. Supervisión debe " +
+          "crear la invitación y volver a activarla." };
+      }
+      if (!p.activo) {
+        await salir();
+        return { error: "Esa cuenta está desactivada. Habla con Supervisión." };
+      }
+      perfil = p;
+      return { perfil: p };
+    } catch (e) {
+      return { error: e.message, codigo: e.codigo };
+    }
+  }
+
+  /* -------------------------------------------------------- activar */
+
+  /* La primera vez: la persona crea su propia cuenta con el código que le
+     dieron y el dato de verificación. Supervisión nunca teclea la contraseña
+     de otro, que es como se filtran. */
+  async function activar(acceso, clave, verificacion) {
+    if (!disponible()) return { error: "No hay servidor de acceso configurado." };
+
+    let creada = false;
+    try {
+      /* PRIMERO se comprueba la invitación, y solo después se crea la cuenta.
+         Al revés —que fue como estuvo escrito— quien se equivocaba una vez al
+         teclear su RUC se quedaba con una cuenta creada y sin perfil, y el
+         segundo intento moría con «esa cuenta ya existe»: una errata lo
+         dejaba fuera para siempre. La comprobación la hace la base y solo
+         contesta sí o no, así que no delata a quién invitó la planta. */
+      const vale = await Nube.rest("rpc/acopia_invitacion_valida", {
+        method: "POST",
+        body: { p_acceso: acceso, p_verificacion: String(verificacion || "") }
+      });
+      if (vale !== true) {
+        return { error: "No hay ninguna invitación disponible con ese código, o el " +
+          "dato de verificación no coincide. Si ya activaste tu cuenta antes, entra " +
+          "con tu contraseña." };
+      }
+
+      let d;
+      try {
+        d = await auth("/signup", { email: correoDe(acceso), password: String(clave) });
+        creada = true;
+      } catch (e) {
+        /* La invitación está libre pero la cuenta existe: alguien se quedó a
+           medias antes de que existiera la comprobación de arriba, o se cortó
+           la red entre el registro y el perfil. Se retoma con la contraseña
+           que acaba de escribir en vez de dejarlo encallado. */
+        if (e.codigo === "user_already_exists") {
+          try {
+            d = await auth("/token?grant_type=password",
+              { email: correoDe(acceso), password: String(clave) });
+          } catch (e2) {
+            return { error: "Esa cuenta ya existe y la contraseña no coincide. " +
+              "Pídele a Supervisión que la vuelva a habilitar." };
+          }
+        } else { throw e; }
+      }
+      /* Con «Confirm email» activo, signup no devuelve sesión. */
+      if (!d.access_token) {
+        return { error: "Supabase está pidiendo confirmación por correo. " +
+          "Hay que desactivar «Confirm email» en Authentication → Providers." };
+      }
+      guardar(d);
+
+      const inv = await Nube.rest("invitaciones?acceso=eq." + encodeURIComponent(acceso) +
+        "&select=acceso,rol,proveedor_id,nombre,verificacion");
+      const i = inv && inv[0];
+      if (!i) {
+        await salir();
+        return { error: "No hay ninguna invitación con ese código. Pídesela a Supervisión." };
+      }
+      if (i.verificacion && String(i.verificacion).trim() !== String(verificacion || "").trim()) {
+        await salir();
+        return { error: "El dato de verificación no coincide con el registrado." };
+      }
+
+      try {
+        await Nube.rest("perfiles", {
+          method: "POST",
+          headers: { Prefer: "return=minimal" },
+          body: {
+            uid: sesion.uid, acceso: i.acceso, rol: i.rol,
+            proveedor_id: i.proveedor_id, nombre: i.nombre
+          }
+        });
+      } catch (e) {
+        await salir();
+        /* La base rechaza el perfil si la invitación ya se gastó: el usuario
+           es único, así que la segunda persona que lo intente se queda fuera. */
+        return { error: "Esa invitación ya fue usada por otra persona." };
+      }
+
+      perfil = await leerPerfil(sesion.uid);
+      return { perfil: perfil };
+    } catch (e) {
+      if (creada) { try { await salir(); } catch (x) { /* ya da igual */ } }
+      return { error: e.message, codigo: e.codigo };
+    }
+  }
+
+  /* ---------------------------------------------------------- salir */
+
+  async function salir() {
+    if (sesion) {
+      try { await auth("/logout", {}, true); } catch (e) { /* da igual: se olvida igual */ }
+    }
+    guardar(null);
+    perfil = null;
+  }
+
+  /* -------------------------------------------------------- retomar */
+
+  /* Al abrir la app: si hay una sesión guardada y sigue viva, se retoma sin
+     pedir nada. Es lo que hace que la app instalada en el celular no vuelva
+     a preguntar cada mañana. */
+  async function retomar() {
+    await comprobar();
+    if (!disponible()) return null;
+    const guardada = leerGuardada();
+    if (!guardada) return null;
+    sesion = guardada;
+    if (!await vigente()) return null;
+    try {
+      perfil = await leerPerfil(sesion.uid);
+    } catch (e) { perfil = null; }
+    if (!perfil || !perfil.activo) { await salir(); return null; }
+    return perfil;
+  }
+
+  async function cambiarClave(nueva) {
+    if (!sesion) return { error: "No hay sesión abierta." };
+    try {
+      await authPut("/user", { password: String(nueva) });
+      return { ok: true };
+    } catch (e) { return { error: e.message, codigo: e.codigo }; }
+  }
+
+  /* ------------------------------------------- administrar personas */
+
+  async function invitar(datos) {
+    try {
+      await Nube.rest("invitaciones?on_conflict=acceso", {
+        method: "POST",
+        headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+        body: {
+          acceso: datos.acceso, rol: datos.rol,
+          proveedor_id: datos.proveedorId || null,
+          nombre: datos.nombre,
+          verificacion: datos.verificacion || null,
+          creada_por: sesion ? sesion.uid : null
+        }
+      });
+      return { ok: true };
+    } catch (e) {
+      return { error: e.codigo === "permiso-denegado"
+        ? "Solo Supervisión puede crear accesos."
+        : e.message };
+    }
+  }
+
+  async function invitaciones() {
+    try {
+      return await Nube.rest("invitaciones?select=acceso,rol,proveedor_id,nombre,verificacion,creada&order=creada.desc") || [];
+    } catch (e) { return []; }
+  }
+
+  async function perfiles() {
+    try {
+      const filas = await Nube.rest("perfiles?select=uid,acceso,rol,proveedor_id,nombre,activo,creado&order=creado.asc") || [];
+      return filas.map(function (f) {
+        return { uid: f.uid, acceso: f.acceso, rol: f.rol, proveedorId: f.proveedor_id,
+          nombre: f.nombre, activo: f.activo, creado: f.creado };
+      });
+    } catch (e) { return []; }
+  }
+
+  async function activarPerfil(uid, activo) {
+    try {
+      await Nube.rest("perfiles?uid=eq." + encodeURIComponent(uid), {
+        method: "PATCH",
+        headers: { Prefer: "return=minimal" },
+        body: { activo: !!activo }
+      });
+      return { ok: true };
+    } catch (e) { return { error: e.message }; }
+  }
+
+  async function borrarInvitacion(acceso) {
+    try {
+      await Nube.rest("invitaciones?acceso=eq." + encodeURIComponent(acceso), {
+        method: "DELETE", headers: { Prefer: "return=minimal" }
+      });
+      return { ok: true };
+    } catch (e) { return { error: e.message }; }
+  }
+
+  /* --------------------------------------------------------- estado */
+
+  function actual() { return perfil; }
+  function uid() { return sesion ? sesion.uid : null; }
+
+  /* Se registra en cuanto carga el módulo: a partir de aquí, toda petición
+     al almacén viaja con la sesión de quien esté dentro. */
+  if (typeof Nube !== "undefined" && Nube.usarToken) {
+    Nube.usarToken(function () {
+      /* Renovar aquí sería asíncrono y las cabeceras se arman en caliente;
+         `vigente()` lo hace en los puntos donde sí se puede esperar. */
+      return sesion ? sesion.token : "";
+    });
+  }
+
+  return {
+    disponible: disponible,
+    comprobar: comprobar,
+    correoDe: correoDe,
+    entrar: entrar,
+    activar: activar,
+    salir: salir,
+    retomar: retomar,
+    vigente: vigente,
+    token: token,
+    actual: actual,
+    uid: uid,
+    cambiarClave: cambiarClave,
+    invitar: invitar,
+    invitaciones: invitaciones,
+    perfiles: perfiles,
+    activarPerfil: activarPerfil,
+    borrarInvitacion: borrarInvitacion,
+    DOMINIO: DOMINIO
+  };
+})();
+
+if (typeof module !== "undefined" && module.exports) { module.exports = Sesion; }
 
 </script>
 
@@ -3133,7 +3656,15 @@ const DB = (function () {
   /* Deriva las credenciales de la demostración al arrancar. Es asíncrono, así
      que hasta que termina esos usuarios no pueden entrar: la interfaz lo
      refleja con el estado de conexión. */
+  /* Las contraseñas locales no existen cuando las comprueba el servidor:
+     sembrarlas sería volver a dejar hashes a la vista, que es justo lo que
+     se quitó de en medio. */
+  function hayServidorDeAcceso() {
+    return typeof Sesion !== "undefined" && Sesion.disponible();
+  }
+
   async function sembrarCredenciales() {
+    if (hayServidorDeAcceso()) return;
     const db = load();
     const pendientes = db.usuarios.filter(function (u) {
       return CLAVES_DEMO[u.id] && !u.credencial;
@@ -3154,6 +3685,9 @@ const DB = (function () {
      esa cuenta deja de aparecer en vez de mostrar una clave que ya no sirve.
      En un despliegue con usuarios reales la lista sale vacía sola. */
   async function cuentasDemo(rolesPermitidos) {
+    /* Ofrecer cuentas de ejemplo en una instalación con servidor sería
+       enseñar contraseñas que ya no abren nada. */
+    if (hayServidorDeAcceso()) return [];
     const candidatos = all("usuarios").filter(function (u) {
       return CLAVES_DEMO[u.id] && u.credencial && u.activo &&
         (!rolesPermitidos || rolesPermitidos.indexOf(u.rol) !== -1);
@@ -3673,6 +4207,16 @@ const DB = (function () {
       const meta = await remoto.doc("sistema/meta").get();
       const esquemaRemoto = meta.exists ? (meta.data().esquema || 0) : 0;
 
+      /* Con servidor, sembrar es escribir doscientos documentos: solo
+         Supervisión puede. Si entra Recepción a una base recién creada, lo
+         que corresponde no es intentarlo y fallar doscientas veces, sino
+         decir que falta prepararla. */
+      if (esquemaRemoto !== ESQUEMA && !puedeSembrar()) {
+        modo = "compartido";
+        escuchar(alCambiar);
+        return modo;
+      }
+
       if (esquemaRemoto !== ESQUEMA) {
         /* El modelo cambió o el almacén está vacío: se vuelve a sembrar.
            Pero lo que la persona registró sin señal NO es descartable, así
@@ -3752,6 +4296,26 @@ const DB = (function () {
       console.warn("No se pudo conectar el almacén compartido:", e);
     }
     return modo;
+  }
+
+  /* Sin servidor, siembra quien sea: es una demostración en un equipo. Con
+     servidor, solo Supervisión, que es la única que la base deja escribir. */
+  function puedeSembrar() {
+    if (typeof Sesion === "undefined" || !Sesion.disponible()) return true;
+    const p = Sesion.actual();
+    return !!p && p.rol === "supervisor";
+  }
+
+  /* Entrar y salir cambian lo que la base deja ver, así que hay que volver
+     a preguntarlo todo. Sin esto, quien acaba de entrar sigue viendo la
+     pantalla vacía de cuando era un desconocido. */
+  async function reconectar(alCambiar) {
+    suscripciones.forEach(function (fn) { try { fn(); } catch (e) { /* ya estaba */ } });
+    suscripciones.length = 0;
+    remoto = null;
+    modo = "local";
+    if (typeof Nube !== "undefined" && Nube.olvidarResumen) Nube.olvidarResumen();
+    return conectar(alCambiar);
   }
 
   async function limpiarRemoto() {
@@ -4112,7 +4676,18 @@ const DB = (function () {
   function destino(id) { return get("destinos", id); }
   function linea(id) { return get("lineas", id); }
 
+  /* En modo servidor, la bitácora es un documento de planta: un proveedor
+     no puede leerla, así que tampoco puede añadirle una línea sin borrar el
+     resto. Antes de esta comprobación, cada anuncio desde el portal dejaba
+     una escritura condenada a reintentarse para siempre en la cola. */
+  function puedeEscribirBitacora() {
+    if (typeof Sesion === "undefined" || !Sesion.disponible()) return true;
+    const p = Sesion.actual();
+    return !!p && p.rol !== "proveedor";
+  }
+
   function registrarBitacora(usuarioId, accion, detalle) {
+    if (!puedeEscribirBitacora()) return;
     const db = load();
     db.bitacora = [{
       id: uid("bt"),
@@ -4176,7 +4751,11 @@ const DB = (function () {
     comprobarActivacion: comprobarActivacion,
     accesoLibre: accesoLibre,
     registrarBitacora: registrarBitacora,
+    puedeEscribirBitacora: puedeEscribirBitacora,
     conectar: conectar,
+    reconectar: reconectar,
+    puedeSembrar: puedeSembrar,
+    hayServidorDeAcceso: hayServidorDeAcceso,
     pendientes: pendientes,
     origen: origen,
     diagnostico: diagnostico,
@@ -7393,10 +7972,43 @@ const Guia = (function () {
 
   /* ============================== sesión ============================== */
 
+  function modoServidor() {
+    return typeof Sesion !== "undefined" && Sesion.disponible();
+  }
+
+  /* Con servidor, el proveedor no tiene ficha de usuario que leer: la base
+     no se la enseña, y es correcto que no se la enseñe. Lo que hay es su
+     perfil, que trae lo único que el portal necesita de él. */
+  function usuarioDesdePerfil(perfil) {
+    return {
+      id: perfil.uid,
+      usuario: perfil.acceso,
+      nombre: perfil.nombre || perfil.acceso,
+      rol: perfil.rol,
+      proveedorId: perfil.proveedorId,
+      activo: true,
+      servidor: true
+    };
+  }
+
+  async function entrarConServidor(codigo, clave) {
+    const r = await Sesion.entrar(codigo, clave);
+    if (r.error) return { error: r.error };
+    if (r.perfil.rol !== "proveedor") {
+      await Sesion.salir();
+      return { error: "Esa cuenta es del personal de planta. Entra por el sistema interno." };
+    }
+    await DB.reconectar(repintarPorSincronizacion);
+    usuario = usuarioDesdePerfil(r.perfil);
+    return { ok: true };
+  }
+
   async function entrar(acceso, clave, recordar) {
     const codigo = String(acceso).trim();
     if (!codigo) return { error: "Escribe tu código de proveedor." };
     if (!clave) return { error: "Escribe tu contraseña." };
+
+    if (modoServidor()) return entrarConServidor(codigo, clave);
 
     const espera = Auth.bloqueo(codigo);
     if (espera > 0) {
@@ -7440,6 +8052,9 @@ const Guia = (function () {
     novedadesAbiertas = false;
     busqueda = "";
     if (usuario) DB.registrarBitacora(usuario.id, "Salida del portal", usuario.nombre);
+    if (modoServidor()) {
+      Sesion.salir().then(function () { DB.reconectar(repintarPorSincronizacion); });
+    }
     usuario = null;
     if (repintado) { clearTimeout(repintado); repintado = null; }
     vista = "inicio";
@@ -7454,6 +8069,25 @@ const Guia = (function () {
     if (u && u.rol === "proveedor" && u.activo) usuario = u;
   }
 
+  /* Dos pasos a propósito. El token hace falta ANTES de conectar, porque sin
+     él la base no devuelve nada; pero a la persona no se la mete en la
+     pantalla hasta que haya datos, o vería su portal vacío un instante y se
+     preguntaría dónde están sus envíos. */
+  let perfilRetomado = null;
+
+  async function restaurarDelServidor() {
+    if (!modoServidor()) return;
+    const perfil = await Sesion.retomar();
+    if (!perfil || perfil.rol !== "proveedor") return;
+    perfilRetomado = perfil;
+  }
+
+  function entrarConPerfilRetomado() {
+    if (!perfilRetomado) return;
+    usuario = usuarioDesdePerfil(perfilRetomado);
+    perfilRetomado = null;
+  }
+
   /* ========================= lectura aislada ========================== */
 
   /* Único punto de acceso a los datos del portal. */
@@ -7464,7 +8098,14 @@ const Guia = (function () {
       .sort(function (a, b) { return a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : 0; });
   }
 
-  function miProveedor() { return DB.get("proveedores", usuario.proveedorId); }
+  /* Nunca devuelve nada: con servidor, la sesión se retoma antes de que la
+     base entregue los datos, y durante ese instante la pantalla ya quiere
+     pintar el nombre de la finca. Una ficha vacía se ve rara medio segundo;
+     un `null` tumba la aplicación entera. */
+  function miProveedor() {
+    return DB.get("proveedores", usuario && usuario.proveedorId) ||
+      { id: (usuario && usuario.proveedorId) || "", nombre: (usuario && usuario.nombre) || "" };
+  }
 
   function produccionDe(loteId) {
     return DB.all("producciones").find(function (p) { return p.loteId === loteId; }) || null;
@@ -8135,6 +8776,20 @@ const Guia = (function () {
       { nombre: "repetir", etiqueta: "Repítela", tipo: "password", requerido: true,
         validar: function (v, d) { return v === d.clave ? null : "Las dos no coinciden."; } }
     ], function (d) {
+      /* Con servidor, activar es crear una cuenta de verdad: la contraseña
+         viaja una sola vez y se queda allí. La planta nunca la teclea ni la
+         ve, que es como se dejan de filtrar. */
+      if (modoServidor()) {
+        return Sesion.activar(d.codigo, d.clave, d.documento).then(function (r) {
+          if (r.error) return { error: r.error };
+          return DB.reconectar(repintarPorSincronizacion).then(function () {
+            usuario = usuarioDesdePerfil(r.perfil);
+            UI.aviso("Cuenta activada. Bienvenido, " + usuario.nombre + ".");
+            render();
+          });
+        });
+      }
+
       const r = DB.comprobarActivacion(d.codigo, d.documento);
 
       if (r.error === "ya-activa") {
@@ -8452,7 +9107,13 @@ const Guia = (function () {
 
     /* Al conectar cambian los datos, pero si la persona ya está llenando el
        acceso NO se repinta: seria borrarle lo escrito justo antes de entrar. */
-    DB.conectar(repintarPorSincronizacion).then(function () {
+    /* Primero quién eres, después qué puedes ver. */
+Sesion.comprobar()
+      .then(restaurarDelServidor)
+      .catch(function () { /* sin sesión previa: se entra a mano */ })
+      .then(function () { return DB.conectar(repintarPorSincronizacion); })
+      .then(function () {
+      entrarConPerfilRetomado();
       return DB.sembrarCredenciales();
     }).then(function () {
       return DB.cuentasDemo(["proveedor"]);
@@ -8521,10 +9182,52 @@ const Guia = (function () {
 
   /* ============================== sesión ============================== */
 
+  /* Dos maneras de comprobar quién entra, y la diferencia importa: con
+     servidor, la contraseña la verifica Supabase y su hash no sale de allí;
+     sin servidor —el artefacto, o un equipo suelto— se comprueba aquí
+     contra un hash que está a la vista, que es lo que se podía hacer antes
+     de tener una base propia. El resto de la aplicación no nota cuál es. */
+  function modoServidor() {
+    return typeof Sesion !== "undefined" && Sesion.disponible();
+  }
+
+  /* El perfil manda sobre el directorio: el rol que vale es el que dice la
+     base, no el que diga un documento que alguien pudo editar. */
+  function usuarioDesdePerfil(perfil) {
+    const dir = DB.buscarPorAcceso(perfil.acceso);
+    return Object.assign({}, dir || {}, {
+      id: dir ? dir.id : perfil.uid,
+      usuario: perfil.acceso,
+      nombre: perfil.nombre || (dir && dir.nombre) || perfil.acceso,
+      rol: perfil.rol,
+      proveedorId: perfil.proveedorId || null,
+      activo: true,
+      servidor: true
+    });
+  }
+
+  async function entrarConServidor(acceso, clave) {
+    const r = await Sesion.entrar(acceso, clave);
+    if (r.error) return { error: r.error };
+    if (ROLES_INTERNOS.indexOf(r.perfil.rol) === -1) {
+      await Sesion.salir();
+      return { error: "Esa cuenta es de proveedor. Entra por el portal del proveedor." };
+    }
+    /* Lo que se puede leer cambia al entrar: hay que traer los datos otra
+       vez, porque hasta ahora la base no devolvía nada. */
+    await DB.reconectar(repintarPorSincronizacion);
+    usuario = usuarioDesdePerfil(r.perfil);
+    novedadesAbiertas = false;
+    DB.registrarBitacora(usuario.id, "Inicio de sesión", usuario.nombre + " · " + usuario.rol);
+    return { ok: true };
+  }
+
   async function entrar(acceso, clave, recordar) {
     const login = String(acceso).trim();
     if (!login) return { error: "Escribe tu usuario." };
     if (!clave) return { error: "Escribe tu contraseña o PIN." };
+
+    if (modoServidor()) return entrarConServidor(login, clave);
 
     const espera = Auth.bloqueo(login);
     if (espera > 0) {
@@ -8562,6 +9265,11 @@ const Guia = (function () {
 
   function salir() {
     if (usuario) DB.registrarBitacora(usuario.id, "Cierre de sesión", usuario.nombre);
+    if (modoServidor()) {
+      /* No se espera: cerrar la sesión en el servidor es cortesía, pero la
+         persona ya está fuera de la pantalla en cuanto suelta el botón. */
+      Sesion.salir().then(function () { DB.reconectar(repintarPorSincronizacion); });
+    }
     usuario = null;
     /* El panel abierto no puede sobrevivir al cambio de persona: se
        quedaba abierto y le enseñaba a la siguiente los avisos de la
@@ -8578,6 +9286,27 @@ const Guia = (function () {
     if (!id) return;
     const u = DB.get("usuarios", id);
     if (u && ROLES_INTERNOS.indexOf(u.rol) !== -1 && u.activo) usuario = u;
+  }
+
+  /* Con servidor, retomar la sesión es ir a preguntar: el token guardado
+     puede haber caducado o haber sido revocado. Por eso es asíncrono y por
+     eso la pantalla se pinta antes, vacía, en vez de quedarse en blanco. */
+  let perfilRetomado = null;
+
+  async function restaurarDelServidor() {
+    if (!modoServidor()) return;
+    const perfil = await Sesion.retomar();
+    if (!perfil || ROLES_INTERNOS.indexOf(perfil.rol) === -1) return;
+    perfilRetomado = perfil;
+  }
+
+  /* El token hace falta antes de conectar; la persona, después: el
+     directorio de nombres y los lotes llegan con la conexión, y entrar
+     antes es enseñar una planta vacía. */
+  function entrarConPerfilRetomado() {
+    if (!perfilRetomado) return;
+    usuario = usuarioDesdePerfil(perfilRetomado);
+    perfilRetomado = null;
   }
 
   /* ============================== navegación ========================== */
@@ -11565,7 +12294,142 @@ const Guia = (function () {
     });
   }
 
+  /* Con servidor, las personas no son documentos del repositorio: son
+     cuentas de Supabase con un perfil. Se leen aparte y se guardan aquí
+     mientras dure la pantalla, porque llegan por la red y el render es
+     síncrono. */
+  let personas = { perfiles: [], invitaciones: [], cargando: false, cargado: false };
+
+  function cargarPersonas() {
+    if (personas.cargando) return;
+    personas.cargando = true;
+    Promise.all([Sesion.perfiles(), Sesion.invitaciones()]).then(function (r) {
+      personas = { perfiles: r[0], invitaciones: r[1], cargando: false, cargado: true };
+      if (vista === "usuarios") render();
+    }).catch(function () {
+      personas.cargando = false; personas.cargado = true;
+    });
+  }
+
+  function vistaUsuariosServidor() {
+    if (!personas.cargado) { cargarPersonas(); }
+
+    let html = '<div class="vista-cab"><div><h1>Usuarios</h1>' +
+      '<p class="sub">Quién entra, con qué rol y con qué acceso. Las contraseñas ' +
+      "las comprueba el servidor y no pasan por aquí.</p></div>" +
+      '<button class="btn btn-primario" id="btnNuevoAcceso">+ Nuevo acceso</button></div>';
+
+    html += '<p class="nota-info"><strong>Cómo funciona.</strong> Tú creas el acceso ' +
+      "con el nombre de usuario y el rol; la persona lo activa desde su pantalla y " +
+      "elige ahí su contraseña. <strong>Nunca tecleas la contraseña de otro</strong>: " +
+      "una contraseña que pasa por las manos de un tercero deja de serlo. El rol no se " +
+      "puede falsificar —la base solo acepta un perfil que coincida con la invitación " +
+      "que dejaste escrita—.</p>";
+
+    if (!personas.cargado) {
+      html += '<p class="vacio">Consultando las cuentas…</p>';
+      return html;
+    }
+
+    const pendientes = personas.invitaciones.filter(function (i) {
+      return !personas.perfiles.some(function (p) { return p.acceso === i.acceso; });
+    });
+
+    html += '<section class="panel"><h2>Cuentas activas</h2>' +
+      UI.tabla([
+        { titulo: "Nombre", valor: function (p) { return "<strong>" + esc(p.nombre) + "</strong>"; } },
+        { titulo: "Usuario", valor: function (p) { return "<code>" + esc(p.acceso) + "</code>"; } },
+        { titulo: "Rol", valor: function (p) {
+          const r = DB.ROLES.find(function (x) { return x.id === p.rol; });
+          return r ? UI.icono(r.icono) + " " + esc(r.nombre) : esc(p.rol); } },
+        { titulo: "Proveedor", valor: function (p) {
+          return p.proveedorId ? esc(Indicadores.nombreProveedor(p.proveedorId)) : "—"; } },
+        { titulo: "Activada", valor: function (p) {
+          return p.creado ? UI.fechaCorta(String(p.creado).slice(0, 10)) : "—"; } },
+        { titulo: "Estado", valor: function (p) {
+          return '<span class="estado estado-' + (p.activo ? "recibido" : "inactivo") + '">' +
+            (p.activo ? "Activa" : "Desactivada") + "</span>"; } },
+        { titulo: "", valor: function (p) {
+          if (Sesion.uid() && p.uid === Sesion.uid()) {
+            return '<span class="tenue">Sesión actual</span>';
+          }
+          return '<button class="btn-mini" data-perfil="' + esc(p.uid) + '" data-activo="' +
+            (p.activo ? "0" : "1") + '">' + (p.activo ? "Desactivar" : "Reactivar") + "</button>"; } }
+      ], personas.perfiles, { vacio: "Todavía no se ha activado ninguna cuenta." }) +
+      "</section>";
+
+    html += '<section class="panel"><h2>Accesos creados, sin activar</h2>' +
+      '<p class="sub panel-sub">Esperando a que la persona entre y elija su ' +
+      "contraseña. Cada acceso sirve una sola vez.</p>" +
+      UI.tabla([
+        { titulo: "Usuario", valor: function (i) { return "<code>" + esc(i.acceso) + "</code>"; } },
+        { titulo: "Nombre", valor: function (i) { return esc(i.nombre); } },
+        { titulo: "Rol", valor: function (i) {
+          const r = DB.ROLES.find(function (x) { return x.id === i.rol; });
+          return r ? UI.icono(r.icono) + " " + esc(r.nombre) : esc(i.rol); } },
+        { titulo: "Verificación", valor: function (i) {
+          return i.verificacion
+            ? "<code>" + esc(i.verificacion) + "</code>"
+            : '<span class="tenue">ninguna</span>'; } },
+        { titulo: "", valor: function (i) {
+          return '<button class="btn-mini btn-mini-peligro" data-quitar-inv="' +
+            esc(i.acceso) + '">Anular</button>'; } }
+      ], pendientes, { vacio: "No hay accesos pendientes de activar." }) +
+      "</section>";
+
+    return html;
+  }
+
+  function formNuevoAcceso() {
+    const proveedores = DB.all("proveedores").filter(function (p) { return p.activo; });
+    UI.abrirFormulario("Nuevo acceso", [
+      { tipo: "html", contenido: '<p class="modal-nota">Creas el acceso; la persona ' +
+        "elige su contraseña al activarlo. Dale el usuario por un medio que ya uses " +
+        "con ella —en persona, por teléfono—.</p>" },
+      { nombre: "acceso", etiqueta: "Usuario", tipo: "text", requerido: true,
+        marcador: "dandrade o PRV-004", ancho: "mitad",
+        ayuda: "Sin espacios. Es lo que teclea para entrar." },
+      { nombre: "nombre", etiqueta: "Nombre de la persona", tipo: "text", requerido: true,
+        ancho: "mitad" },
+      { nombre: "rol", etiqueta: "Rol", tipo: "select", requerido: true, ancho: "mitad",
+        opciones: DB.ROLES.map(function (r) { return { valor: r.id, texto: r.nombre }; }) },
+      { nombre: "proveedorId", etiqueta: "Finca (solo si es proveedor)", tipo: "select",
+        ancho: "mitad", vacio: "—",
+        opciones: proveedores.map(function (p) {
+          return { valor: p.id, texto: p.codigo + " · " + p.nombre };
+        }) },
+      { nombre: "verificacion", etiqueta: "Dato de verificación", tipo: "text",
+        marcador: "RUC o cédula",
+        ayuda: "Lo que la persona tendrá que escribir además del usuario para " +
+          "activarse. Sin esto, quien conozca el usuario podría adelantarse." }
+    ], function (d) {
+      if (d.rol === "proveedor" && !d.proveedorId) {
+        return { error: "Un proveedor tiene que quedar atado a una finca, o vería " +
+          "los lotes de todas." };
+      }
+      if (d.rol !== "proveedor" && d.proveedorId) {
+        return { error: "Solo los proveedores llevan finca asignada." };
+      }
+      return Sesion.invitar({
+        acceso: String(d.acceso).trim(),
+        rol: d.rol,
+        proveedorId: d.rol === "proveedor" ? d.proveedorId : null,
+        nombre: String(d.nombre).trim(),
+        verificacion: String(d.verificacion || "").trim() || null
+      }).then(function (r) {
+        if (r.error) return { error: r.error };
+        DB.registrarBitacora(usuario.id, "Alta de acceso",
+          d.acceso + " · " + d.rol);
+        UI.aviso("Acceso creado. Dile a " + d.nombre + " que entre y lo active.");
+        personas.cargado = false;
+        render();
+      });
+    }, { aceptar: "Crear acceso", ancho: true });
+  }
+
   function vistaUsuarios() {
+    if (modoServidor()) return vistaUsuariosServidor();
+
     let html = '<div class="vista-cab"><div><h1>Usuarios</h1>' +
       '<p class="sub">Quién entra a cada aplicación, con qué rol y con qué acceso.</p></div>' +
       '<button class="btn btn-primario" id="btnNuevoUsuario">+ Nuevo usuario interno</button></div>';
@@ -11922,11 +12786,50 @@ const Guia = (function () {
       '<button type="submit" class="btn btn-primario btn-ancho btn-grande" id="btnEntrar">Entrar</button>' +
       "</form>" + demoHTML();
 
-    html += '<p class="acceso-ayuda">Recepción y Producción entran con PIN; Supervisión, ' +
-      "con contraseña. Si la olvidaste, Supervisión puede regenerarla.</p>";
+    html += modoServidor()
+      ? '<p class="acceso-ayuda">La primera vez hay que activar la cuenta con el ' +
+        "usuario que te dio Supervisión: ahí eliges tu contraseña, y no la sabrá nadie más." +
+        '<br><button type="button" class="enlace" id="btnActivarInterno">' +
+        "Activa tu cuenta aquí</button></p>"
+      : '<p class="acceso-ayuda">Recepción y Producción entran con PIN; Supervisión, ' +
+        "con contraseña. Si la olvidaste, Supervisión puede regenerarla.</p>";
     html += '<p class="acceso-pie">¿Eres proveedor? <a ' + UI.rutaOtraApp("proveedor") +
       ">Entra al portal</a></p></div></div>";
     return html;
+  }
+
+  /* La primera vez, cada quien crea su propia contraseña con el usuario que
+     le dieron. Supervisión nunca teclea la de otro: una contraseña que pasa
+     por las manos de un tercero deja de ser una contraseña. */
+  function formActivarInterno() {
+    UI.abrirFormulario("Activa tu cuenta", [
+      { tipo: "html", contenido: '<p class="modal-nota">Necesitas el <strong>usuario' +
+        "</strong> que te dio Supervisión. La contraseña la eliges tú ahora y no la " +
+        "sabrá nadie más.</p>" },
+      { nombre: "acceso", etiqueta: "Tu usuario", tipo: "text", requerido: true,
+        marcador: "dandrade" },
+      { nombre: "clave", etiqueta: "Crea tu contraseña", tipo: "password", requerido: true,
+        ayuda: "Al menos 6 caracteres.",
+        validar: function (v) {
+          return String(v || "").length >= 6 ? null : "Al menos 6 caracteres.";
+        } },
+      { nombre: "repetir", etiqueta: "Repítela", tipo: "password", requerido: true,
+        validar: function (v, d) { return v === d.clave ? null : "Las dos no coinciden."; } }
+    ], function (d) {
+      return Sesion.activar(d.acceso, d.clave, null).then(function (r) {
+        if (r.error) return { error: r.error };
+        if (ROLES_INTERNOS.indexOf(r.perfil.rol) === -1) {
+          return Sesion.salir().then(function () {
+            return { error: "Esa cuenta es de proveedor. Actívala desde el portal." };
+          });
+        }
+        return DB.reconectar(repintarPorSincronizacion).then(function () {
+          usuario = usuarioDesdePerfil(r.perfil);
+          UI.aviso("Cuenta activada. Bienvenido, " + usuario.nombre + ".");
+          render();
+        });
+      });
+    }, { aceptar: "Activar y entrar" });
   }
 
   function formCambiarClave(obligatorio) {
@@ -12135,6 +13038,12 @@ const Guia = (function () {
         campo.focus();
       });
     }
+
+    /* Va aquí y no con el resto de la aplicación: este botón vive en la
+       pantalla de acceso, y aquel bloque solo corre con la sesión ya
+       abierta, que es justo cuando ya no hace falta. */
+    const btnActInt = $("#btnActivarInterno");
+    if (btnActInt) btnActInt.addEventListener("click", formActivarInterno);
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -12353,6 +13262,29 @@ const Guia = (function () {
         render();
       });
     });
+    const btnNuevoAcc = $("#btnNuevoAcceso");
+    if (btnNuevoAcc) btnNuevoAcc.addEventListener("click", formNuevoAcceso);
+    $$("[data-perfil]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        Sesion.activarPerfil(b.dataset.perfil, b.dataset.activo === "1").then(function (r) {
+          if (r.error) { UI.aviso(r.error, "error"); return; }
+          UI.aviso(b.dataset.activo === "1" ? "Cuenta reactivada." : "Cuenta desactivada.");
+          personas.cargado = false;
+          render();
+        });
+      });
+    });
+    $$("[data-quitar-inv]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        Sesion.borrarInvitacion(b.dataset.quitarInv).then(function (r) {
+          if (r.error) { UI.aviso(r.error, "error"); return; }
+          UI.aviso("Acceso anulado.");
+          personas.cargado = false;
+          render();
+        });
+      });
+    });
+
     const btnNuevoUsr = $("#btnNuevoUsuario");
     if (btnNuevoUsr) btnNuevoUsr.addEventListener("click", formUsuarioInterno);
 
@@ -12591,7 +13523,15 @@ const Guia = (function () {
 
     /* Al conectar cambian los datos, pero si la persona ya está llenando el
        acceso NO se repinta: seria borrarle lo escrito justo antes de entrar. */
-    DB.conectar(repintarPorSincronizacion).then(function (m) {
+    /* Primero quién eres, después qué puedes ver: al revés, la primera
+       consulta sale sin sesión y la base responde lo que le corresponde a un
+       desconocido, que es nada. */
+Sesion.comprobar()
+      .then(restaurarDelServidor)
+      .catch(function () { /* sin sesión previa: se entra a mano */ })
+      .then(function () { return DB.conectar(repintarPorSincronizacion); })
+      .then(function (m) {
+      entrarConPerfilRetomado();
       return DB.sembrarCredenciales()
         .then(function () { return DB.cuentasDemo(ROLES_INTERNOS); })
         .then(function (lista) { demo = lista; return m; });

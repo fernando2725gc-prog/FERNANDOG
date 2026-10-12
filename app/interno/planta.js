@@ -44,10 +44,52 @@
 
   /* ============================== sesión ============================== */
 
+  /* Dos maneras de comprobar quién entra, y la diferencia importa: con
+     servidor, la contraseña la verifica Supabase y su hash no sale de allí;
+     sin servidor —el artefacto, o un equipo suelto— se comprueba aquí
+     contra un hash que está a la vista, que es lo que se podía hacer antes
+     de tener una base propia. El resto de la aplicación no nota cuál es. */
+  function modoServidor() {
+    return typeof Sesion !== "undefined" && Sesion.disponible();
+  }
+
+  /* El perfil manda sobre el directorio: el rol que vale es el que dice la
+     base, no el que diga un documento que alguien pudo editar. */
+  function usuarioDesdePerfil(perfil) {
+    const dir = DB.buscarPorAcceso(perfil.acceso);
+    return Object.assign({}, dir || {}, {
+      id: dir ? dir.id : perfil.uid,
+      usuario: perfil.acceso,
+      nombre: perfil.nombre || (dir && dir.nombre) || perfil.acceso,
+      rol: perfil.rol,
+      proveedorId: perfil.proveedorId || null,
+      activo: true,
+      servidor: true
+    });
+  }
+
+  async function entrarConServidor(acceso, clave) {
+    const r = await Sesion.entrar(acceso, clave);
+    if (r.error) return { error: r.error };
+    if (ROLES_INTERNOS.indexOf(r.perfil.rol) === -1) {
+      await Sesion.salir();
+      return { error: "Esa cuenta es de proveedor. Entra por el portal del proveedor." };
+    }
+    /* Lo que se puede leer cambia al entrar: hay que traer los datos otra
+       vez, porque hasta ahora la base no devolvía nada. */
+    await DB.reconectar(repintarPorSincronizacion);
+    usuario = usuarioDesdePerfil(r.perfil);
+    novedadesAbiertas = false;
+    DB.registrarBitacora(usuario.id, "Inicio de sesión", usuario.nombre + " · " + usuario.rol);
+    return { ok: true };
+  }
+
   async function entrar(acceso, clave, recordar) {
     const login = String(acceso).trim();
     if (!login) return { error: "Escribe tu usuario." };
     if (!clave) return { error: "Escribe tu contraseña o PIN." };
+
+    if (modoServidor()) return entrarConServidor(login, clave);
 
     const espera = Auth.bloqueo(login);
     if (espera > 0) {
@@ -85,6 +127,11 @@
 
   function salir() {
     if (usuario) DB.registrarBitacora(usuario.id, "Cierre de sesión", usuario.nombre);
+    if (modoServidor()) {
+      /* No se espera: cerrar la sesión en el servidor es cortesía, pero la
+         persona ya está fuera de la pantalla en cuanto suelta el botón. */
+      Sesion.salir().then(function () { DB.reconectar(repintarPorSincronizacion); });
+    }
     usuario = null;
     /* El panel abierto no puede sobrevivir al cambio de persona: se
        quedaba abierto y le enseñaba a la siguiente los avisos de la
@@ -101,6 +148,27 @@
     if (!id) return;
     const u = DB.get("usuarios", id);
     if (u && ROLES_INTERNOS.indexOf(u.rol) !== -1 && u.activo) usuario = u;
+  }
+
+  /* Con servidor, retomar la sesión es ir a preguntar: el token guardado
+     puede haber caducado o haber sido revocado. Por eso es asíncrono y por
+     eso la pantalla se pinta antes, vacía, en vez de quedarse en blanco. */
+  let perfilRetomado = null;
+
+  async function restaurarDelServidor() {
+    if (!modoServidor()) return;
+    const perfil = await Sesion.retomar();
+    if (!perfil || ROLES_INTERNOS.indexOf(perfil.rol) === -1) return;
+    perfilRetomado = perfil;
+  }
+
+  /* El token hace falta antes de conectar; la persona, después: el
+     directorio de nombres y los lotes llegan con la conexión, y entrar
+     antes es enseñar una planta vacía. */
+  function entrarConPerfilRetomado() {
+    if (!perfilRetomado) return;
+    usuario = usuarioDesdePerfil(perfilRetomado);
+    perfilRetomado = null;
   }
 
   /* ============================== navegación ========================== */
@@ -3088,7 +3156,142 @@
     });
   }
 
+  /* Con servidor, las personas no son documentos del repositorio: son
+     cuentas de Supabase con un perfil. Se leen aparte y se guardan aquí
+     mientras dure la pantalla, porque llegan por la red y el render es
+     síncrono. */
+  let personas = { perfiles: [], invitaciones: [], cargando: false, cargado: false };
+
+  function cargarPersonas() {
+    if (personas.cargando) return;
+    personas.cargando = true;
+    Promise.all([Sesion.perfiles(), Sesion.invitaciones()]).then(function (r) {
+      personas = { perfiles: r[0], invitaciones: r[1], cargando: false, cargado: true };
+      if (vista === "usuarios") render();
+    }).catch(function () {
+      personas.cargando = false; personas.cargado = true;
+    });
+  }
+
+  function vistaUsuariosServidor() {
+    if (!personas.cargado) { cargarPersonas(); }
+
+    let html = '<div class="vista-cab"><div><h1>Usuarios</h1>' +
+      '<p class="sub">Quién entra, con qué rol y con qué acceso. Las contraseñas ' +
+      "las comprueba el servidor y no pasan por aquí.</p></div>" +
+      '<button class="btn btn-primario" id="btnNuevoAcceso">+ Nuevo acceso</button></div>';
+
+    html += '<p class="nota-info"><strong>Cómo funciona.</strong> Tú creas el acceso ' +
+      "con el nombre de usuario y el rol; la persona lo activa desde su pantalla y " +
+      "elige ahí su contraseña. <strong>Nunca tecleas la contraseña de otro</strong>: " +
+      "una contraseña que pasa por las manos de un tercero deja de serlo. El rol no se " +
+      "puede falsificar —la base solo acepta un perfil que coincida con la invitación " +
+      "que dejaste escrita—.</p>";
+
+    if (!personas.cargado) {
+      html += '<p class="vacio">Consultando las cuentas…</p>';
+      return html;
+    }
+
+    const pendientes = personas.invitaciones.filter(function (i) {
+      return !personas.perfiles.some(function (p) { return p.acceso === i.acceso; });
+    });
+
+    html += '<section class="panel"><h2>Cuentas activas</h2>' +
+      UI.tabla([
+        { titulo: "Nombre", valor: function (p) { return "<strong>" + esc(p.nombre) + "</strong>"; } },
+        { titulo: "Usuario", valor: function (p) { return "<code>" + esc(p.acceso) + "</code>"; } },
+        { titulo: "Rol", valor: function (p) {
+          const r = DB.ROLES.find(function (x) { return x.id === p.rol; });
+          return r ? UI.icono(r.icono) + " " + esc(r.nombre) : esc(p.rol); } },
+        { titulo: "Proveedor", valor: function (p) {
+          return p.proveedorId ? esc(Indicadores.nombreProveedor(p.proveedorId)) : "—"; } },
+        { titulo: "Activada", valor: function (p) {
+          return p.creado ? UI.fechaCorta(String(p.creado).slice(0, 10)) : "—"; } },
+        { titulo: "Estado", valor: function (p) {
+          return '<span class="estado estado-' + (p.activo ? "recibido" : "inactivo") + '">' +
+            (p.activo ? "Activa" : "Desactivada") + "</span>"; } },
+        { titulo: "", valor: function (p) {
+          if (Sesion.uid() && p.uid === Sesion.uid()) {
+            return '<span class="tenue">Sesión actual</span>';
+          }
+          return '<button class="btn-mini" data-perfil="' + esc(p.uid) + '" data-activo="' +
+            (p.activo ? "0" : "1") + '">' + (p.activo ? "Desactivar" : "Reactivar") + "</button>"; } }
+      ], personas.perfiles, { vacio: "Todavía no se ha activado ninguna cuenta." }) +
+      "</section>";
+
+    html += '<section class="panel"><h2>Accesos creados, sin activar</h2>' +
+      '<p class="sub panel-sub">Esperando a que la persona entre y elija su ' +
+      "contraseña. Cada acceso sirve una sola vez.</p>" +
+      UI.tabla([
+        { titulo: "Usuario", valor: function (i) { return "<code>" + esc(i.acceso) + "</code>"; } },
+        { titulo: "Nombre", valor: function (i) { return esc(i.nombre); } },
+        { titulo: "Rol", valor: function (i) {
+          const r = DB.ROLES.find(function (x) { return x.id === i.rol; });
+          return r ? UI.icono(r.icono) + " " + esc(r.nombre) : esc(i.rol); } },
+        { titulo: "Verificación", valor: function (i) {
+          return i.verificacion
+            ? "<code>" + esc(i.verificacion) + "</code>"
+            : '<span class="tenue">ninguna</span>'; } },
+        { titulo: "", valor: function (i) {
+          return '<button class="btn-mini btn-mini-peligro" data-quitar-inv="' +
+            esc(i.acceso) + '">Anular</button>'; } }
+      ], pendientes, { vacio: "No hay accesos pendientes de activar." }) +
+      "</section>";
+
+    return html;
+  }
+
+  function formNuevoAcceso() {
+    const proveedores = DB.all("proveedores").filter(function (p) { return p.activo; });
+    UI.abrirFormulario("Nuevo acceso", [
+      { tipo: "html", contenido: '<p class="modal-nota">Creas el acceso; la persona ' +
+        "elige su contraseña al activarlo. Dale el usuario por un medio que ya uses " +
+        "con ella —en persona, por teléfono—.</p>" },
+      { nombre: "acceso", etiqueta: "Usuario", tipo: "text", requerido: true,
+        marcador: "dandrade o PRV-004", ancho: "mitad",
+        ayuda: "Sin espacios. Es lo que teclea para entrar." },
+      { nombre: "nombre", etiqueta: "Nombre de la persona", tipo: "text", requerido: true,
+        ancho: "mitad" },
+      { nombre: "rol", etiqueta: "Rol", tipo: "select", requerido: true, ancho: "mitad",
+        opciones: DB.ROLES.map(function (r) { return { valor: r.id, texto: r.nombre }; }) },
+      { nombre: "proveedorId", etiqueta: "Finca (solo si es proveedor)", tipo: "select",
+        ancho: "mitad", vacio: "—",
+        opciones: proveedores.map(function (p) {
+          return { valor: p.id, texto: p.codigo + " · " + p.nombre };
+        }) },
+      { nombre: "verificacion", etiqueta: "Dato de verificación", tipo: "text",
+        marcador: "RUC o cédula",
+        ayuda: "Lo que la persona tendrá que escribir además del usuario para " +
+          "activarse. Sin esto, quien conozca el usuario podría adelantarse." }
+    ], function (d) {
+      if (d.rol === "proveedor" && !d.proveedorId) {
+        return { error: "Un proveedor tiene que quedar atado a una finca, o vería " +
+          "los lotes de todas." };
+      }
+      if (d.rol !== "proveedor" && d.proveedorId) {
+        return { error: "Solo los proveedores llevan finca asignada." };
+      }
+      return Sesion.invitar({
+        acceso: String(d.acceso).trim(),
+        rol: d.rol,
+        proveedorId: d.rol === "proveedor" ? d.proveedorId : null,
+        nombre: String(d.nombre).trim(),
+        verificacion: String(d.verificacion || "").trim() || null
+      }).then(function (r) {
+        if (r.error) return { error: r.error };
+        DB.registrarBitacora(usuario.id, "Alta de acceso",
+          d.acceso + " · " + d.rol);
+        UI.aviso("Acceso creado. Dile a " + d.nombre + " que entre y lo active.");
+        personas.cargado = false;
+        render();
+      });
+    }, { aceptar: "Crear acceso", ancho: true });
+  }
+
   function vistaUsuarios() {
+    if (modoServidor()) return vistaUsuariosServidor();
+
     let html = '<div class="vista-cab"><div><h1>Usuarios</h1>' +
       '<p class="sub">Quién entra a cada aplicación, con qué rol y con qué acceso.</p></div>' +
       '<button class="btn btn-primario" id="btnNuevoUsuario">+ Nuevo usuario interno</button></div>';
@@ -3445,11 +3648,50 @@
       '<button type="submit" class="btn btn-primario btn-ancho btn-grande" id="btnEntrar">Entrar</button>' +
       "</form>" + demoHTML();
 
-    html += '<p class="acceso-ayuda">Recepción y Producción entran con PIN; Supervisión, ' +
-      "con contraseña. Si la olvidaste, Supervisión puede regenerarla.</p>";
+    html += modoServidor()
+      ? '<p class="acceso-ayuda">La primera vez hay que activar la cuenta con el ' +
+        "usuario que te dio Supervisión: ahí eliges tu contraseña, y no la sabrá nadie más." +
+        '<br><button type="button" class="enlace" id="btnActivarInterno">' +
+        "Activa tu cuenta aquí</button></p>"
+      : '<p class="acceso-ayuda">Recepción y Producción entran con PIN; Supervisión, ' +
+        "con contraseña. Si la olvidaste, Supervisión puede regenerarla.</p>";
     html += '<p class="acceso-pie">¿Eres proveedor? <a ' + UI.rutaOtraApp("proveedor") +
       ">Entra al portal</a></p></div></div>";
     return html;
+  }
+
+  /* La primera vez, cada quien crea su propia contraseña con el usuario que
+     le dieron. Supervisión nunca teclea la de otro: una contraseña que pasa
+     por las manos de un tercero deja de ser una contraseña. */
+  function formActivarInterno() {
+    UI.abrirFormulario("Activa tu cuenta", [
+      { tipo: "html", contenido: '<p class="modal-nota">Necesitas el <strong>usuario' +
+        "</strong> que te dio Supervisión. La contraseña la eliges tú ahora y no la " +
+        "sabrá nadie más.</p>" },
+      { nombre: "acceso", etiqueta: "Tu usuario", tipo: "text", requerido: true,
+        marcador: "dandrade" },
+      { nombre: "clave", etiqueta: "Crea tu contraseña", tipo: "password", requerido: true,
+        ayuda: "Al menos 6 caracteres.",
+        validar: function (v) {
+          return String(v || "").length >= 6 ? null : "Al menos 6 caracteres.";
+        } },
+      { nombre: "repetir", etiqueta: "Repítela", tipo: "password", requerido: true,
+        validar: function (v, d) { return v === d.clave ? null : "Las dos no coinciden."; } }
+    ], function (d) {
+      return Sesion.activar(d.acceso, d.clave, null).then(function (r) {
+        if (r.error) return { error: r.error };
+        if (ROLES_INTERNOS.indexOf(r.perfil.rol) === -1) {
+          return Sesion.salir().then(function () {
+            return { error: "Esa cuenta es de proveedor. Actívala desde el portal." };
+          });
+        }
+        return DB.reconectar(repintarPorSincronizacion).then(function () {
+          usuario = usuarioDesdePerfil(r.perfil);
+          UI.aviso("Cuenta activada. Bienvenido, " + usuario.nombre + ".");
+          render();
+        });
+      });
+    }, { aceptar: "Activar y entrar" });
   }
 
   function formCambiarClave(obligatorio) {
@@ -3658,6 +3900,12 @@
         campo.focus();
       });
     }
+
+    /* Va aquí y no con el resto de la aplicación: este botón vive en la
+       pantalla de acceso, y aquel bloque solo corre con la sesión ya
+       abierta, que es justo cuando ya no hace falta. */
+    const btnActInt = $("#btnActivarInterno");
+    if (btnActInt) btnActInt.addEventListener("click", formActivarInterno);
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -3876,6 +4124,29 @@
         render();
       });
     });
+    const btnNuevoAcc = $("#btnNuevoAcceso");
+    if (btnNuevoAcc) btnNuevoAcc.addEventListener("click", formNuevoAcceso);
+    $$("[data-perfil]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        Sesion.activarPerfil(b.dataset.perfil, b.dataset.activo === "1").then(function (r) {
+          if (r.error) { UI.aviso(r.error, "error"); return; }
+          UI.aviso(b.dataset.activo === "1" ? "Cuenta reactivada." : "Cuenta desactivada.");
+          personas.cargado = false;
+          render();
+        });
+      });
+    });
+    $$("[data-quitar-inv]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        Sesion.borrarInvitacion(b.dataset.quitarInv).then(function (r) {
+          if (r.error) { UI.aviso(r.error, "error"); return; }
+          UI.aviso("Acceso anulado.");
+          personas.cargado = false;
+          render();
+        });
+      });
+    });
+
     const btnNuevoUsr = $("#btnNuevoUsuario");
     if (btnNuevoUsr) btnNuevoUsr.addEventListener("click", formUsuarioInterno);
 
@@ -4114,7 +4385,15 @@
 
     /* Al conectar cambian los datos, pero si la persona ya está llenando el
        acceso NO se repinta: seria borrarle lo escrito justo antes de entrar. */
-    DB.conectar(repintarPorSincronizacion).then(function (m) {
+    /* Primero quién eres, después qué puedes ver: al revés, la primera
+       consulta sale sin sesión y la base responde lo que le corresponde a un
+       desconocido, que es nada. */
+Sesion.comprobar()
+      .then(restaurarDelServidor)
+      .catch(function () { /* sin sesión previa: se entra a mano */ })
+      .then(function () { return DB.conectar(repintarPorSincronizacion); })
+      .then(function (m) {
+      entrarConPerfilRetomado();
       return DB.sembrarCredenciales()
         .then(function () { return DB.cuentasDemo(ROLES_INTERNOS); })
         .then(function (lista) { demo = lista; return m; });

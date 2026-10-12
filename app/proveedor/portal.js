@@ -26,10 +26,43 @@
 
   /* ============================== sesión ============================== */
 
+  function modoServidor() {
+    return typeof Sesion !== "undefined" && Sesion.disponible();
+  }
+
+  /* Con servidor, el proveedor no tiene ficha de usuario que leer: la base
+     no se la enseña, y es correcto que no se la enseñe. Lo que hay es su
+     perfil, que trae lo único que el portal necesita de él. */
+  function usuarioDesdePerfil(perfil) {
+    return {
+      id: perfil.uid,
+      usuario: perfil.acceso,
+      nombre: perfil.nombre || perfil.acceso,
+      rol: perfil.rol,
+      proveedorId: perfil.proveedorId,
+      activo: true,
+      servidor: true
+    };
+  }
+
+  async function entrarConServidor(codigo, clave) {
+    const r = await Sesion.entrar(codigo, clave);
+    if (r.error) return { error: r.error };
+    if (r.perfil.rol !== "proveedor") {
+      await Sesion.salir();
+      return { error: "Esa cuenta es del personal de planta. Entra por el sistema interno." };
+    }
+    await DB.reconectar(repintarPorSincronizacion);
+    usuario = usuarioDesdePerfil(r.perfil);
+    return { ok: true };
+  }
+
   async function entrar(acceso, clave, recordar) {
     const codigo = String(acceso).trim();
     if (!codigo) return { error: "Escribe tu código de proveedor." };
     if (!clave) return { error: "Escribe tu contraseña." };
+
+    if (modoServidor()) return entrarConServidor(codigo, clave);
 
     const espera = Auth.bloqueo(codigo);
     if (espera > 0) {
@@ -73,6 +106,9 @@
     novedadesAbiertas = false;
     busqueda = "";
     if (usuario) DB.registrarBitacora(usuario.id, "Salida del portal", usuario.nombre);
+    if (modoServidor()) {
+      Sesion.salir().then(function () { DB.reconectar(repintarPorSincronizacion); });
+    }
     usuario = null;
     if (repintado) { clearTimeout(repintado); repintado = null; }
     vista = "inicio";
@@ -87,6 +123,25 @@
     if (u && u.rol === "proveedor" && u.activo) usuario = u;
   }
 
+  /* Dos pasos a propósito. El token hace falta ANTES de conectar, porque sin
+     él la base no devuelve nada; pero a la persona no se la mete en la
+     pantalla hasta que haya datos, o vería su portal vacío un instante y se
+     preguntaría dónde están sus envíos. */
+  let perfilRetomado = null;
+
+  async function restaurarDelServidor() {
+    if (!modoServidor()) return;
+    const perfil = await Sesion.retomar();
+    if (!perfil || perfil.rol !== "proveedor") return;
+    perfilRetomado = perfil;
+  }
+
+  function entrarConPerfilRetomado() {
+    if (!perfilRetomado) return;
+    usuario = usuarioDesdePerfil(perfilRetomado);
+    perfilRetomado = null;
+  }
+
   /* ========================= lectura aislada ========================== */
 
   /* Único punto de acceso a los datos del portal. */
@@ -97,7 +152,14 @@
       .sort(function (a, b) { return a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : 0; });
   }
 
-  function miProveedor() { return DB.get("proveedores", usuario.proveedorId); }
+  /* Nunca devuelve nada: con servidor, la sesión se retoma antes de que la
+     base entregue los datos, y durante ese instante la pantalla ya quiere
+     pintar el nombre de la finca. Una ficha vacía se ve rara medio segundo;
+     un `null` tumba la aplicación entera. */
+  function miProveedor() {
+    return DB.get("proveedores", usuario && usuario.proveedorId) ||
+      { id: (usuario && usuario.proveedorId) || "", nombre: (usuario && usuario.nombre) || "" };
+  }
 
   function produccionDe(loteId) {
     return DB.all("producciones").find(function (p) { return p.loteId === loteId; }) || null;
@@ -768,6 +830,20 @@
       { nombre: "repetir", etiqueta: "Repítela", tipo: "password", requerido: true,
         validar: function (v, d) { return v === d.clave ? null : "Las dos no coinciden."; } }
     ], function (d) {
+      /* Con servidor, activar es crear una cuenta de verdad: la contraseña
+         viaja una sola vez y se queda allí. La planta nunca la teclea ni la
+         ve, que es como se dejan de filtrar. */
+      if (modoServidor()) {
+        return Sesion.activar(d.codigo, d.clave, d.documento).then(function (r) {
+          if (r.error) return { error: r.error };
+          return DB.reconectar(repintarPorSincronizacion).then(function () {
+            usuario = usuarioDesdePerfil(r.perfil);
+            UI.aviso("Cuenta activada. Bienvenido, " + usuario.nombre + ".");
+            render();
+          });
+        });
+      }
+
       const r = DB.comprobarActivacion(d.codigo, d.documento);
 
       if (r.error === "ya-activa") {
@@ -1085,7 +1161,13 @@
 
     /* Al conectar cambian los datos, pero si la persona ya está llenando el
        acceso NO se repinta: seria borrarle lo escrito justo antes de entrar. */
-    DB.conectar(repintarPorSincronizacion).then(function () {
+    /* Primero quién eres, después qué puedes ver. */
+Sesion.comprobar()
+      .then(restaurarDelServidor)
+      .catch(function () { /* sin sesión previa: se entra a mano */ })
+      .then(function () { return DB.conectar(repintarPorSincronizacion); })
+      .then(function () {
+      entrarConPerfilRetomado();
       return DB.sembrarCredenciales();
     }).then(function () {
       return DB.cuentasDemo(["proveedor"]);

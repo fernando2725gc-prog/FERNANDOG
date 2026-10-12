@@ -12,6 +12,11 @@ X=00000000-0000-0000-0000-0000000000ff
 NUEVO=00000000-0000-0000-0000-0000000000e1
 fallos=0
 
+# Carga sus propios datos: antes dependía de que alguien hubiera ejecutado
+# 02-datos.sql justo antes, y bastaba correr otra prueba en medio para que
+# esta fallara sin que nada estuviera mal.
+$PSQL -f "$(dirname "$0")/02-datos.sql" >/dev/null
+
 como() {  # como <uid|anon> <sql>
   local uid="$1"; shift
   if [ "$uid" = "anon" ]; then

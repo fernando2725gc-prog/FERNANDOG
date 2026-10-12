@@ -58,6 +58,17 @@ const Nube = (function () {
     return !!(c.url && c.clave);
   }
 
+  /* Quién está dentro lo sabe `sesion.js`, que a su vez necesita a este
+     módulo para hablar con Supabase. Para no atarlos en círculo, aquí solo
+     se guarda una función que devuelve el token del momento; si nadie la
+     registra, las peticiones salen sin sesión y la base responde lo que
+     corresponde a un desconocido, que es nada. */
+  let dameToken = null;
+  function usarToken(fn) { dameToken = fn; }
+  function token() {
+    try { return dameToken ? (dameToken() || "") : ""; } catch (e) { return ""; }
+  }
+
   /* ------------------------------------------------------------ errores */
 
   /* db.js lee `e.code` para decidir si reencola y qué avisar. Se le da uno
@@ -77,13 +88,15 @@ const Nube = (function () {
       "Content-Type": "application/json",
       Accept: "application/json"
     };
-    /* Supabase tiene dos formatos de clave pública. La antigua (`anon`) es un
-       JWT y empieza por «eyJ»: ahí el `Authorization` lleva el mismo token, y
-       es de donde PostgREST saca el rol. La nueva (`sb_publishable_...`) no es
-       un JWT, y mandarla como Bearer es pedirle al servidor que descodifique
-       algo que no se puede descodificar. El `apikey` basta en los dos casos;
-       el Bearer solo se añade cuando de verdad hay un token que leer. */
-    if (/^eyJ/.test(c.clave)) h.Authorization = "Bearer " + c.clave;
+    /* El `apikey` dice QUÉ proyecto es; el `Authorization` dice QUIÉN pide.
+       Cuando hay sesión abierta manda el token de la persona, que es lo que
+       Postgres lee para decidir qué puede ver. Sin sesión, y solo si la clave
+       pública es del formato antiguo (un JWT, que empieza por «eyJ»), se
+       manda ella: el formato nuevo `sb_publishable_...` no es descodificable
+       y mandarlo como Bearer solo provoca un error. */
+    const t = token();
+    if (t) h.Authorization = "Bearer " + t;
+    else if (/^eyJ/.test(c.clave)) h.Authorization = "Bearer " + c.clave;
     if (extra) Object.keys(extra).forEach(function (k) { h[k] = extra[k]; });
     return h;
   }
@@ -118,6 +131,22 @@ const Nube = (function () {
   /* PostgREST escapa con comillas dobles; los identificadores del sistema
      son códigos sin espacios, pero no se da por supuesto. */
   function val(v) { return encodeURIComponent(String(v)); }
+
+  /* Acceso suelto a la API, para las tablas que no son `documentos`:
+     perfiles e invitaciones, que `sesion.js` necesita consultar. */
+  async function rest(ruta, opciones) {
+    const o = opciones || {};
+    return pedir(ruta, {
+      method: o.method || "GET",
+      headers: cabeceras(o.headers),
+      body: o.body === undefined ? undefined : JSON.stringify(o.body)
+    });
+  }
+
+  /* La dirección base de Supabase, que `sesion.js` necesita para hablar con
+     la API de autenticación, que no vive bajo /rest/v1. */
+  function base() { return config().url; }
+  function clavePublica() { return config().clave; }
 
   /* -------------------------------------------------------- lectura */
 
@@ -394,6 +423,13 @@ const Nube = (function () {
     configurada: configurada,
     diagnostico: diagnostico,
     abrir: abrir,
+    usarToken: usarToken,
+    rest: rest,
+    base: base,
+    clavePublica: clavePublica,
+    /* Tras entrar o salir, lo que se puede ver cambia de golpe: hay que
+       volver a mirar sin esperar al turno del sondeo. */
+    olvidarResumen: function () { resumenPrevio = null; },
     /* Para las pruebas y para el panel de datos del sistema. */
     INTERVALO_MS: INTERVALO_MS,
     sondearAhora: sondear

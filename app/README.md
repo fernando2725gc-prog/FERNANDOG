@@ -1045,173 +1045,102 @@ deben verse exactamente así.
 
 ## 13. Pruebas
 
-Dos suites en Chromium con Playwright. **22 comprobaciones** sobre las aplicaciones
-separadas que recorren las dos
-aplicaciones contra un mismo almacén compartido — portada, aislamiento del proveedor,
-anuncio en cajas, pesaje con contraste de cajas y kg, propagación en vivo al celular sin
-recargar, tasa y eficiencia contra el estudio de tiempos, balance de masa (incluidos los
-casos que *deben* fallar), Pareto por causa raíz, planificador con takt time y detección
-de sobrecarga, catálogos editables con M/E/S, cierre del lote y reporte al proveedor sin
-exponerle causas internas de planta.
+```bash
+tools/pruebas/correr.sh            # todas, un solo resultado
+tools/pruebas/correr.sh cordura    # una sola
+```
 
-**7 comprobaciones de primera entrada**: que la pantalla ofrezca cuentas, que al pulsarlas
-quede listo el formulario, que se entre sin conocimiento previo, que la planta no ofrezca
-cuentas de proveedor y que una cuenta con la clave cambiada deje de ofrecerse.
+Viven en `tools/pruebas/`, **dentro del repositorio**. Una versión anterior
+las tenía en un directorio temporal del entorno de desarrollo y se perdieron
+veintiuna cuando se vació: estaban en verde, pero no estaban. Lo que sigue
+es lo que hay hoy, ejecutable.
 
-**18 comprobaciones de autenticación**: que la contraseña no quede escrita en el almacén,
-que dos cuentas con la misma clave den hashes distintos, que rechace la clave equivocada,
-que no revele si un código existe, que un proveedor no entre con credencial de planta, que
-frene la adivinación, que la sesión se recuerde, que Supervisión pueda crear un acceso y
-entregarlo una sola vez, y que la clave temporal deje de servir en cuanto se cambia.
+### Qué protege cada una
 
-**15 comprobaciones de activación por el propio proveedor** y **10 de corrección con
-rastro**: que un pesaje equivocado pueda enmendarse y que la bitácora conserve el valor
-anterior, quién lo cambió y cuándo.
+**`cordura` — que ningún número imposible llegue a la pantalla.** Es la que
+más errores reales ha encontrado, porque comprueba algo que ninguna prueba
+de funcionamiento mira: no si la aplicación hace lo que se le pide, sino si
+lo que enseña puede ser verdad. Recorre siete vistas de planta y cuatro del
+portal buscando porcentajes imposibles, y contrasta la física: que la merma
+no supere lo que entró, que el balance de masa cierre en cada lote, que el
+peso real por gaveta se parezca al nominal, y que las cajas salgan de los
+kilos y no de las gavetas.
 
-**11 comprobaciones sin señal**: que la app no finja haber guardado, que lo registrado
-sobreviva a cerrar y reabrir, que salga solo al volver la red —incluido un cambio de
-catálogo, que no vive en una colección— y que deje de marcarse como pendiente.
+Encontró tres sitios donde se dividían minutos-persona entre minutos de
+reloj —eficiencias del 997%—, uno donde se dividían cajas entre gavetas, y
+que los gráficos escribían «58.7%» con punto decimal mientras el resto de la
+pantalla escribía «96,4%»: en es-EC eso se lee como quinientos ochenta y
+siete.
 
-**17 comprobaciones de costeo y simulador**: que las tres partes del costo cuadren con el
-total, que el Pareto económico cierre en 100%, que el payback concuerde con inversión y
-ahorro, que quitar una medida baje las dos cifras, que mover un deslizador recalcule **sin
-robar el foco**, que valorizar el residuo aporte ahorro propio, y que una inversión
-imposible o un costo anual mayor que el ahorro se declaren inviables en vez de mostrar un
-número absurdo.
+**`tiempos` — las relaciones del estudio de tiempos.** El contraste de cada
+cifra contra el Excel maestro se hizo una vez, a mano, con el archivo
+delante, y queda recogido en el documento; eso no se puede repetir aquí
+porque el archivo no vive en el repositorio y copiar sus números solo
+comprobaría que se copiaron bien. Lo que sí se comprueba en cada cambio son
+las relaciones, que es donde se cuelan los errores: que TE salga de
+TO × V × (1 + suplemento), que el contenido de trabajo y el tiempo de ciclo
+no se confundan, que el takt salga del tiempo disponible y el ingreso, que
+las estaciones sumen el total, y que el planificador use el contenido y no
+el ciclo.
 
-**23 comprobaciones de cierre, siguiente paso y guía**: que el contador del menú cuente los pendientes
-de cierre, que el bloque sobreviva al filtro de fechas, que cerrar publique el reporte,
-que un lote ya cerrado no ofrezca cerrarse otra vez, que Recepción no vea nada de eso,
-que cada rol reciba su propia guía, que la guía se arme con los catálogos reales, que no
-se cuele marcado HTML en el texto y que al imprimir se abran las preguntas plegadas y
-luego vuelvan a su sitio.
+**`bascula` — el momento del pesaje**, en una pantalla de 390 px. Teclado de
+báscula, aviso de desviación y dos personas pesando el mismo lote.
+Encontró que «10,5» acababa siendo «5» y que el aviso saltaba nada más abrir
+el formulario.
 
-**24 comprobaciones de uso diario**: que la campana encienda y se apague sola, que los
-avisos de un proveedor no mencionen lotes ajenos, que pulsarlos lleve a la pantalla
-correcta, que el buscador no robe el foco mientras se escribe, que *Repetir* copie todo
-menos la fecha y no dispare la ficha al pulsarlo, que crear el repetido no toque el
-original, y —comprobado comparando las cabeceras de todas las tablas— que **ninguna
-pantalla repita la tabla de otra**.
+**`excel` — que los libros se abran de verdad.** Descarga los siete informes
+desde la aplicación y los abre como los abrirá Excel: un ZIP con su XML
+dentro. Comprueba que no haya hojas repetidas ni caracteres prohibidos en
+los nombres —las dos cosas hacen que Excel declare el libro dañado y no abra
+nada— y contrasta quince formas de escribir un número en es-EC.
 
-**15 comprobaciones del estudio de tiempos**, contrastadas una a una contra el Excel del
-TIC: ciclo, contenido, cajas por gaveta, minutos por caja, minutos-persona por kilo, takt,
-operarios mínimos, costo de mano de obra y estación que manda, en las tres líneas. Además:
-que TE salga de TO × V × (1 + suplemento) en cada actividad, que cambiar una lectura mueva
-el estándar y el costo, que el contenido supere al ciclo donde hay dos personas, que las
-estaciones sumen los operarios del total, y que el planificador use el contenido de trabajo
-y **no** el tiempo de ciclo.
+**`identidad` — el acuerdo de confidencialidad.** Recorre todos los archivos
+del proyecto, el sitio publicado y las pantallas de las dos aplicaciones ya
+pintadas. Si el nombre, la razón social o las iniciales aparecen en
+cualquiera de los tres, falla. Comprueba además el ciclo completo del modo
+confidencial y que no quede ningún emoji suelto.
 
-**14 comprobaciones de cordura**: que ninguna tasa se salga de 0–100 %, que la eficiencia
-viva en un rango creíble, que ningún porcentaje imposible llegue a la pantalla —en el
-panel, en producción, en lotes, en costeo, en los reportes y en el portal—, que la merma
-nunca supere lo procesado, que el balance de masa cierre en cada lote y que el peso real
-por gaveta se parezca al nominal. Un número imposible en pantalla es lo menos intuitivo
-que hay: quien lo ve deja de confiar en todo lo demás. Esta suite encontró tres sitios
-donde se dividían minutos-persona entre minutos de reloj, y uno donde se dividían cajas
-entre gavetas.
+**`autenticacion` — el acceso y los permisos**, de punta a punta: la
+aplicación tal cual se publica contra un PostgreSQL de verdad con las
+políticas de verdad; lo único simulado es el reparto de tokens. Que sin
+cuenta no se ve nada ni forzándolo desde la consola, que un proveedor
+pidiendo el lote ajeno por su id recibe cero filas, que Recepción no toca
+los catálogos ni se sube el rol, y que las pantallas de activación y de alta
+funcionan con el ratón.
 
-**11 comprobaciones del arranque en limpio**: que no se borre sin escribir `EMPEZAR`, que
-se vaya la operación y se queden los catálogos, que la clave temporal se muestre una vez y
-no quede escrita, que las cuentas de ejemplo dejen de ofrecerse solas, que la cuenta nueva
-entre y deba cambiar su clave, y que la vieja ya no sirva. Y **4 de instalación móvil**:
-manifiesto válido y descargable, iconos PNG reales y los dos atajos llevando a cada puerta.
+**`sin-servidor` — cuando la base está configurada pero no responde.** Es el
+caso que más fácil se olvida: dentro del artefacto la red de salida está
+restringida. Llegó a ocurrir que la pantalla pedía una contraseña que ningún
+servidor iba a comprobar y no entraba nadie.
 
-**10 comprobaciones de liquidación**: que el total salga de kg × precio y **no** de lo
-declarado, que un rechazado quede en cero con su motivo, que las líneas del documento
-sumen el total, que el folio sea estable, que el proveedor vea exactamente la misma cifra
-que calcula la planta y que nunca vea un lote ajeno. Y **6 de uso sin conexión**, cortando
-la red de verdad: la app abre, se entra al portal, se trabaja, y al volver la señal se
-recoge la versión nueva.
+**`rls` — las políticas de seguridad, atacándolas.** Cuarenta
+comprobaciones en `tools/pruebas-rls/`, contra PostgreSQL y no contra una
+imitación: unas políticas escritas en SQL solo se pueden verificar
+ejecutándolas. Encontraron que Recepción y Producción podían sobrescribir
+los catálogos de la planta.
 
-**11 comprobaciones de capacidad y archivo**: que la cuenta de documentos coincida con lo
-que de verdad hay, que la proyección salga del ritmo medido, que solo se ofrezcan meses con
-todo cerrado, que el resumen conserve los indicadores del mes, que no archive sin escribir
-`ARCHIVAR`, que descargue el respaldo, que libere documentos y que nada se rompa después
-—incluida la liquidación, que deja de incluir un mes archivado.
+**`humo` — el propio banco de pruebas.** Si falla, lo roto es el andamiaje y
+no la aplicación, y conviene saberlo antes de pasar una hora buscando en el
+sitio equivocado.
 
-**9 comprobaciones del balance por etapa**: que recepción pregunte por lo retirado y lo
-guarde con causa y destino, que cada línea de merma pida la etapa y que la de selección
-tome el nombre de su línea, que lo que entra a la mesa descuente el retiro, que las tres
-etapas sumen exactamente la pérdida total, que recibido − pérdida sea igual a exportado, y
-que el rendimiento global quede por debajo del de proceso.
+### Lo que todavía no está cubierto
 
-**40 comprobaciones de las políticas de seguridad**, contra un PostgreSQL de
-verdad y no contra una imitación: unas políticas escritas en SQL solo se
-pueden verificar ejecutándolas. `tools/pruebas-rls/` levanta la base, recrea
-el andamiaje que Supabase da por hecho y entra como entraría alguien con la
-consola del navegador abierta. Encontraron un agujero real: Recepción y
-Producción podían escribir en la colección `sistema` entera «para poder
-anotar en la bitácora», y con eso **sobrescribir los catálogos** —los pesos
-por gaveta, los precios por kilo y los rendimientos de las tres líneas, que
-es de donde sale cada cifra del documento—.
+La reescritura recuperó el núcleo. Siguen sin suite propia: el cierre de
+lotes y la guía, la liquidación al proveedor, la capacidad y el archivado
+mensual, el balance por etapa, el costeo y el simulador, el arranque en
+limpio, y el trabajo sin señal con su cola. El código de todo eso no ha
+cambiado desde que se verificó, pero **hoy no hay nada que lo compruebe
+solo**.
 
-**27 comprobaciones de autenticación de punta a punta**: la aplicación tal
-cual se publica, hablando con ese mismo PostgreSQL; lo único simulado es el
-reparto de tokens. Que sin cuenta no se ve nada ni forzándolo desde la
-consola; que sin invitación no hay manera de entrar; que la primera
-supervisión se activa y puede sembrar; que la sesión se retoma sola al
-reabrir; que un proveedor ve solo sus lotes **y pedir el ajeno por su id
-devuelve cero**; que no ve la bitácora ni los usuarios; que no anuncia a
-nombre de otra finca ni se da por recibido a sí mismo; que Recepción no toca
-los catálogos, no borra lotes y no se sube el rol; que desactivar a alguien
-le cierra la puerta; y que las pantallas de activación y de alta funcionan
-con el ratón, incluido que un acceso ya usado no sirve para nadie más.
+### Dos cosas que estas pruebas enseñaron sobre cómo probar
 
-Esta suite encontró un fallo de diseño: comprobar el dato de verificación
-**después** de crear la cuenta dejaba fuera para siempre a quien se
-equivocara una vez al teclear su RUC.
-
-**10 comprobaciones del momento del pesaje**, en una pantalla de 390 px: que
-el teclado de báscula aparezca al tocar un campo y diga a cuál apunta, que
-sus teclas midan al menos 48 px, que escriba y borre en el campo apuntado,
-que la coma decimal funcione, que haya **uno solo** para todo el formulario;
-que una diferencia pequeña no alarme y una grande avise en el momento; que no
-deje confirmar una desviación grave sin explicarla y sí con ella; y que si
-otra persona pesó el lote mientras tanto, el sistema se niegue, lo explique y
-**no pierda el dato ajeno**.
-
-**11 comprobaciones de la exportación a Excel**, descargando los archivos
-desde la app de verdad y abriéndolos como los abrirá Excel —un ZIP con su XML
-dentro—: que las siete vistas produzcan un `.xlsx` válido con datos, que el
-libro completo traiga una hoja por informe y una por línea de tiempos, que no
-haya hojas repetidas ni nombres con caracteres prohibidos (las dos cosas
-hacen que Excel declare el libro dañado y no abra nada), que los números
-vayan como números y que la cabecera quede congelada y con estilo. Más
-diecisiete formas de escribir un número contrastadas una a una.
-
-**34 comprobaciones de identidad y confidencialidad**, que son el guardián del acuerdo:
-recorren los diecinueve archivos del proyecto, el paquete publicado y **las veinte
-pantallas de las dos aplicaciones ya pintadas**, y fallan si encuentran el nombre, la
-razón social o las iniciales de la empresa en cualquiera de ellos. Además: que el sistema
-nazca en modo confidencial y sin razón social escrita, que una razón social configurada
-**no** se filtre a ningún documento mientras ese modo siga activo, que el reporte impreso
-cite «la Empresa», que al desactivarlo —y solo entonces— aparezca el nombre real, que al
-volver a activarlo se oculte sin perder lo configurado, y que no quede un solo emoji en
-pantalla (los símbolos ASME del diagrama de proceso sí, que son notación normalizada).
-
-**16 comprobaciones del almacén propio**, contra un servidor PostgREST de
-mentira que implementa la misma semántica que Supabase —*upsert* por clave
-compuesta, vista de resumen, CORS— y con **dos navegadores independientes**
-que no comparten nada salvo la base: que la app siembre una base vacía, que
-el segundo navegador lea lo que ya hay en vez de volver a sembrar, que un
-anuncio hecho en uno aparezca en el otro **sin recargar**, que el pesaje
-vuelva al proveedor igual, que sin red el registro quede en la cola y **no**
-llegue a la base, que al volver la señal suba solo, que si nada cambia **no
-se descargue nada**, y que una base caída no tumbe la app.
-
-**10 comprobaciones del sitio publicado**, servido exactamente como lo
-servirá GitHub Pages: que la portada cargue con las dos puertas, que el
-manifiesto declare una app instalable con sus dos atajos, que los iconos
-sean PNG del tamaño que dicen, que el service worker quede **activo**, que
-guarde lo esencial en el cache, que **con la red cortada recargar siga
-abriendo la app** y se pueda entrar al portal, que con señal sincronice
-contra su propia base, y que el nombre de la empresa tampoco aparezca en el
-HTML servido.
-
-Y **9 comprobaciones** sobre el paquete publicado: las dos puertas, el almacén compartido
-activo, un envío anunciado desde el celular apareciendo en la cola de la planta, el pesaje
-llegando en vivo al portal, la navegación entre puertas, y el costeo y la guía funcionando
-dentro del archivo único.
+- **Mira los elementos hoja, no el texto de un contenedor.** Concatenar las
+  celdas de una fila fabrica números que nadie escribió: «5.470» seguido de
+  «94,1%» se lee como «394,1%».
+- **Postgres rechaza de dos maneras.** Un `INSERT` contra `WITH CHECK` da
+  error; un `UPDATE` contra `USING` no da error: afecta a cero filas. Una
+  prueba que solo mire si hubo error da por buena una política que no
+  protege nada.
 
 ### Empaquetar
 

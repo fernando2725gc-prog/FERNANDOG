@@ -7,7 +7,7 @@
    a alguien con la consola del navegador abierta. */
 const { chromium } = require("playwright");
 const G = require("./falsogotrue.js");
-const BASE = "http://localhost:8199/app";
+const BASE = require("./entorno.js").BASE;
 const PUERTO = 8211;
 const CLAVE = "sb_publishable_prueba";
 
@@ -23,9 +23,9 @@ const CLAVE = "sb_publishable_prueba";
   nube.sql("insert into invitaciones(acceso,rol,proveedor_id,nombre,verificacion) values " +
     "('supervision','supervisor',null,'Supervisión de planta',null);", undefined);
 
-  const b = await chromium.launch({
-    executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome", args: ["--no-sandbox"]
-  });
+  /* La ruta de Chromium cambia con la versión del contenedor: la resuelve
+     entorno.js en vez de estar escrita a mano en cada suite. */
+  const b = await require("./entorno.js").navegador();
 
   const nuevoCtx = async () => {
     const ctx = await b.newContext();
@@ -373,6 +373,10 @@ const CLAVE = "sb_publishable_prueba";
 
   await b.close();
   await nube.cerrar();
-  console.log(errores.length ? "\nFALLOS: " + errores.length : "\nTodo en orden.");
+  /* Mismo final que las demás suites, para que el lanzador tenga un solo
+     contrato que leer en vez de uno por archivo. */
+  console.log(errores.length
+    ? "\nautenticacion: FALLOS (" + errores.length + ")"
+    : "\nautenticacion: todo en orden.");
   process.exit(errores.length ? 1 : 0);
 })();

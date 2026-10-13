@@ -6185,6 +6185,21 @@ const Indicadores = (function () {
 const Graficos = (function () {
   "use strict";
 
+  /* Los porcentajes que se LEEN van en formato local: el resto de la
+     aplicación escribe «96,4%» y aquí salía «58.7%» en la misma pantalla,
+     que en es-EC se lee como quinientos ochenta y siete.
+
+     No se usa UI.pct porque este módulo carga antes que ui.js. Son dos
+     líneas; atarlos por el orden de carga costaría más que repetirlas.
+
+     Ojo: los porcentajes que van dentro de un `style` NO pasan por aquí.
+     CSS quiere punto decimal, y una coma ahí deja la barra sin ancho. */
+  const FORMATO = new Intl.NumberFormat("es-EC", {
+    minimumFractionDigits: 1, maximumFractionDigits: 1
+  });
+  function pctTexto(fraccion) { return FORMATO.format(fraccion * 100) + "%"; }
+
+
   /* Los tres primeros colores son los de las lineas de producto: pitahaya
      roja, tomate de arbol y granadilla. El resto completa la escala. */
   const PALETA = ["#c0246b", "#c85a1e", "#b8860b", "#2f6f8f", "#5b8c3a", "#7a5ba8"];
@@ -6360,7 +6375,7 @@ const Graficos = (function () {
 
       svg += '<path d="' + d1 + '" fill="' + PALETA[i % PALETA.length] + '" fill-rule="evenodd">' +
         "<title>" + esc(d.nombre) + ": " + fmt(d[campo]) + " kg (" +
-        (parte * 100).toFixed(1) + "%)</title></path>";
+        pctTexto(parte) + ")</title></path>";
       angulo = fin;
     });
 
@@ -6370,9 +6385,9 @@ const Graficos = (function () {
 
     let leyenda = '<ul class="leyenda leyenda-col">';
     datos.forEach(function (d, i) {
-      const pct = ((Number(d[campo]) || 0) / total) * 100;
+      const parte = total > 0 ? (Number(d[campo]) || 0) / total : 0;
       leyenda += '<li><span class="punto" style="background:' + PALETA[i % PALETA.length] + '"></span>' +
-        esc(d.nombre) + ' <strong>' + pct.toFixed(1) + "%</strong></li>";
+        esc(d.nombre) + ' <strong>' + pctTexto(parte) + "</strong></li>";
     });
     leyenda += "</ul>";
 
@@ -6427,7 +6442,7 @@ const Graficos = (function () {
       svg += '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + bw.toFixed(1) +
         '" height="' + (m.t + ih - by).toFixed(1) + '" rx="3" fill="' + color + '">' +
         "<title>" + esc(d.nombre) + ": " + fmt(valorDe(d)) + unidad + " · " +
-        (d.porcentaje * 100).toFixed(1) + "% del total</title></rect>";
+        pctTexto(d.porcentaje) + " del total</title></rect>";
 
       /* Etiqueta girada: los nombres de causa no caben en horizontal */
       const eje = o.ejeX ? o.ejeX(d) : d.nombre;
@@ -6446,7 +6461,7 @@ const Graficos = (function () {
     filas.forEach(function (d, i) {
       svg += '<circle cx="' + (m.l + i * ancho + ancho / 2).toFixed(1) + '" cy="' +
         yAcum(d.acumulado).toFixed(1) + '" r="3.5" fill="' + PALETA[3] + '">' +
-        "<title>Acumulado: " + (d.acumulado * 100).toFixed(1) + "%</title></circle>";
+        "<title>Acumulado: " + pctTexto(d.acumulado) + "</title></circle>";
     });
 
     /* Referencia del 80%: la frontera clasica del analisis de Pareto */
@@ -6474,11 +6489,11 @@ const Graficos = (function () {
     const estado = pct >= 1 ? "ok" : pct >= 0.9 ? "alerta" : "bajo";
     return '<div class="medidor medidor-' + estado + '">' +
       '<div class="medidor-cab"><span>' + esc(etiqueta) + "</span><strong>" +
-      (valor * 100).toFixed(1) + "%</strong></div>" +
+      pctTexto(valor) + "</strong></div>" +
       '<div class="medidor-pista"><div class="medidor-barra" style="width:' + ancho.toFixed(1) + '%"></div>' +
       '<div class="medidor-meta" style="left:' + Math.min(100, 100).toFixed(1) + '%"></div></div>' +
       '<div class="medidor-pie">' +
-      (pie || "Meta ponderada: " + (meta * 100).toFixed(1) + "%") + "</div></div>";
+      (pie || "Meta ponderada: " + pctTexto(meta)) + "</div></div>";
   }
 
   return {

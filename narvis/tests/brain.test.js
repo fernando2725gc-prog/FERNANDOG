@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { CANVA_RULES } from "../js/canva.js";
 import { buildMessages, pickTier, normalizeAnswer, quadrant, partialField, formatMemory, errorMessage } from "../js/brain.js";
 
 test("buildMessages incluye reglas, formato, memoria y nombre, y termina en la pregunta", () => {
@@ -9,12 +10,12 @@ test("buildMessages incluye reglas, formato, memoria y nombre, y termina en la p
     history,
     memory: ["Trabaja en una planta de inyección de plástico"],
     name: "Fernando",
-    canva: true,
+    toolRules: [CANVA_RULES],
     now: new Date(2026, 9, 27, 12)
   });
   const ctx = msgs[0].content;
   assert.match(ctx, /ingeniero de producción/);
-  assert.match(ctx, /Piensa de forma crítica/);
+  assert.match(ctx, /Sé crítico de verdad/);
   assert.match(ctx, /"acciones"/);
   assert.match(ctx, /canva_buscar_disenos/);
   assert.match(ctx, /Fernando/);

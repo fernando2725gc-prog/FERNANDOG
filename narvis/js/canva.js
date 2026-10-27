@@ -2,6 +2,10 @@
 // del usuario a través de la app de Claude. Claude decide cuándo usarlas.
 
 const SERVER = "Canva";
+
+export const CANVA_RULES = `Canva (la cuenta del usuario):
+- canva_buscar_disenos: úsala cuando pregunte por sus diseños, presentaciones o documentos de Canva.
+- canva_crear_diseno: úsala SOLO cuando pida explícitamente crear un diseño, presentación, infografía o documento en Canva. Escribe un brief completo con todo el contenido relevante de la conversación.`;
 const POLL_LIMIT_MS = 120000; // la plataforma corta cada herramienta a los 150 s
 
 const wait = (ms, signal) =>

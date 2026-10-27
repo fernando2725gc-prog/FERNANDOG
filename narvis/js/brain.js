@@ -7,7 +7,8 @@ export const RULES = `Eres Narvis, el asistente personal de un ingeniero de prod
 Tu especialidad es la ingeniería de la producción y todo lo que la rodea: manufactura esbelta (VSM, 5S, SMED, Kanban, Heijunka, Jidoka, Kaizen), Six Sigma y control estadístico de procesos (DMAIC, Cp/Cpk, cartas de control, DOE, MSA), TPM y OEE, planeación y control de la producción (MPS, MRP, pronósticos, capacidad, secuenciación, teoría de restricciones), balanceo de líneas y takt time, estudio del trabajo (tiempos, métodos, ergonomía), distribución de planta y manejo de materiales, logística y cadena de suministro, gestión de calidad (ISO 9001, AMEF, 8D, PPAP), seguridad industrial, costos y evaluación de proyectos, investigación de operaciones, simulación e Industria 4.0. También dominas el conocimiento general de ingeniería, ciencia, economía y negocios.
 
 Cómo piensas:
-- Piensa de forma crítica. Antes de responder, identifica supuestos, datos que faltan, causas raíz posibles y riesgos. Si la premisa del usuario es débil o hay una mejor pregunta, dilo con respeto.
+- Sé crítico de verdad. No le des la razón al usuario por cortesía ni lo halagues: si su planteamiento, cálculo, plan o idea tiene errores, huecos o riesgos, dilo claro y explica por qué. Cuestiona supuestos, pide la evidencia que falte y señala la causa raíz probable en lugar del síntoma. Si hay una mejor pregunta o un mejor enfoque, propónlo.
+- Antes de responder, identifica supuestos, datos que faltan, causas raíz posibles y riesgos.
 - Cuantifica cuando se pueda: fórmulas, unidades, órdenes de magnitud, ejemplos numéricos. Muestra el cálculo de forma breve.
 - Distingue hechos, estimaciones y opiniones. Si algo depende de datos actuales que no tienes (precios, normas recién cambiadas, noticias), dilo y propone cómo verificarlo. Nunca inventes cifras, normas ni referencias.
 - Cuando haya algo que mejorar, propone acciones de mejora concretas y priorizadas: qué hacer, por qué, impacto y esfuerzo estimados, y el indicador (KPI) con el que se mediría.
@@ -24,11 +25,6 @@ const FORMAT = `Responde SOLO con un objeto JSON con esta forma exacta:
 }
 Deja "critica", "acciones", "recordar" y "enlaces" como listas vacías cuando no apliquen (por ejemplo, en un saludo). Incluye "acciones" solo si hay algo concreto que mejorar (máximo 5). En "enlaces" pon solo URLs que te hayan devuelto las herramientas.`;
 
-const CANVA_RULES = `Herramientas de Canva (la cuenta del usuario):
-- canva_buscar_disenos: úsala cuando pregunte por sus diseños, presentaciones o documentos de Canva.
-- canva_crear_diseno: úsala SOLO cuando pida explícitamente crear un diseño, presentación, infografía o documento en Canva. Escribe un brief completo con todo el contenido relevante de la conversación.
-- Si una herramienta falla, explícalo en la respuesta sin inventar resultados.`;
-
 export const MAX_HISTORY = 10; // turnos de conversación que se reenvían
 export const MAX_MEMORY = 40;
 
@@ -44,10 +40,12 @@ export function formatMemory(facts = []) {
 }
 
 // Turnos para sample(): empieza y termina en "user". El historial guarda solo
-// el texto de las respuestas, no el JSON completo.
-export function buildMessages({ question, history = [], memory = [], name = "", canva = false, now = new Date() }) {
+// el texto de las respuestas, no el JSON completo. toolRules: instrucciones de
+// las herramientas disponibles (Canva, proyectos…).
+export function buildMessages({ question, history = [], memory = [], name = "", toolRules = [], now = new Date() }) {
   const who = name ? `El usuario se llama ${name}.` : "";
-  const context = [RULES, canva ? CANVA_RULES : "", FORMAT, `Fecha y hora actual: ${formatDate(now)}.`, who, formatMemory(memory)]
+  const tools = toolRules.length ? `${toolRules.join("\n\n")}\n\nSi una herramienta falla, dilo en la respuesta sin inventar resultados.` : "";
+  const context = [RULES, tools, FORMAT, `Fecha y hora actual: ${formatDate(now)}.`, who, formatMemory(memory)]
     .filter(Boolean)
     .join("\n\n");
   const recent = history.slice(-MAX_HISTORY).filter((t) => t?.content && (t.role === "user" || t.role === "assistant"));
@@ -151,8 +149,8 @@ export function errorMessage(code) {
 }
 
 // Conecta con Claude a través de la app de Claude. Devuelve null fuera de Claude.
-// tools: herramientas de la página (por ejemplo, Canva) que Claude puede usar.
-export async function createBrain({ tools = [] } = {}) {
+// tools: herramientas de la página que Claude puede usar; toolRules: cómo usarlas.
+export async function createBrain({ tools = [], toolRules = [] } = {}) {
   if (!window.claude?.use) return null;
   const sample = await window.claude.use("sample");
   if (!sample) return null;
@@ -163,7 +161,7 @@ export async function createBrain({ tools = [] } = {}) {
     hasTools: usableTools.length > 0,
     // onText recibe lo que ya se escribió del campo "respuesta".
     async ask(question, { history, memory, name, onText, signal } = {}) {
-      const messages = buildMessages({ question, history, memory, name, canva: usableTools.length > 0 });
+      const messages = buildMessages({ question, history, memory, name, toolRules: usableTools.length ? toolRules : [] });
       const options = { modelTier: pickTier(question), signal };
       if (onText) options.onText = ({ text }) => onText(partialField(text));
       // Con herramientas la plataforma nunca guarda en caché; sin ellas, lo pedimos explícito.

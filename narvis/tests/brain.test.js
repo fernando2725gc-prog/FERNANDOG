@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CANVA_RULES } from "../js/canva.js";
-import { buildMessages, pickTier, normalizeAnswer, quadrant, partialField, formatMemory, errorMessage } from "../js/brain.js";
+import { formatKnowledge, buildMessages, pickTier, normalizeAnswer, quadrant, partialField, formatMemory, errorMessage } from "../js/brain.js";
 
 test("buildMessages incluye reglas, formato, memoria y nombre, y termina en la pregunta", () => {
   const history = [{ role: "user", content: "hola" }, { role: "assistant", content: "Hola." }];
@@ -24,6 +24,16 @@ test("buildMessages incluye reglas, formato, memoria y nombre, y termina en la p
   assert.deepEqual(msgs.slice(1, 3), history);
   assert.deepEqual(msgs.at(-1), { role: "user", content: "¿Cómo bajo el scrap?" });
   assert.doesNotMatch(buildMessages({ question: "x" })[0].content, /canva_buscar_disenos/);
+});
+
+test("los documentos del proyecto entran al contexto", () => {
+  const knowledge = [{ titulo: "TIC Acopia", actualizado: "2026-10-27", texto: "Tres líneas: pitahaya, tomate de árbol y granadilla." }];
+  const ctx = buildMessages({ question: "¿Cuál es el takt de pitahaya?", knowledge })[0].content;
+  assert.match(ctx, /DOCUMENTOS DE SUS PROYECTOS/);
+  assert.match(ctx, /### TIC Acopia \(actualizado 2026-10-27\)/);
+  assert.match(ctx, /granadilla/);
+  assert.equal(formatKnowledge([]), "");
+  assert.equal(formatKnowledge([{ titulo: "vacío" }]), "");
 });
 
 test("buildMessages limita el historial a 10 turnos", () => {

@@ -12,7 +12,8 @@ Cómo piensas:
 - Cuantifica cuando se pueda: fórmulas, unidades, órdenes de magnitud, ejemplos numéricos. Muestra el cálculo de forma breve.
 - Distingue hechos, estimaciones y opiniones. Si algo depende de datos actuales que no tienes (precios, normas recién cambiadas, noticias), dilo y propone cómo verificarlo. Nunca inventes cifras, normas ni referencias.
 - Cuando haya algo que mejorar, propone acciones de mejora concretas y priorizadas: qué hacer, por qué, impacto y esfuerzo estimados, y el indicador (KPI) con el que se mediría.
-- Usa lo que sabes del usuario (MEMORIA) para personalizar, sin repetirlo en cada respuesta.`;
+- Usa lo que sabes del usuario (MEMORIA) para personalizar, sin repetirlo en cada respuesta.
+- Si el usuario tiene DOCUMENTOS DE SUS PROYECTOS (por ejemplo, su TIC o tesis), son tu referencia principal sobre ese trabajo: usa sus datos y fórmulas, di de qué sección sale cada cifra, respeta si un dato es medido (M), estimado (E) o secundario (S), y señala inconsistencias o huecos que veas. Nunca reveles el nombre de una empresa bajo confidencialidad.`;
 
 const FORMAT = `Responde SOLO con un objeto JSON con esta forma exacta:
 {
@@ -34,6 +35,14 @@ function formatDate(now) {
     .replace(/\.$/, "");
 }
 
+export function formatKnowledge(docs = []) {
+  const valid = docs.filter((d) => d?.texto);
+  if (!valid.length) return "";
+  return `DOCUMENTOS DE SUS PROYECTOS:\n\n${valid
+    .map((d) => `### ${d.titulo || "Documento"}${d.actualizado ? ` (actualizado ${d.actualizado})` : ""}\n${d.texto}`)
+    .join("\n\n")}`;
+}
+
 export function formatMemory(facts = []) {
   if (!facts.length) return "MEMORIA: todavía no sabes nada en particular del usuario.";
   return `MEMORIA (lo que sabes del usuario):\n${facts.slice(-MAX_MEMORY).map((f) => `- ${f}`).join("\n")}`;
@@ -42,10 +51,10 @@ export function formatMemory(facts = []) {
 // Turnos para sample(): empieza y termina en "user". El historial guarda solo
 // el texto de las respuestas, no el JSON completo. toolRules: instrucciones de
 // las herramientas disponibles (Canva, proyectos…).
-export function buildMessages({ question, history = [], memory = [], name = "", toolRules = [], now = new Date() }) {
+export function buildMessages({ question, history = [], memory = [], knowledge = [], name = "", toolRules = [], now = new Date() }) {
   const who = name ? `El usuario se llama ${name}.` : "";
   const tools = toolRules.length ? `${toolRules.join("\n\n")}\n\nSi una herramienta falla, dilo en la respuesta sin inventar resultados.` : "";
-  const context = [RULES, tools, FORMAT, `Fecha y hora actual: ${formatDate(now)}.`, who, formatMemory(memory)]
+  const context = [RULES, tools, FORMAT, `Fecha y hora actual: ${formatDate(now)}.`, who, formatMemory(memory), formatKnowledge(knowledge)]
     .filter(Boolean)
     .join("\n\n");
   const recent = history.slice(-MAX_HISTORY).filter((t) => t?.content && (t.role === "user" || t.role === "assistant"));
@@ -160,8 +169,8 @@ export async function createBrain({ tools = [], toolRules = [] } = {}) {
   return {
     hasTools: usableTools.length > 0,
     // onText recibe lo que ya se escribió del campo "respuesta".
-    async ask(question, { history, memory, name, onText, signal } = {}) {
-      const messages = buildMessages({ question, history, memory, name, toolRules: usableTools.length ? toolRules : [] });
+    async ask(question, { history, memory, knowledge, name, onText, signal } = {}) {
+      const messages = buildMessages({ question, history, memory, knowledge, name, toolRules: usableTools.length ? toolRules : [] });
       const options = { modelTier: pickTier(question), signal };
       if (onText) options.onText = ({ text }) => onText(partialField(text));
       // Con herramientas la plataforma nunca guarda en caché; sin ellas, lo pedimos explícito.

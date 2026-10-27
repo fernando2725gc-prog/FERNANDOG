@@ -1,6 +1,7 @@
 // Datos personales de Narvis, privados para cada persona. En la app de Claude se
 // guardan en la base de datos del artifact, bajo data/users/<id>/:
 //   memory → lo que Narvis sabe de ti   chat → la conversación   notes → tus notas
+//   knowledge → documentos de tus proyectos (por ejemplo, tu TIC), cargados por Claude
 // Si no hay base de datos (o no se puede escribir), se usa el navegador.
 
 import { MAX_MEMORY } from "./brain.js";
@@ -96,6 +97,7 @@ export async function createStore() {
     persistent: Boolean(db && id),
     memory: list(doc("memory"), MAX_MEMORY),
     chat: list(doc("chat"), MAX_CHAT),
+    knowledge: list(doc("knowledge"), 10),
     notes: { add: (text) => notes.add(text), list: () => notes.all(), clear: () => notes.clear() }
   };
 }

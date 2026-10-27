@@ -12,12 +12,20 @@ import { createHologram } from "./hologram.js";
 const SETTINGS_KEY = "narvis.settings";
 
 const STARTERS = [
+  ["TIC", "Revisa mi TIC con ojo crítico: ¿qué está débil o inconsistente antes de la defensa y qué corrijo primero?"],
   ["Proyectos", "¿Cómo van mis proyectos? Dame un diagnóstico crítico y el siguiente paso de cada uno."],
   ["OEE", "Mi línea trabajó 450 de 480 min, produjo 820 piezas con ciclo ideal de 30 s y 40 defectuosas. Calcula el OEE y dime dónde atacar."],
   ["SMED", "El cambio de molde en mi prensa tarda 65 minutos. Arma un plan SMED para bajarlo a menos de 10."],
   ["Causa raíz", "Tenemos muchas piezas con rebaba en inyección. Hagamos un análisis de causa raíz con 5 porqués e Ishikawa."],
   ["Takt time", "La demanda es de 1,200 piezas por día en dos turnos de 8 h con 30 min de descanso. ¿Cuál es el takt time y cuántas estaciones necesito?"],
-  ["Canva", "Busca mis presentaciones recientes en Canva."]
+];
+
+// Un proyecto de Claude Code se considera el del TIC si su título lo menciona.
+const TIC_PROJECT = /tesis|tic\b|acopia|agroregistro/i;
+const TIC_ACTIONS = [
+  ["Preparar la defensa", "Hazme 8 preguntas difíciles que me haría el tribunal sobre mi TIC, con la respuesta que debería dar basada en mis datos."],
+  ["Revisar inconsistencias", "Revisa mi TIC y lista las inconsistencias o datos dudosos que debo corregir, en orden de gravedad."],
+  ["Priorizar mejoras", "Con los datos de mi TIC, prioriza las medidas CR5 a CR8 por impacto económico y esfuerzo, y dime cuál defender primero."]
 ];
 
 // ---------- Utilidades ----------
@@ -94,6 +102,9 @@ function buildShell() {
   ui.detail = el("small", { textContent: "—" });
   ui.readout.append(el("span", { className: "dot" }), ui.state, ui.detail);
 
+  ui.tic = el("div", { className: "tic" });
+  const ticPanel = panel("TIC · Acopia", ui.tic);
+
   ui.projects = el("ul", { className: "items" });
   const projects = panel("Proyectos", ui.projects);
   ui.projectCount = projects.count;
@@ -135,6 +146,7 @@ function buildShell() {
     el("div", { className: "brand" }, el("h1", {}, "N.A.R.V.I.S."), el("span", {}, "ingeniería de producción")),
     el("div", { className: "holo" }, ui.canvas),
     ui.readout,
+    ticPanel.node,
     projects.node,
     memory.node,
     notes.node,
@@ -306,6 +318,35 @@ function fillAnswer(shell, answer, { remembered = [] } = {}) {
 }
 
 // ---------- Paneles ----------
+let knowledgeDocs = [];
+let ticProject = null;
+
+function renderTic() {
+  ui.tic.replaceChildren();
+  const doc = knowledgeDocs[0];
+  if (!doc) {
+    ui.tic.append(el("p", { textContent: "Aún no tengo cargados los documentos de tu TIC. Pídele a Claude que los cargue en tu memoria privada." }));
+    return;
+  }
+  ui.tic.append(
+    el("div", { className: "conn" }, el("span", {}, "Documento"), el("b", { dataset: { ok: "true" }, textContent: `cargado ${doc.actualizado ?? ""}`.trim() })),
+    el(
+      "div",
+      { className: "conn" },
+      el("span", {}, "Proyecto"),
+      el("b", { dataset: { ok: String(Boolean(ticProject)) }, textContent: ticProject ? ticProject.estado : "sin vincular" })
+    )
+  );
+  if (ticProject?.ultimo_avance) ui.tic.append(el("p", { textContent: `Último avance: ${ticProject.ultimo_avance}` }));
+  const actions = el("div", { className: "row" });
+  for (const [label, prompt] of TIC_ACTIONS) {
+    const b = el("button", { className: "btn", type: "button", textContent: label });
+    b.addEventListener("click", () => ask(ticProject ? `${prompt} (Proyecto vinculado: «${ticProject.titulo}», id ${ticProject.id}.)` : prompt));
+    actions.append(b);
+  }
+  ui.tic.append(actions);
+}
+
 function renderProjects(result) {
   ui.projects.replaceChildren();
   if (!result) {
@@ -320,6 +361,8 @@ function renderProjects(result) {
   }
   ui.projectState.textContent = "conectado";
   ui.projectState.dataset.ok = "true";
+  ticProject = result.projects.find((p) => TIC_PROJECT.test(p.titulo)) ?? null;
+  renderTic();
   ui.projectCount.textContent = String(result.projects.length);
   if (!result.projects.length) ui.projects.append(el("li", {}, el("span", { textContent: "No encontré proyectos en tu cuenta." })));
   for (const p of result.projects.slice(0, 8)) {
@@ -440,6 +483,7 @@ async function ask(text) {
     answer = await brain.ask(question, {
       history: await historyTurns(),
       memory: await store.memory.all(),
+      knowledge: knowledgeDocs,
       name: store.name,
       signal: controller.signal,
       onText: (partial) => {
@@ -543,6 +587,8 @@ async function init() {
   store = await createStore();
   ui.memoryState.textContent = store.persistent ? "en tu cuenta" : "en este navegador";
   ui.memoryState.dataset.ok = String(store.persistent);
+  knowledgeDocs = await store.knowledge.all();
+  renderTic();
   await Promise.all([restoreChat(), renderMemory(), renderNotes()]);
 
   const mcp = window.claude?.use ? await window.claude.use("mcp") : null;

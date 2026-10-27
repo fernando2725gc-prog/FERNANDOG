@@ -145,6 +145,8 @@ a { color: var(--holo); }
 .project small { grid-column: 1 / -1; color: var(--muted); font-size: 0.8rem; }
 .items li.project > button.ask-link { grid-column: 1 / -1; justify-self: start; padding: 0; font-size: 0.8rem; color: var(--holo); }
 
+.tic { display: grid; gap: 8px; }
+.tic .row .btn { font-size: 0.66rem; padding: 6px 10px; }
 .conn { display: flex; justify-content: space-between; gap: 10px; font-size: 0.86rem; }
 .conn b { font: 500 0.76rem var(--font-mono); }
 .conn b[data-ok="true"] { color: var(--go); }

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jarvis</title>
+  <meta name="description" content="Asistente personal con control de voz en español.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="top">
+      <h1>J.A.R.V.I.S.</h1>
+      <p class="tagline">Asistente personal por voz</p>
+    </header>
+
+    <section class="hud" aria-live="polite">
+      <div id="core" class="core" data-state="idle" aria-hidden="true">
+        <span class="ring ring-1"></span>
+        <span class="ring ring-2"></span>
+        <span class="ring ring-3"></span>
+        <span class="heart"></span>
+      </div>
+      <p id="status" class="status">Micrófono apagado</p>
+      <p id="interim" class="interim"></p>
+      <button id="toggle" class="toggle" type="button" aria-pressed="false">Activar micrófono</button>
+      <p id="support" class="support" hidden>
+        Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge,
+        o escribe tus órdenes abajo.
+      </p>
+      <ul id="timers" class="timers"></ul>
+    </section>
+
+    <section class="panel">
+      <ol id="log" class="log" aria-label="Conversación"></ol>
+      <form id="text-form" class="text-form">
+        <label class="visually-hidden" for="text-input">Escribe una orden</label>
+        <input id="text-input" type="text" autocomplete="off" placeholder="O escribe una orden: ¿qué hora es?">
+        <button type="submit">Enviar</button>
+      </form>
+    </section>
+
+    <section class="settings">
+      <label class="switch">
+        <input id="wake-mode" type="checkbox" checked>
+        <span>Requerir la palabra «Jarvis»</span>
+      </label>
+      <label>
+        Idioma
+        <select id="lang">
+          <option value="es-MX">Español (México)</option>
+          <option value="es-ES">Español (España)</option>
+          <option value="es-US">Español (EE. UU.)</option>
+          <option value="es-AR">Español (Argentina)</option>
+          <option value="es-CO">Español (Colombia)</option>
+        </select>
+      </label>
+    </section>
+
+    <details class="help">
+      <summary>¿Qué puedo decir?</summary>
+      <ul id="help-list"></ul>
+    </details>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

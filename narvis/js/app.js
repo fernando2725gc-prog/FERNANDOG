@@ -1,120 +1,35 @@
-// Narvis: interfaz, micrófono (SpeechRecognition), voz (speechSynthesis) y el
-// "contexto" que usan los comandos. Los comandos rápidos viven en commands.js y
-// las preguntas abiertas las contesta el cerebro (brain.js).
-import { respond, stripWakeWord, COMMANDS } from "./commands.js";
-import { createBrain, createServerBrain, headlinesText, TOPICS } from "./brain.js";
+// Narvis: interfaz, voz (speechSynthesis) y conexión con el cerebro, la memoria y Canva.
+// Las órdenes simples se resuelven aquí (commands.js); lo demás lo piensa Claude (brain.js).
+import { respond, stripWakeWord } from "./commands.js";
+import { createBrain, quadrant, MAX_HISTORY } from "./brain.js";
 import { createStore } from "./store.js";
-import { probeMicrophone, diagnoseRecognitionError } from "./mic.js";
+import { createCanvaTools } from "./canva.js";
 
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const ATTENTION_MS = 8000; // tras decir solo "Narvis", escucha sin palabra clave durante este tiempo
 const SETTINGS_KEY = "narvis.settings";
-const IN_CLAUDE = Boolean(window.claude?.use);
 
-// ¿Corre junto al servidor local (npm run server)? Responde en /api/status.
-async function detectServer() {
-  if (IN_CLAUDE || location.protocol === "file:") return null;
-  try {
-    const res = await fetch("/api/status");
-    return res.ok ? await res.json() : null;
-  } catch {
-    return null;
-  }
-}
+const STARTERS = [
+  ["OEE", "Mi línea trabajó 450 de 480 min, produjo 820 piezas con ciclo ideal de 30 s y 40 defectuosas. Calcula el OEE y dime dónde atacar."],
+  ["SMED", "El cambio de molde en mi prensa tarda 65 minutos. Arma un plan SMED para bajarlo a menos de 10."],
+  ["5 porqués", "Tenemos muchas piezas con rebaba en inyección. Hagamos un análisis de causa raíz con 5 porqués e Ishikawa."],
+  ["Takt time", "La demanda es de 1,200 piezas por día en dos turnos de 8 h con 30 min de descanso. ¿Cuál es el takt time y cuántas estaciones necesito?"],
+  ["Cpk", "Un diámetro de 25 ± 0.05 mm tiene media 25.012 y desviación 0.011. Calcula Cp y Cpk e interpreta."],
+  ["Canva", "Busca mis presentaciones recientes en Canva."]
+];
 
-// ---------- Interfaz ----------
-const root = document.querySelector("#narvis");
-root.innerHTML = `
-  <header class="top">
-    <div>
-      <h1>N.A.R.V.I.S.</h1>
-      <p class="tagline">Asistente por voz enfocado en lo que importa</p>
-    </div>
-    <p id="brain-pill" class="pill" data-state="loading">Conectando cerebro…</p>
-  </header>
-
-  <div class="layout">
-    <section class="console" aria-label="Consola de voz">
-      <div class="hud">
-        <div id="core" class="core" data-state="idle" aria-hidden="true">
-          <span class="ring ring-1"></span><span class="ring ring-2"></span>
-          <span class="ring ring-3"></span><span class="heart"></span>
-        </div>
-        <p id="status" class="status" aria-live="polite">Micrófono apagado</p>
-        <p id="interim" class="interim"></p>
-        <div class="controls">
-          <button id="toggle" class="btn btn-primary" type="button" aria-pressed="false">Activar micrófono</button>
-          <button id="voice" class="btn" type="button" aria-pressed="true">Voz: activada</button>
-          <button id="stop" class="btn" type="button" hidden>Detener</button>
-        </div>
-        <p id="mic-note" class="note" hidden></p>
-        <ul id="timers" class="timers"></ul>
-      </div>
-
-      <div class="chat">
-        <ol id="log" class="log" aria-label="Conversación" aria-live="polite"></ol>
-        <form id="text-form" class="text-form">
-          <label class="visually-hidden" for="text-input">Escribe o dicta una orden</label>
-          <input id="text-input" type="text" autocomplete="off" enterkeyhint="send"
-            placeholder="Pregunta o dicta: ¿qué está pasando en el mundo?">
-          <button class="btn btn-primary" type="submit">Enviar</button>
-        </form>
-      </div>
-    </section>
-
-    <aside class="radar" aria-label="Radar de noticias">
-      <div class="radar-head">
-        <div>
-          <h2>Radar mundial</h2>
-          <p id="news-updated" class="meta">Cargando noticias…</p>
-        </div>
-        <div class="controls">
-          <button id="refresh-news" class="btn" type="button" hidden>Actualizar</button>
-          <button id="briefing" class="btn btn-primary" type="button">Resumen del día</button>
-        </div>
-      </div>
-      <div id="topics" class="chips" role="group" aria-label="Filtrar por tema"></div>
-      <ul id="news" class="news"></ul>
-    </aside>
-  </div>
-
-  <footer class="foot">
-    <label class="switch">
-      <input id="wake-mode" type="checkbox" checked>
-      <span>Requerir la palabra «Narvis» al hablar</span>
-    </label>
-    <label for="lang">Idioma
-      <select id="lang">
-        <option value="es-MX">Español (México)</option>
-        <option value="es-ES">Español (España)</option>
-        <option value="es-US">Español (EE. UU.)</option>
-        <option value="es-AR">Español (Argentina)</option>
-        <option value="es-CO">Español (Colombia)</option>
-      </select>
-    </label>
-    <details class="help">
-      <summary>¿Qué puedo decir?</summary>
-      <ul id="help-list"></ul>
-      <p>Y cualquier pregunta abierta: «¿Por qué sube el petróleo?», «Explícame la elección en Israel».</p>
-    </details>
-  </footer>
-`;
-
-const $ = (sel) => root.querySelector(sel);
-const ui = {
-  pill: $("#brain-pill"), core: $("#core"), status: $("#status"), interim: $("#interim"),
-  toggle: $("#toggle"), voice: $("#voice"), stop: $("#stop"), micNote: $("#mic-note"),
-  timers: $("#timers"), log: $("#log"), form: $("#text-form"), input: $("#text-input"),
-  updated: $("#news-updated"), briefing: $("#briefing"), refreshNews: $("#refresh-news"), topics: $("#topics"), news: $("#news"),
-  wakeMode: $("#wake-mode"), lang: $("#lang"), help: $("#help-list")
+// ---------- Utilidades ----------
+const el = (tag, props = {}, ...children) => {
+  const { dataset, ...rest } = props;
+  const node = Object.assign(document.createElement(tag), rest);
+  if (dataset) Object.assign(node.dataset, dataset);
+  for (const child of children) if (child != null) node.append(child);
+  return node;
 };
 
-// ---------- Ajustes (comodidad por navegador) ----------
 function loadSettings() {
   try {
-    return JSON.parse(localStorage.getItem(SETTINGS_KEY)) ?? {};
+    return { voice: true, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}") };
   } catch {
-    return {};
+    return { voice: true };
   }
 }
 function saveSettings() {
@@ -124,500 +39,450 @@ function saveSettings() {
     /* sin persistencia */
   }
 }
-const settings = { wakeWord: true, lang: "es-MX", voice: true, ...loadSettings() };
 
-// ---------- Estado ----------
-let brain = null;
-let store = { notes: null };
-let server = null; // estado del servidor local, si hay
-let news = null;
-let topicFilter = null;
-let recognition = null;
-let listening = false;
-let speaking = false;
-let busy = false;
-let attentiveUntil = 0;
-let controller = null;
+function greeting(now = new Date()) {
+  const h = now.getHours();
+  return h < 12 ? "Buenos días" : h < 19 ? "Buenas tardes" : "Buenas noches";
+}
 
-function setState(state, text) {
-  ui.core.dataset.state = state; // idle | listening | attentive | thinking | speaking
+// Cómo dictar en cada sistema (en la app de Claude el micrófono directo está bloqueado).
+function dictationHint() {
+  const ua = navigator.userAgent;
+  if (/Android|iPhone|iPad/i.test(ua)) return el("span", {}, "Para hablar, toca el micrófono de tu teclado");
+  if (/Mac/i.test(ua)) return el("span", {}, "Para hablar, pulsa ", el("kbd", {}, "Fn"), " dos veces");
+  return el("span", {}, "Para hablar, pulsa ", el("kbd", {}, "Windows"), " + ", el("kbd", {}, "H"));
+}
+
+// Convierte texto con párrafos y listas con guion en nodos (nunca HTML del modelo).
+function renderText(text) {
+  const frag = document.createDocumentFragment();
+  for (const block of text.split(/\n{2,}/)) {
+    const lines = block.split("\n").filter((l) => l.trim());
+    if (!lines.length) continue;
+    const bullet = /^\s*[-•*]\s+/;
+    const numbered = /^\s*\d+[.)]\s+/;
+    if (lines.every((l) => bullet.test(l)) || lines.every((l) => numbered.test(l))) {
+      const isNum = numbered.test(lines[0]);
+      const list = el(isNum ? "ol" : "ul");
+      for (const l of lines) list.append(el("li", { textContent: l.replace(isNum ? numbered : bullet, "") }));
+      frag.append(list);
+    } else {
+      frag.append(el("p", { textContent: lines.join("\n"), style: "white-space: pre-line" }));
+    }
+  }
+  return frag;
+}
+
+// ---------- Interfaz ----------
+const root = document.querySelector("#narvis");
+const ui = {};
+let settings = loadSettings();
+
+function buildShell() {
+  ui.andon = el("div", { className: "andon", ariaHidden: "true" }, el("i", { className: "lamp-stop" }), el("i", { className: "lamp-wait" }), el("i", { className: "lamp-go" }));
+  ui.status = el("span", { className: "status-text", role: "status" }, "Conectando…");
+  ui.voice = el("button", { className: "icon-btn", type: "button" });
+  const topbar = el(
+    "header",
+    { className: "topbar" },
+    el("div", { className: "brand" }, el("h1", {}, "Narvis"), el("span", {}, "Ingeniería de producción")),
+    el("div", { className: "status" }, ui.status, ui.andon, ui.voice)
+  );
+
+  ui.thread = el("div", { className: "thread", ariaLive: "polite" });
+  ui.timers = el("ul", { className: "timers" });
+  ui.input = el("textarea", { id: "ask", rows: 1, placeholder: "Pregúntale a Narvis…", enterKeyHint: "send" });
+  ui.send = el("button", { className: "send", type: "submit", textContent: "Enviar" });
+  ui.form = el(
+    "form",
+    { className: "composer" },
+    ui.timers,
+    el("label", { className: "visually-hidden", htmlFor: "ask", textContent: "Pregunta" }),
+    el("div", { className: "composer-box" }, ui.input, ui.send),
+    el(
+      "p",
+      { className: "composer-hint" },
+      dictationHint(),
+      el("span", {}, el("kbd", {}, "Enter"), " envía · ", el("kbd", {}, "Shift"), " + ", el("kbd", {}, "Enter"), " nueva línea")
+    )
+  );
+
+  ui.facts = el("ul", { className: "facts" });
+  ui.factCount = el("small");
+  ui.notes = el("ul", { className: "facts" });
+  ui.canvaState = el("b", { textContent: "—" });
+  ui.memoryState = el("b", { textContent: "—" });
+  ui.newChat = el("button", { className: "ghost", type: "button", textContent: "Nueva conversación" });
+  const side = el(
+    "aside",
+    { className: "side" },
+    el("section", { className: "panel" }, el("h3", {}, "Lo que sé de ti", ui.factCount), ui.facts),
+    el("section", { className: "panel" }, el("h3", {}, "Notas"), ui.notes),
+    el(
+      "section",
+      { className: "panel" },
+      el("h3", {}, "Conexiones"),
+      el(
+        "div",
+        { className: "links-row" },
+        el("div", { className: "conn" }, el("span", {}, "Canva"), ui.canvaState),
+        el("div", { className: "conn" }, el("span", {}, "Memoria"), ui.memoryState)
+      ),
+      ui.newChat
+    )
+  );
+
+  root.replaceChildren(topbar, el("div", { className: "layout" }, el("main", { className: "conversation" }, ui.thread, ui.form), side));
+}
+
+function setStatus(state, text) {
+  ui.andon.dataset.state = state; // ready | thinking | speaking | error
   ui.status.textContent = text;
 }
 
-function refreshIdleState() {
-  ui.stop.hidden = !(busy || speaking);
-  if (busy || speaking) return;
-  if (!listening) setState("idle", recognition ? "Micrófono apagado" : "Listo para tus preguntas");
-  else if (Date.now() < attentiveUntil) setState("attentive", "Te escucho…");
-  else if (settings.wakeWord) setState("listening", "Di «Narvis» seguido de tu orden");
-  else setState("attentive", "Escuchando…");
+function renderVoiceButton() {
+  ui.voice.setAttribute("aria-pressed", String(settings.voice));
+  ui.voice.textContent = settings.voice ? "Voz activada" : "Voz silenciada";
 }
 
-// ---------- Conversación ----------
-function addMessage(who, text, link) {
-  const item = document.createElement("li");
-  item.className = `msg msg-${who}`;
-  const p = document.createElement("p");
-  p.textContent = text;
-  item.append(p);
-  if (link) addLink(item, link);
-  ui.log.append(item);
-  ui.log.scrollTop = ui.log.scrollHeight;
-  return { item, p };
-}
-
-function addLink(item, link) {
-  const a = document.createElement("a");
-  a.href = link.url;
-  a.target = "_blank";
-  a.rel = "noopener";
-  a.textContent = `Abrir ${link.label} ↗`;
-  item.append(a);
-}
+// ---------- Estado ----------
+let brain = null;
+let store = null;
+let busy = false;
+let controller = null;
 
 // ---------- Voz ----------
 let voice = null;
 function pickVoice() {
   const voices = speechSynthesis.getVoices();
-  const base = settings.lang.slice(0, 2);
-  voice = voices.find((v) => v.lang === settings.lang) ?? voices.find((v) => v.lang.startsWith(base)) ?? null;
+  voice = voices.find((v) => v.lang === "es-MX") ?? voices.find((v) => v.lang.startsWith("es")) ?? null;
 }
 
 function speak(text) {
-  return new Promise((resolve) => {
-    if (!settings.voice || !text || !("speechSynthesis" in window)) return resolve();
-    speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = settings.lang;
-    if (voice) utterance.voice = voice;
-    utterance.rate = 1.03;
-    utterance.pitch = 0.9;
-    speaking = true;
-    setState("speaking", "Hablando…");
-    ui.stop.hidden = false;
-    recognition?.abort(); // que Narvis no se escuche a sí mismo
-    const done = () => {
-      speaking = false;
-      refreshIdleState();
-      startRecognition();
-      resolve();
-    };
-    utterance.onend = done;
-    utterance.onerror = done;
-    speechSynthesis.speak(utterance);
+  if (!settings.voice || !text || !("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = voice?.lang ?? "es-MX";
+  if (voice) utterance.voice = voice;
+  utterance.rate = 1.04;
+  utterance.onstart = () => setStatus("speaking", "Hablando…");
+  utterance.onend = utterance.onerror = () => {
+    if (!busy) setStatus("ready", "Listo");
+  };
+  speechSynthesis.speak(utterance);
+}
+
+// ---------- Conversación ----------
+function renderWelcome() {
+  const who = store?.name ? `, ${store.name}` : "";
+  const starters = el("div", { className: "starters" });
+  for (const [tag, prompt] of STARTERS) {
+    const b = el("button", { className: "starter", type: "button" }, el("b", {}, tag), el("span", {}, prompt));
+    b.addEventListener("click", () => ask(prompt));
+    starters.append(b);
+  }
+  ui.thread.replaceChildren(
+    el(
+      "section",
+      { className: "welcome" },
+      el("h2", {}, `${greeting()}${who}. `, el("em", {}, "¿Qué mejoramos hoy?")),
+      el(
+        "p",
+        {},
+        "Analizo problemas de planta con pensamiento crítico, hago los cálculos y te propongo acciones de mejora priorizadas. Escribe o dicta tu pregunta, o empieza con un caso:"
+      ),
+      starters
+    )
+  );
+}
+
+function addUserTurn(text) {
+  ui.thread.querySelector(".welcome")?.remove();
+  ui.thread.append(el("div", { className: "turn-user", textContent: text }));
+}
+
+function answerShell() {
+  const body = el("div", { className: "answer-body" });
+  const activity = el("p", { className: "activity", textContent: "Pensando…" });
+  const node = el("article", { className: "answer thinking" }, el("div", { className: "answer-head", textContent: "Narvis" }), activity, body);
+  ui.thread.append(node);
+  node.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  return { node, body, activity };
+}
+
+// Claves sin acentos para el CSS de cada cuadrante de la matriz.
+const QUAD_KEYS = { "Ganancia rápida": "quick", "Proyecto estratégico": "strategic", "Ajuste menor": "minor", Reconsiderar: "reconsider" };
+
+function level(value) {
+  return el("span", { className: "level", dataset: { level: value } }, el("span", { className: "meter", ariaHidden: "true" }, el("i"), el("i"), el("i")), value);
+}
+
+function actionsTable(actions) {
+  const rows = actions.map((a) =>
+    el(
+      "tr",
+      {},
+      el("td", { className: "what" }, el("b", { textContent: a.accion }), a.porque ? el("small", { textContent: a.porque }) : null),
+      el("td", { dataset: { label: "Impacto" } }, level(a.impacto)),
+      el("td", { dataset: { label: "Esfuerzo" } }, level(a.esfuerzo)),
+      el("td", { dataset: { label: "Prioridad" } }, el("span", { className: "quad", dataset: { q: QUAD_KEYS[quadrant(a)] }, textContent: quadrant(a) })),
+      el("td", { className: "kpi", dataset: { label: "Indicador" }, textContent: a.indicador || "—" })
+    )
+  );
+  const head = el("tr", {}, ...["Acción", "Impacto", "Esfuerzo", "Prioridad", "Indicador"].map((t) => el("th", { scope: "col", textContent: t })));
+  return el("div", { className: "table-wrap" }, el("table", { className: "actions" }, el("thead", {}, head), el("tbody", {}, ...rows)));
+}
+
+// Pinta una respuesta completa (del cerebro o de un comando) dentro de su tarjeta.
+function fillAnswer(shell, answer, { remembered = [] } = {}) {
+  const { node, body, activity } = shell;
+  node.classList.remove("thinking");
+  node.classList.toggle("failed", answer.ok === false && !answer.cancelled);
+  activity.remove();
+  body.replaceChildren(renderText(answer.respuesta || ""));
+
+  if (answer.critica?.length) {
+    node.append(
+      el("section", { className: "block" }, el("h3", {}, "Pensamiento crítico"), el("ul", { className: "critique" }, ...answer.critica.map((c) => el("li", { textContent: c }))))
+    );
+  }
+  if (answer.acciones?.length) {
+    node.append(el("section", { className: "block" }, el("h3", {}, "Acciones de mejora"), actionsTable(answer.acciones)));
+  }
+  if (answer.enlaces?.length) {
+    node.append(el("div", { className: "links" }, ...answer.enlaces.map((l) => el("a", { href: l.url, target: "_blank", rel: "noopener", textContent: `${l.titulo} ↗` }))));
+  }
+  if (remembered.length) {
+    node.append(el("p", { className: "remembered", textContent: `Lo guardé en mi memoria: ${remembered.join(" · ")}` }));
+  }
+  const listen = el("button", { type: "button", textContent: "Escuchar" });
+  listen.addEventListener("click", () => speak(answer.voz || answer.respuesta));
+  const copy = el("button", { type: "button", textContent: "Copiar" });
+  copy.addEventListener("click", () => {
+    const text = [answer.respuesta, ...(answer.acciones ?? []).map((a) => `- ${a.accion} (${a.indicador})`)].join("\n");
+    navigator.clipboard?.writeText(text).then(
+      () => (copy.textContent = "Copiado"),
+      () => (copy.textContent = "No se pudo copiar")
+    );
+  });
+  node.append(el("div", { className: "answer-tools" }, listen, copy));
+}
+
+// ---------- Memoria y notas ----------
+async function renderMemory() {
+  const facts = await store.memory.all();
+  ui.factCount.textContent = facts.length ? String(facts.length) : "";
+  ui.facts.replaceChildren();
+  if (!facts.length) {
+    ui.facts.append(el("li", {}, el("span", { textContent: "Todavía nada. Cuéntame dónde trabajas, qué produces o en qué proyecto estás y lo recordaré." })));
+  }
+  facts.forEach((fact, i) => {
+    const remove = el("button", { type: "button", title: "Olvidar", ariaLabel: `Olvidar: ${fact}`, textContent: "×" });
+    remove.addEventListener("click", async () => {
+      await store.memory.remove(i);
+      renderMemory();
+    });
+    ui.facts.append(el("li", {}, el("span", { textContent: fact }), remove));
   });
 }
 
-// ---------- Contexto para los comandos ----------
+async function renderNotes() {
+  const notes = await store.notes.list();
+  ui.notes.replaceChildren(
+    ...(notes.length
+      ? notes.map((n) => el("li", {}, el("span", { textContent: n })))
+      : [el("li", {}, el("span", { textContent: "Di «anota…» para guardar una nota." }))])
+  );
+}
+
+async function remember(facts) {
+  const known = (await store.memory.all()).map((f) => f.toLowerCase());
+  const fresh = facts.filter((f) => !known.includes(f.toLowerCase()));
+  if (fresh.length) {
+    await store.memory.add(...fresh);
+    renderMemory();
+  }
+  return fresh;
+}
+
+async function historyTurns() {
+  const chat = await store.chat.all();
+  return chat.slice(-MAX_HISTORY / 2).flatMap((x) => [
+    { role: "user", content: x.q },
+    { role: "assistant", content: x.a.respuesta }
+  ]);
+}
+
+// ---------- Comandos locales ----------
 const ctx = {
   now: () => new Date(),
-  canFetch: !IN_CLAUDE, // dentro de Claude la página no puede llamar a otros sitios
   pendingLink: null,
   openUrl(url, label) {
-    // Las ventanas abiertas sin clic suelen bloquearse: dejamos también un enlace.
-    ctx.pendingLink = { url, label };
-    try {
-      window.open(url, "_blank", "noopener");
-    } catch {
-      /* el enlace queda en la conversación */
-    }
+    // Dentro de Claude no se pueden abrir ventanas solas: dejamos el enlace en la respuesta.
+    ctx.pendingLink = { titulo: label, url };
   },
   get notes() {
-    return store.notes;
+    return {
+      add: async (n) => {
+        await store.notes.add(n);
+        renderNotes();
+      },
+      list: () => store.notes.list(),
+      clear: async () => {
+        await store.notes.clear();
+        renderNotes();
+      }
+    };
   },
   startTimer(seconds, label) {
     const end = Date.now() + seconds * 1000;
-    const row = document.createElement("li");
-    ui.timers.append(row);
+    const chip = el("li");
+    ui.timers.append(chip);
     const tick = () => {
       const left = Math.max(0, Math.round((end - Date.now()) / 1000));
-      const m = String(Math.floor(left / 60)).padStart(2, "0");
-      const s = String(left % 60).padStart(2, "0");
-      row.textContent = `${label} · ${m}:${s}`;
+      chip.textContent = `${label} · ${String(Math.floor(left / 60)).padStart(2, "0")}:${String(left % 60).padStart(2, "0")}`;
       if (left === 0) {
         clearInterval(id);
-        row.remove();
-        addMessage("narvis", `Tu temporizador de ${label} terminó.`);
-        speak(`Atención. Tu temporizador de ${label} ha terminado.`);
+        chip.remove();
+        const done = `Tu temporizador de ${label} terminó.`;
+        fillAnswer(answerShell(), { respuesta: done, voz: done, critica: [], acciones: [], enlaces: [] });
+        speak(`Atención. ${done}`);
       }
     };
     const id = setInterval(tick, 1000);
     tick();
-  },
-  async fetchJson(url) {
-    const res = await fetch(url);
-    if (!res.ok && res.status !== 404) throw new Error(`HTTP ${res.status}`);
-    return res.json();
-  },
-  briefing: (phrase) => (brain ? ask(phrase, "briefing") : headlinesText(news)),
-  stop: () => stopListening()
+  }
 };
 
-// Pregunta al cerebro mostrando la respuesta mientras se escribe.
-let currentBubble = null;
-async function ask(question, mode) {
-  currentBubble = addMessage("narvis", "Pensando…");
-  currentBubble.item.classList.add("thinking");
-  controller = new AbortController();
-  const answer = await brain.ask(question, {
-    mode,
-    news,
-    signal: controller.signal,
-    onText: (text) => {
-      currentBubble.item.classList.remove("thinking");
-      currentBubble.p.textContent = text;
-      ui.log.scrollTop = ui.log.scrollHeight;
-    }
-  });
-  controller = null;
-  return answer;
-}
+const EMPTY = { critica: [], acciones: [], recordar: [], enlaces: [] };
 
-// ---------- Procesar una orden ----------
-async function handle(text) {
-  if (busy) return;
+// ---------- Preguntar ----------
+async function ask(text) {
+  const question = (stripWakeWord(text) ?? text).trim();
+  if (!question || busy || !store) return;
   busy = true;
   window.speechSynthesis?.cancel();
-  addMessage("user", text);
-  setState("thinking", "Procesando…");
-  ui.stop.hidden = false;
+  ui.send.dataset.mode = "stop";
+  ui.send.textContent = "Detener";
+  addUserTurn(text);
+  const shell = answerShell();
+  setStatus("thinking", "Pensando…");
   ctx.pendingLink = null;
-  currentBubble = null;
 
-  let answer = await respond(text, ctx);
-  if (answer === null) {
-    const question = (stripWakeWord(text) ?? text).trim();
-    answer = !question
-      ? "¿Sí? Dime qué necesitas."
-      : brain
-      ? await ask(question)
-      : "Esa pregunta necesita mi cerebro. Abre Narvis con el servidor local (npm run server) o desde la app de Claude. Aquí puedo darte la hora, hacer cuentas, poner temporizadores, guardar notas y abrir páginas.";
-  }
-
-  // Si el cerebro respondió, su burbuja ya existe: solo se actualiza.
-  if (currentBubble) {
-    currentBubble.item.classList.remove("thinking");
-    currentBubble.p.textContent = answer || "Detenido.";
-    if (ctx.pendingLink) addLink(currentBubble.item, ctx.pendingLink);
-  } else {
-    addMessage("narvis", answer, ctx.pendingLink);
-  }
-  busy = false;
-  attentiveUntil = 0;
-  refreshIdleState();
-  await speak(answer);
-}
-
-function onHeard(transcript) {
-  if (speaking || busy) return;
-  if (!settings.wakeWord || Date.now() < attentiveUntil) {
-    if (transcript.trim()) handle(transcript.trim());
-    return;
-  }
-  const order = stripWakeWord(transcript);
-  if (order === null) return; // no iba dirigido a Narvis
-  if (order) {
-    handle(transcript.trim());
-  } else {
-    speak("¿Sí?").then(() => {
-      attentiveUntil = Date.now() + ATTENTION_MS;
-      refreshIdleState();
-      setTimeout(refreshIdleState, ATTENTION_MS + 50);
-    });
-  }
-}
-
-// ---------- Reconocimiento de voz ----------
-const CLAUDE_MIC_NOTE =
-  "En la app de Claude el micrófono está bloqueado. Para hablarle directo a Narvis, usa la versión de tu computadora (iniciar-narvis). Aquí puedes escribir o dictar con el micrófono de tu teclado, y Narvis te responde en voz alta.";
-const FATAL_MIC_ERRORS = ["not-allowed", "service-not-allowed", "audio-capture", "language-not-supported"];
-let networkErrors = 0;
-
-function showMicProblem(text) {
-  ui.micNote.hidden = false;
-  ui.micNote.textContent = text;
-}
-
-async function onRecognitionError(code) {
-  stopListening();
-  // Si llegamos a escuchar, el micrófono abrió bien (tryStartListening lo probó).
-  showMicProblem(IN_CLAUDE ? CLAUDE_MIC_NOTE : (await diagnoseRecognitionError(code, { micWorks: true })).text);
-}
-
-function createRecognition() {
-  const rec = new SpeechRecognition();
-  rec.lang = settings.lang;
-  rec.continuous = true;
-  rec.interimResults = true;
-
-  rec.onresult = (event) => {
-    let interim = "";
-    networkErrors = 0;
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      const result = event.results[i];
-      if (result.isFinal) {
-        ui.interim.textContent = "";
-        onHeard(result[0].transcript);
-      } else {
-        interim += result[0].transcript;
+  let answer;
+  const local = await respond(question, ctx);
+  if (local !== null) {
+    answer = { ...EMPTY, ok: true, voz: local, respuesta: local, enlaces: ctx.pendingLink ? [ctx.pendingLink] : [] };
+  } else if (brain) {
+    controller = new AbortController();
+    answer = await brain.ask(question, {
+      history: await historyTurns(),
+      memory: await store.memory.all(),
+      name: store.name,
+      signal: controller.signal,
+      onText: (partial) => {
+        if (!partial) return;
+        shell.activity.textContent = "Escribiendo…";
+        shell.body.replaceChildren(renderText(partial));
       }
-    }
-    if (interim) ui.interim.textContent = interim;
-  };
-
-  rec.onerror = (event) => {
-    if (FATAL_MIC_ERRORS.includes(event.error)) {
-      onRecognitionError(event.error);
-    } else if (event.error === "network" && ++networkErrors >= 2) {
-      // Un corte de red aislado se recupera solo; dos seguidos ya no.
-      onRecognitionError("network");
-    }
-    // "no-speech" y "aborted" se recuperan solos en onend.
-  };
-
-  rec.onend = () => {
-    if (listening && !speaking) setTimeout(startRecognition, 250);
-  };
-  return rec;
-}
-
-function startRecognition() {
-  if (!recognition || !listening || speaking) return;
-  try {
-    recognition.start();
-  } catch {
-    /* ya estaba iniciado */
-  }
-}
-
-// Antes de escuchar, pide el micrófono una vez: así Chrome muestra su aviso de
-// permiso y, si algo falla, sabemos exactamente qué.
-async function tryStartListening() {
-  ui.toggle.disabled = true;
-  const problem = IN_CLAUDE ? null : await probeMicrophone();
-  ui.toggle.disabled = false;
-  if (problem) {
-    showMicProblem(problem.text);
-    return;
-  }
-  ui.micNote.hidden = true;
-  networkErrors = 0;
-  startListening();
-}
-
-function startListening() {
-  listening = true;
-  ui.toggle.setAttribute("aria-pressed", "true");
-  ui.toggle.textContent = "Desactivar micrófono";
-  startRecognition();
-  refreshIdleState();
-}
-
-function stopListening() {
-  listening = false;
-  attentiveUntil = 0;
-  recognition?.abort();
-  ui.toggle.setAttribute("aria-pressed", "false");
-  ui.toggle.textContent = "Activar micrófono";
-  ui.interim.textContent = "";
-  refreshIdleState();
-}
-
-// ---------- Radar de noticias ----------
-const IMPORTANCE = { 3: "Alta", 2: "Media", 1: "Baja" };
-
-function timeAgo(iso) {
-  const ms = Date.now() - new Date(iso).getTime();
-  if (!Number.isFinite(ms)) return "";
-  const hours = Math.round(ms / 3600000);
-  if (hours < 1) return "hace menos de una hora";
-  if (hours < 48) return `hace ${hours} h`;
-  return `hace ${Math.round(hours / 24)} días`;
-}
-
-function renderTopics() {
-  ui.topics.replaceChildren();
-  for (const topic of [null, ...TOPICS]) {
-    const count = topic ? (news?.items ?? []).filter((n) => n.topic === topic).length : news?.items?.length ?? 0;
-    if (topic && count === 0) continue;
-    const chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "chip";
-    chip.textContent = topic ?? "Todo";
-    chip.setAttribute("aria-pressed", String(topicFilter === topic));
-    chip.addEventListener("click", () => {
-      topicFilter = topic;
-      renderNews();
     });
-    ui.topics.append(chip);
+    controller = null;
+  } else {
+    answer = { ...EMPTY, ok: false, voz: "", respuesta: "Mi cerebro solo funciona dentro de la app de Claude. Abre Narvis desde su enlace de claude.ai." };
   }
-}
 
-function renderNews() {
-  renderTopics();
-  ui.news.replaceChildren();
-  if (!news?.items?.length) {
-    const hasSource = IN_CLAUDE || server;
-    ui.updated.textContent = hasSource ? "Sin noticias todavía" : "Sin fuente de noticias";
-    const empty = document.createElement("li");
-    empty.className = "news-empty";
-    empty.textContent = server
-      ? "Estoy buscando las noticias más importantes del día. Tarda uno o dos minutos."
-      : IN_CLAUDE
-      ? "El radar se llena solo varias veces al día con lo más importante del mundo."
-      : "Inicia el servidor local (npm run server) para tener el radar actualizado.";
-    ui.news.append(empty);
-    return;
-  }
-  ui.updated.textContent = `Actualizado ${timeAgo(news.updatedAt)} · ${news.items.length} noticias`;
-  const items = [...news.items]
-    .filter((n) => !topicFilter || n.topic === topicFilter)
-    .sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0));
-  for (const n of items) {
-    const li = document.createElement("li");
-    li.className = "news-item";
-    li.dataset.importance = n.importance ?? 1;
+  const remembered = answer.ok && answer.recordar.length ? await remember(answer.recordar) : [];
+  fillAnswer(shell, answer, { remembered });
+  if (answer.ok) store.chat.add({ q: question, a: answer, at: new Date().toISOString() });
 
-    const meta = document.createElement("p");
-    meta.className = "meta";
-    meta.textContent = `${n.topic} · ${IMPORTANCE[n.importance] ?? "Baja"}`;
-
-    const title = document.createElement("button");
-    title.type = "button";
-    title.className = "news-title";
-    title.textContent = n.title;
-    title.title = "Pedir a Narvis que lo explique";
-    title.addEventListener("click", () => handle(`Explícame esta noticia y por qué importa: ${n.title}`));
-
-    const summary = document.createElement("p");
-    summary.className = "summary";
-    summary.textContent = n.summary ?? "";
-
-    const source = document.createElement("p");
-    source.className = "meta";
-    if (n.url) {
-      const a = document.createElement("a");
-      a.href = n.url;
-      a.target = "_blank";
-      a.rel = "noopener";
-      a.textContent = `${n.source} ↗`;
-      source.append(a);
-    } else {
-      source.textContent = n.source;
-    }
-    if (n.date) source.append(` · ${n.date}`);
-
-    li.append(meta, title, summary, source);
-    ui.news.append(li);
-  }
+  busy = false;
+  ui.send.dataset.mode = "send";
+  ui.send.textContent = "Enviar";
+  const failed = answer.ok === false && !answer.cancelled;
+  setStatus(failed ? "error" : "ready", failed ? "Algo falló" : "Listo");
+  if (!answer.cancelled) speak(answer.voz);
 }
 
 // ---------- Arranque ----------
-function init() {
-  ui.wakeMode.checked = settings.wakeWord;
-  ui.lang.value = settings.lang;
-  ui.voice.setAttribute("aria-pressed", String(settings.voice));
-  ui.voice.textContent = settings.voice ? "Voz: activada" : "Voz: silenciada";
-
-  for (const command of COMMANDS) {
-    if (command.network && IN_CLAUDE) continue;
-    const li = document.createElement("li");
-    li.textContent = `«${command.help}»`;
-    ui.help.append(li);
+async function restoreChat() {
+  const chat = await store.chat.all();
+  if (!chat.length) return renderWelcome();
+  ui.thread.replaceChildren();
+  for (const x of chat) {
+    addUserTurn(x.q);
+    fillAnswer(answerShell(), { ...EMPTY, ...x.a, ok: true });
   }
+  ui.thread.lastElementChild?.scrollIntoView({ block: "end" });
+}
+
+function autoGrow() {
+  ui.input.style.height = "auto";
+  ui.input.style.height = `${Math.min(ui.input.scrollHeight, 200)}px`;
+}
+
+async function init() {
+  buildShell();
+  renderVoiceButton();
+  renderWelcome();
+  setStatus("thinking", "Conectando…");
 
   if ("speechSynthesis" in window) {
     pickVoice();
     speechSynthesis.onvoiceschanged = pickVoice;
   }
 
-  if (IN_CLAUDE) {
-    // Claude no deja que sus páginas usen el micrófono: no ofrecemos un botón que no puede funcionar.
-    ui.toggle.hidden = true;
-    showMicProblem(CLAUDE_MIC_NOTE);
-  } else if (SpeechRecognition) {
-    recognition = createRecognition();
-  } else {
-    ui.toggle.hidden = true;
-    showMicProblem(
-      "Este navegador no tiene reconocimiento de voz. Abre Narvis en Google Chrome o Microsoft Edge, o usa el micrófono de tu teclado para dictar en la caja de texto."
-    );
-  }
-
-  ui.toggle.addEventListener("click", () => (listening ? stopListening() : tryStartListening()));
-
   ui.voice.addEventListener("click", () => {
-    settings.voice = !settings.voice;
+    settings = { ...settings, voice: !settings.voice };
     saveSettings();
     if (!settings.voice) window.speechSynthesis?.cancel();
-    ui.voice.setAttribute("aria-pressed", String(settings.voice));
-    ui.voice.textContent = settings.voice ? "Voz: activada" : "Voz: silenciada";
+    renderVoiceButton();
   });
-
-  ui.stop.addEventListener("click", () => {
-    controller?.abort();
-    window.speechSynthesis?.cancel();
-  });
-
-  ui.briefing.addEventListener("click", () => handle("Dame el resumen del día"));
 
   ui.form.addEventListener("submit", (event) => {
     event.preventDefault();
+    if (busy) {
+      controller?.abort();
+      return;
+    }
     const text = ui.input.value.trim();
-    if (!text || busy) return;
+    if (!text) return;
     ui.input.value = "";
-    handle(text);
+    autoGrow();
+    ask(text);
   });
-
-  ui.wakeMode.addEventListener("change", () => {
-    settings.wakeWord = ui.wakeMode.checked;
-    saveSettings();
-    refreshIdleState();
-  });
-
-  ui.lang.addEventListener("change", () => {
-    settings.lang = ui.lang.value;
-    saveSettings();
-    if ("speechSynthesis" in window) pickVoice();
-    if (recognition) {
-      recognition.lang = settings.lang;
-      recognition.abort(); // onend la reinicia con el nuevo idioma
+  ui.input.addEventListener("input", autoGrow);
+  ui.input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+      event.preventDefault();
+      ui.form.requestSubmit();
     }
   });
 
-  refreshIdleState();
-  renderNews();
-
-  ui.refreshNews.addEventListener("click", async () => {
-    ui.refreshNews.disabled = true;
-    ui.updated.textContent = "Buscando noticias nuevas… (uno o dos minutos)";
-    await store.refreshNews?.();
-    ui.refreshNews.disabled = false;
-    renderNews();
+  ui.newChat.addEventListener("click", async () => {
+    if (busy || !store) return;
+    window.speechSynthesis?.cancel();
+    await store.chat.clear();
+    renderWelcome();
   });
 
-  connect();
-}
+  store = await createStore();
+  ui.memoryState.textContent = store.persistent ? "en tu cuenta" : "en este navegador";
+  ui.memoryState.dataset.ok = String(store.persistent);
+  await Promise.all([restoreChat(), renderMemory(), renderNotes()]);
 
-async function connect() {
-  server = await detectServer();
-  brain = IN_CLAUDE ? await createBrain() : await createServerBrain(server);
-  ui.pill.dataset.state = brain ? "on" : "off";
-  ui.pill.textContent = !brain
-    ? "Sin cerebro (inicia el servidor local)"
-    : server
-    ? `Cerebro conectado · ${server.obsidian ? `Obsidian: ${server.obsidian}` : "sin Obsidian"}`
-    : "Cerebro conectado";
-  renderNews();
-
-  store = await createStore({
-    serverStatus: server,
-    onNews: (data) => {
-      news = data;
-      renderNews();
-    }
-  });
-  ui.refreshNews.hidden = !store.refreshNews;
+  const mcp = window.claude?.use ? await window.claude.use("mcp") : null;
+  const tools = mcp
+    ? createCanvaTools(mcp, {
+        onActivity: (text) => {
+          const activity = ui.thread.querySelector(".answer.thinking .activity");
+          if (activity) activity.textContent = text;
+        }
+      })
+    : [];
+  brain = await createBrain({ tools });
+  ui.canvaState.textContent = brain?.hasTools ? "conectado" : "no disponible";
+  ui.canvaState.dataset.ok = String(Boolean(brain?.hasTools));
+  setStatus(brain ? "ready" : "error", brain ? "Listo" : "Sin cerebro");
 }
 
 init();

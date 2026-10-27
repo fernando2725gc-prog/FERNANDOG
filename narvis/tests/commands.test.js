@@ -13,8 +13,6 @@ function fakeCtx(overrides = {}) {
     openUrl: (url, label) => ctx.opened.push({ url, label }),
     notes: { add: (n) => notes.push(n), list: () => [...notes], clear: () => notes.splice(0) },
     startTimer: (seconds, label) => ctx.timers.push({ seconds, label }),
-    fetchJson: async () => ({}),
-    briefing: async (phrase) => `BRIEFING:${phrase}`,
     stop: () => { ctx.stopped = true; },
     ...overrides
   };
@@ -57,7 +55,6 @@ test("parseDuration convierte duraciones habladas a segundos", () => {
 
 test("cada frase va al comando correcto", () => {
   const cases = {
-    "Hola": "saludo",
     "¿Qué hora es?": "hora",
     "¿Qué día es hoy?": "fecha",
     "¿Cuánto es 3 más 4?": "calcular",
@@ -65,19 +62,9 @@ test("cada frase va al comando correcto", () => {
     "Anota comprar leche": "anotar",
     "Lee mis notas": "leer notas",
     "Borra mis notas": "borrar notas",
-    "Pon música relajante en YouTube": "youtube",
-    "¿Qué está pasando en el mundo?": "noticias",
-    "Dame las noticias": "noticias",
-    "Narvis, dame el resumen del día": "noticias",
     "Abre YouTube": "abrir",
     "Busca recetas de pasta": "buscar",
-    "¿Cómo está el clima en Monterrey?": "clima",
-    "¿Qué tiempo hace en Madrid?": "clima",
-    "¿Quién es Marie Curie?": "wikipedia",
-    "Cuéntame un chiste": "chiste",
-    "¿Quién eres?": "identidad",
-    "¿Qué puedes hacer?": "ayuda",
-    "Apágate": "apagar"
+    "¿Qué puedes hacer?": "ayuda"
   };
   for (const [phrase, expected] of Object.entries(cases)) {
     assert.equal(matchCommand(phrase)?.command.name, expected, phrase);
@@ -86,17 +73,17 @@ test("cada frase va al comando correcto", () => {
   assert.equal(matchCommand("¿Por qué sube el petróleo?"), null); // va al cerebro
 });
 
-test("sin acceso a internet, clima y Wikipedia pasan al cerebro", () => {
-  assert.equal(matchCommand("¿Quién es Marie Curie?", { canFetch: false }), null);
-  assert.equal(matchCommand("clima en Monterrey", { canFetch: false }), null);
-});
-
-test("lo que no es un comando devuelve null", async () => {
-  assert.equal(await respond("¿Qué opinas de la inflación?", fakeCtx()), null);
-});
-
-test("noticias usa el resumen del contexto", async () => {
-  assert.equal(await respond("qué está pasando en el mundo", fakeCtx()), "BRIEFING:que esta pasando en el mundo");
+test("lo que no es un comando va al cerebro", async () => {
+  for (const phrase of [
+    "¿Qué opinas de la inflación?",
+    "Hola Narvis, ayúdame con el OEE",
+    "Calcula el takt time con 1200 piezas por día",
+    "Busca en mi Canva la presentación del taller",
+    "Abre mi presentación de Canva",
+    "Recuerda que trabajo en una planta de inyección"
+  ]) {
+    assert.equal(await respond(phrase, fakeCtx()), null, phrase);
+  }
 });
 
 test("respuestas de hora, cuentas y notas", async () => {
@@ -133,28 +120,5 @@ test("temporizador y apagado usan el contexto", async () => {
   assert.equal(await respond("pon un temporizador de 2 minutos", ctx),
     "Temporizador de 2 minutos en marcha. Te aviso cuando termine.");
   assert.deepEqual(ctx.timers, [{ seconds: 120, label: "2 minutos" }]);
-  await respond("adiós", ctx);
-  assert.equal(ctx.stopped, true);
 });
 
-test("clima consulta Open-Meteo", async () => {
-  const ctx = fakeCtx({
-    fetchJson: async (url) =>
-      url.includes("geocoding")
-        ? { results: [{ name: "Monterrey", latitude: 25.67, longitude: -100.31 }] }
-        : { current: { temperature_2m: 28.4, apparent_temperature: 30.1, relative_humidity_2m: 40, weather_code: 0 } }
-  });
-  assert.equal(await respond("clima en monterrey", ctx),
-    "En Monterrey hay 28 grados, despejado, con sensación térmica de 30 y humedad del 40 por ciento.");
-});
-
-test("un fallo de red no rompe a Jarvis", async () => {
-  const original = console.error;
-  console.error = () => {};
-  try {
-    const ctx = fakeCtx({ fetchJson: async () => { throw new Error("offline"); } });
-    assert.match(await respond("quién es Marie Curie", ctx), /Revisa tu conexión/);
-  } finally {
-    console.error = original;
-  }
-});

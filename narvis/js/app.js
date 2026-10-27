@@ -4,6 +4,7 @@
 import { respond, stripWakeWord, COMMANDS } from "./commands.js";
 import { createBrain, createServerBrain, headlinesText, TOPICS } from "./brain.js";
 import { createStore } from "./store.js";
+import { probeMicrophone, diagnoseRecognitionError } from "./mic.js";
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const ATTENTION_MS = 8000; // tras decir solo "Narvis", escucha sin palabra clave durante este tiempo
@@ -327,11 +328,20 @@ function onHeard(transcript) {
 }
 
 // ---------- Reconocimiento de voz ----------
-function showMicProblem() {
+const CLAUDE_MIC_NOTE =
+  "Aquí el navegador no deja usar el micrófono directamente. Toca la caja de texto y usa el micrófono de tu teclado para dictar; Narvis te responde en voz alta.";
+const FATAL_MIC_ERRORS = ["not-allowed", "service-not-allowed", "audio-capture", "language-not-supported"];
+let networkErrors = 0;
+
+function showMicProblem(text) {
   ui.micNote.hidden = false;
-  ui.micNote.textContent = IN_CLAUDE
-    ? "Aquí el navegador no deja usar el micrófono directamente. Toca la caja de texto y usa el micrófono de tu teclado para dictar; Narvis te responde en voz alta."
-    : "No tengo permiso para usar el micrófono. Habilítalo en la configuración del navegador.";
+  ui.micNote.textContent = text;
+}
+
+async function onRecognitionError(code) {
+  stopListening();
+  // Si llegamos a escuchar, el micrófono abrió bien (tryStartListening lo probó).
+  showMicProblem(IN_CLAUDE ? CLAUDE_MIC_NOTE : (await diagnoseRecognitionError(code, { micWorks: true })).text);
 }
 
 function createRecognition() {
@@ -342,6 +352,7 @@ function createRecognition() {
 
   rec.onresult = (event) => {
     let interim = "";
+    networkErrors = 0;
     for (let i = event.resultIndex; i < event.results.length; i++) {
       const result = event.results[i];
       if (result.isFinal) {
@@ -355,11 +366,13 @@ function createRecognition() {
   };
 
   rec.onerror = (event) => {
-    if (["not-allowed", "service-not-allowed", "audio-capture"].includes(event.error)) {
-      stopListening();
-      showMicProblem();
+    if (FATAL_MIC_ERRORS.includes(event.error)) {
+      onRecognitionError(event.error);
+    } else if (event.error === "network" && ++networkErrors >= 2) {
+      // Un corte de red aislado se recupera solo; dos seguidos ya no.
+      onRecognitionError("network");
     }
-    // "no-speech", "aborted" y "network" se recuperan solos en onend.
+    // "no-speech" y "aborted" se recuperan solos en onend.
   };
 
   rec.onend = () => {
@@ -375,6 +388,21 @@ function startRecognition() {
   } catch {
     /* ya estaba iniciado */
   }
+}
+
+// Antes de escuchar, pide el micrófono una vez: así Chrome muestra su aviso de
+// permiso y, si algo falla, sabemos exactamente qué.
+async function tryStartListening() {
+  ui.toggle.disabled = true;
+  const problem = IN_CLAUDE ? null : await probeMicrophone();
+  ui.toggle.disabled = false;
+  if (problem) {
+    showMicProblem(problem.text);
+    return;
+  }
+  ui.micNote.hidden = true;
+  networkErrors = 0;
+  startListening();
 }
 
 function startListening() {
@@ -507,12 +535,12 @@ function init() {
     recognition = createRecognition();
   } else {
     ui.toggle.hidden = true;
-    showMicProblem();
-    ui.micNote.textContent =
-      "Este navegador no reconoce voz. Usa el micrófono de tu teclado para dictar en la caja de texto, o abre Narvis en Chrome o Edge.";
+    showMicProblem(
+      "Este navegador no tiene reconocimiento de voz. Abre Narvis en Google Chrome o Microsoft Edge, o usa el micrófono de tu teclado para dictar en la caja de texto."
+    );
   }
 
-  ui.toggle.addEventListener("click", () => (listening ? stopListening() : startListening()));
+  ui.toggle.addEventListener("click", () => (listening ? stopListening() : tryStartListening()));
 
   ui.voice.addEventListener("click", () => {
     settings.voice = !settings.voice;

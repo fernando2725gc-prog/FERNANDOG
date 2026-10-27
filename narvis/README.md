@@ -26,6 +26,20 @@ clave de la API de Claude ([console.anthropic.com](https://console.anthropic.com
 El servidor solo escucha en tu computadora (`127.0.0.1`) y la clave de API nunca
 llega al navegador.
 
+## Si el micrófono no funciona
+
+Al pulsar **Activar micrófono**, Narvis prueba el micrófono y, si algo falla,
+muestra un aviso amarillo con la causa y un código. Las causas más comunes:
+
+| El aviso dice… | Qué hacer |
+| --- | --- |
+| Chrome tiene bloqueado el micrófono | Clic en el ícono a la izquierda de `localhost:8000` › Micrófono › **Permitir**, y recarga |
+| Tu sistema no le deja usar el micrófono | **Windows:** Configuración › Privacidad y seguridad › Micrófono › activa el acceso y «aplicaciones de escritorio». **Mac:** Ajustes del Sistema › Privacidad y seguridad › Micrófono › activa Chrome y reinícialo |
+| No encontré ningún micrófono | Conecta uno y elígelo en `chrome://settings/content/microphone` |
+| Otra aplicación lo está usando | Cierra Zoom, Teams, Discord, etc. |
+| El dictado de Chrome… no pude conectarme | El reconocimiento de voz de Chrome usa internet; revisa VPN o firewall. Brave no lo trae: usa Chrome o Edge |
+| Página en blanco o «Narvis no cargó» | Abriste `index.html` con doble clic: usa el iniciador y entra a `http://localhost:8000` |
+
 ## Qué puede hacer
 
 | Di… | Qué pasa |

@@ -329,7 +329,7 @@ function onHeard(transcript) {
 
 // ---------- Reconocimiento de voz ----------
 const CLAUDE_MIC_NOTE =
-  "Aquí el navegador no deja usar el micrófono directamente. Toca la caja de texto y usa el micrófono de tu teclado para dictar; Narvis te responde en voz alta.";
+  "En la app de Claude el micrófono está bloqueado. Para hablarle directo a Narvis, usa la versión de tu computadora (iniciar-narvis). Aquí puedes escribir o dictar con el micrófono de tu teclado, y Narvis te responde en voz alta.";
 const FATAL_MIC_ERRORS = ["not-allowed", "service-not-allowed", "audio-capture", "language-not-supported"];
 let networkErrors = 0;
 
@@ -531,7 +531,11 @@ function init() {
     speechSynthesis.onvoiceschanged = pickVoice;
   }
 
-  if (SpeechRecognition) {
+  if (IN_CLAUDE) {
+    // Claude no deja que sus páginas usen el micrófono: no ofrecemos un botón que no puede funcionar.
+    ui.toggle.hidden = true;
+    showMicProblem(CLAUDE_MIC_NOTE);
+  } else if (SpeechRecognition) {
     recognition = createRecognition();
   } else {
     ui.toggle.hidden = true;

@@ -2,13 +2,24 @@
 // "contexto" que usan los comandos. Los comandos rápidos viven en commands.js y
 // las preguntas abiertas las contesta el cerebro (brain.js).
 import { respond, stripWakeWord, COMMANDS } from "./commands.js";
-import { createBrain, headlinesText, TOPICS } from "./brain.js";
+import { createBrain, createServerBrain, headlinesText, TOPICS } from "./brain.js";
 import { createStore } from "./store.js";
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const ATTENTION_MS = 8000; // tras decir solo "Narvis", escucha sin palabra clave durante este tiempo
 const SETTINGS_KEY = "narvis.settings";
 const IN_CLAUDE = Boolean(window.claude?.use);
+
+// ¿Corre junto al servidor local (npm run server)? Responde en /api/status.
+async function detectServer() {
+  if (IN_CLAUDE || location.protocol === "file:") return null;
+  try {
+    const res = await fetch("/api/status");
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}
 
 // ---------- Interfaz ----------
 const root = document.querySelector("#narvis");
@@ -56,7 +67,10 @@ root.innerHTML = `
           <h2>Radar mundial</h2>
           <p id="news-updated" class="meta">Cargando noticias…</p>
         </div>
-        <button id="briefing" class="btn btn-primary" type="button">Resumen del día</button>
+        <div class="controls">
+          <button id="refresh-news" class="btn" type="button" hidden>Actualizar</button>
+          <button id="briefing" class="btn btn-primary" type="button">Resumen del día</button>
+        </div>
       </div>
       <div id="topics" class="chips" role="group" aria-label="Filtrar por tema"></div>
       <ul id="news" class="news"></ul>
@@ -90,7 +104,7 @@ const ui = {
   pill: $("#brain-pill"), core: $("#core"), status: $("#status"), interim: $("#interim"),
   toggle: $("#toggle"), voice: $("#voice"), stop: $("#stop"), micNote: $("#mic-note"),
   timers: $("#timers"), log: $("#log"), form: $("#text-form"), input: $("#text-input"),
-  updated: $("#news-updated"), briefing: $("#briefing"), topics: $("#topics"), news: $("#news"),
+  updated: $("#news-updated"), briefing: $("#briefing"), refreshNews: $("#refresh-news"), topics: $("#topics"), news: $("#news"),
   wakeMode: $("#wake-mode"), lang: $("#lang"), help: $("#help-list")
 };
 
@@ -114,6 +128,7 @@ const settings = { wakeWord: true, lang: "es-MX", voice: true, ...loadSettings()
 // ---------- Estado ----------
 let brain = null;
 let store = { notes: null };
+let server = null; // estado del servidor local, si hay
 let news = null;
 let topicFilter = null;
 let recognition = null;
@@ -275,7 +290,7 @@ async function handle(text) {
       ? "¿Sí? Dime qué necesitas."
       : brain
       ? await ask(question)
-      : "Esa pregunta necesita mi cerebro, que solo funciona dentro de la app de Claude. Aquí puedo darte la hora, hacer cuentas, poner temporizadores, guardar notas y abrir páginas.";
+      : "Esa pregunta necesita mi cerebro. Abre Narvis con el servidor local (npm run server) o desde la app de Claude. Aquí puedo darte la hora, hacer cuentas, poner temporizadores, guardar notas y abrir páginas.";
   }
 
   // Si el cerebro respondió, su burbuja ya existe: solo se actualiza.
@@ -414,12 +429,15 @@ function renderNews() {
   renderTopics();
   ui.news.replaceChildren();
   if (!news?.items?.length) {
-    ui.updated.textContent = IN_CLAUDE ? "Sin noticias todavía" : "Las noticias se ven dentro de la app de Claude";
+    const hasSource = IN_CLAUDE || server;
+    ui.updated.textContent = hasSource ? "Sin noticias todavía" : "Sin fuente de noticias";
     const empty = document.createElement("li");
     empty.className = "news-empty";
-    empty.textContent = IN_CLAUDE
+    empty.textContent = server
+      ? "Estoy buscando las noticias más importantes del día. Tarda uno o dos minutos."
+      : IN_CLAUDE
       ? "El radar se llena solo varias veces al día con lo más importante del mundo."
-      : "Abre Narvis desde Claude para ver el radar actualizado.";
+      : "Inicia el servidor local (npm run server) para tener el radar actualizado.";
     ui.news.append(empty);
     return;
   }
@@ -538,20 +556,36 @@ function init() {
   refreshIdleState();
   renderNews();
 
-  createBrain().then((b) => {
-    brain = b;
-    ui.pill.dataset.state = b ? "on" : "off";
-    ui.pill.textContent = b ? "Cerebro conectado" : "Sin cerebro (abre la app en Claude)";
+  ui.refreshNews.addEventListener("click", async () => {
+    ui.refreshNews.disabled = true;
+    ui.updated.textContent = "Buscando noticias nuevas… (uno o dos minutos)";
+    await store.refreshNews?.();
+    ui.refreshNews.disabled = false;
+    renderNews();
   });
 
-  createStore({
+  connect();
+}
+
+async function connect() {
+  server = await detectServer();
+  brain = IN_CLAUDE ? await createBrain() : await createServerBrain(server);
+  ui.pill.dataset.state = brain ? "on" : "off";
+  ui.pill.textContent = !brain
+    ? "Sin cerebro (inicia el servidor local)"
+    : server
+    ? `Cerebro conectado · ${server.obsidian ? `Obsidian: ${server.obsidian}` : "sin Obsidian"}`
+    : "Cerebro conectado";
+  renderNews();
+
+  store = await createStore({
+    serverStatus: server,
     onNews: (data) => {
       news = data;
       renderNews();
     }
-  }).then((s) => {
-    store = s;
   });
+  ui.refreshNews.hidden = !store.refreshNews;
 }
 
 init();

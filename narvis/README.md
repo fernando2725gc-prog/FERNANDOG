@@ -1,87 +1,113 @@
 # N.A.R.V.I.S. — Asistente personal por voz
 
-Asistente en español que escucha, responde en voz alta y está enfocado en los
-temas importantes: geopolítica, economía, México, ciencia y tecnología, salud
-y clima. Su cerebro es Claude y tiene un **radar de noticias** que se actualiza
-solo varias veces al día.
+Asistente en español que te escucha por el micrófono, responde en voz alta y
+está enfocado en los temas importantes: geopolítica, economía, México, ciencia
+y tecnología, salud y clima. Su cerebro es Claude, busca en la web para estar
+al día y se conecta con tu bóveda de **Obsidian**.
 
-## Dos formas de usarlo
+## Ponerlo en marcha (versión completa, con micrófono directo)
 
-| | App en Claude (`app.html`) | Versión local (`index.html`) |
-| --- | --- | --- |
-| Cerebro (preguntas abiertas, análisis) | Sí, con tu cuenta de Claude | No |
-| Radar de noticias actualizado | Sí | No |
-| Comandos rápidos (hora, cuentas, notas, temporizadores, abrir sitios) | Sí | Sí |
-| Respuesta en voz alta | Sí | Sí |
-| Micrófono | Dictado del teclado (el marco de Claude no deja usar el micrófono directo) | Sí, con palabra clave «Narvis» (Chrome o Edge) |
-| Notas | Privadas, guardadas en tu cuenta | En el navegador |
+Necesitas [Node.js](https://nodejs.org) 22 o más reciente, Chrome o Edge, y una
+clave de la API de Claude ([console.anthropic.com](https://console.anthropic.com) → API Keys).
 
-### App en Claude
+1. Copia `.env.example` como `.env` y llénalo:
+   ```ini
+   ANTHROPIC_API_KEY=sk-ant-...
+   OBSIDIAN_VAULT=C:\Users\TuNombre\Documents\MiBoveda
+   ```
+   `OBSIDIAN_VAULT` es la carpeta de tu bóveda (la que contiene `.obsidian`).
+2. Inicia Narvis:
+   - **Windows:** doble clic en `iniciar-narvis.bat`.
+   - **macOS:** doble clic en `iniciar-narvis.command`.
+   - **Terminal:** `npm install` y luego `npm start`.
+3. Se abre `http://localhost:8000`. Pulsa **Activar micrófono**, acepta el
+   permiso y di: *«Narvis, ¿qué está pasando en el mundo?»*.
 
-Se publica como Artifact con `app.html` y los archivos de `css/` y `js/`.
-Declara tres capacidades:
+El servidor solo escucha en tu computadora (`127.0.0.1`) y la clave de API nunca
+llega al navegador.
 
-- `sample`: le pregunta a Claude (el cerebro). La primera vez pide permiso.
-- `db`: lee las noticias de `news/latest` y guarda las notas de cada persona en
-  `data/users/<id>/notes`. Solo la dueña puede escribir noticias.
-- `user`: identifica a quien la usa para separar sus notas.
+## Qué puede hacer
 
-Las noticias las escribe una **tarea programada** de Claude Code (3 veces al
-día) que busca en la web lo más importante de las últimas 24 horas y guarda
-entre 15 y 25 notas con fuente, tema e importancia.
+| Di… | Qué pasa |
+| --- | --- |
+| «Narvis, dame el resumen del día» | Lee las noticias más importantes y guarda el resumen en Obsidian |
+| «Narvis, ¿por qué sube el petróleo?» | Responde con contexto; busca en la web si hace falta |
+| «Narvis, ¿qué tengo anotado sobre la casa?» | Busca y lee tus notas de Obsidian |
+| «Narvis, crea una nota en Obsidian con ideas para el viaje a Oaxaca» | Crea la nota en `Narvis/` |
+| «Narvis, agrega a mi nota Proyectos que el lunes empieza la obra» | Agrega texto al final de esa nota |
+| «Narvis, anota comprar café» / «lee mis notas» | Lista de pendientes en `Narvis/Notas.md` |
+| «Narvis, pon un temporizador de 10 minutos» | Temporizador con aviso hablado |
+| «Narvis, ¿cuánto es 18.57 por 250?» | Calculadora |
+| «Narvis, abre YouTube» | Abre sitios web |
 
-### Versión local
+Si dices solo «Narvis», contesta «¿Sí?» y escucha la siguiente frase durante
+8 segundos. Puedes desactivar la palabra clave en la parte de abajo.
 
-```bash
-cd narvis
-npm start            # o: python3 -m http.server 8000
-# abre http://localhost:8000 en Chrome o Edge
+## Obsidian
+
+Narvis lee y escribe los archivos Markdown de tu bóveda directamente; no hace
+falta instalar ningún plugin. Todo lo que crea queda en la carpeta `Narvis/`:
+
+```
+MiBoveda/
+└── Narvis/
+    ├── Notas.md                 # «anota…» (lista de pendientes)
+    ├── Resúmenes/2026-10-27.md  # cada «resumen del día»
+    ├── Noticias/2026-10-27.md   # el radar de noticias del día
+    └── <notas que le pidas crear>.md
 ```
 
-Pulsa **Activar micrófono** y di: *«Narvis, ¿qué hora es?»*.
+Reglas de seguridad: solo crea notas dentro de `Narvis/`; en el resto de la
+bóveda puede leer y **agregar al final** de una nota, pero nunca borra ni
+reemplaza. «Borra mis notas» marca los pendientes como hechos (`- [x]`) en
+lugar de eliminarlos.
+
+## Radar de noticias
+
+Al iniciar, y cada 4 horas (`NEWS_MAX_AGE_HOURS`), el servidor le pide a Claude
+que busque en la web las noticias más importantes de las últimas 24 horas y las
+ordene por tema e importancia. El botón **Actualizar** fuerza una búsqueda nueva
+(tarda uno o dos minutos). Cada actualización usa la API, así que tiene un costo
+pequeño.
 
 ## Cómo piensa
 
-1. Si la frase es un comando rápido (`js/commands.js`), se resuelve al
-   instante sin gastar uso de Claude.
-2. Si no, va al cerebro (`js/brain.js`) con: las instrucciones de Narvis, la
-   fecha y hora, las noticias del radar y los últimos turnos de conversación.
-3. Preguntas cortas usan el modelo rápido; «explica», «analiza», «por qué» y el
-   resumen del día usan el modelo más capaz.
-4. La respuesta se muestra mientras se escribe y luego se lee en voz alta.
+1. Las órdenes simples (hora, cuentas, notas, temporizadores, abrir sitios) se
+   resuelven en el navegador al instante, sin usar la API (`js/commands.js`).
+2. Lo demás va al servidor (`server/claude.js`), que llama a Claude
+   (`claude-opus-5-5`) con: las instrucciones de Narvis, la fecha, el radar de
+   noticias, los últimos turnos de conversación, búsqueda web y las herramientas
+   de Obsidian.
+3. Preguntas cortas usan esfuerzo bajo para responder rápido; «explica»,
+   «analiza», «por qué» y el resumen del día usan esfuerzo medio.
+4. La respuesta aparece mientras se escribe y luego se lee en voz alta.
+
+## Otras formas de abrirlo
+
+- **App en Claude** (`app.html`, publicada como Artifact): funciona desde
+  claude.ai con tu cuenta, sin clave de API, con un radar que actualiza una
+  tarea programada. Ahí el navegador no deja usar el micrófono directo (se
+  dicta con el teclado) y no tiene acceso a Obsidian.
+- **Sin servidor** (abrir `index.html` con cualquier servidor estático): solo
+  comandos simples y micrófono, sin cerebro ni noticias.
 
 ## Estructura
 
 ```
 narvis/
-├── app.html               # Entrada para la app de Claude
-├── index.html             # Entrada para abrirlo en local
-├── css/styles.css         # Estilo HUD
-├── js/app.js              # Interfaz, micrófono, voz, radar, temporizadores
-├── js/commands.js         # Comandos rápidos
-├── js/brain.js            # Instrucciones y llamadas al cerebro (Claude)
-├── js/store.js            # Noticias y notas (base de datos de Claude o navegador)
-└── tests/                 # Pruebas con node:test, sin dependencias
+├── server/
+│   ├── index.js       # Servidor local: archivos de la app + API
+│   ├── claude.js      # Cerebro (Claude + búsqueda web + Obsidian) y radar
+│   └── vault.js       # Lectura y escritura de la bóveda de Obsidian
+├── js/
+│   ├── app.js         # Interfaz, micrófono, voz, radar, temporizadores
+│   ├── commands.js    # Comandos rápidos
+│   ├── brain.js       # Instrucciones de Narvis y cliente del cerebro
+│   └── store.js       # Noticias y notas según dónde corre la app
+├── css/styles.css
+├── index.html         # Entrada para el servidor local
+├── app.html           # Entrada para la app de Claude
+└── tests/             # npm test
 ```
 
-```bash
-npm test
-```
-
-## Agregar un comando rápido
-
-Añade un objeto al arreglo `COMMANDS` en `js/commands.js`. Los patrones se
-comparan contra el texto normalizado (minúsculas, sin acentos ni signos) y gana
-el primero que coincida:
-
-```js
-{
-  name: "moneda",
-  help: "Lanza una moneda",
-  patterns: [/^(?:lanza|tira) una moneda$/],
-  run: () => (Math.random() < 0.5 ? "Salió águila." : "Salió sol.")
-}
-```
-
-Para cambiar en qué temas se enfoca el cerebro, edita `RULES` y `TOPICS` en
-`js/brain.js`.
+Para cambiar en qué temas se enfoca, edita `RULES` y `TOPICS` en `js/brain.js`.

@@ -234,7 +234,7 @@ export const COMMANDS = [
     patterns: [/^(?:borra|borrar|elimina|limpia) (?:todas )?(?:mis |las )?notas$/],
     run: async (_, ctx) => {
       await ctx.notes.clear();
-      return "Listo, borré todas tus notas.";
+      return "Listo, tu lista de notas quedó vacía.";
     }
   },
   {

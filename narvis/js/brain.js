@@ -14,7 +14,7 @@ export const TOPICS = [
 const MAX_HISTORY = 8; // turnos de conversación que se reenvían
 const MAX_NEWS = 30;
 
-const RULES = `Eres Narvis, un asistente personal por voz en español, sereno, preciso y directo.
+export const RULES = `Eres Narvis, un asistente personal por voz en español, sereno, preciso y directo.
 Tu foco son los temas importantes: geopolítica y conflictos, economía y mercados, política de México y Latinoamérica, ciencia y tecnología (sobre todo inteligencia artificial), salud, y clima y medio ambiente.
 
 Cómo respondes:
@@ -59,7 +59,7 @@ const BRIEFING = `Dame el resumen del día: las 4 o 5 noticias más importantes 
 
 // Construye la lista de turnos que espera sample(): empieza y termina en "user".
 export function buildMessages({ question, mode, history = [], news, now = new Date() }) {
-  const context = `${RULES}\n\nFecha y hora actual: ${formatDate(now)}.\n\n${formatNews(news)}`;
+  const context = `${RULES}\n\nFecha y hora actual: ${formatDate(now).replace(/\.$/, "")}.\n\n${formatNews(news)}`;
   const recent = history.slice(-MAX_HISTORY);
   const ask = mode === "briefing" ? `${BRIEFING}\n\nLo que dijo el usuario: «${question}»` : question;
   return [{ role: "user", content: context }, ...recent, { role: "user", content: ask }];
@@ -100,6 +100,43 @@ export function errorMessage(code) {
     default:
       return "Perdí la conexión con mi cerebro. Inténtalo de nuevo en un momento.";
   }
+}
+
+// Conecta con el servidor local de Narvis (npm run server), que llama a Claude con
+// tu clave de API, busca en la web y lee tu bóveda de Obsidian.
+export async function createServerBrain(status) {
+  if (!status?.brain) return null;
+  const history = [];
+  return {
+    async ask(question, { mode, onText, signal } = {}) {
+      let text = "";
+      try {
+        const res = await fetch("/api/ask", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ question, mode, history }),
+          signal
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          text += decoder.decode(value, { stream: true });
+          if (text.trim()) onText?.(text);
+        }
+        text += decoder.decode();
+        history.push({ role: "user", content: question }, { role: "assistant", content: text });
+        if (history.length > MAX_HISTORY) history.splice(0, history.length - MAX_HISTORY);
+        return cleanForSpeech(text);
+      } catch (error) {
+        if (error?.name === "AbortError") return cleanForSpeech(text);
+        console.error("Error del servidor de Narvis:", error);
+        return "No pude comunicarme con el servidor de Narvis. Revisa que siga encendido.";
+      }
+    }
+  };
 }
 
 // Conecta con Claude a través de la app de Claude. Devuelve null si no está disponible

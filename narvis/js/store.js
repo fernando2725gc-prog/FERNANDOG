@@ -1,7 +1,9 @@
-// Datos de Narvis. Dentro de la app de Claude usa su base de datos:
-//   news/latest            → noticias (las actualiza una tarea programada)
-//   data/users/<id>/notes  → notas privadas de cada persona
-// Fuera de Claude, las notas viven en el navegador y no hay noticias.
+// Datos de Narvis, según dónde corre la app:
+// - App de Claude: base de datos del artifact.
+//     news/latest            → noticias (las actualiza una tarea programada)
+//     data/users/<id>/notes  → notas privadas de cada persona
+// - Servidor local (npm run server): noticias del servidor y notas en Obsidian.
+// - Archivo suelto: notas en el navegador y sin noticias.
 
 const NOTES_KEY = "narvis.notes";
 
@@ -64,9 +66,54 @@ function dbNotes(ref) {
   };
 }
 
+const NEWS_POLL_MS = 5 * 60 * 1000;
+
+function serverNotes() {
+  const call = async (method, body) => {
+    const res = await fetch("/api/notes", {
+      method,
+      headers: { "content-type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  };
+  return {
+    add: (text) => call("POST", { text }),
+    list: async () => (await call("GET")).notes,
+    clear: () => call("DELETE")
+  };
+}
+
+async function serverStore(status, onNews) {
+  let lastUpdated = null;
+  const load = async (refresh = false) => {
+    try {
+      const res = await fetch(`/api/news${refresh ? "?refresh=1" : ""}`);
+      const { news, refreshing } = await res.json();
+      if (news?.updatedAt !== lastUpdated) {
+        lastUpdated = news?.updatedAt ?? null;
+        onNews(news);
+      }
+      // Si el servidor está actualizando en segundo plano, volvemos a preguntar pronto.
+      if (refreshing) setTimeout(load, 20000);
+    } catch (error) {
+      console.error("No se pudieron leer las noticias:", error);
+    }
+  };
+  await load();
+  setInterval(load, NEWS_POLL_MS);
+  return {
+    notes: status.obsidian ? serverNotes() : localNotes(),
+    refreshNews: () => load(true)
+  };
+}
+
 // onNews(news) se llama cada vez que cambian las noticias (o con null si no hay).
-export async function createStore({ onNews }) {
+// serverStatus: respuesta de /api/status cuando hay servidor local.
+export async function createStore({ onNews, serverStatus = null }) {
   const fallback = { notes: localNotes(), shared: false };
+  if (serverStatus) return serverStore(serverStatus, onNews);
   if (!window.claude?.use) {
     onNews(null);
     return fallback;

@@ -1,7 +1,8 @@
-// Cerebro de Jarvis: interpreta frases en español y decide qué responder.
+// Comandos rápidos de Narvis: interpreta frases en español y decide qué responder.
+// Lo que no coincide con ningún comando lo contesta el cerebro (brain.js).
 // No toca el DOM ni las APIs de voz, así se puede probar con Node.
 
-export const WAKE_WORD = "jarvis";
+export const WAKE_WORD = "narvis";
 
 // Minúsculas, sin acentos ni signos, espacios simples.
 export function normalize(text) {
@@ -18,7 +19,7 @@ export function normalize(text) {
 // Separa la palabra de activación. Devuelve null si la frase no empieza con ella.
 export function stripWakeWord(text) {
   const clean = normalize(text);
-  const match = clean.match(/^(?:oye |hey |ok )?(?:jarvis|jarvi|yarvis|charlie)\b\s*(.*)$/);
+  const match = clean.match(/^(?:oye |hey |ok )?(?:narvis|narvi|narbis|marvis|nervis|narvez|jarvis)\b\s*(.*)$/);
   return match ? match[1] : null;
 }
 
@@ -146,7 +147,8 @@ function titleCase(text) {
 
 // Cada comando: patrones (sobre texto normalizado) y run(match, ctx).
 // run devuelve un string, o una promesa de string, con lo que Jarvis dirá.
-// ctx: { now(), openUrl(url, label), notes, startTimer(seconds, label), fetchJson(url), stop() }
+// ctx: { now(), openUrl(url, label), notes, startTimer(seconds, label), fetchJson(url),
+//        briefing(phrase), stop(), canFetch }  — notes.add/list/clear pueden ser async.
 export const COMMANDS = [
   {
     name: "saludo",
@@ -209,8 +211,9 @@ export const COMMANDS = [
     name: "anotar",
     help: "Anota comprar leche",
     patterns: [/^(?:anota|apunta|toma nota|recuerda|guarda la nota|agrega la nota)(?: de| que)? (.+)$/],
-    run: ([, note], ctx) => {
-      ctx.notes.add(note);
+    run: async ([, clean], ctx, original) => {
+      const note = originalTail(original, clean);
+      await ctx.notes.add(note);
       return `Anotado: ${note}.`;
     }
   },
@@ -218,8 +221,8 @@ export const COMMANDS = [
     name: "leer notas",
     help: "Lee mis notas",
     patterns: [/^(?:lee|leer|dime|muestra|cuales son) (?:mis |las )?notas$/, /^que tengo anotado$/],
-    run: (_, ctx) => {
-      const notes = ctx.notes.list();
+    run: async (_, ctx) => {
+      const notes = await ctx.notes.list();
       if (notes.length === 0) return "No tienes notas guardadas.";
       const items = notes.map((n, i) => `${i + 1}: ${n}`).join(". ");
       return `Tienes ${plural(notes.length, "nota")}. ${items}.`;
@@ -229,10 +232,19 @@ export const COMMANDS = [
     name: "borrar notas",
     help: "Borra mis notas",
     patterns: [/^(?:borra|borrar|elimina|limpia) (?:todas )?(?:mis |las )?notas$/],
-    run: (_, ctx) => {
-      ctx.notes.clear();
+    run: async (_, ctx) => {
+      await ctx.notes.clear();
       return "Listo, borré todas tus notas.";
     }
+  },
+  {
+    name: "noticias",
+    help: "¿Qué está pasando en el mundo?",
+    patterns: [
+      /\b(?:noticias|titulares|resumen del dia|resumen de hoy|informe del dia)\b/,
+      /\bque (?:esta pasando|pasa|hay de nuevo) en (?:el mundo|mexico|la economia)\b/
+    ],
+    run: ([phrase], ctx) => ctx.briefing(phrase)
   },
   {
     name: "youtube",
@@ -276,6 +288,7 @@ export const COMMANDS = [
   },
   {
     name: "clima",
+    network: true,
     help: "¿Cómo está el clima en Monterrey?",
     patterns: [/\b(?:clima|tiempo|temperatura)(?: hace| hay)? en (.+)$/],
     run: async ([, city], ctx) => {
@@ -297,6 +310,7 @@ export const COMMANDS = [
   },
   {
     name: "wikipedia",
+    network: true,
     help: "¿Quién es Marie Curie?",
     patterns: [
       /^(?:quien es|quien era|quien fue|que es|que era|que son|que fue|hablame de|hablame sobre|informacion sobre|dime sobre) (?:el |la |los |las |un |una )?(.+)$/
@@ -322,7 +336,7 @@ export const COMMANDS = [
     name: "identidad",
     help: "¿Quién eres?",
     patterns: [/^(?:quien eres|como te llamas|que eres)$/],
-    run: () => "Soy Jarvis, tu asistente personal por voz. Di ayuda para ver lo que puedo hacer."
+    run: () => "Soy Narvis, tu asistente personal por voz, enfocado en los temas que importan. Di ayuda para ver lo que puedo hacer."
   },
   {
     name: "gracias",
@@ -335,9 +349,9 @@ export const COMMANDS = [
     help: "Ayuda",
     patterns: [/^(?:ayuda|que puedes hacer|que sabes hacer|comandos)$/],
     run: () =>
-      "Puedo decirte la hora y la fecha, hacer cuentas, poner temporizadores, guardar notas, " +
-      "abrir páginas, buscar en Google y YouTube, darte el clima de una ciudad, " +
-      "buscar en Wikipedia y contarte chistes."
+      "Puedo darte el resumen de noticias del día, explicarte temas de política, economía, " +
+      "ciencia y salud, decirte la hora y la fecha, hacer cuentas, poner temporizadores, " +
+      "guardar notas, abrir páginas y buscar en Google y YouTube."
   },
   {
     name: "apagar",
@@ -349,6 +363,15 @@ export const COMMANDS = [
     }
   }
 ];
+
+// Recupera del texto original (con acentos y mayúsculas) las últimas palabras que
+// corresponden a `part`, que viene normalizado. "Anota llamar a Mamá" -> "llamar a Mamá".
+export function originalTail(original, part) {
+  const count = part.split(" ").length;
+  const words = original.trim().split(/\s+/).filter((w) => normalize(w));
+  if (words.length < count) return part;
+  return words.slice(-count).join(" ").replace(/[.,;:!?¡¿"]+$/, "");
+}
 
 function firstSentences(text, count) {
   const parts = text.match(/[^.!?]+[.!?]+/g) ?? [text];
@@ -369,10 +392,12 @@ function describeWeather(code) {
 }
 
 // Busca el primer comando que coincida. Devuelve { command, match } o null.
-export function matchCommand(text) {
+// Con canFetch: false se saltan los comandos que necesitan internet desde la página.
+export function matchCommand(text, { canFetch = true } = {}) {
   const clean = stripWakeWord(text) ?? normalize(text);
   if (!clean) return null;
   for (const command of COMMANDS) {
+    if (command.network && !canFetch) continue;
     for (const pattern of command.patterns) {
       const match = clean.match(pattern);
       if (match) return { command, match };
@@ -381,14 +406,13 @@ export function matchCommand(text) {
   return null;
 }
 
-// Punto de entrada: frase -> respuesta hablada.
+// Punto de entrada: frase -> respuesta hablada, o null si ningún comando aplica
+// (entonces la pregunta pasa al cerebro).
 export async function respond(text, ctx) {
-  const found = matchCommand(text);
-  if (!found) {
-    return "No entendí ese comando. Di ayuda para ver lo que puedo hacer.";
-  }
+  const found = matchCommand(text, { canFetch: ctx.canFetch !== false });
+  if (!found) return null;
   try {
-    return await found.command.run(found.match, ctx);
+    return await found.command.run(found.match, ctx, text);
   } catch (error) {
     console.error(`Error en el comando ${found.command.name}:`, error);
     return "Tuve un problema al hacer eso. Revisa tu conexión e inténtalo de nuevo.";

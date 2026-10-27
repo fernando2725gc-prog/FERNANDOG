@@ -1,0 +1,236 @@
+/* Consola HUD: columna de voz a la izquierda, radar de noticias a la derecha.
+   Tema oscuro único por diseño (pantalla de instrumentos). */
+:root {
+  --bg: #060d18;
+  --surface: #0c1a2c;
+  --surface-2: #11243b;
+  --line: #1f3a58;
+  --cyan: #4cc9f0;
+  --cyan-soft: rgba(76, 201, 240, 0.14);
+  --amber: #f4b942;
+  --amber-soft: rgba(244, 185, 66, 0.16);
+  --text: #e3eef9;
+  --muted: #8aa4bf;
+  --ok: #5ad19a;
+  --warn: #f4b942;
+  --alert: #ff7a6b;
+  --font-display: "Orbitron", "Eurostile", "Bank Gothic", sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(76, 201, 240, 0.10), transparent 60%),
+    var(--bg);
+  color: var(--text);
+  font: 15px/1.55 var(--font-body);
+}
+
+.shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  gap: 20px;
+}
+
+/* ---------- Encabezado ---------- */
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.top h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  letter-spacing: 0.28em;
+  color: var(--cyan);
+  text-shadow: 0 0 16px rgba(76, 201, 240, 0.5);
+}
+.tagline { margin: 2px 0 0; color: var(--muted); }
+
+.pill {
+  margin: 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font: 500 0.8rem/1.4 var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.pill::before { content: "●"; margin-right: 6px; }
+.pill[data-state="on"] { color: var(--ok); border-color: rgba(90, 209, 154, 0.4); }
+.pill[data-state="off"] { color: var(--warn); border-color: rgba(244, 185, 66, 0.4); }
+
+/* ---------- Distribución ---------- */
+.layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+.console, .radar {
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.console { display: grid; }
+
+/* ---------- Núcleo animado ---------- */
+.hud { display: grid; justify-items: center; gap: 10px; padding: 20px 16px 16px; text-align: center; }
+
+.core { --size: min(170px, 46vw); --speed: 1; position: relative; width: var(--size); height: var(--size); }
+.ring, .heart { position: absolute; border-radius: 50%; inset: 0; }
+.ring { border: 2px solid var(--line); border-top-color: var(--cyan); animation: spin calc(8s / var(--speed)) linear infinite; }
+.ring-2 { inset: 14%; border-right-color: var(--cyan); animation-direction: reverse; animation-duration: calc(5s / var(--speed)); }
+.ring-3 { inset: 28%; border-left-color: var(--amber); animation-duration: calc(3s / var(--speed)); }
+.heart {
+  inset: 40%;
+  background: radial-gradient(circle, #e6f8ff 0%, var(--cyan) 45%, transparent 72%);
+  box-shadow: 0 0 28px var(--cyan);
+  opacity: 0.45;
+  transition: opacity 0.3s;
+}
+.core[data-state="listening"] .heart { opacity: 0.7; }
+.core[data-state="attentive"] { --speed: 2; }
+.core[data-state="attentive"] .heart { opacity: 1; animation: pulse 1.2s ease-in-out infinite; }
+.core[data-state="thinking"] { --speed: 4; }
+.core[data-state="thinking"] .ring-3 { border-left-color: var(--cyan); }
+.core[data-state="speaking"] { --speed: 2.5; }
+.core[data-state="speaking"] .heart { opacity: 1; animation: pulse 0.45s ease-in-out infinite; }
+.core[data-state="idle"] .ring { animation-play-state: paused; opacity: 0.55; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 50% { transform: scale(1.25); } }
+
+.status { margin: 0; font: 500 0.85rem var(--font-display); letter-spacing: 0.08em; color: var(--cyan); }
+.interim { margin: 0; min-height: 1.5em; color: var(--muted); font-style: italic; }
+.note { margin: 0; max-width: 46ch; color: var(--amber); font-size: 0.9rem; }
+.timers { list-style: none; margin: 0; padding: 0; color: var(--amber); font: 0.95rem var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* ---------- Botones ---------- */
+button, select, input { font: inherit; color: inherit; }
+.controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.btn:hover { border-color: var(--cyan); }
+.btn-primary { border-color: var(--cyan); background: var(--cyan-soft); }
+.btn[aria-pressed="true"].btn-primary { background: var(--cyan); color: var(--bg); font-weight: 500; }
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+
+/* ---------- Conversación ---------- */
+.chat { border-top: 1px solid var(--line); min-width: 0; }
+.log {
+  list-style: none;
+  margin: 0;
+  padding: 16px;
+  height: 340px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.log:empty::before {
+  content: "Pregúntame lo que quieras. Por ejemplo: «Narvis, ¿qué está pasando en el mundo?»";
+  margin: auto;
+  max-width: 34ch;
+  color: var(--muted);
+  text-align: center;
+}
+.msg { max-width: 88%; padding: 9px 13px; border-radius: 12px; }
+.msg p { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+.msg a { display: inline-block; margin-top: 6px; color: var(--amber); }
+.msg-user { align-self: flex-end; background: var(--amber-soft); border-bottom-right-radius: 3px; }
+.msg-narvis { align-self: flex-start; background: var(--cyan-soft); border-bottom-left-radius: 3px; }
+.msg.thinking p { color: var(--muted); animation: blink 1.4s ease-in-out infinite; }
+@keyframes blink { 50% { opacity: 0.4; } }
+
+.text-form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--line); }
+.text-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+}
+
+/* ---------- Radar de noticias ---------- */
+.radar { padding: 16px; display: grid; gap: 12px; }
+.radar-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.radar h2 {
+  margin: 0;
+  font: 700 1rem var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.meta { margin: 0; color: var(--muted); font: 0.78rem/1.5 var(--font-mono); letter-spacing: 0.02em; }
+.meta a { color: var(--cyan); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.chip[aria-pressed="true"] { border-color: var(--amber); background: var(--amber-soft); color: var(--amber); }
+
+.news {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  max-height: 560px;
+  overflow-y: auto;
+}
+.news-item {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px 10px 14px;
+  border-left: 3px solid var(--line);
+  background: var(--surface-2);
+  border-radius: 0 10px 10px 0;
+}
+.news-item[data-importance="3"] { border-left-color: var(--alert); }
+.news-item[data-importance="2"] { border-left-color: var(--warn); }
+.news-title {
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font-weight: 600;
+  line-height: 1.35;
+  cursor: pointer;
+}
+.news-title:hover { color: var(--cyan); }
+.summary { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.news-empty { color: var(--muted); padding: 12px 0; }
+
+/* ---------- Pie ---------- */
+.foot { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; color: var(--muted); }
+.foot label { display: flex; align-items: center; gap: 8px; }
+.foot select { padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); }
+.switch input { accent-color: var(--cyan); width: 18px; height: 18px; }
+.help { flex-basis: 100%; }
+.help summary { cursor: pointer; color: var(--cyan); }
+.help ul { columns: 2 220px; margin: 10px 0 0; padding-left: 18px; }
+
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ring, .heart, .msg.thinking p { animation: none !important; }
+}

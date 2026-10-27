@@ -1,4 +1,4 @@
-// Ejecutar con: node --test jarvis/tests
+// Ejecutar con: npm test (desde narvis/)
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { normalize, stripWakeWord, calculate, parseDuration, matchCommand, respond } from "../js/commands.js";
@@ -14,6 +14,7 @@ function fakeCtx(overrides = {}) {
     notes: { add: (n) => notes.push(n), list: () => [...notes], clear: () => notes.splice(0) },
     startTimer: (seconds, label) => ctx.timers.push({ seconds, label }),
     fetchJson: async () => ({}),
+    briefing: async (phrase) => `BRIEFING:${phrase}`,
     stop: () => { ctx.stopped = true; },
     ...overrides
   };
@@ -26,11 +27,12 @@ test("normalize quita acentos, signos y mayúsculas", () => {
 });
 
 test("stripWakeWord detecta la palabra de activación", () => {
-  assert.equal(stripWakeWord("Jarvis, ¿qué hora es?"), "que hora es");
-  assert.equal(stripWakeWord("Oye Jarvis abre YouTube"), "abre youtube");
-  assert.equal(stripWakeWord("Jarvis"), "");
+  assert.equal(stripWakeWord("Narvis, ¿qué hora es?"), "que hora es");
+  assert.equal(stripWakeWord("Oye Narvis abre YouTube"), "abre youtube");
+  assert.equal(stripWakeWord("Marvis dime la hora"), "dime la hora"); // así lo suele oír el reconocedor
+  assert.equal(stripWakeWord("Narvis"), "");
   assert.equal(stripWakeWord("qué hora es"), null);
-  assert.equal(stripWakeWord("jarvisito"), null);
+  assert.equal(stripWakeWord("narvisito"), null);
 });
 
 test("calculate entiende palabras y precedencia", () => {
@@ -64,6 +66,9 @@ test("cada frase va al comando correcto", () => {
     "Lee mis notas": "leer notas",
     "Borra mis notas": "borrar notas",
     "Pon música relajante en YouTube": "youtube",
+    "¿Qué está pasando en el mundo?": "noticias",
+    "Dame las noticias": "noticias",
+    "Narvis, dame el resumen del día": "noticias",
     "Abre YouTube": "abrir",
     "Busca recetas de pasta": "buscar",
     "¿Cómo está el clima en Monterrey?": "clima",
@@ -78,6 +83,20 @@ test("cada frase va al comando correcto", () => {
     assert.equal(matchCommand(phrase)?.command.name, expected, phrase);
   }
   assert.equal(matchCommand("blablabla"), null);
+  assert.equal(matchCommand("¿Por qué sube el petróleo?"), null); // va al cerebro
+});
+
+test("sin acceso a internet, clima y Wikipedia pasan al cerebro", () => {
+  assert.equal(matchCommand("¿Quién es Marie Curie?", { canFetch: false }), null);
+  assert.equal(matchCommand("clima en Monterrey", { canFetch: false }), null);
+});
+
+test("lo que no es un comando devuelve null", async () => {
+  assert.equal(await respond("¿Qué opinas de la inflación?", fakeCtx()), null);
+});
+
+test("noticias usa el resumen del contexto", async () => {
+  assert.equal(await respond("qué está pasando en el mundo", fakeCtx()), "BRIEFING:que esta pasando en el mundo");
 });
 
 test("respuestas de hora, cuentas y notas", async () => {
@@ -86,9 +105,15 @@ test("respuestas de hora, cuentas y notas", async () => {
   assert.equal(await respond("cuánto es 12 por 8", ctx), "El resultado es 96.");
   await respond("anota comprar leche", ctx);
   await respond("apunta llamar a mamá", ctx);
-  assert.equal(await respond("lee mis notas", ctx), "Tienes 2 notas. 1: comprar leche. 2: llamar a mama.");
+  assert.equal(await respond("lee mis notas", ctx), "Tienes 2 notas. 1: comprar leche. 2: llamar a mamá.");
   await respond("borra mis notas", ctx);
   assert.equal(await respond("lee mis notas", ctx), "No tienes notas guardadas.");
+});
+
+test("originalTail conserva acentos y mayúsculas", async () => {
+  const ctx = fakeCtx();
+  await respond("Narvis, anota revisar la reunión de la Fed.", ctx);
+  assert.deepEqual(await ctx.notes.list(), ["revisar la reunión de la Fed"]);
 });
 
 test("abrir y buscar generan la URL correcta", async () => {

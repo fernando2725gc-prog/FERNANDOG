@@ -1,0 +1,468 @@
+<title>Plan Volver a Empezar</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: una columna de lectura (~720px) que alterna diagramas de proceso y un panel de registro diario. Amanecer: tinta azul + luz de mañana. */
+:root{
+  --bg:#f6f7f4; --surface:#ffffff; --ink:#18232e; --muted:#5b6670; --line:#d9ded8;
+  --dawn:#e8a33d; --dawn-soft:#fbecd2; --pine:#2f6b5a; --pine-soft:#dcebe4;
+  --bad:#b4483b; --bad-soft:#f6e1dc;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#10171d; --surface:#17212a; --ink:#e8ecee; --muted:#9aa6af; --line:#2a3741;
+  --dawn:#f0b65a; --dawn-soft:#3a2d17; --pine:#6fbfa5; --pine-soft:#173229;
+  --bad:#e07c6e; --bad-soft:#3b201c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10171d; --surface:#17212a; --ink:#e8ecee; --muted:#9aa6af; --line:#2a3741;
+  --dawn:#f0b65a; --dawn-soft:#3a2d17; --pine:#6fbfa5; --pine-soft:#173229;
+  --bad:#e07c6e; --bad-soft:#3b201c; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.4rem,7vw,3.6rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:1.75rem;font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.1rem;font-weight:700}
+p{margin:0}
+.eyebrow{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+section{display:flex;flex-direction:column;gap:18px}
+.lead{color:var(--muted);max-width:62ch}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* hero */
+header.hero{padding-top:48px;display:flex;flex-direction:column;gap:16px}
+.horizon{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--ink) 0%,var(--pine) 45%,var(--dawn) 100%);max-width:220px}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px}
+nav.toc a{font-family:var(--f-mono);font-size:.8rem;color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:5px 10px;border-radius:999px;background:var(--surface)}
+nav.toc a:hover,nav.toc a:focus-visible{border-color:var(--pine);outline:none}
+
+/* ciclos */
+.cycles{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:640px){.cycles{grid-template-columns:1fr}}
+.cycle{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.cycle svg{width:100%;height:auto;display:block}
+.cycle .tag{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase}
+.cycle.bad .tag{color:var(--bad)} .cycle.good .tag{color:var(--pine)}
+.cycle p{font-size:.95rem;color:var(--muted)}
+
+/* flujo vertical */
+.flow{display:flex;flex-direction:column;gap:0;counter-reset:step}
+.step{display:grid;grid-template-columns:64px 1fr;gap:14px;position:relative;padding-bottom:18px}
+.step:not(:last-child)::after{content:"";position:absolute;left:31px;top:44px;bottom:0;width:2px;background:var(--line)}
+.step .time{font-family:var(--f-mono);font-size:.82rem;color:var(--ink);background:var(--dawn-soft);border:1px solid var(--dawn);border-radius:8px;height:36px;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.step .body{min-width:0;padding-top:4px}
+.step .body p{color:var(--muted);font-size:.95rem}
+.step.key .time{background:var(--pine);color:var(--bg);border-color:var(--pine)}
+
+/* diagrama de decisión */
+.decide{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.decide svg{min-width:560px;width:100%;height:auto;display:block}
+svg text{font-family:var(--f-display)}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.rule{border-top:3px solid var(--dawn);padding-top:10px;display:flex;flex-direction:column;gap:4px}
+.rule p{font-size:.93rem;color:var(--muted)}
+
+/* día */
+.day{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
+.block{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:12px 16px;border-top:1px solid var(--line);align-items:baseline}
+.block:first-child{border-top:0}
+.block .mono{font-size:.82rem;color:var(--muted)}
+.block b{font-family:var(--f-display);font-weight:700}
+.block span.d{color:var(--muted);font-size:.93rem;display:block}
+.block.focus{background:var(--pine-soft)}
+.block.off{background:var(--dawn-soft)}
+
+/* hábitos mínimos */
+table.min{width:100%;border-collapse:collapse;font-size:.93rem}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table.min th,table.min td{text-align:left;padding:10px 14px;border-top:1px solid var(--line);vertical-align:top}
+table.min thead th{border-top:0;font-family:var(--f-mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+table.min td:first-child{font-family:var(--f-display);font-weight:700;white-space:nowrap}
+
+/* semanas */
+.weeks{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media (max-width:640px){.weeks{grid-template-columns:1fr 1fr}}
+.week{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px;background:var(--surface);min-width:0}
+.week .mono{font-size:.72rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.week ul{margin:0;padding-left:18px;font-size:.9rem;color:var(--muted)}
+.week.now{border-color:var(--pine);box-shadow:0 0 0 1px var(--pine)}
+
+/* dinero */
+.loop{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:stretch}
+@media (max-width:640px){.loop{grid-template-columns:1fr}}
+.loop .node{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.loop .node .mono{font-size:.72rem;color:var(--dawn)}
+.loop .node p{font-size:.88rem;color:var(--muted)}
+
+/* tracker */
+.tracker{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:18px}
+.tbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.datenav{display:flex;align-items:center;gap:8px}
+button{font:inherit;cursor:pointer}
+.btn{font-family:var(--f-mono);font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:6px 12px}
+.btn:hover{border-color:var(--pine)}
+.btn:focus-visible,.habit:focus-within,input:focus-visible,.mood button:focus-visible{outline:2px solid var(--dawn);outline-offset:2px}
+#dateLabel{font-family:var(--f-display);font-weight:700;font-size:1.1rem;min-width:0}
+.status{font-family:var(--f-mono);font-size:.75rem;color:var(--muted)}
+.tgrid{display:grid;grid-template-columns:1fr 150px;gap:20px;align-items:start}
+@media (max-width:640px){.tgrid{grid-template-columns:1fr}}
+.habits{display:flex;flex-direction:column;gap:8px;min-width:0}
+.habit{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:var(--bg)}
+.habit input{width:20px;height:20px;accent-color:var(--pine);flex:none;margin:0}
+.habit .t{display:flex;flex-direction:column;min-width:0}
+.habit .t b{font-family:var(--f-display);font-weight:700;font-size:.98rem}
+.habit .t small{color:var(--muted);font-size:.82rem}
+.habit.done{background:var(--pine-soft);border-color:var(--pine)}
+.side{display:flex;flex-direction:column;gap:16px;align-items:center}
+.ring{width:130px;height:130px}
+.ring text{font-family:var(--f-mono)}
+.field{display:flex;flex-direction:column;gap:6px;width:100%}
+.field label{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.field input[type=number]{font:inherit;font-family:var(--f-mono);padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%}
+.mood{display:flex;gap:4px}
+.mood button{flex:1;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:6px 0;font-family:var(--f-mono);font-size:.85rem}
+.mood button[aria-pressed="true"]{background:var(--dawn);border-color:var(--dawn);color:#18232e}
+.notes textarea{font:inherit;font-size:.95rem;width:100%;min-height:70px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);resize:vertical}
+.heat{overflow-x:auto}
+.heat table{border-collapse:separate;border-spacing:3px;font-size:.75rem}
+.heat th{font-family:var(--f-mono);font-weight:400;color:var(--muted);text-align:right;padding-right:6px;white-space:nowrap}
+.heat thead th{text-align:center;padding:0;font-size:.65rem}
+.heat td{width:22px;height:22px;border-radius:5px;background:var(--line);padding:0}
+.heat td.on{background:var(--pine)}
+.heat td.today{box-shadow:inset 0 0 0 2px var(--dawn)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{border-top:1px solid var(--line);padding-top:8px;display:flex;flex-direction:column}
+.stat .v{font-family:var(--f-mono);font-size:1.4rem;font-variant-numeric:tabular-nums}
+.stat .l{font-size:.8rem;color:var(--muted)}
+
+.review{display:flex;flex-direction:column;gap:8px;padding-left:0;margin:0;list-style:none}
+.review li{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:baseline}
+.review li .mono{color:var(--dawn);font-size:.85rem}
+footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);padding-top:16px}
+@media (prefers-reduced-motion:no-preference){.habit{transition:background .15s,border-color .15s}}
+</style>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="horizon" aria-hidden="true"></div>
+  <span class="eyebrow">Sistema personal · 4 semanas</span>
+  <h1>Volver a empezar, un día a la vez</h1>
+  <p class="lead">Todo lo que quieres recuperar (levantarte temprano, leer, inglés, ejercicio, generar ingresos) depende de una sola palanca: lo que haces con el celular entre las 9 de la noche y las 8 de la mañana. Este mapa empieza por ahí.</p>
+  <nav class="toc" aria-label="Secciones">
+    <a href="#ciclo">El ciclo</a><a href="#manana">Mañana</a><a href="#celular">Celular</a><a href="#dia">Mi día</a><a href="#minimos">Mínimos</a><a href="#semanas">4 semanas</a><a href="#dinero">Dinero</a><a href="#registro">Registro diario</a><a href="#revision">Revisión</a>
+  </nav>
+</header>
+
+<section id="ciclo">
+  <span class="eyebrow">Diagnóstico</span>
+  <h2>El ciclo que te atrapa y el que te saca</h2>
+  <p class="lead">No te falta disciplina. Estás dentro de un ciclo que se alimenta solo. Se rompe en un punto: la hora de dormir.</p>
+  <div class="cycles">
+    <div class="cycle bad">
+      <span class="tag">Ciclo actual</span>
+      <svg viewBox="0 0 300 260" role="img" aria-label="Ciclo negativo: celular de noche, duermo tarde, no me levanto, día sin energía, me siento mal, busco distracción en el celular">
+        <defs><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--bad)"/></marker></defs>
+        <circle cx="150" cy="130" r="92" fill="none" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="4 5" opacity=".5"/>
+        <g font-size="12" font-weight="700" fill="var(--ink)" text-anchor="middle">
+          <rect x="95" y="18" width="110" height="28" rx="14" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="150" y="36">Celular de noche</text>
+          <rect x="200" y="74" width="92" height="28" rx="14" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="246" y="92">Duermo tarde</text>
+          <rect x="196" y="164" width="100" height="28" rx="14" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="246" y="182">No me levanto</text>
+          <rect x="100" y="214" width="100" height="28" rx="14" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="150" y="232">Día sin energía</text>
+          <rect x="6" y="164" width="96" height="28" rx="14" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="54" y="182">Me siento mal</text>
+          <rect x="4" y="74" width="100" height="28" rx="14" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="54" y="92">Busco escape</text>
+        </g>
+        <g stroke="var(--bad)" stroke-width="1.6" fill="none" marker-end="url(#ab)">
+          <path d="M205 40 Q235 50 242 70"/><path d="M246 104 L246 160"/><path d="M240 194 Q225 215 204 224"/>
+          <path d="M98 224 Q72 214 60 196"/><path d="M54 162 L54 106"/><path d="M60 72 Q68 48 92 36"/>
+        </g>
+      </svg>
+      <p>Cada vuelta te deja con menos energía y más ganas de escapar al celular.</p>
+    </div>
+    <div class="cycle good">
+      <span class="tag">Ciclo nuevo</span>
+      <svg viewBox="0 0 300 260" role="img" aria-label="Ciclo positivo: celular fuera del cuarto a las 22:00, duermo 7 a 8 horas, me levanto 6:30, ejercicio, lectura e inglés, logro pequeño, me siento capaz">
+        <defs><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--pine)"/></marker></defs>
+        <circle cx="150" cy="130" r="92" fill="none" stroke="var(--pine)" stroke-width="1.5" stroke-dasharray="4 5" opacity=".5"/>
+        <g font-size="12" font-weight="700" fill="var(--ink)" text-anchor="middle">
+          <rect x="88" y="18" width="124" height="28" rx="14" fill="var(--dawn-soft)" stroke="var(--dawn)" stroke-width="2"/><text x="150" y="36">Celular fuera 22:00</text>
+          <rect x="200" y="74" width="92" height="28" rx="14" fill="var(--pine-soft)" stroke="var(--pine)"/><text x="246" y="92">Duermo 7–8 h</text>
+          <rect x="196" y="164" width="100" height="28" rx="14" fill="var(--pine-soft)" stroke="var(--pine)"/><text x="246" y="182">Me levanto 6:30</text>
+          <rect x="94" y="214" width="112" height="28" rx="14" fill="var(--pine-soft)" stroke="var(--pine)"/><text x="150" y="232">Muevo · leo · inglés</text>
+          <rect x="6" y="164" width="96" height="28" rx="14" fill="var(--pine-soft)" stroke="var(--pine)"/><text x="54" y="182">Logro pequeño</text>
+          <rect x="4" y="74" width="100" height="28" rx="14" fill="var(--pine-soft)" stroke="var(--pine)"/><text x="54" y="92">Me siento capaz</text>
+        </g>
+        <g stroke="var(--pine)" stroke-width="1.6" fill="none" marker-end="url(#ag)">
+          <path d="M212 40 Q235 50 242 70"/><path d="M246 104 L246 160"/><path d="M240 194 Q225 215 208 224"/>
+          <path d="M92 224 Q72 214 60 196"/><path d="M54 162 L54 106"/><path d="M60 72 Q68 48 86 36"/>
+        </g>
+      </svg>
+      <p>El punto de entrada (en amarillo) es una sola decisión cada noche. Todo lo demás se vuelve más fácil.</p>
+    </div>
+  </div>
+</section>
+
+<section id="manana">
+  <span class="eyebrow">Proceso 1</span>
+  <h2>La rutina de la mañana</h2>
+  <p class="lead">Sigue el orden, no la perfección. Si un día solo haces los dos primeros pasos, ese día cuenta.</p>
+  <div class="flow">
+    <div class="step key"><div class="time">21:30</div><div class="body"><h3>La mañana empieza la noche anterior</h3><p>Escribe en papel las 3 tareas de mañana. Deja ropa de ejercicio y el libro a la vista.</p></div></div>
+    <div class="step key"><div class="time">22:00</div><div class="body"><h3>Celular a cargar fuera del cuarto</h3><p>Usa un despertador barato o el celular en otra habitación con alarma alta. Este es el paso más importante de todo el plan.</p></div></div>
+    <div class="step"><div class="time">6:30</div><div class="body"><h3>Pies en el suelo al primer sonido</h3><p>Regla de 5 segundos: cuenta 5-4-3-2-1 y levántate. Nada de posponer.</p></div></div>
+    <div class="step"><div class="time">6:35</div><div class="body"><h3>Agua y luz</h3><p>Un vaso de agua, abre la ventana o sal 2 minutos. La luz le dice a tu cuerpo que es de día.</p></div></div>
+    <div class="step"><div class="time">6:40</div><div class="body"><h3>Ejercicio 20 minutos</h3><p>Caminar rápido, rutina de peso corporal o un video. Sin celular en la mano, solo para poner música.</p></div></div>
+    <div class="step"><div class="time">7:05</div><div class="body"><h3>Ducha y desayuno</h3><p>Todavía sin redes sociales.</p></div></div>
+    <div class="step"><div class="time">7:30</div><div class="body"><h3>Leer 15 minutos</h3><p>Libro en papel o lector. Meta: 10 páginas.</p></div></div>
+    <div class="step"><div class="time">7:45</div><div class="body"><h3>Inglés 15 minutos</h3><p>Una lección de app, un podcast corto o 10 palabras nuevas en una libreta.</p></div></div>
+    <div class="step key"><div class="time">8:00</div><div class="body"><h3>Ahora sí, el celular</h3><p>Ya hiciste lo importante. Lo que pase después es ganancia.</p></div></div>
+  </div>
+</section>
+
+<section id="celular">
+  <span class="eyebrow">Proceso 2</span>
+  <h2>Protocolo antes de abrir el celular</h2>
+  <p class="lead">El problema es abrirlo sin intención, no usarlo. Este diagrama es la pausa que te falta.</p>
+  <div class="decide">
+    <svg viewBox="0 0 640 330" role="img" aria-label="Diagrama de decisión: ganas de tomar el celular. ¿Es para algo concreto? Sí: hazlo y suéltalo. No: respira 10 veces. ¿Sigues con ganas? No: vuelve a lo que hacías. Sí: pon un temporizador de 10 minutos y úsalo de pie">
+      <defs><marker id="ad" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--muted)"/></marker></defs>
+      <g font-size="13" font-weight="700" fill="var(--ink)" text-anchor="middle">
+        <rect x="230" y="10" width="180" height="40" rx="20" fill="var(--dawn-soft)" stroke="var(--dawn)"/><text x="320" y="35">Ganas de tomar el celular</text>
+        <polygon points="320,78 420,118 320,158 220,118" fill="var(--surface)" stroke="var(--ink)"/><text x="320" y="114">¿Es para algo</text><text x="320" y="130">concreto?</text>
+        <rect x="470" y="98" width="160" height="40" rx="10" fill="var(--pine-soft)" stroke="var(--pine)"/><text x="550" y="123">Hazlo y suéltalo</text>
+        <rect x="230" y="186" width="180" height="40" rx="10" fill="var(--surface)" stroke="var(--ink)"/><text x="320" y="211">Respira 10 veces</text>
+        <polygon points="320,246 410,278 320,310 230,278" fill="var(--surface)" stroke="var(--ink)"/><text x="320" y="283">¿Sigues con ganas?</text>
+        <rect x="10" y="258" width="180" height="40" rx="10" fill="var(--pine-soft)" stroke="var(--pine)"/><text x="100" y="283">Vuelve a lo que hacías</text>
+        <rect x="450" y="250" width="180" height="56" rx="10" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="540" y="274">Temporizador 10 min</text><text x="540" y="292" font-weight="500" font-size="12">y úsalo de pie</text>
+      </g>
+      <g stroke="var(--muted)" stroke-width="1.6" fill="none" marker-end="url(#ad)">
+        <path d="M320 50 L320 74"/><path d="M420 118 L466 118"/><path d="M320 158 L320 182"/><path d="M320 226 L320 242"/><path d="M230 278 L194 278"/><path d="M410 278 L446 278"/>
+      </g>
+      <g font-family="var(--f-mono)" font-size="11" fill="var(--muted)">
+        <text x="430" y="110">sí</text><text x="328" y="174">no</text><text x="200" y="270">no</text><text x="418" y="270">sí</text>
+      </g>
+    </svg>
+  </div>
+  <div class="rules">
+    <div class="rule"><h3>Pantalla en gris</h3><p>Activa la escala de grises en accesibilidad. Las redes pierden la mitad de su atractivo.</p></div>
+    <div class="rule"><h3>Redes fuera de la pantalla de inicio</h3><p>Muévelas a una carpeta en la última página, o bórralas y entra solo desde el navegador.</p></div>
+    <div class="rule"><h3>Límite diario</h3><p>Pon 60 minutos de límite para redes en Bienestar digital o Tiempo en pantalla.</p></div>
+    <div class="rule"><h3>Sustituto a mano</h3><p>Ten el libro o la libreta de inglés donde sueles tomar el celular: el sillón, la cama, la mesa.</p></div>
+  </div>
+</section>
+
+<section id="dia">
+  <span class="eyebrow">Gestión del tiempo</span>
+  <h2>Mi día en bloques</h2>
+  <p class="lead">Ajusta las horas a tu trabajo o estudio. Lo importante es que cada hábito tenga un lugar fijo en el día, así no depende de las ganas.</p>
+  <div class="day">
+    <div class="block focus"><span class="mono">6:30–8:00</span><div><b>Bloque de oro</b><span class="d">Ejercicio, lectura, inglés. Sin celular.</span></div></div>
+    <div class="block"><span class="mono">8:00–13:00</span><div><b>Trabajo o estudio profundo</b><span class="d">La tarea más difícil primero. Celular en otra habitación por bloques de 50 min.</span></div></div>
+    <div class="block off"><span class="mono">13:00–14:00</span><div><b>Comida y pausa</b><span class="d">Aquí sí puedes ver redes, con temporizador.</span></div></div>
+    <div class="block"><span class="mono">14:00–18:00</span><div><b>Trabajo, pendientes, mandados</b><span class="d">Agrupa mensajes y correos en dos momentos fijos.</span></div></div>
+    <div class="block focus"><span class="mono">18:30–19:30</span><div><b>Hora de ingresos</b><span class="d">Una hora a tu proyecto para ganar dinero (ver ciclo abajo).</span></div></div>
+    <div class="block off"><span class="mono">19:30–21:30</span><div><b>Libre</b><span class="d">Cena, familia, series, celular. Es tu descanso y no tiene culpa.</span></div></div>
+    <div class="block focus"><span class="mono">21:30–22:30</span><div><b>Cierre del día</b><span class="d">Plan de mañana en papel, celular fuera del cuarto, 10 min de lectura en la cama.</span></div></div>
+  </div>
+</section>
+
+<section id="minimos">
+  <span class="eyebrow">Regla de los 2 minutos</span>
+  <h2>Versión mínima y versión completa</h2>
+  <p class="lead">En un día malo, haz la versión mínima. Lo que cuenta es no romper la cadena; la intensidad viene después.</p>
+  <div class="tablewrap">
+    <table class="min">
+      <thead><tr><th>Hábito</th><th>Mínimo (día malo)</th><th>Completo (día normal)</th></tr></thead>
+      <tbody>
+        <tr><td>Levantarme</td><td>Antes de las 7:30</td><td>6:30 sin posponer</td></tr>
+        <tr><td>Ejercicio</td><td>10 sentadillas</td><td>20–30 min</td></tr>
+        <tr><td>Leer</td><td>1 página</td><td>10 páginas / 15 min</td></tr>
+        <tr><td>Inglés</td><td>5 palabras nuevas</td><td>15 min de lección o podcast</td></tr>
+        <tr><td>Ingresos</td><td>Anotar 1 idea</td><td>1 hora de trabajo en el proyecto</td></tr>
+        <tr><td>Celular</td><td>Fuera del cuarto al dormir</td><td>Menos de 2 h de pantalla</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="semanas">
+  <span class="eyebrow">Progresión</span>
+  <h2>Plan de 4 semanas</h2>
+  <p class="lead">Si intentas cambiar todo el lunes, abandonas el jueves. Cada semana sube un escalón y mantiene lo anterior.</p>
+  <div class="weeks">
+    <div class="week now"><span class="mono">Semana 1</span><h3>Dormir</h3><ul><li>Celular fuera a las 22:00</li><li>Alarma 15 min antes cada 3 días</li><li>Mínimos del resto</li></ul></div>
+    <div class="week"><span class="mono">Semana 2</span><h3>Moverme</h3><ul><li>Ejercicio completo diario</li><li>Pantalla en gris</li><li>Levantarme 6:30</li></ul></div>
+    <div class="week"><span class="mono">Semana 3</span><h3>Aprender</h3><ul><li>Lectura e inglés completos</li><li>Límite de 60 min en redes</li></ul></div>
+    <div class="week"><span class="mono">Semana 4</span><h3>Construir</h3><ul><li>Hora de ingresos 5 días</li><li>Primera revisión de mes</li></ul></div>
+  </div>
+</section>
+
+<section id="dinero">
+  <span class="eyebrow">Proceso 3</span>
+  <h2>Ciclo para encontrar ingresos extra</h2>
+  <p class="lead">Buscar ideas sin probarlas también es perder tiempo. Este ciclo dura una semana y se repite hasta que algo funcione.</p>
+  <div class="loop">
+    <div class="node"><span class="mono">Lun</span><h3>Inventario</h3><p>Lista lo que sabes hacer, lo que te piden tus conocidos y lo que disfrutas.</p></div>
+    <div class="node"><span class="mono">Mar</span><h3>3 ideas</h3><p>Ej.: clases particulares, ventas en línea, servicio freelance, reventa.</p></div>
+    <div class="node"><span class="mono">Mié–Jue</span><h3>Prueba barata</h3><p>Publica una oferta a 10 personas o en un grupo local. Sin invertir dinero.</p></div>
+    <div class="node"><span class="mono">Vie</span><h3>Mide</h3><p>¿Alguien preguntó, pagó o pidió más? Anótalo en números.</p></div>
+    <div class="node"><span class="mono">Dom</span><h3>Decide</h3><p>Repite lo que tuvo respuesta. Descarta lo que no, sin culpa.</p></div>
+  </div>
+</section>
+
+<section id="registro">
+  <span class="eyebrow">Registro diario</span>
+  <h2>Marca tu día</h2>
+  <p class="lead">Dos minutos cada noche, en el paso de cierre de las 21:30. Ver la cadena crecer es la mejor motivación.</p>
+  <div class="tracker">
+    <div class="tbar">
+      <div class="datenav">
+        <button class="btn" id="prevDay" aria-label="Día anterior">←</button>
+        <span id="dateLabel">Hoy</span>
+        <button class="btn" id="nextDay" aria-label="Día siguiente">→</button>
+      </div>
+      <span class="status" id="status">Cargando…</span>
+    </div>
+    <div class="tgrid">
+      <div class="habits" id="habits"></div>
+      <div class="side">
+        <svg class="ring" viewBox="0 0 130 130" aria-label="Progreso del día" role="img">
+          <circle cx="65" cy="65" r="54" fill="none" stroke="var(--line)" stroke-width="12"/>
+          <circle id="ringArc" cx="65" cy="65" r="54" fill="none" stroke="var(--pine)" stroke-width="12" stroke-linecap="round" transform="rotate(-90 65 65)" stroke-dasharray="339.3" stroke-dashoffset="339.3"/>
+          <text id="ringText" x="65" y="72" text-anchor="middle" font-size="22" fill="var(--ink)">0/7</text>
+        </svg>
+        <div class="field"><label for="phone">Minutos de pantalla</label><input type="number" id="phone" min="0" max="1440" step="5" placeholder="ej. 120"></div>
+        <div class="field"><label id="moodLbl">Cómo me siento (1–5)</label><div class="mood" id="mood" role="group" aria-labelledby="moodLbl"></div></div>
+      </div>
+    </div>
+    <div class="field notes"><label for="note">Una línea sobre hoy</label><textarea id="note" placeholder="¿Qué funcionó? ¿Qué me distrajo?"></textarea></div>
+    <div class="stats">
+      <div class="stat"><span class="v" id="sStreak">0</span><span class="l">días seguidos con celular fuera</span></div>
+      <div class="stat"><span class="v" id="sAvg">0%</span><span class="l">cumplimiento últimos 14 días</span></div>
+      <div class="stat"><span class="v" id="sPhone">–</span><span class="l">pantalla promedio (min)</span></div>
+    </div>
+    <div class="heat"><table id="heat" aria-label="Últimos 14 días por hábito"></table></div>
+  </div>
+</section>
+
+<section id="revision">
+  <span class="eyebrow">Domingo, 20 minutos</span>
+  <h2>Revisión semanal</h2>
+  <ol class="review">
+    <li><span class="mono">1</span><span>Mira la cuadrícula de arriba. ¿Qué hábito tuvo más huecos?</span></li>
+    <li><span class="mono">2</span><span>Pregúntate qué lo bloqueó: hora, lugar, cansancio o celular. Cambia eso, no tu fuerza de voluntad.</span></li>
+    <li><span class="mono">3</span><span>Compara tus minutos de pantalla con la semana pasada.</span></li>
+    <li><span class="mono">4</span><span>Revisa el ciclo de ingresos: ¿qué idea pruebas esta semana?</span></li>
+    <li><span class="mono">5</span><span>Escribe una cosa que hiciste bien. Sentirte bien también se entrena.</span></li>
+  </ol>
+</section>
+
+<footer>Si un día fallas, no empiezas de cero: retomas al día siguiente con la versión mínima. Nunca falles dos días seguidos.</footer>
+</div>
+
+<script>
+(function(){
+  const HABITS=[
+    {k:"wake",n:"Me levanté a tiempo",d:"6:30 (mínimo antes de 7:30)"},
+    {k:"phoneOut",n:"Celular fuera del cuarto",d:"anoche, a las 22:00"},
+    {k:"move",n:"Ejercicio",d:"20 min (mínimo 10 sentadillas)"},
+    {k:"read",n:"Lectura",d:"10 páginas (mínimo 1)"},
+    {k:"english",n:"Inglés",d:"15 min (mínimo 5 palabras)"},
+    {k:"money",n:"Acción de ingresos",d:"1 hora (mínimo anotar 1 idea)"},
+    {k:"close",n:"Cierre del día",d:"plan de mañana en papel"}
+  ];
+  const SHORT={wake:"Levantarme",phoneOut:"Celular fuera",move:"Ejercicio",read:"Leer",english:"Inglés",money:"Ingresos",close:"Cierre"};
+  const LS="plan-volver-registro";
+  const days={}; // date -> {h:{}, phone, mood, note}
+  let cur=iso(new Date()); let store=null; const $=id=>document.getElementById(id);
+
+  function iso(d){const z=new Date(d.getTime()-d.getTimezoneOffset()*60000);return z.toISOString().slice(0,10)}
+  function shift(s,n){const d=new Date(s+"T12:00:00");d.setDate(d.getDate()+n);return iso(d)}
+  function get(s){return days[s]||(days[s]={h:{},phone:null,mood:null,note:""})}
+  function status(t){$("status").textContent=t}
+
+  // --- almacenamiento: db privado por persona; si no hay, el navegador ---
+  const local={
+    load(){try{Object.assign(days,JSON.parse(localStorage.getItem(LS)||"{}"))}catch(e){}},
+    save(){try{localStorage.setItem(LS,JSON.stringify(days))}catch(e){}}
+  };
+  local.load();
+  let timers={};
+  function save(s){
+    local.save();
+    if(!store){status("Guardado en este navegador");return}
+    clearTimeout(timers[s]); status("Guardando…");
+    timers[s]=setTimeout(async()=>{
+      try{const d=get(s);await store.doc(s).set({date:s,h:d.h,phone:d.phone,mood:d.mood,note:d.note});status("Guardado")}
+      catch(e){status("No se pudo guardar en la nube; quedó en este navegador")}
+    },600);
+  }
+  (async()=>{
+    try{
+      if(!window.claude?.use){status("Guardado en este navegador");return}
+      const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);
+      const id=user?await user.id():null;
+      if(!db||!id){status("Guardado en este navegador");return}
+      store=db.collection("data/users/"+id);
+      const snap=await store.get();
+      snap.docs.forEach(ds=>{const v=ds.data();if(v&&v.date)days[v.date]={h:v.h||{},phone:v.phone??null,mood:v.mood??null,note:v.note||""}});
+      local.save(); status("Sincronizado con tu cuenta"); render();
+    }catch(e){status("Guardado en este navegador")}
+  })();
+
+  // --- interfaz ---
+  const hab=$("habits");
+  HABITS.forEach(h=>{
+    const l=document.createElement("label");l.className="habit";l.dataset.k=h.k;
+    l.innerHTML=`<input type="checkbox" id="h-${h.k}"><span class="t"><b>${h.n}</b><small>${h.d}</small></span>`;
+    l.querySelector("input").addEventListener("change",e=>{get(cur).h[h.k]=e.target.checked;save(cur);render()});
+    hab.appendChild(l);
+  });
+  const mood=$("mood");
+  for(let i=1;i<=5;i++){const b=document.createElement("button");b.type="button";b.textContent=i;b.setAttribute("aria-pressed","false");
+    b.onclick=()=>{const d=get(cur);d.mood=d.mood===i?null:i;save(cur);render()};mood.appendChild(b)}
+  $("phone").addEventListener("input",e=>{const v=e.target.value;get(cur).phone=v===""?null:Math.max(0,+v);save(cur);renderStats()});
+  $("note").addEventListener("input",e=>{get(cur).note=e.target.value;save(cur)});
+  $("prevDay").onclick=()=>{cur=shift(cur,-1);render()};
+  $("nextDay").onclick=()=>{if(cur<iso(new Date())){cur=shift(cur,1);render()}};
+
+  function label(s){
+    const t=iso(new Date());if(s===t)return"Hoy";if(s===shift(t,-1))return"Ayer";
+    return new Date(s+"T12:00:00").toLocaleDateString("es",{weekday:"long",day:"numeric",month:"long"});
+  }
+  function render(){
+    const d=days[cur]||{h:{},phone:null,mood:null,note:""};
+    $("dateLabel").textContent=label(cur);
+    $("nextDay").disabled=cur>=iso(new Date());
+    let n=0;
+    HABITS.forEach(h=>{const on=!!d.h[h.k];if(on)n++;$("h-"+h.k).checked=on;hab.querySelector(`[data-k="${h.k}"]`).classList.toggle("done",on)});
+    $("ringArc").setAttribute("stroke-dashoffset",(339.3*(1-n/HABITS.length)).toFixed(1));
+    $("ringText").textContent=n+"/"+HABITS.length;
+    if(document.activeElement!==$("phone"))$("phone").value=d.phone??"";
+    if(document.activeElement!==$("note"))$("note").value=d.note||"";
+    [...mood.children].forEach((b,i)=>b.setAttribute("aria-pressed",String(d.mood===i+1)));
+    renderStats();
+  }
+  function renderStats(){
+    const t=iso(new Date());const list=[];for(let i=13;i>=0;i--)list.push(shift(t,-i));
+    // racha de celular fuera (hoy cuenta si ya está marcado)
+    let s=0,x=t;if(!days[x]?.h?.phoneOut)x=shift(x,-1);while(days[x]?.h?.phoneOut){s++;x=shift(x,-1)}
+    $("sStreak").textContent=s;
+    let done=0;list.forEach(dd=>HABITS.forEach(h=>{if(days[dd]?.h?.[h.k])done++}));
+    $("sAvg").textContent=Math.round(done/(14*HABITS.length)*100)+"%";
+    const ph=list.map(dd=>days[dd]?.phone).filter(v=>typeof v==="number");
+    $("sPhone").textContent=ph.length?Math.round(ph.reduce((a,b)=>a+b,0)/ph.length):"–";
+    let html="<thead><tr><th></th>"+list.map(dd=>`<th>${+dd.slice(8)}</th>`).join("")+"</tr></thead><tbody>";
+    HABITS.forEach(h=>{html+=`<tr><th>${SHORT[h.k]}</th>`+list.map(dd=>`<td class="${days[dd]?.h?.[h.k]?"on":""}${dd===cur?" today":""}" title="${dd}"></td>`).join("")+"</tr>"});
+    $("heat").innerHTML=html+"</tbody>";
+  }
+  render();
+})();
+</script>

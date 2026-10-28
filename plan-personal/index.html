@@ -109,6 +109,37 @@ button{font:inherit;cursor:pointer}
 .heat td.on{background:var(--laurel)}
 .heat td.cur{box-shadow:inset 0 0 0 2px var(--bronze)}
 
+/* indicadores */
+.kbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
+.kbar .mono{font-size:.8rem;color:var(--muted)}
+.seg{display:flex;gap:4px}
+.seg .btn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ksum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media (max-width:520px){.ksum{grid-template-columns:1fr}}
+.kcard{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;align-items:flex-start;min-width:0}
+.kcard .l{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.kcard .v{font-family:var(--f-mono);font-size:1.7rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.kcard .m{font-size:.8rem;color:var(--muted)}
+.pill{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;border-radius:2px;padding:2px 7px;margin-top:6px;border:1px solid var(--line);color:var(--muted)}
+.pill:empty{display:none}
+.pill.good{background:var(--laurel-soft);border-color:var(--laurel);color:var(--laurel)}
+.pill.warn{background:var(--bronze-soft);border-color:var(--bronze);color:var(--bronze)}
+.pill.bad{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.ktable{display:flex;flex-direction:column;border-top:1px solid var(--ink)}
+.krow{display:grid;grid-template-columns:110px 1fr 54px 92px 72px;gap:10px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--line)}
+@media (max-width:560px){.krow{grid-template-columns:90px 1fr 48px 84px}.krow .d{display:none}}
+.krow .n{font-weight:600;font-size:.95rem}
+.krow .bar{height:8px;background:var(--line);border-radius:1px;position:relative;overflow:hidden}
+.krow .bar i{position:absolute;inset:0 auto 0 0;background:var(--laurel)}
+.krow .bar i.warn{background:var(--bronze)} .krow .bar i.bad{background:var(--bad)}
+.krow .mono{font-size:.82rem;text-align:right}
+.krow .pill{margin:0;justify-self:start}
+.krow .d{font-family:var(--f-mono);font-size:.75rem;color:var(--muted);text-align:right}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:620px){.charts{grid-template-columns:1fr}}
+.charts .tag{color:var(--muted)}
+.charts svg text{font-family:var(--f-mono)}
+
 /* diagramas */
 .cycles{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media (max-width:620px){.cycles{grid-template-columns:1fr}}
@@ -165,7 +196,7 @@ ol.review li .mono{color:var(--porphyry);font-family:var(--f-display);font-size:
   <h1>Volver a empezar</h1>
   <blockquote><p id="qText">No es que tengamos poco tiempo, sino que perdemos mucho.</p><footer id="qCite">Séneca · De la brevedad de la vida</footer></blockquote>
   <nav class="toc" aria-label="Secciones">
-    <a href="#hoy">Hoy</a><a href="#examen">Examen</a><a href="#ciclo">Ciclo</a><a href="#amanecer">Amanecer</a><a href="#control">Control</a><a href="#minimos">Mínimos</a><a href="#semanas">4 semanas</a><a href="#ingresos">Ingresos</a><a href="#revision">Domingo</a>
+    <a href="#hoy">Hoy</a><a href="#examen">Examen</a><a href="#indicadores">Indicadores</a><a href="#ciclo">Ciclo</a><a href="#amanecer">Amanecer</a><a href="#control">Control</a><a href="#minimos">Mínimos</a><a href="#semanas">4 semanas</a><a href="#ingresos">Ingresos</a><a href="#revision">Domingo</a>
   </nav>
 </header>
 
@@ -218,8 +249,29 @@ ol.review li .mono{color:var(--porphyry);font-family:var(--f-display);font-size:
   </div>
 </section>
 
+<section id="indicadores">
+  <div class="shead"><span class="num">III</span><h2>Indicadores</h2><p class="quote">Los números, sin culpa y sin excusas.</p></div>
+  <div class="kbar">
+    <span class="mono" id="kWeek">Esta semana</span>
+    <div class="seg" role="group" aria-label="Semana">
+      <button type="button" class="btn" id="kPrev" aria-pressed="false">Anterior</button>
+      <button type="button" class="btn" id="kThis" aria-pressed="true">Actual</button>
+    </div>
+  </div>
+  <div class="ksum">
+    <div class="kcard"><span class="l">Cumplimiento</span><span class="v" id="kTotal">–</span><span class="m">meta 80%</span><span class="pill" id="kTotalS"></span></div>
+    <div class="kcard"><span class="l">Pantalla promedio</span><span class="v" id="kPhone">–</span><span class="m">meta ≤ 120 min</span><span class="pill" id="kPhoneS"></span></div>
+    <div class="kcard"><span class="l">Ánimo promedio</span><span class="v" id="kMood">–</span><span class="m">meta ≥ 4</span><span class="pill" id="kMoodS"></span></div>
+  </div>
+  <div class="ktable" id="kRows" role="table" aria-label="Hábitos de la semana contra su meta"></div>
+  <div class="charts">
+    <div class="panel"><span class="tag">PANTALLA · 14 DÍAS</span><svg id="cPhone" viewBox="0 0 320 150" role="img" aria-label="Minutos de pantalla por día, últimos 14 días"></svg></div>
+    <div class="panel"><span class="tag">ÁNIMO · 14 DÍAS</span><svg id="cMood" viewBox="0 0 320 150" role="img" aria-label="Ánimo por día, últimos 14 días"></svg></div>
+  </div>
+</section>
+
 <section id="ciclo">
-  <div class="shead"><span class="num">III</span><h2>El ciclo</h2><p class="quote">La felicidad de tu vida depende de la calidad de tus pensamientos.<cite>Marco Aurelio</cite></p></div>
+  <div class="shead"><span class="num">IV</span><h2>El ciclo</h2><p class="quote">La felicidad de tu vida depende de la calidad de tus pensamientos.<cite>Marco Aurelio</cite></p></div>
   <div class="cycles">
     <div class="panel bad">
       <span class="tag">AHORA</span>
@@ -263,7 +315,7 @@ ol.review li .mono{color:var(--porphyry);font-family:var(--f-display);font-size:
 </section>
 
 <section id="amanecer">
-  <div class="shead"><span class="num">IV</span><h2>Al amanecer</h2><p class="quote">Cuando te cueste levantarte, piensa: me levanto para hacer el trabajo de un ser humano.<cite>Marco Aurelio · Meditaciones V</cite></p></div>
+  <div class="shead"><span class="num">V</span><h2>Al amanecer</h2><p class="quote">Cuando te cueste levantarte, piensa: me levanto para hacer el trabajo de un ser humano.<cite>Marco Aurelio · Meditaciones V</cite></p></div>
   <div class="steps">
     <div class="row key"><span class="mono">21:30</span><b>Plan de mañana en papel</b></div>
     <div class="row key"><span class="mono">22:00</span><b>Celular fuera del cuarto</b></div>
@@ -277,7 +329,7 @@ ol.review li .mono{color:var(--porphyry);font-family:var(--f-display);font-size:
 </section>
 
 <section id="control">
-  <div class="shead"><span class="num">V</span><h2>Lo que depende de ti</h2><p class="quote">Algunas cosas dependen de nosotros y otras no.<cite>Epicteto · Enquiridión 1</cite></p></div>
+  <div class="shead"><span class="num">VI</span><h2>Lo que depende de ti</h2><p class="quote">Algunas cosas dependen de nosotros y otras no.<cite>Epicteto · Enquiridión 1</cite></p></div>
   <div class="panel decide">
     <svg viewBox="0 0 640 330" role="img" aria-label="Antes de abrir el celular: ¿es para algo concreto? Sí: hazlo y suéltalo. No: respira 10 veces. ¿Sigues con ganas? No: vuelve a lo tuyo. Sí: 10 minutos con temporizador, de pie">
       <defs><marker id="ad" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--muted)"/></marker></defs>
@@ -307,7 +359,7 @@ ol.review li .mono{color:var(--porphyry);font-family:var(--f-display);font-size:
 </section>
 
 <section id="minimos">
-  <div class="shead"><span class="num">VI</span><h2>Para el día malo</h2><p class="quote">Prepara la mente para lo que puede pasar.<cite>Séneca · Cartas a Lucilio</cite></p></div>
+  <div class="shead"><span class="num">VII</span><h2>Para el día malo</h2><p class="quote">Prepara la mente para lo que puede pasar.<cite>Séneca · Cartas a Lucilio</cite></p></div>
   <div class="tablewrap">
     <table class="min">
       <thead><tr><th>Hábito</th><th>Mínimo</th><th>Completo</th></tr></thead>
@@ -326,7 +378,7 @@ ol.review li .mono{color:var(--porphyry);font-family:var(--f-display);font-size:
 </section>
 
 <section id="semanas">
-  <div class="shead"><span class="num">VII</span><h2>Cuatro semanas</h2><p class="quote">Nada grande se hace de repente.<cite>Epicteto · Disertaciones I</cite></p></div>
+  <div class="shead"><span class="num">VIII</span><h2>Cuatro semanas</h2><p class="quote">Nada grande se hace de repente.<cite>Epicteto · Disertaciones I</cite></p></div>
   <div class="weeks">
     <div class="week now"><span class="mono">Semana 1</span><h3>Dormir</h3><p>Celular fuera 22:00. Alarma −15 min cada 3 días.</p></div>
     <div class="week"><span class="mono">Semana 2</span><h3>Moverme</h3><p>Ejercicio diario. Pantalla en gris. Arriba 6:00.</p></div>
@@ -336,7 +388,7 @@ ol.review li .mono{color:var(--porphyry);font-family:var(--f-display);font-size:
 </section>
 
 <section id="ingresos">
-  <div class="shead"><span class="num">VIII</span><h2>Ingresos</h2><p class="quote">Mientras se aplaza, la vida pasa.<cite>Séneca · Cartas a Lucilio 1</cite></p></div>
+  <div class="shead"><span class="num">IX</span><h2>Ingresos</h2><p class="quote">Mientras se aplaza, la vida pasa.<cite>Séneca · Cartas a Lucilio 1</cite></p></div>
   <div class="loop">
     <div class="node"><span class="mono">MAR</span><h3>Inventario</h3><p>Qué sé hacer y qué me piden.</p></div>
     <div class="node"><span class="mono">MAR</span><h3>3 ideas</h3><p>Clases, freelance, ventas.</p></div>
@@ -347,7 +399,7 @@ ol.review li .mono{color:var(--porphyry);font-family:var(--f-display);font-size:
 </section>
 
 <section id="revision">
-  <div class="shead"><span class="num">IX</span><h2>Domingo · 30 min</h2></div>
+  <div class="shead"><span class="num">X</span><h2>Domingo · 30 min</h2></div>
   <ol class="review">
     <li><span class="mono">I</span><span>¿Qué hábito tuvo más huecos?</span></li>
     <li><span class="mono">II</span><span>¿Qué lo bloqueó: hora, lugar o celular? Cambia eso.</span></li>
@@ -508,6 +560,67 @@ ol.review li .mono{color:var(--porphyry);font-family:var(--f-display);font-size:
     let html="<thead><tr><th></th>"+list.map(dd=>`<th>${+dd.slice(8)}</th>`).join("")+"</tr></thead><tbody>";
     HABITS.forEach(h=>{html+=`<tr><th>${SHORT[h.k]}</th>`+list.map(dd=>`<td class="${days[dd]?.h?.[h.k]?"on":""}${dd===cur?" cur":""}" title="${dd}"></td>`).join("")+"</tr>"});
     $("heat").innerHTML=html+"</tbody>";
+    renderKPIs(); renderCharts(list);
+  }
+
+  // --- indicadores semanales (lunes a domingo) ---
+  const META={wake:5,phoneOut:7,move:5,read:6,english:5,thesis:7,money:3,close:7};
+  let kOff=0;
+  function weekDays(off){const t=new Date(iso(new Date())+"T12:00:00");const m=(t.getDay()+6)%7;t.setDate(t.getDate()-m+7*off);const a=[];for(let i=0;i<7;i++){a.push(iso(t));t.setDate(t.getDate()+1)}return a}
+  function count(wk,k){return wk.filter(d=>days[d]?.h?.[k]).length}
+  function avg(wk,f){const v=wk.map(d=>days[d]?.[f]).filter(x=>typeof x==="number");return v.length?v.reduce((a,b)=>a+b,0)/v.length:null}
+  function pill(el,c,t){el.className="pill "+(c||"");el.textContent=t||""}
+  function setK(off){kOff=off;$("kPrev").setAttribute("aria-pressed",String(off===-1));$("kThis").setAttribute("aria-pressed",String(off===0));renderKPIs()}
+  $("kPrev").onclick=()=>setK(-1);$("kThis").onclick=()=>setK(0);
+  function renderKPIs(){
+    const wk=weekDays(kOff),prev=weekDays(kOff-1),t=iso(new Date());
+    const elapsed=kOff<0?7:wk.filter(d=>d<=t).length;
+    const fmt=d=>new Date(d+"T12:00:00").toLocaleDateString("es",{day:"numeric",month:"short"});
+    $("kWeek").textContent=(kOff<0?"Semana pasada":"Esta semana")+" · "+fmt(wk[0])+" – "+fmt(wk[6])+(kOff<0?"":" · día "+elapsed+" de 7");
+    const any=wk.some(d=>days[d]&&(Object.values(days[d].h||{}).some(Boolean)||days[d].phone!=null||days[d].mood!=null));
+    // cumplimiento: hábitos marcados sobre la meta prorrateada
+    let got=0,target=0;
+    HABITS.forEach(h=>{got+=Math.min(count(wk,h.k),META[h.k]);target+=META[h.k]});
+    const pace=elapsed/7, pct=Math.round(got/target*100), exp=Math.round(80*pace);
+    $("kTotal").textContent=any?pct+"%":"–";
+    pill($("kTotalS"),...(!any?["","Sin registros"]:pct>=80?["good","Logrado"]:pct>=exp?["good","En camino"]:pct>=exp*.7?["warn","Cerca"]:["bad","Atrasado"]));
+    const ph=avg(wk,"phone");
+    $("kPhone").textContent=ph==null?"–":Math.round(ph)+"";
+    pill($("kPhoneS"),...(ph==null?["","Sin datos"]:ph<=120?["good","En meta"]:ph<=180?["warn","Cerca"]:["bad","Alto"]));
+    const md=avg(wk,"mood");
+    $("kMood").textContent=md==null?"–":md.toFixed(1).replace(".",",");
+    pill($("kMoodS"),...(md==null?["","Sin datos"]:md>=4?["good","Bien"]:md>=3?["warn","Regular"]:["bad","Bajo"]));
+    let rows=`<div class="krow" role="row" style="border-bottom-color:var(--ink)"><span class="mono" role="columnheader" style="text-align:left;color:var(--muted)">HÁBITO</span><span role="columnheader"></span><span class="mono" role="columnheader" style="color:var(--muted)">DÍAS</span><span role="columnheader"></span><span class="d" role="columnheader">VS ANT.</span></div>`;
+    HABITS.forEach(h=>{
+      const v=count(wk,h.k),m=META[h.k],left=kOff<0?0:7-elapsed,dv=v-count(prev,h.k);
+      const st=v>=m?["good","Logrado"]:v+left<m?["bad","No alcanza"]:v>=Math.floor(m*pace)?["good","En camino"]:["warn","Atrasado"];
+      const cls=st[0]==="good"?"":st[0];
+      rows+=`<div class="krow" role="row"><span class="n" role="cell">${h.n}</span><span class="bar" role="cell" aria-hidden="true"><i class="${cls}" style="width:${Math.min(100,v/m*100)}%"></i></span><span class="mono" role="cell">${v}/${m}</span><span class="pill ${st[0]}" role="cell">${st[1]}</span><span class="d" role="cell">${dv>0?"+"+dv:dv===0?"=":dv}</span></div>`;
+    });
+    $("kRows").innerHTML=rows;
+  }
+  function renderCharts(list){
+    const W=320,H=150,L=30,R=8,T=10,B=22,iw=W-L-R,ih=H-T-B,bw=iw/list.length;
+    const css=v=>`var(--${v})`;
+    // pantalla
+    const vals=list.map(d=>days[d]?.phone);const mx=Math.max(240,...vals.filter(v=>typeof v==="number"));const top=Math.ceil(mx/60)*60;
+    const y=v=>T+ih-(v/top)*ih;
+    let s="";
+    for(let g=0;g<=top;g+=top/4){s+=`<line x1="${L}" x2="${W-R}" y1="${y(g)}" y2="${y(g)}" stroke="${css("line")}" stroke-width="1"/><text x="${L-5}" y="${y(g)+3}" text-anchor="end" font-size="9" fill="${css("muted")}">${g}</text>`}
+    vals.forEach((v,i)=>{if(typeof v==="number"){const h=Math.max(1,(v/top)*ih);s+=`<rect x="${L+i*bw+2}" y="${T+ih-h}" width="${bw-4}" height="${h}" fill="${css(v<=120?"laurel":v<=180?"bronze":"bad")}"><title>${list[i]}: ${v} min</title></rect>`}});
+    s+=`<line x1="${L}" x2="${W-R}" y1="${y(120)}" y2="${y(120)}" stroke="${css("porphyry")}" stroke-width="1.5" stroke-dasharray="4 3"/><text x="${W-R}" y="${y(120)-4}" text-anchor="end" font-size="9" fill="${css("porphyry")}">meta 120</text>`;
+    list.forEach((d,i)=>{if(i%2===0)s+=`<text x="${L+i*bw+bw/2}" y="${H-6}" text-anchor="middle" font-size="9" fill="${css("muted")}">${+d.slice(8)}</text>`});
+    if(!vals.some(v=>typeof v==="number"))s+=`<text x="${L+iw/2}" y="${T+ih/2}" text-anchor="middle" font-size="11" fill="${css("muted")}">Anota tus minutos en el examen</text>`;
+    $("cPhone").innerHTML=s;
+    // ánimo
+    const my=v=>T+ih-((v-1)/4)*ih;let m="";
+    for(let g=1;g<=5;g++)m+=`<line x1="${L}" x2="${W-R}" y1="${my(g)}" y2="${my(g)}" stroke="${css("line")}" stroke-width="1"/><text x="${L-5}" y="${my(g)+3}" text-anchor="end" font-size="9" fill="${css("muted")}">${g}</text>`;
+    const pts=list.map((d,i)=>[L+i*bw+bw/2,days[d]?.mood]).filter(p=>typeof p[1]==="number");
+    if(pts.length>1)m+=`<polyline points="${pts.map(p=>p[0]+","+my(p[1])).join(" ")}" fill="none" stroke="${css("bronze")}" stroke-width="2"/>`;
+    pts.forEach((p,i)=>m+=`<circle cx="${p[0]}" cy="${my(p[1])}" r="${i===pts.length-1?4.5:3}" fill="${css("bronze")}"/>`);
+    list.forEach((d,i)=>{if(i%2===0)m+=`<text x="${L+i*bw+bw/2}" y="${H-6}" text-anchor="middle" font-size="9" fill="${css("muted")}">${+d.slice(8)}</text>`});
+    if(!pts.length)m+=`<text x="${L+iw/2}" y="${T+ih/2}" text-anchor="middle" font-size="11" fill="${css("muted")}">Marca tu ánimo en el examen</text>`;
+    $("cMood").innerHTML=m;
   }
   render();
 })();

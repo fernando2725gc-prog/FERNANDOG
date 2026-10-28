@@ -78,6 +78,19 @@ svg text{font-family:var(--f-display)}
 .block span.d{color:var(--muted);font-size:.93rem;display:block}
 .block.focus{background:var(--pine-soft)}
 .block.off{background:var(--dawn-soft)}
+.block.fixed{background:var(--bg)}
+.block.fixed b::after{content:"fijo";font-family:var(--f-mono);font-size:.68rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:1px 7px;margin-left:8px;vertical-align:2px}
+.block.tbd .mono::after{content:" *";color:var(--dawn)}
+.daytabs{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.daytabs button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:8px 0;font-family:var(--f-mono);font-size:.82rem;display:flex;flex-direction:column;align-items:center;gap:2px}
+.daytabs button small{font-size:.65rem;color:var(--muted)}
+.daytabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.daytabs button[aria-selected="true"] small{color:var(--bg);opacity:.75}
+.daytabs button:focus-visible{outline:2px solid var(--dawn);outline-offset:2px}
+.daytabs button.today{box-shadow:inset 0 -3px 0 var(--dawn)}
+.assume{font-size:.9rem;color:var(--muted)}
+.chip{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;background:var(--dawn-soft);color:var(--ink);border:1px solid var(--dawn);border-radius:999px;padding:2px 8px;margin-right:6px}
+.weekfacts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 
 /* hábitos mínimos */
 table.min{width:100%;border-collapse:collapse;font-size:.93rem}
@@ -222,7 +235,7 @@ footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);paddi
     <div class="step"><div class="time">7:05</div><div class="body"><h3>Ducha y desayuno</h3><p>Todavía sin redes sociales.</p></div></div>
     <div class="step"><div class="time">7:30</div><div class="body"><h3>Leer 15 minutos</h3><p>Libro en papel o lector. Meta: 10 páginas.</p></div></div>
     <div class="step"><div class="time">7:45</div><div class="body"><h3>Inglés 15 minutos</h3><p>Una lección de app, un podcast corto o 10 palabras nuevas en una libreta.</p></div></div>
-    <div class="step key"><div class="time">8:00</div><div class="body"><h3>Ahora sí, el celular</h3><p>Ya hiciste lo importante. Lo que pase después es ganancia.</p></div></div>
+    <div class="step key"><div class="time">8:00</div><div class="body"><h3>Sales al trabajo</h3><p>Ya hiciste lo importante antes de entrar a las 8:30. El martes, como trabajas virtual, te sobran unos 20 min: úsalos para alargar el ejercicio.</p></div></div>
   </div>
 </section>
 
@@ -260,16 +273,15 @@ footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);paddi
 
 <section id="dia">
   <span class="eyebrow">Gestión del tiempo</span>
-  <h2>Mi día en bloques</h2>
-  <p class="lead">Ajusta las horas a tu trabajo o estudio. Lo importante es que cada hábito tenga un lugar fijo en el día, así no depende de las ganas.</p>
-  <div class="day">
-    <div class="block focus"><span class="mono">6:30–8:00</span><div><b>Bloque de oro</b><span class="d">Ejercicio, lectura, inglés. Sin celular.</span></div></div>
-    <div class="block"><span class="mono">8:00–13:00</span><div><b>Trabajo o estudio profundo</b><span class="d">La tarea más difícil primero. Celular en otra habitación por bloques de 50 min.</span></div></div>
-    <div class="block off"><span class="mono">13:00–14:00</span><div><b>Comida y pausa</b><span class="d">Aquí sí puedes ver redes, con temporizador.</span></div></div>
-    <div class="block"><span class="mono">14:00–18:00</span><div><b>Trabajo, pendientes, mandados</b><span class="d">Agrupa mensajes y correos en dos momentos fijos.</span></div></div>
-    <div class="block focus"><span class="mono">18:30–19:30</span><div><b>Hora de ingresos</b><span class="d">Una hora a tu proyecto para ganar dinero (ver ciclo abajo).</span></div></div>
-    <div class="block off"><span class="mono">19:30–21:30</span><div><b>Libre</b><span class="d">Cena, familia, series, celular. Es tu descanso y no tiene culpa.</span></div></div>
-    <div class="block focus"><span class="mono">21:30–22:30</span><div><b>Cierre del día</b><span class="d">Plan de mañana en papel, celular fuera del cuarto, 10 min de lectura en la cama.</span></div></div>
+  <h2>Mi semana en bloques</h2>
+  <p class="lead">Armada sobre tu horario real: trabajo desde las 8:30, martes virtual con revisión de TIC, y clases lunes, miércoles y viernes por la tarde. Cada hábito tiene un lugar fijo, así no depende de las ganas.</p>
+  <div class="daytabs" id="dayTabs" role="tablist" aria-label="Día de la semana"></div>
+  <div class="day" id="dayBlocks" role="tabpanel"></div>
+  <p class="assume"><span class="chip">Por confirmar</span> Supuse que sales del trabajo a las 14:00 y que tardas unos 30 min en llegar. Si no es así, dímelo y ajusto la semana.</p>
+  <div class="weekfacts">
+    <div class="stat"><span class="v">6 h</span><span class="l">a la semana para ingresos</span></div>
+    <div class="stat"><span class="v">5×</span><span class="l">bloque de oro (lun–vie)</span></div>
+    <div class="stat"><span class="v">±1 h</span><span class="l">máximo cambio de horario el fin de semana</span></div>
   </div>
 </section>
 
@@ -368,6 +380,43 @@ footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);paddi
 </div>
 
 <script>
+(function(){
+  // f = bloque de hábitos, o = libre/descanso, x = fijo (trabajo, clases), t = hora por confirmar
+  const ORO=["6:30–8:00","Bloque de oro","Ejercicio, lectura e inglés. Sin celular.","f"];
+  const TRAB=["8:30–14:00","Trabajo","Celular boca abajo en bloques de 50 min.","x t"];
+  const COM=["14:00–15:00","Comida y pausa","Aquí sí puedes ver redes, con temporizador de 15 min.","o t"];
+  const CIERRE=["21:30–22:00","Cierre del día","Plan de mañana en papel. Celular fuera del cuarto a las 22:00.","f"];
+  const WEEK=[
+    {d:"Lun",n:"Lunes",s:"clases",b:[ORO,TRAB,COM,["15:00–18:00","Clases","","x"],["18:00–19:00","Cena y descanso","Recupera energía antes del último bloque.","o"],["19:00–19:45","Hora de ingresos (corta)","45 min: avanza la prueba de la semana.","f"],["19:45–21:30","Libre","Series, familia, celular sin culpa.","o"],CIERRE]},
+    {d:"Mar",n:"Martes",s:"virtual",b:[["6:30–8:15","Bloque de oro largo","Sin traslado: 35 min de ejercicio, lectura e inglés.","f"],["8:30–10:30","Revisión de TIC","Virtual. Cámara y pestañas de trabajo; celular en otra habitación.","x"],["10:30–14:00","Trabajo virtual","Levántate 5 min cada hora; en casa es fácil quedarse pegado a la pantalla.","x t"],COM,["15:00–17:00","Estudio y pendientes","Tarde sin clases: tareas, trámites, mandados.","o"],["18:30–19:30","Hora de ingresos","Una hora completa.","f"],["19:30–21:30","Libre","","o"],CIERRE]},
+    {d:"Mié",n:"Miércoles",s:"clases",b:[ORO,TRAB,COM,["15:00–16:00","Preparar la clase","Repaso o tareas pendientes.","o"],["16:00–18:00","Clases","","x"],["19:00–19:45","Hora de ingresos (corta)","45 min.","f"],["19:45–21:30","Libre","","o"],CIERRE]},
+    {d:"Jue",n:"Jueves",s:"sin clases",b:[ORO,TRAB,COM,["15:30–17:00","Estudio y pendientes","","o"],["18:00–19:30","Hora de ingresos (larga)","90 min: el día más fuerte para tu proyecto.","f"],["19:30–21:30","Libre","","o"],CIERRE]},
+    {d:"Vie",n:"Viernes",s:"clases",b:[ORO,TRAB,COM,["15:00–16:00","Descanso corto","","o"],["16:00–19:00","Clases","","x"],["19:00–22:30","Noche libre","Sin hora de ingresos: es tu premio de la semana.","o"],["22:30","Celular fuera del cuarto","Media hora más de margen, no más.","f"]]},
+    {d:"Sáb",n:"Sábado",s:"libre",b:[["7:30","Me levanto","Máximo una hora más tarde que entre semana.","f"],["7:45–8:45","Ejercicio largo","Sal a caminar, trotar o a un parque.","f"],["9:30–11:30","Bloque de ingresos","2 horas: la tarea grande de la semana.","f"],["11:30–21:30","Libre","Descansa, sal, ve a quien quieras ver.","o"],CIERRE]},
+    {d:"Dom",n:"Domingo",s:"libre",b:[["7:30","Me levanto","","f"],["8:00–9:00","Lectura larga e inglés","Una película o serie en inglés con subtítulos también cuenta.","f"],["9:00–18:00","Libre","","o"],["18:00–18:30","Revisión semanal","Los 5 pasos del final de esta página y el plan de la semana.","f"],["18:30–21:30","Libre","","o"],CIERRE]}
+  ];
+  const tabs=document.getElementById("dayTabs"),blocks=document.getElementById("dayBlocks");
+  const todayIdx=(new Date().getDay()+6)%7;
+  function showDay(i){
+    [...tabs.children].forEach((b,j)=>{b.setAttribute("aria-selected",String(i===j));b.tabIndex=i===j?0:-1});
+    blocks.innerHTML="";
+    WEEK[i].b.forEach(([t,n,d,c])=>{
+      const row=document.createElement("div");row.className="block "+({f:"focus",o:"off",x:"fixed"}[c[0]])+(c.includes("t")?" tbd":"");
+      row.innerHTML=`<span class="mono"></span><div><b></b><span class="d"></span></div>`;
+      row.querySelector(".mono").textContent=t;row.querySelector("b").textContent=n;row.querySelector(".d").textContent=d;
+      blocks.appendChild(row);
+    });
+    blocks.setAttribute("aria-label",WEEK[i].n);
+  }
+  WEEK.forEach((w,i)=>{
+    const b=document.createElement("button");b.type="button";b.setAttribute("role","tab");
+    b.innerHTML=`${w.d}<small>${w.s}</small>`;if(i===todayIdx)b.classList.add("today");
+    b.onclick=()=>showDay(i);
+    b.onkeydown=e=>{if(e.key==="ArrowRight"||e.key==="ArrowLeft"){const k=(i+(e.key==="ArrowRight"?1:6))%7;showDay(k);tabs.children[k].focus()}};
+    tabs.appendChild(b);
+  });
+  showDay(todayIdx);
+})();
 (function(){
   const HABITS=[
     {k:"wake",n:"Me levanté a tiempo",d:"6:30 (mínimo antes de 7:30)"},

@@ -168,7 +168,7 @@ footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);paddi
   <div class="horizon" aria-hidden="true"></div>
   <span class="eyebrow">Sistema personal · 4 semanas</span>
   <h1>Volver a empezar, un día a la vez</h1>
-  <p class="lead">Todo lo que quieres recuperar (levantarte temprano, leer, inglés, ejercicio, generar ingresos) depende de una sola palanca: lo que haces con el celular entre las 9 de la noche y las 8 de la mañana. Este mapa empieza por ahí.</p>
+  <p class="lead">Todo lo que quieres recuperar o sostener (levantarte temprano, leer, inglés, ejercicio, tu tesis, generar ingresos) depende de una sola palanca: lo que haces con el celular entre las 9 de la noche y las 8 de la mañana. Este mapa empieza por ahí.</p>
   <nav class="toc" aria-label="Secciones">
     <a href="#ciclo">El ciclo</a><a href="#manana">Mañana</a><a href="#celular">Celular</a><a href="#dia">Mi día</a><a href="#minimos">Mínimos</a><a href="#semanas">4 semanas</a><a href="#dinero">Dinero</a><a href="#registro">Registro diario</a><a href="#revision">Revisión</a>
   </nav>
@@ -273,13 +273,14 @@ footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);paddi
 <section id="dia">
   <span class="eyebrow">Gestión del tiempo</span>
   <h2>Mi semana en bloques</h2>
-  <p class="lead">Armada sobre tu horario real: trabajo de 8:30 a 13:00 con 40–60 min de traslado, martes virtual con revisión de TIC, y los días de clase presencial 20 min a la U y almuerzo allá a las 13:30. Los huecos antes de clase se vuelven tiempo útil.</p>
+  <p class="lead">Armada sobre tu horario real: trabajo de 8:30 a 13:00 con 40–60 min de traslado, martes virtual con revisión de TIC, los días de clase presencial 20 min a la U y almuerzo allá a las 13:30, y tesis todos los días. Los huecos antes de clase se vuelven tiempo de tesis.</p>
+  <p class="assume"><b>Regla de la tesis:</b> al terminar cada bloque, escribe en una línea cuál es el siguiente paso. El próximo bloque empieza leyendo esa línea, sin perder 20 minutos en recordar dónde ibas.</p>
   <div class="daytabs" id="dayTabs" role="tablist" aria-label="Día de la semana"></div>
   <div class="day" id="dayBlocks" role="tabpanel"></div>
   <p class="assume"><span class="chip">Por confirmar</span> Las horas con asterisco suponen que de la U a tu casa tardas lo mismo que al trabajo, alrededor de una hora.</p>
   <div class="weekfacts">
-    <div class="stat"><span class="v">6 h</span><span class="l">a la semana para ingresos</span></div>
-    <div class="stat"><span class="v">5 h</span><span class="l">de tareas en huecos fijos</span></div>
+    <div class="stat"><span class="v">9 h</span><span class="l">de tesis a la semana, todos los días</span></div>
+    <div class="stat"><span class="v">3,5 h</span><span class="l">para ingresos</span></div>
     <div class="stat"><span class="v">~4 h</span><span class="l">de inglés en audio en tus traslados</span></div>
   </div>
 </section>
@@ -296,6 +297,7 @@ footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);paddi
         <tr><td>Ejercicio</td><td>10 sentadillas</td><td>20–30 min</td></tr>
         <tr><td>Leer</td><td>1 página</td><td>10 páginas / 15 min</td></tr>
         <tr><td>Inglés</td><td>Un podcast en el traslado</td><td>Podcast en el traslado y 10 palabras anotadas</td></tr>
+        <tr><td>Tesis</td><td>25 min o un párrafo</td><td>El bloque del día completo</td></tr>
         <tr><td>Ingresos</td><td>Anotar 1 idea</td><td>1 hora de trabajo en el proyecto</td></tr>
         <tr><td>Celular</td><td>Fuera del cuarto al dormir</td><td>Menos de 2 h de pantalla</td></tr>
       </tbody>
@@ -311,7 +313,7 @@ footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);paddi
     <div class="week now"><span class="mono">Semana 1</span><h3>Dormir</h3><ul><li>Celular fuera a las 22:00</li><li>Alarma 15 min antes cada 3 días</li><li>Mínimos del resto</li></ul></div>
     <div class="week"><span class="mono">Semana 2</span><h3>Moverme</h3><ul><li>Ejercicio completo diario</li><li>Pantalla en gris</li><li>Levantarme 6:00</li></ul></div>
     <div class="week"><span class="mono">Semana 3</span><h3>Aprender</h3><ul><li>Lectura e inglés completos</li><li>Límite de 60 min en redes</li></ul></div>
-    <div class="week"><span class="mono">Semana 4</span><h3>Construir</h3><ul><li>Hora de ingresos 5 días</li><li>Primera revisión de mes</li></ul></div>
+    <div class="week"><span class="mono">Semana 4</span><h3>Construir</h3><ul><li>Tesis los 7 días sin fallar</li><li>Los 3 bloques de ingresos</li><li>Primera revisión de mes</li></ul></div>
   </div>
 </section>
 
@@ -388,13 +390,13 @@ footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);paddi
   const COM_U=["13:30–14:00","Almuerzo en la U","30 min. Aquí sí puedes ver redes.","o"];
   const CIERRE=["21:30–22:00","Cierre del día","Plan de mañana en papel. Celular fuera del cuarto a las 22:00, luces apagadas a las 22:30.","f"];
   const WEEK=[
-    {d:"Lun",n:"Lunes",s:"clases",b:[ORO,IDA,TRAB,A_U,COM_U,["14:00–14:50","Tareas en la biblioteca","Aprovecha el hueco antes de clase en vez de pasarlo en el celular.","f"],["15:00–18:00","Clases","","x"],["18:00–19:00","Regreso a casa","Inglés en audio o música para desconectar.","x t"],["19:00–21:30","Cena y libre","Series, familia, celular sin culpa.","o"],CIERRE]},
-    {d:"Mar",n:"Martes",s:"virtual",b:[["6:00–8:15","Bloque de oro largo","Sin traslado: 35 min de ejercicio, 20 de lectura y 20 de inglés.","f"],["8:30–10:30","Revisión de TIC","Virtual. Cámara y pestañas de trabajo; celular en otra habitación.","x"],["10:30–13:00","Trabajo virtual","Levántate 5 min cada hora; en casa es fácil quedarse pegado a la pantalla.","x"],["13:00–13:30","Almuerzo","","o"],["13:30–15:00","Descanso y pendientes","Trámites, mandados, casa.","o"],["15:00–16:30","Tareas de la U","Tarde sin clases.","f"],["18:30–19:30","Hora de ingresos","Una hora completa.","f"],["19:30–21:30","Libre","","o"],CIERRE]},
-    {d:"Mié",n:"Miércoles",s:"clases",b:[ORO,IDA,TRAB,A_U,COM_U,["14:00–15:30","Hora de ingresos en la U","90 min en la biblioteca o un café antes de clase.","f"],["15:30–16:00","Pausa","","o"],["16:00–18:00","Clases","","x"],["18:00–19:00","Regreso a casa","","x t"],["19:00–21:30","Cena y libre","","o"],CIERRE]},
-    {d:"Jue",n:"Jueves",s:"sin clases",b:[ORO,IDA,TRAB,["13:00–13:30","Almuerzo","Cerca del trabajo, antes de regresar.","o"],["13:30–14:30","Regreso a casa","Inglés en audio.","x"],["14:30–15:30","Descanso","Una siesta de 20 min está bien; más de eso te quita el sueño de la noche.","o"],["15:30–17:00","Tareas de la U","","f"],["18:00–19:30","Hora de ingresos (larga)","90 min: el día más fuerte para tu proyecto.","f"],["19:30–21:30","Libre","","o"],CIERRE]},
-    {d:"Vie",n:"Viernes",s:"clases",b:[ORO,IDA,TRAB,A_U,COM_U,["14:00–15:30","Tareas en la biblioteca","Deja la semana de la U cerrada antes del fin de semana.","f"],["15:30–16:00","Pausa","","o"],["16:00–19:00","Clases","","x"],["19:00–20:00","Regreso a casa","","x t"],["20:00–22:30","Noche libre","Sin hora de ingresos: es tu premio de la semana.","o"],["22:30","Celular fuera del cuarto","Media hora más de margen, no más.","f"]]},
-    {d:"Sáb",n:"Sábado",s:"libre",b:[["7:00","Me levanto","Máximo una hora más tarde que entre semana.","f"],["7:15–8:15","Ejercicio largo","Sal a caminar, trotar o a un parque.","f"],["9:00–11:00","Bloque de ingresos","2 horas: la tarea grande de la semana.","f"],["11:00–21:30","Libre","Descansa, sal, ve a quien quieras ver.","o"],CIERRE]},
-    {d:"Dom",n:"Domingo",s:"libre",b:[["7:00","Me levanto","","f"],["8:00–9:00","Lectura larga e inglés","Una película o serie en inglés con subtítulos también cuenta.","f"],["9:00–18:00","Libre","","o"],["18:00–18:30","Revisión semanal","Los 5 pasos del final de esta página y el plan de la semana.","f"],["18:30–21:30","Libre","","o"],CIERRE]}
+    {d:"Lun",n:"Lunes",s:"clases",b:[ORO,IDA,TRAB,A_U,COM_U,["14:00–14:50","Tesis en la biblioteca","50 min sin celular. Empieza por la nota de “siguiente paso” que dejaste ayer.","f"],["15:00–18:00","Clases","","x"],["18:00–19:00","Regreso a casa","Inglés en audio o música para desconectar.","x t"],["19:00–21:30","Cena y libre","Día largo: descansa sin culpa.","o"],CIERRE]},
+    {d:"Mar",n:"Martes",s:"virtual",b:[["6:00–8:15","Bloque de oro largo","Sin traslado: 35 min de ejercicio, 20 de lectura y 20 de inglés.","f"],["8:30–10:30","Revisión de TIC","Virtual. Cámara y pestañas de trabajo; celular en otra habitación.","x"],["10:30–13:00","Trabajo virtual","Levántate 5 min cada hora; en casa es fácil quedarse pegado a la pantalla.","x"],["13:00–13:30","Almuerzo","","o"],["13:30–15:00","Descanso y pendientes","Trámites, mandados, casa.","o"],["15:00–16:30","Tesis (bloque profundo)","90 min en casa: escribir, no solo leer fuentes.","f"],["16:30–17:30","Tareas de la U","","f"],["18:30–19:30","Hora de ingresos","Una hora completa.","f"],["19:30–21:30","Libre","","o"],CIERRE]},
+    {d:"Mié",n:"Miércoles",s:"clases",b:[ORO,IDA,TRAB,A_U,COM_U,["14:00–15:30","Tesis en la biblioteca","90 min antes de clase.","f"],["15:30–16:00","Pausa","","o"],["16:00–18:00","Clases","","x"],["18:00–19:00","Regreso a casa","","x t"],["19:00–21:30","Cena y libre","","o"],CIERRE]},
+    {d:"Jue",n:"Jueves",s:"sin clases",b:[ORO,IDA,TRAB,["13:00–13:30","Almuerzo","Cerca del trabajo, antes de regresar.","o"],["13:30–14:30","Regreso a casa","Inglés en audio.","x"],["14:30–15:30","Descanso","Una siesta de 20 min está bien; más de eso te quita el sueño de la noche.","o"],["15:30–17:00","Tesis (bloque profundo)","90 min.","f"],["17:00–17:45","Tareas de la U","","f"],["18:00–19:00","Hora de ingresos","","f"],["19:00–21:30","Libre","","o"],CIERRE]},
+    {d:"Vie",n:"Viernes",s:"clases",b:[ORO,IDA,TRAB,A_U,COM_U,["14:00–14:45","Tesis en la biblioteca","45 min: revisa lo de la semana y anota qué sigue el sábado.","f"],["14:45–15:30","Tareas de la U","Deja la semana cerrada antes del fin de semana.","f"],["15:30–16:00","Pausa","","o"],["16:00–19:00","Clases","","x"],["19:00–20:00","Regreso a casa","","x t"],["20:00–22:30","Noche libre","Tu premio de la semana.","o"],["22:30","Celular fuera del cuarto","Media hora más de margen, no más.","f"]]},
+    {d:"Sáb",n:"Sábado",s:"libre",b:[["7:00","Me levanto","Máximo una hora más tarde que entre semana.","f"],["7:15–8:15","Ejercicio largo","Sal a caminar, trotar o a un parque.","f"],["9:00–11:00","Tesis (bloque largo)","2 horas: el avance grande de la semana, como un capítulo o un apartado.","f"],["11:30–13:00","Bloque de ingresos","90 min.","f"],["13:00–21:30","Libre","Descansa, sal, ve a quien quieras ver.","o"],CIERRE]},
+    {d:"Dom",n:"Domingo",s:"libre",b:[["7:00","Me levanto","","f"],["8:00–9:00","Lectura larga e inglés","Una película o serie en inglés con subtítulos también cuenta.","f"],["9:00–10:00","Tesis (ligera)","1 hora: corregir, ordenar referencias o planear la semana de tesis.","f"],["10:00–18:00","Libre","","o"],["18:00–18:30","Revisión semanal","Los 5 pasos del final de esta página y el plan de la semana.","f"],["18:30–21:30","Libre","","o"],CIERRE]}
   ];
   const tabs=document.getElementById("dayTabs"),blocks=document.getElementById("dayBlocks");
   const todayIdx=(new Date().getDay()+6)%7;
@@ -425,10 +427,11 @@ footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);paddi
     {k:"move",n:"Ejercicio",d:"20 min (mínimo 10 sentadillas)"},
     {k:"read",n:"Lectura",d:"10 páginas (mínimo 1)"},
     {k:"english",n:"Inglés",d:"audio en el traslado (mínimo 5 palabras)"},
-    {k:"money",n:"Acción de ingresos",d:"1 hora (mínimo anotar 1 idea)"},
+    {k:"thesis",n:"Tesis",d:"bloque del día (mínimo 25 min o un párrafo)"},
+    {k:"money",n:"Acción de ingresos",d:"bloque del día (mínimo anotar 1 idea)"},
     {k:"close",n:"Cierre del día",d:"plan de mañana en papel"}
   ];
-  const SHORT={wake:"Levantarme",phoneOut:"Celular fuera",move:"Ejercicio",read:"Leer",english:"Inglés",money:"Ingresos",close:"Cierre"};
+  const SHORT={wake:"Levantarme",phoneOut:"Celular fuera",move:"Ejercicio",read:"Leer",english:"Inglés",thesis:"Tesis",money:"Ingresos",close:"Cierre"};
   const LS="plan-volver-registro";
   const days={}; // date -> {h:{}, phone, mood, note}
   let cur=iso(new Date()); let store=null; const $=id=>document.getElementById(id);

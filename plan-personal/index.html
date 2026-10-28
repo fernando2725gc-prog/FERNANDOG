@@ -4,23 +4,30 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: columna única tipo códice (~720px). Mármol y basalto, pórfido imperial como acento, laurel para lo cumplido. Capitales romanas solo en títulos. */
+/* Layout: columna única tipo códice (~720px) con láminas ilustradas a lo ancho. Un solo tema: noche de basalto, oro de lámpara, pórfido y laurel. Capitales romanas solo en títulos. */
 :root{
-  --bg:#ecebe6; --surface:#f7f6f2; --ink:#1d1f22; --muted:#62625e; --line:#d3d1c8;
-  --porphyry:#6b2d4f; --porphyry-soft:#ecdfe5; --bronze:#8d6328; --bronze-soft:#efe4d2;
-  --laurel:#56653a; --laurel-soft:#e1e6d3; --bad:#9c3d33; --bad-soft:#f1dfdb;
+  --bg:#0b0c0f; --surface:#15161b; --surface-2:#1c1d24; --ink:#ece6d8; --muted:#948f84; --line:#2a2b33;
+  --porphyry:#c77ba3; --porphyry-soft:#2d1a26; --bronze:#d9a952; --bronze-soft:#2e2414;
+  --laurel:#a2b86c; --laurel-soft:#1f2717; --bad:#e2806f; --bad-soft:#331b18;
   --f-display:"Cinzel","Trajan Pro",Georgia,serif;
   --f-body:"Spectral",Georgia,"Times New Roman",serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#141517; --surface:#1c1d20; --ink:#e7e4dc; --muted:#9d9a91; --line:#2f3034;
-  --porphyry:#c58aab; --porphyry-soft:#33202b; --bronze:#d3a35f; --bronze-soft:#33281a;
-  --laurel:#a3b57a; --laurel-soft:#252c1b; --bad:#df8577; --bad-soft:#36201d; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#141517; --surface:#1c1d20; --ink:#e7e4dc; --muted:#9d9a91; --line:#2f3034;
-  --porphyry:#c58aab; --porphyry-soft:#33202b; --bronze:#d3a35f; --bronze-soft:#33281a;
-  --laurel:#a3b57a; --laurel-soft:#252c1b; --bad:#df8577; --bad-soft:#36201d; color-scheme:dark}
+/* láminas */
+.plate{position:relative;margin:0;border-radius:4px;overflow:hidden;aspect-ratio:16/7;max-width:100%;background:var(--surface);border:1px solid var(--line)}
+@media (max-width:560px){.plate{aspect-ratio:4/3}}
+.plate canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.plate figcaption{position:absolute;inset:auto 0 0 0;padding:48px 22px 18px;background:linear-gradient(to top,rgba(5,6,9,.88),rgba(5,6,9,0));display:flex;flex-direction:column;gap:4px}
+.plate figcaption p{font-family:var(--f-body);font-style:italic;font-size:clamp(1.05rem,2.6vw,1.35rem);line-height:1.35;color:#f3ecdc;max-width:44ch;text-wrap:balance}
+.plate figcaption span{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.08em;color:var(--bronze)}
+.plate.hero{aspect-ratio:16/9}
+@media (max-width:560px){.plate.hero{aspect-ratio:3/4}}
+.plate.hero figcaption{inset:auto 0 0 0;padding:80px 22px 22px;gap:12px}
+.plate.hero h1{color:#f6efdf;text-shadow:0 2px 18px rgba(0,0,0,.6)}
+.plate.hero .eyebrow{color:#d9cfbb}
+.plate.hero blockquote{border-left-color:var(--bronze)}
+.plate.hero blockquote p{color:#efe7d6}
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.55;
@@ -39,7 +46,10 @@ section{display:flex;flex-direction:column;gap:16px}
 .quote cite{font-style:normal;font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;margin-left:6px;color:var(--bronze)}
 
 /* hero */
-header.hero{padding-top:56px;display:flex;flex-direction:column;gap:18px;align-items:flex-start}
+header.hero{padding-top:24px;display:flex;flex-direction:column;gap:18px}
+h2{color:var(--bronze)}
+.panel,.tracker,.kcard,.week,.node{background:var(--surface)}
+.habit,.btn,.mood button,.field input[type=number],.field textarea{background:var(--surface-2)}
 .meander{width:180px;height:10px;display:block}
 .hero .eyebrow{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .hero blockquote{margin:0;border-left:2px solid var(--porphyry);padding:4px 0 4px 16px;display:flex;flex-direction:column;gap:6px;max-width:52ch}
@@ -62,6 +72,7 @@ nav.toc a:hover,nav.toc a:focus-visible{border-color:var(--porphyry);color:var(-
 .row.f b{color:var(--porphyry)}
 .row.x{color:var(--muted)}
 .row.x b{font-weight:400}
+.row.o b{font-weight:400;color:var(--ink)}
 .row.t .mono::after{content:" *";color:var(--bronze)}
 .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.82rem;color:var(--muted)}
 .legend i{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:0}
@@ -191,10 +202,15 @@ ol.review li .mono{color:var(--porphyry);font-family:var(--f-display);font-size:
 <div class="wrap">
 
 <header class="hero">
-  <svg class="meander" viewBox="0 0 180 10" aria-hidden="true"><path d="M0 9 H10 V1 H20 V6 H15 V4 M20 9 H30 V1 H40 V6 H35 V4 M40 9 H50 V1 H60 V6 H55 V4 M60 9 H70 V1 H80 V6 H75 V4 M80 9 H90 V1 H100 V6 H95 V4 M100 9 H110 V1 H120 V6 H115 V4 M120 9 H130 V1 H140 V6 H135 V4 M140 9 H150 V1 H160 V6 H155 V4 M160 9 H180" fill="none" stroke="var(--porphyry)" stroke-width="1.4"/></svg>
-  <span class="eyebrow" id="heroDate">Diario estoico</span>
-  <h1>Volver a empezar</h1>
-  <blockquote><p id="qText">No es que tengamos poco tiempo, sino que perdemos mucho.</p><footer id="qCite">Séneca · De la brevedad de la vida</footer></blockquote>
+  <figure class="plate hero">
+    <canvas data-scene="dawn" aria-hidden="true"></canvas>
+    <figcaption>
+      <svg class="meander" viewBox="0 0 180 10" aria-hidden="true"><path d="M0 9 H10 V1 H20 V6 H15 V4 M20 9 H30 V1 H40 V6 H35 V4 M40 9 H50 V1 H60 V6 H55 V4 M60 9 H70 V1 H80 V6 H75 V4 M80 9 H90 V1 H100 V6 H95 V4 M100 9 H110 V1 H120 V6 H115 V4 M120 9 H130 V1 H140 V6 H135 V4 M140 9 H150 V1 H160 V6 H155 V4 M160 9 H180" fill="none" stroke="var(--bronze)" stroke-width="1.4"/></svg>
+      <span class="eyebrow" id="heroDate">Diario estoico</span>
+      <h1>Volver a empezar</h1>
+      <blockquote><p id="qText">No es que tengamos poco tiempo, sino que perdemos mucho.</p><footer id="qCite">Séneca · De la brevedad de la vida</footer></blockquote>
+    </figcaption>
+  </figure>
   <nav class="toc" aria-label="Secciones">
     <a href="#hoy">Hoy</a><a href="#examen">Examen</a><a href="#indicadores">Indicadores</a><a href="#ciclo">Ciclo</a><a href="#amanecer">Amanecer</a><a href="#control">Control</a><a href="#minimos">Mínimos</a><a href="#semanas">4 semanas</a><a href="#ingresos">Ingresos</a><a href="#revision">Domingo</a>
   </nav>
@@ -328,6 +344,11 @@ ol.review li .mono{color:var(--porphyry);font-family:var(--f-display);font-size:
   </div>
 </section>
 
+<figure class="plate">
+  <canvas data-scene="temple" aria-hidden="true"></canvas>
+  <figcaption><p>En ninguna parte puede uno retirarse con más calma que en su propia alma.</p><span>Marco Aurelio · Meditaciones IV</span></figcaption>
+</figure>
+
 <section id="control">
   <div class="shead"><span class="num">VI</span><h2>Lo que depende de ti</h2><p class="quote">Algunas cosas dependen de nosotros y otras no.<cite>Epicteto · Enquiridión 1</cite></p></div>
   <div class="panel decide">
@@ -377,6 +398,11 @@ ol.review li .mono{color:var(--porphyry);font-family:var(--f-display);font-size:
   <p class="quote">Si fallas un día, retoma con el mínimo. Nunca dos seguidos.</p>
 </section>
 
+<figure class="plate">
+  <canvas data-scene="summit" aria-hidden="true"></canvas>
+  <figcaption><p>Nada grande se hace de repente.</p><span>Epicteto · Disertaciones I</span></figcaption>
+</figure>
+
 <section id="semanas">
   <div class="shead"><span class="num">VIII</span><h2>Cuatro semanas</h2><p class="quote">Nada grande se hace de repente.<cite>Epicteto · Disertaciones I</cite></p></div>
   <div class="weeks">
@@ -386,6 +412,11 @@ ol.review li .mono{color:var(--porphyry);font-family:var(--f-display);font-size:
     <div class="week"><span class="mono">Semana 4</span><h3>Construir</h3><p>Tesis 7 de 7. Los 3 bloques de ingresos.</p></div>
   </div>
 </section>
+
+<figure class="plate">
+  <canvas data-scene="harbor" aria-hidden="true"></canvas>
+  <figcaption><p>Si uno no sabe a qué puerto se dirige, ningún viento le es favorable.</p><span>Séneca · Cartas a Lucilio 71</span></figcaption>
+</figure>
 
 <section id="ingresos">
   <div class="shead"><span class="num">IX</span><h2>Ingresos</h2><p class="quote">Mientras se aplaza, la vida pasa.<cite>Séneca · Cartas a Lucilio 1</cite></p></div>
@@ -413,6 +444,85 @@ ol.review li .mono{color:var(--porphyry);font-family:var(--f-display);font-size:
 </div>
 
 <script>
+// --- láminas: escenas pintadas en canvas ---
+(function(){
+  function rng(seed){let s=seed>>>0;return()=>((s=(s*1664525+1013904223)>>>0)/4294967296)}
+  function sky(c,w,h,stops){const g=c.createLinearGradient(0,0,0,h);stops.forEach(([o,col])=>g.addColorStop(o,col));c.fillStyle=g;c.fillRect(0,0,w,h)}
+  function stars(c,w,h,n,seed,maxY){const r=rng(seed);for(let i=0;i<n;i++){const x=r()*w,y=r()*h*maxY,a=.25+r()*.65,s=r()<.08?1.6:.8;c.fillStyle=`rgba(255,247,230,${a*(1-y/(h*maxY))})`;c.beginPath();c.arc(x,y,s*(w/800+.4),0,7);c.fill()}}
+  function glow(c,x,y,r,col,a){const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,col.replace("A",a));g.addColorStop(1,col.replace("A",0));c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2)}
+  function ridge(c,w,h,base,amp,col,seed,rough){const r=rng(seed);const p=[r()*6,r()*6,r()*6];c.fillStyle=col;c.beginPath();c.moveTo(0,h);
+    for(let x=0;x<=w;x+=Math.max(2,w/240)){const t=x/w;const y=base*h-amp*h*(.55*Math.sin(t*3.1+p[0])+.3*Math.sin(t*7.3+p[1])+.15*Math.sin(t*17+p[2])+(rough?(r()-.5)*.08:0));c.lineTo(x,y)}
+    c.lineTo(w,h);c.closePath();c.fill()}
+  const S={
+    dawn(c,w,h){
+      sky(c,w,h,[[0,"#070a1a"],[.35,"#1c1736"],[.6,"#5a2d4a"],[.78,"#c4683f"],[.9,"#f0b25e"]]);
+      stars(c,w,h,160,7,.45);
+      const sx=w*.8,sy=h*.72;glow(c,sx,sy,h*.9,"rgba(255,170,90,A)",.45);glow(c,sx,sy,h*.25,"rgba(255,226,170,A)",.9);
+      c.fillStyle="#ffe7b8";c.beginPath();c.arc(sx,sy,h*.07,0,7);c.fill();
+      ridge(c,w,h,.76,.08,"#6b3446",3,0);ridge(c,w,h,.82,.1,"#3a1f33",11,1);ridge(c,w,h,.9,.08,"#1b1220",5,1);ridge(c,w,h,.97,.05,"#0a080d",9,1);
+    },
+    temple(c,w,h){
+      sky(c,w,h,[[0,"#05060c"],[.55,"#161a2e"],[.85,"#3b2a43"],[1,"#5c3a4a"]]);
+      stars(c,w,h,220,21,.7);
+      const mx=w*.8,my=h*.22;glow(c,mx,my,h*.35,"rgba(220,225,255,A)",.25);c.fillStyle="#efe9da";c.beginPath();c.arc(mx,my,h*.055,0,7);c.fill();
+      ridge(c,w,h,.86,.05,"#1a1726",4,0);
+      const base=h*.86,tw=Math.min(w*.62,h*1.3),tx=w*.42-tw/2,col="#0c0b10",rim="rgba(217,169,82,.55)";
+      c.fillStyle=col;
+      for(let i=0;i<3;i++){c.fillRect(tx-i*tw*.03,base+i*h*.025,tw+i*tw*.06,h*.026)}
+      const n=6,cw=tw*.07,gap=(tw-cw*n)/(n-1),ch=h*.36,top=base-ch;
+      for(let i=0;i<n;i++){const x=tx+i*(cw+gap);c.fillStyle=col;c.fillRect(x,top,cw,ch);c.fillRect(x-cw*.15,top-h*.018,cw*1.3,h*.018);
+        c.fillStyle=rim;c.fillRect(x+cw-1.5,top,1.5,ch)}
+      c.fillStyle=col;c.fillRect(tx-tw*.03,top-h*.07,tw*1.06,h*.055);
+      c.beginPath();c.moveTo(tx-tw*.04,top-h*.07);c.lineTo(tx+tw/2,top-h*.2);c.lineTo(tx+tw*1.04,top-h*.07);c.closePath();c.fill();
+      c.strokeStyle=rim;c.lineWidth=1.2;c.beginPath();c.moveTo(tx+tw/2,top-h*.2);c.lineTo(tx+tw*1.04,top-h*.07);c.stroke();
+      glow(c,tx+tw/2,base-ch*.4,tw*.35,"rgba(217,169,82,A)",.18);
+      c.fillStyle="#07070a";c.fillRect(0,base+h*.075,w,h);
+    },
+    summit(c,w,h){
+      sky(c,w,h,[[0,"#0a1220"],[.5,"#1d2b3a"],[.8,"#7a5a3e"],[1,"#d39a52"]]);
+      stars(c,w,h,90,33,.35);
+      const px=w*.58,py=h*.18;
+      glow(c,px,py,h*.4,"rgba(255,200,120,A)",.35);
+      ridge(c,w,h,.72,.07,"#2b2a36",8,0);
+      c.fillStyle="#15141b";c.beginPath();c.moveTo(w*.05,h);c.lineTo(px,py);c.lineTo(w*1.02,h);c.closePath();c.fill();
+      c.fillStyle="rgba(217,169,82,.12)";c.beginPath();c.moveTo(px,py);c.lineTo(w*.66,h*.55);c.lineTo(w*.7,h);c.lineTo(w*1.02,h);c.closePath();c.fill();
+      const pts=[[.4,1],[.62,.86],[.47,.72],[.6,.58],[.51,.45],[.59,.33],[.555,.24],[.58,.18]];
+      c.strokeStyle="#d9a952";c.lineWidth=Math.max(1.5,w/400);c.setLineDash([w/120,w/160]);c.beginPath();
+      pts.forEach(([x,y],i)=>{const X=x*w,Y=y*h;i?c.lineTo(X,Y):c.moveTo(X,Y)});c.stroke();c.setLineDash([]);
+      pts.slice(0,-1).forEach(([x,y],i)=>{c.fillStyle=`rgba(217,169,82,${.35+i*.08})`;c.beginPath();c.arc(x*w,y*h,w/260+1,0,7);c.fill()});
+      glow(c,px,py,h*.08,"rgba(255,235,190,A)",.95);
+      ridge(c,w,h,.97,.04,"#08080b",12,1);
+    },
+    harbor(c,w,h){
+      sky(c,w,h,[[0,"#04060b"],[.6,"#0f1a2a"],[.62,"#0a1220"],[1,"#04070c"]]);
+      stars(c,w,h,200,45,.55);
+      const hz=h*.62;
+      const lx=w*.78,ly=hz-h*.32;
+      c.save();c.globalCompositeOperation="lighter";
+      const beam=c.createLinearGradient(lx,ly,0,ly);beam.addColorStop(0,"rgba(255,214,140,.45)");beam.addColorStop(1,"rgba(255,214,140,0)");
+      c.fillStyle=beam;c.beginPath();c.moveTo(lx,ly);c.lineTo(0,ly-h*.2);c.lineTo(0,ly+h*.12);c.closePath();c.fill();c.restore();
+      glow(c,lx,ly,h*.18,"rgba(255,214,140,A)",.8);
+      const r=rng(9);
+      for(let i=0;i<70;i++){const y=hz+(h-hz)*Math.pow(r(),1.4),x=r()*w,l=w*(.02+r()*.07);c.fillStyle=`rgba(160,190,230,${.05+r()*.12})`;c.fillRect(x,y,l,1)}
+      for(let i=0;i<26;i++){const y=hz+(h-hz)*(i/26),wd=w*.01+(i/26)*w*.06;c.fillStyle=`rgba(255,210,140,${.35*(1-i/26)})`;c.fillRect(lx-wd/2+(r()-.5)*w*.02,y,wd,1.5)}
+      c.fillStyle="#020306";c.beginPath();c.moveTo(w*.66,hz+2);c.quadraticCurveTo(w*.75,hz-h*.08,w*.84,hz-h*.05);c.lineTo(w*1.02,hz-h*.02);c.lineTo(w*1.02,hz+4);c.closePath();c.fill();
+      const tw=w*.018;c.beginPath();c.moveTo(lx-tw*1.2,hz-h*.05);c.lineTo(lx-tw*.7,ly+h*.02);c.lineTo(lx+tw*.7,ly+h*.02);c.lineTo(lx+tw*1.2,hz-h*.05);c.closePath();c.fill();
+      c.fillRect(lx-tw,ly-h*.035,tw*2,h*.012);c.fillStyle="#ffe2a8";c.fillRect(lx-tw*.6,ly-h*.024,tw*1.2,h*.026);c.fillStyle="#020306";c.beginPath();c.moveTo(lx-tw,ly-h*.035);c.lineTo(lx,ly-h*.065);c.lineTo(lx+tw,ly-h*.035);c.fill();
+      const bx=w*.3,by=hz+h*.03,bs=w*.05;c.fillStyle="#05070b";c.beginPath();c.moveTo(bx-bs,by);c.lineTo(bx+bs,by);c.lineTo(bx+bs*.75,by+bs*.25);c.lineTo(bx-bs*.75,by+bs*.25);c.closePath();c.fill();
+      c.beginPath();c.moveTo(bx,by-bs*1.3);c.lineTo(bx,by);c.lineTo(bx+bs*.7,by-bs*.1);c.closePath();c.fill();c.beginPath();c.moveTo(bx-bs*.05,by-bs*1.1);c.lineTo(bx-bs*.6,by-bs*.08);c.lineTo(bx-bs*.05,by-bs*.08);c.closePath();c.fill();
+    }
+  };
+  function paint(cv){
+    const r=cv.getBoundingClientRect();if(!r.width)return;
+    const dpr=Math.min(2,window.devicePixelRatio||1),w=Math.round(r.width*dpr),h=Math.round(r.height*dpr);
+    if(cv.width===w&&cv.height===h)return;cv.width=w;cv.height=h;
+    const c=cv.getContext("2d");S[cv.dataset.scene]?.(c,w,h);
+  }
+  const cvs=[...document.querySelectorAll("canvas[data-scene]")];
+  cvs.forEach(paint);
+  if(window.ResizeObserver){const ro=new ResizeObserver(es=>es.forEach(e=>paint(e.target)));cvs.forEach(c=>ro.observe(c))}
+  else window.addEventListener("resize",()=>cvs.forEach(paint));
+})();
 (function(){
   const Q=[
     ["No es que tengamos poco tiempo, sino que perdemos mucho.","Séneca · De la brevedad de la vida"],

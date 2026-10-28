@@ -2,338 +2,187 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: una columna de lectura (~720px) que alterna diagramas de proceso y un panel de registro diario. Amanecer: tinta azul + luz de mañana. */
+/* Layout: columna única tipo códice (~720px). Mármol y basalto, pórfido imperial como acento, laurel para lo cumplido. Capitales romanas solo en títulos. */
 :root{
-  --bg:#f6f7f4; --surface:#ffffff; --ink:#18232e; --muted:#5b6670; --line:#d9ded8;
-  --dawn:#e8a33d; --dawn-soft:#fbecd2; --pine:#2f6b5a; --pine-soft:#dcebe4;
-  --bad:#b4483b; --bad-soft:#f6e1dc;
-  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
-  --f-body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --bg:#ecebe6; --surface:#f7f6f2; --ink:#1d1f22; --muted:#62625e; --line:#d3d1c8;
+  --porphyry:#6b2d4f; --porphyry-soft:#ecdfe5; --bronze:#8d6328; --bronze-soft:#efe4d2;
+  --laurel:#56653a; --laurel-soft:#e1e6d3; --bad:#9c3d33; --bad-soft:#f1dfdb;
+  --f-display:"Cinzel","Trajan Pro",Georgia,serif;
+  --f-body:"Spectral",Georgia,"Times New Roman",serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#10171d; --surface:#17212a; --ink:#e8ecee; --muted:#9aa6af; --line:#2a3741;
-  --dawn:#f0b65a; --dawn-soft:#3a2d17; --pine:#6fbfa5; --pine-soft:#173229;
-  --bad:#e07c6e; --bad-soft:#3b201c; color-scheme:dark}}
+  --bg:#141517; --surface:#1c1d20; --ink:#e7e4dc; --muted:#9d9a91; --line:#2f3034;
+  --porphyry:#c58aab; --porphyry-soft:#33202b; --bronze:#d3a35f; --bronze-soft:#33281a;
+  --laurel:#a3b57a; --laurel-soft:#252c1b; --bad:#df8577; --bad-soft:#36201d; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#10171d; --surface:#17212a; --ink:#e8ecee; --muted:#9aa6af; --line:#2a3741;
-  --dawn:#f0b65a; --dawn-soft:#3a2d17; --pine:#6fbfa5; --pine-soft:#173229;
-  --bad:#e07c6e; --bad-soft:#3b201c; color-scheme:dark}
+  --bg:#141517; --surface:#1c1d20; --ink:#e7e4dc; --muted:#9d9a91; --line:#2f3034;
+  --porphyry:#c58aab; --porphyry-soft:#33202b; --bronze:#d3a35f; --bronze-soft:#33281a;
+  --laurel:#a3b57a; --laurel-soft:#252c1b; --bad:#df8577; --bad-soft:#36201d; color-scheme:dark}
 
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6;
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.55;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
-.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
-h1,h2,h3{font-family:var(--f-display);line-height:1.1;text-wrap:balance;margin:0}
-h1{font-size:clamp(2.4rem,7vw,3.6rem);font-weight:800;letter-spacing:-.02em}
-h2{font-size:1.75rem;font-weight:700;letter-spacing:-.01em}
-h3{font-size:1.1rem;font-weight:700}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:64px}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.3rem,8vw,3.6rem);letter-spacing:.04em}
+h2{font-size:1.45rem;letter-spacing:.06em}
+h3{font-size:.95rem;letter-spacing:.06em}
 p{margin:0}
-.eyebrow{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-section{display:flex;flex-direction:column;gap:18px}
-.lead{color:var(--muted);max-width:62ch}
 .mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+section{display:flex;flex-direction:column;gap:16px}
+.shead{display:flex;flex-direction:column;gap:6px}
+.num{font-family:var(--f-display);font-size:.8rem;letter-spacing:.2em;color:var(--porphyry)}
+.quote{font-style:italic;color:var(--muted);max-width:56ch}
+.quote cite{font-style:normal;font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;margin-left:6px;color:var(--bronze)}
 
 /* hero */
-header.hero{padding-top:48px;display:flex;flex-direction:column;gap:16px}
-.horizon{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--ink) 0%,var(--pine) 45%,var(--dawn) 100%);max-width:220px}
-nav.toc{display:flex;flex-wrap:wrap;gap:8px}
-nav.toc a{font-family:var(--f-mono);font-size:.8rem;color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:5px 10px;border-radius:999px;background:var(--surface)}
-nav.toc a:hover,nav.toc a:focus-visible{border-color:var(--pine);outline:none}
+header.hero{padding-top:56px;display:flex;flex-direction:column;gap:18px;align-items:flex-start}
+.meander{width:180px;height:10px;display:block}
+.hero .eyebrow{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.hero blockquote{margin:0;border-left:2px solid var(--porphyry);padding:4px 0 4px 16px;display:flex;flex-direction:column;gap:6px;max-width:52ch}
+.hero blockquote p{font-size:1.25rem;font-style:italic;line-height:1.45}
+.hero blockquote footer{font-family:var(--f-mono);font-size:.75rem;color:var(--bronze);letter-spacing:.06em;border:0;padding:0}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px}
+nav.toc a{font-family:var(--f-display);font-size:.72rem;letter-spacing:.12em;color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:6px 11px;border-radius:2px;background:var(--surface)}
+nav.toc a:hover,nav.toc a:focus-visible{border-color:var(--porphyry);color:var(--porphyry);outline:none}
 
-/* ciclos */
-.cycles{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media (max-width:640px){.cycles{grid-template-columns:1fr}}
-.cycle{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px;min-width:0}
-.cycle svg{width:100%;height:auto;display:block}
-.cycle .tag{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase}
-.cycle.bad .tag{color:var(--bad)} .cycle.good .tag{color:var(--pine)}
-.cycle p{font-size:.95rem;color:var(--muted)}
-
-/* flujo vertical */
-.flow{display:flex;flex-direction:column;gap:0;counter-reset:step}
-.step{display:grid;grid-template-columns:64px 1fr;gap:14px;position:relative;padding-bottom:18px}
-.step:not(:last-child)::after{content:"";position:absolute;left:31px;top:44px;bottom:0;width:2px;background:var(--line)}
-.step .time{font-family:var(--f-mono);font-size:.82rem;color:var(--ink);background:var(--dawn-soft);border:1px solid var(--dawn);border-radius:8px;height:36px;display:grid;place-items:center;font-variant-numeric:tabular-nums}
-.step .body{min-width:0;padding-top:4px}
-.step .body p{color:var(--muted);font-size:.95rem}
-.step.key .time{background:var(--pine);color:var(--bg);border-color:var(--pine)}
-
-/* diagrama de decisión */
-.decide{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
-.decide svg{min-width:560px;width:100%;height:auto;display:block}
-svg text{font-family:var(--f-display)}
-.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-.rule{border-top:3px solid var(--dawn);padding-top:10px;display:flex;flex-direction:column;gap:4px}
-.rule p{font-size:.93rem;color:var(--muted)}
-
-/* día */
-.day{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
-.block{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:12px 16px;border-top:1px solid var(--line);align-items:baseline}
-.block:first-child{border-top:0}
-.block .mono{font-size:.82rem;color:var(--muted)}
-.block b{font-family:var(--f-display);font-weight:700}
-.block span.d{color:var(--muted);font-size:.93rem;display:block}
-.block.focus{background:var(--pine-soft)}
-.block.off{background:var(--dawn-soft)}
-.block.fixed{background:var(--bg)}
-.block.fixed b::after{content:"fijo";font-family:var(--f-mono);font-size:.68rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:1px 7px;margin-left:8px;vertical-align:2px}
-.block.tbd .mono::after{content:" *";color:var(--dawn)}
-.daytabs{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.daytabs button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:8px 0;font-family:var(--f-mono);font-size:.82rem;display:flex;flex-direction:column;align-items:center;gap:2px}
-.daytabs button small{font-size:.65rem;color:var(--muted)}
+/* hoy */
+.daytabs{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.daytabs button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:2px;padding:8px 0;font-family:var(--f-display);font-size:.78rem;letter-spacing:.08em;cursor:pointer;position:relative}
 .daytabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.daytabs button[aria-selected="true"] small{color:var(--bg);opacity:.75}
-.daytabs button:focus-visible{outline:2px solid var(--dawn);outline-offset:2px}
-.daytabs button.today{box-shadow:inset 0 -3px 0 var(--dawn)}
-.assume{font-size:.9rem;color:var(--muted)}
-.chip{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;background:var(--dawn-soft);color:var(--ink);border:1px solid var(--dawn);border-radius:999px;padding:2px 8px;margin-right:6px}
-.weekfacts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.daytabs button.today::after{content:"";position:absolute;left:50%;bottom:3px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--bronze)}
+.agenda{display:flex;flex-direction:column;border-top:1px solid var(--ink)}
+.row{display:grid;grid-template-columns:104px 1fr;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line);align-items:baseline}
+.row .mono{font-size:.8rem;color:var(--muted)}
+.row b{font-weight:600}
+.row small{color:var(--muted);font-size:.86rem;margin-left:8px}
+.row.f b{color:var(--porphyry)}
+.row.x{color:var(--muted)}
+.row.x b{font-weight:400}
+.row.t .mono::after{content:" *";color:var(--bronze)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.82rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:0}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.fact{display:flex;flex-direction:column;border-top:1px solid var(--line);padding-top:8px}
+.fact .v{font-family:var(--f-mono);font-size:1.35rem;font-variant-numeric:tabular-nums}
+.fact .l{font-size:.8rem;color:var(--muted);line-height:1.3}
 
-/* hábitos mínimos */
-table.min{width:100%;border-collapse:collapse;font-size:.93rem}
-.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
-table.min th,table.min td{text-align:left;padding:10px 14px;border-top:1px solid var(--line);vertical-align:top}
-table.min thead th{border-top:0;font-family:var(--f-mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
-table.min td:first-child{font-family:var(--f-display);font-weight:700;white-space:nowrap}
-
-/* semanas */
-.weeks{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-@media (max-width:640px){.weeks{grid-template-columns:1fr 1fr}}
-.week{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px;background:var(--surface);min-width:0}
-.week .mono{font-size:.72rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
-.week ul{margin:0;padding-left:18px;font-size:.9rem;color:var(--muted)}
-.week.now{border-color:var(--pine);box-shadow:0 0 0 1px var(--pine)}
-
-/* dinero */
-.loop{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:stretch}
-@media (max-width:640px){.loop{grid-template-columns:1fr}}
-.loop .node{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:4px;min-width:0}
-.loop .node .mono{font-size:.72rem;color:var(--dawn)}
-.loop .node p{font-size:.88rem;color:var(--muted)}
-
-/* tracker */
-.tracker{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:18px}
-.tbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+/* examen */
+.tracker{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:20px;display:flex;flex-direction:column;gap:18px}
+.tbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
 .datenav{display:flex;align-items:center;gap:8px}
 button{font:inherit;cursor:pointer}
-.btn{font-family:var(--f-mono);font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:6px 12px}
-.btn:hover{border-color:var(--pine)}
-.btn:focus-visible,.habit:focus-within,input:focus-visible,.mood button:focus-visible{outline:2px solid var(--dawn);outline-offset:2px}
-#dateLabel{font-family:var(--f-display);font-weight:700;font-size:1.1rem;min-width:0}
-.status{font-family:var(--f-mono);font-size:.75rem;color:var(--muted)}
+.btn{font-family:var(--f-mono);font-size:.85rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:2px;padding:5px 12px}
+.btn:hover{border-color:var(--porphyry)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn:focus-visible,.daytabs button:focus-visible,.habit:focus-within,input:focus-visible,textarea:focus-visible,.mood button:focus-visible{outline:2px solid var(--bronze);outline-offset:2px}
+#dateLabel{font-family:var(--f-display);font-weight:700;letter-spacing:.06em}
+.status{font-family:var(--f-mono);font-size:.72rem;color:var(--muted)}
 .tgrid{display:grid;grid-template-columns:1fr 150px;gap:20px;align-items:start}
-@media (max-width:640px){.tgrid{grid-template-columns:1fr}}
-.habits{display:flex;flex-direction:column;gap:8px;min-width:0}
-.habit{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:var(--bg)}
-.habit input{width:20px;height:20px;accent-color:var(--pine);flex:none;margin:0}
-.habit .t{display:flex;flex-direction:column;min-width:0}
-.habit .t b{font-family:var(--f-display);font-weight:700;font-size:.98rem}
-.habit .t small{color:var(--muted);font-size:.82rem}
-.habit.done{background:var(--pine-soft);border-color:var(--pine)}
-.side{display:flex;flex-direction:column;gap:16px;align-items:center}
-.ring{width:130px;height:130px}
+@media (max-width:620px){.tgrid{grid-template-columns:1fr}}
+.habits{display:grid;grid-template-columns:1fr 1fr;gap:6px;min-width:0}
+@media (max-width:460px){.habits{grid-template-columns:1fr}}
+.habit{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:2px;cursor:pointer;background:var(--bg);min-width:0}
+.habit input{width:18px;height:18px;accent-color:var(--laurel);flex:none;margin:0}
+.habit span{font-size:.95rem}
+.habit.done{background:var(--laurel-soft);border-color:var(--laurel)}
+.side{display:flex;flex-direction:column;gap:14px;align-items:center}
+.ring{width:124px;height:124px}
 .ring text{font-family:var(--f-mono)}
 .field{display:flex;flex-direction:column;gap:6px;width:100%}
-.field label{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.field input[type=number]{font:inherit;font-family:var(--f-mono);padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%}
+.field label,.field .lbl{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.field input[type=number]{font:inherit;font-family:var(--f-mono);padding:6px 10px;border:1px solid var(--line);border-radius:2px;background:var(--bg);color:var(--ink);width:100%}
 .mood{display:flex;gap:4px}
-.mood button{flex:1;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:6px 0;font-family:var(--f-mono);font-size:.85rem}
-.mood button[aria-pressed="true"]{background:var(--dawn);border-color:var(--dawn);color:#18232e}
-.notes textarea{font:inherit;font-size:.95rem;width:100%;min-height:70px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);resize:vertical}
-.heat{overflow-x:auto}
-.heat table{border-collapse:separate;border-spacing:3px;font-size:.75rem}
-.heat th{font-family:var(--f-mono);font-weight:400;color:var(--muted);text-align:right;padding-right:6px;white-space:nowrap}
-.heat thead th{text-align:center;padding:0;font-size:.65rem}
-.heat td{width:22px;height:22px;border-radius:5px;background:var(--line);padding:0}
-.heat td.on{background:var(--pine)}
-.heat td.today{box-shadow:inset 0 0 0 2px var(--dawn)}
+.mood button{flex:1;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:2px;padding:5px 0;font-family:var(--f-mono);font-size:.85rem}
+.mood button[aria-pressed="true"]{background:var(--bronze);border-color:var(--bronze);color:var(--bg)}
+.field textarea{font:inherit;font-size:.95rem;width:100%;min-height:64px;padding:10px;border:1px solid var(--line);border-radius:2px;background:var(--bg);color:var(--ink);resize:vertical}
+.questions{display:flex;flex-direction:column;gap:2px;font-size:.88rem;color:var(--muted);font-style:italic}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.stat{border-top:1px solid var(--line);padding-top:8px;display:flex;flex-direction:column}
-.stat .v{font-family:var(--f-mono);font-size:1.4rem;font-variant-numeric:tabular-nums}
-.stat .l{font-size:.8rem;color:var(--muted)}
+.heat{overflow-x:auto}
+.heat table{border-collapse:separate;border-spacing:3px;font-size:.72rem}
+.heat th{font-family:var(--f-mono);font-weight:400;color:var(--muted);text-align:right;padding-right:6px;white-space:nowrap}
+.heat thead th{text-align:center;padding:0;font-size:.62rem}
+.heat td{width:20px;height:20px;border-radius:2px;background:var(--line);padding:0}
+.heat td.on{background:var(--laurel)}
+.heat td.cur{box-shadow:inset 0 0 0 2px var(--bronze)}
 
-.review{display:flex;flex-direction:column;gap:8px;padding-left:0;margin:0;list-style:none}
-.review li{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:baseline}
-.review li .mono{color:var(--dawn);font-size:.85rem}
-footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);padding-top:16px}
+/* diagramas */
+.cycles{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:620px){.cycles{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.panel svg{width:100%;height:auto;display:block}
+.panel .tag{font-family:var(--f-display);font-size:.75rem;letter-spacing:.14em}
+.bad .tag{color:var(--bad)} .good .tag{color:var(--laurel)}
+svg text{font-family:var(--f-body)}
+.decide{overflow-x:auto}
+.decide svg{min-width:540px}
+
+/* mañana */
+.steps{display:flex;flex-direction:column;border-top:1px solid var(--ink)}
+.steps .row b{font-weight:600}
+.steps .row.key b{color:var(--porphyry)}
+
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin:0;padding:0;list-style:none}
+@media (max-width:520px){.rules{grid-template-columns:1fr}}
+.rules li{border-top:1px solid var(--line);padding-top:8px;font-size:.95rem}
+.rules li b{font-weight:600}
+
+table.min{width:100%;border-collapse:collapse;font-size:.93rem}
+.tablewrap{overflow-x:auto;border-top:1px solid var(--ink)}
+table.min th,table.min td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line)}
+table.min thead th{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+table.min td:first-child{font-weight:600}
+table.min td:nth-child(2){color:var(--bronze)}
+
+.weeks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (max-width:620px){.weeks{grid-template-columns:1fr 1fr}}
+.week{border:1px solid var(--line);border-radius:3px;padding:12px;display:flex;flex-direction:column;gap:6px;background:var(--surface);min-width:0}
+.week .mono{font-size:.7rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.week p{font-size:.88rem;color:var(--muted)}
+.week.now{border-color:var(--porphyry);box-shadow:inset 0 3px 0 var(--porphyry)}
+
+.loop{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+@media (max-width:620px){.loop{grid-template-columns:1fr}}
+.node{border:1px solid var(--line);border-radius:3px;padding:10px;background:var(--surface);display:flex;flex-direction:column;gap:3px;min-width:0}
+.node .mono{font-size:.7rem;color:var(--bronze)}
+.node p{font-size:.86rem;color:var(--muted)}
+
+ol.review{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;border-top:1px solid var(--ink)}
+ol.review li{display:grid;grid-template-columns:36px 1fr;gap:8px;padding:9px 4px;border-bottom:1px solid var(--line)}
+ol.review li .mono{color:var(--porphyry);font-family:var(--f-display);font-size:.85rem}
+.closing{font-family:var(--f-display);font-size:1.05rem;letter-spacing:.06em;text-align:center;color:var(--muted);text-wrap:balance}
 @media (prefers-reduced-motion:no-preference){.habit{transition:background .15s,border-color .15s}}
 </style>
 
 <div class="wrap">
 
 <header class="hero">
-  <div class="horizon" aria-hidden="true"></div>
-  <span class="eyebrow">Sistema personal · 4 semanas</span>
-  <h1>Volver a empezar, un día a la vez</h1>
-  <p class="lead">Todo lo que quieres recuperar o sostener (levantarte temprano, leer, inglés, ejercicio, tu tesis, generar ingresos) depende de una sola palanca: lo que haces con el celular entre las 9 de la noche y las 8 de la mañana. Este mapa empieza por ahí.</p>
+  <svg class="meander" viewBox="0 0 180 10" aria-hidden="true"><path d="M0 9 H10 V1 H20 V6 H15 V4 M20 9 H30 V1 H40 V6 H35 V4 M40 9 H50 V1 H60 V6 H55 V4 M60 9 H70 V1 H80 V6 H75 V4 M80 9 H90 V1 H100 V6 H95 V4 M100 9 H110 V1 H120 V6 H115 V4 M120 9 H130 V1 H140 V6 H135 V4 M140 9 H150 V1 H160 V6 H155 V4 M160 9 H180" fill="none" stroke="var(--porphyry)" stroke-width="1.4"/></svg>
+  <span class="eyebrow" id="heroDate">Diario estoico</span>
+  <h1>Volver a empezar</h1>
+  <blockquote><p id="qText">No es que tengamos poco tiempo, sino que perdemos mucho.</p><footer id="qCite">Séneca · De la brevedad de la vida</footer></blockquote>
   <nav class="toc" aria-label="Secciones">
-    <a href="#ciclo">El ciclo</a><a href="#manana">Mañana</a><a href="#celular">Celular</a><a href="#dia">Mi día</a><a href="#minimos">Mínimos</a><a href="#semanas">4 semanas</a><a href="#dinero">Dinero</a><a href="#registro">Registro diario</a><a href="#revision">Revisión</a>
+    <a href="#hoy">Hoy</a><a href="#examen">Examen</a><a href="#ciclo">Ciclo</a><a href="#amanecer">Amanecer</a><a href="#control">Control</a><a href="#minimos">Mínimos</a><a href="#semanas">4 semanas</a><a href="#ingresos">Ingresos</a><a href="#revision">Domingo</a>
   </nav>
 </header>
 
-<section id="ciclo">
-  <span class="eyebrow">Diagnóstico</span>
-  <h2>El ciclo que te atrapa y el que te saca</h2>
-  <p class="lead">No te falta disciplina. Estás dentro de un ciclo que se alimenta solo. Se rompe en un punto: la hora de dormir.</p>
-  <div class="cycles">
-    <div class="cycle bad">
-      <span class="tag">Ciclo actual</span>
-      <svg viewBox="0 0 300 260" role="img" aria-label="Ciclo negativo: celular de noche, duermo tarde, no me levanto, día sin energía, me siento mal, busco distracción en el celular">
-        <defs><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--bad)"/></marker></defs>
-        <circle cx="150" cy="130" r="92" fill="none" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="4 5" opacity=".5"/>
-        <g font-size="12" font-weight="700" fill="var(--ink)" text-anchor="middle">
-          <rect x="95" y="18" width="110" height="28" rx="14" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="150" y="36">Celular de noche</text>
-          <rect x="200" y="74" width="92" height="28" rx="14" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="246" y="92">Duermo tarde</text>
-          <rect x="196" y="164" width="100" height="28" rx="14" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="246" y="182">No me levanto</text>
-          <rect x="100" y="214" width="100" height="28" rx="14" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="150" y="232">Día sin energía</text>
-          <rect x="6" y="164" width="96" height="28" rx="14" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="54" y="182">Me siento mal</text>
-          <rect x="4" y="74" width="100" height="28" rx="14" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="54" y="92">Busco escape</text>
-        </g>
-        <g stroke="var(--bad)" stroke-width="1.6" fill="none" marker-end="url(#ab)">
-          <path d="M205 40 Q235 50 242 70"/><path d="M246 104 L246 160"/><path d="M240 194 Q225 215 204 224"/>
-          <path d="M98 224 Q72 214 60 196"/><path d="M54 162 L54 106"/><path d="M60 72 Q68 48 92 36"/>
-        </g>
-      </svg>
-      <p>Cada vuelta te deja con menos energía y más ganas de escapar al celular.</p>
-    </div>
-    <div class="cycle good">
-      <span class="tag">Ciclo nuevo</span>
-      <svg viewBox="0 0 300 260" role="img" aria-label="Ciclo positivo: celular fuera del cuarto a las 22:00, duermo 7 a 8 horas, me levanto 6:30, ejercicio, lectura e inglés, logro pequeño, me siento capaz">
-        <defs><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--pine)"/></marker></defs>
-        <circle cx="150" cy="130" r="92" fill="none" stroke="var(--pine)" stroke-width="1.5" stroke-dasharray="4 5" opacity=".5"/>
-        <g font-size="12" font-weight="700" fill="var(--ink)" text-anchor="middle">
-          <rect x="88" y="18" width="124" height="28" rx="14" fill="var(--dawn-soft)" stroke="var(--dawn)" stroke-width="2"/><text x="150" y="36">Celular fuera 22:00</text>
-          <rect x="200" y="74" width="92" height="28" rx="14" fill="var(--pine-soft)" stroke="var(--pine)"/><text x="246" y="92">Duermo 7–8 h</text>
-          <rect x="196" y="164" width="100" height="28" rx="14" fill="var(--pine-soft)" stroke="var(--pine)"/><text x="246" y="182">Me levanto 6:00</text>
-          <rect x="94" y="214" width="112" height="28" rx="14" fill="var(--pine-soft)" stroke="var(--pine)"/><text x="150" y="232">Muevo · leo · inglés</text>
-          <rect x="6" y="164" width="96" height="28" rx="14" fill="var(--pine-soft)" stroke="var(--pine)"/><text x="54" y="182">Logro pequeño</text>
-          <rect x="4" y="74" width="100" height="28" rx="14" fill="var(--pine-soft)" stroke="var(--pine)"/><text x="54" y="92">Me siento capaz</text>
-        </g>
-        <g stroke="var(--pine)" stroke-width="1.6" fill="none" marker-end="url(#ag)">
-          <path d="M212 40 Q235 50 242 70"/><path d="M246 104 L246 160"/><path d="M240 194 Q225 215 208 224"/>
-          <path d="M92 224 Q72 214 60 196"/><path d="M54 162 L54 106"/><path d="M60 72 Q68 48 86 36"/>
-        </g>
-      </svg>
-      <p>El punto de entrada (en amarillo) es una sola decisión cada noche. Todo lo demás se vuelve más fácil.</p>
-    </div>
-  </div>
-</section>
-
-<section id="manana">
-  <span class="eyebrow">Proceso 1</span>
-  <h2>La rutina de la mañana</h2>
-  <p class="lead">Sigue el orden, no la perfección. Si un día solo haces los dos primeros pasos, ese día cuenta.</p>
-  <div class="flow">
-    <div class="step key"><div class="time">21:30</div><div class="body"><h3>La mañana empieza la noche anterior</h3><p>Escribe en papel las 3 tareas de mañana. Deja ropa de ejercicio y el libro a la vista.</p></div></div>
-    <div class="step key"><div class="time">22:00</div><div class="body"><h3>Celular a cargar fuera del cuarto</h3><p>Usa un despertador barato o el celular en otra habitación con alarma alta. Este es el paso más importante de todo el plan.</p></div></div>
-    <div class="step"><div class="time">6:00</div><div class="body"><h3>Pies en el suelo al primer sonido</h3><p>Regla de 5 segundos: cuenta 5-4-3-2-1 y levántate. Nada de posponer.</p></div></div>
-    <div class="step"><div class="time">6:05</div><div class="body"><h3>Agua y luz</h3><p>Un vaso de agua, abre la ventana o sal 2 minutos. La luz le dice a tu cuerpo que es de día.</p></div></div>
-    <div class="step"><div class="time">6:10</div><div class="body"><h3>Ejercicio 20 minutos</h3><p>Rutina de peso corporal o un video en casa. Sin celular en la mano, solo para poner música.</p></div></div>
-    <div class="step"><div class="time">6:30</div><div class="body"><h3>Ducha y desayuno</h3><p>Todavía sin redes sociales.</p></div></div>
-    <div class="step"><div class="time">7:00</div><div class="body"><h3>Leer 15 minutos</h3><p>Libro en papel o lector. Meta: 10 páginas.</p></div></div>
-    <div class="step key"><div class="time">7:20</div><div class="body"><h3>Sales al trabajo con inglés en los audífonos</h3><p>Tu traslado de 40–60 min es tu clase de inglés: un podcast o la app en modo audio. Si vas en bus, también puedes leer. Entras a las 8:30 con lo importante ya hecho.</p></div></div>
-  </div>
-</section>
-
-<section id="celular">
-  <span class="eyebrow">Proceso 2</span>
-  <h2>Protocolo antes de abrir el celular</h2>
-  <p class="lead">El problema es abrirlo sin intención, no usarlo. Este diagrama es la pausa que te falta.</p>
-  <div class="decide">
-    <svg viewBox="0 0 640 330" role="img" aria-label="Diagrama de decisión: ganas de tomar el celular. ¿Es para algo concreto? Sí: hazlo y suéltalo. No: respira 10 veces. ¿Sigues con ganas? No: vuelve a lo que hacías. Sí: pon un temporizador de 10 minutos y úsalo de pie">
-      <defs><marker id="ad" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--muted)"/></marker></defs>
-      <g font-size="13" font-weight="700" fill="var(--ink)" text-anchor="middle">
-        <rect x="230" y="10" width="180" height="40" rx="20" fill="var(--dawn-soft)" stroke="var(--dawn)"/><text x="320" y="35">Ganas de tomar el celular</text>
-        <polygon points="320,78 420,118 320,158 220,118" fill="var(--surface)" stroke="var(--ink)"/><text x="320" y="114">¿Es para algo</text><text x="320" y="130">concreto?</text>
-        <rect x="470" y="98" width="160" height="40" rx="10" fill="var(--pine-soft)" stroke="var(--pine)"/><text x="550" y="123">Hazlo y suéltalo</text>
-        <rect x="230" y="186" width="180" height="40" rx="10" fill="var(--surface)" stroke="var(--ink)"/><text x="320" y="211">Respira 10 veces</text>
-        <polygon points="320,246 410,278 320,310 230,278" fill="var(--surface)" stroke="var(--ink)"/><text x="320" y="283">¿Sigues con ganas?</text>
-        <rect x="10" y="258" width="180" height="40" rx="10" fill="var(--pine-soft)" stroke="var(--pine)"/><text x="100" y="283">Vuelve a lo que hacías</text>
-        <rect x="450" y="250" width="180" height="56" rx="10" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="540" y="274">Temporizador 10 min</text><text x="540" y="292" font-weight="500" font-size="12">y úsalo de pie</text>
-      </g>
-      <g stroke="var(--muted)" stroke-width="1.6" fill="none" marker-end="url(#ad)">
-        <path d="M320 50 L320 74"/><path d="M420 118 L466 118"/><path d="M320 158 L320 182"/><path d="M320 226 L320 242"/><path d="M230 278 L194 278"/><path d="M410 278 L446 278"/>
-      </g>
-      <g font-family="var(--f-mono)" font-size="11" fill="var(--muted)">
-        <text x="430" y="110">sí</text><text x="328" y="174">no</text><text x="200" y="270">no</text><text x="418" y="270">sí</text>
-      </g>
-    </svg>
-  </div>
-  <div class="rules">
-    <div class="rule"><h3>Pantalla en gris</h3><p>Activa la escala de grises en accesibilidad. Las redes pierden la mitad de su atractivo.</p></div>
-    <div class="rule"><h3>Redes fuera de la pantalla de inicio</h3><p>Muévelas a una carpeta en la última página, o bórralas y entra solo desde el navegador.</p></div>
-    <div class="rule"><h3>Límite diario</h3><p>Pon 60 minutos de límite para redes en Bienestar digital o Tiempo en pantalla.</p></div>
-    <div class="rule"><h3>Sustituto a mano</h3><p>Ten el libro o la libreta de inglés donde sueles tomar el celular: el sillón, la cama, la mesa.</p></div>
-  </div>
-</section>
-
-<section id="dia">
-  <span class="eyebrow">Gestión del tiempo</span>
-  <h2>Mi semana en bloques</h2>
-  <p class="lead">Armada sobre tu horario real: trabajo desde las 8:30 con 40–60 min de traslado, martes virtual con revisión de TIC, y los días de clase presencial 20 min a la U, almuerzo allá a las 13:30 y trabajo hasta que empieza la clase. La tesis va todos los días: escritura fuerte el martes, jueves y fin de semana, y bloques ligeros de tesis las noches de clase.</p>
-  <p class="assume"><b>Regla de la tesis:</b> al terminar cada bloque, escribe en una línea cuál es el siguiente paso. El próximo bloque empieza leyendo esa línea, sin perder 20 minutos en recordar dónde ibas.</p>
+<section id="hoy">
+  <div class="shead"><span class="num">I</span><h2>Hoy</h2><p class="quote">Primero di quién quieres ser; luego haz lo que tengas que hacer.<cite>Epicteto</cite></p></div>
   <div class="daytabs" id="dayTabs" role="tablist" aria-label="Día de la semana"></div>
-  <div class="day" id="dayBlocks" role="tabpanel"></div>
-  <p class="assume"><span class="chip">Por confirmar</span> Las horas con asterisco suponen que de la U a tu casa tardas lo mismo que al trabajo, alrededor de una hora.</p>
-  <div class="weekfacts">
-    <div class="stat"><span class="v">9 h</span><span class="l">de tesis a la semana, todos los días</span></div>
-    <div class="stat"><span class="v">3,5 h</span><span class="l">para ingresos</span></div>
-    <div class="stat"><span class="v">~4 h</span><span class="l">de inglés en audio en tus traslados</span></div>
+  <div class="agenda" id="dayBlocks" role="tabpanel"></div>
+  <div class="legend"><span><i style="background:var(--porphyry)"></i>Hábito</span><span><i style="background:var(--muted)"></i>Fijo</span><span><i style="background:var(--line)"></i>Libre</span><span>* Por confirmar</span></div>
+  <div class="facts">
+    <div class="fact"><span class="v">9 h</span><span class="l">tesis por semana</span></div>
+    <div class="fact"><span class="v">3,5 h</span><span class="l">ingresos</span></div>
+    <div class="fact"><span class="v">~4 h</span><span class="l">inglés en traslados</span></div>
   </div>
 </section>
 
-<section id="minimos">
-  <span class="eyebrow">Regla de los 2 minutos</span>
-  <h2>Versión mínima y versión completa</h2>
-  <p class="lead">En un día malo, haz la versión mínima. Lo que cuenta es no romper la cadena; la intensidad viene después.</p>
-  <div class="tablewrap">
-    <table class="min">
-      <thead><tr><th>Hábito</th><th>Mínimo (día malo)</th><th>Completo (día normal)</th></tr></thead>
-      <tbody>
-        <tr><td>Levantarme</td><td>6:30 y salir a tiempo</td><td>6:00 sin posponer</td></tr>
-        <tr><td>Ejercicio</td><td>10 sentadillas</td><td>20–30 min</td></tr>
-        <tr><td>Leer</td><td>1 página</td><td>10 páginas / 15 min</td></tr>
-        <tr><td>Inglés</td><td>Un podcast en el traslado</td><td>Podcast en el traslado y 10 palabras anotadas</td></tr>
-        <tr><td>Tesis</td><td>25 min o un párrafo</td><td>El bloque del día completo</td></tr>
-        <tr><td>Ingresos</td><td>Anotar 1 idea</td><td>1 hora de trabajo en el proyecto</td></tr>
-        <tr><td>Celular</td><td>Fuera del cuarto al dormir</td><td>Menos de 2 h de pantalla</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<section id="semanas">
-  <span class="eyebrow">Progresión</span>
-  <h2>Plan de 4 semanas</h2>
-  <p class="lead">Si intentas cambiar todo el lunes, abandonas el jueves. Cada semana sube un escalón y mantiene lo anterior.</p>
-  <div class="weeks">
-    <div class="week now"><span class="mono">Semana 1</span><h3>Dormir</h3><ul><li>Celular fuera a las 22:00</li><li>Alarma 15 min antes cada 3 días</li><li>Mínimos del resto</li></ul></div>
-    <div class="week"><span class="mono">Semana 2</span><h3>Moverme</h3><ul><li>Ejercicio completo diario</li><li>Pantalla en gris</li><li>Levantarme 6:00</li></ul></div>
-    <div class="week"><span class="mono">Semana 3</span><h3>Aprender</h3><ul><li>Lectura e inglés completos</li><li>Límite de 60 min en redes</li></ul></div>
-    <div class="week"><span class="mono">Semana 4</span><h3>Construir</h3><ul><li>Tesis los 7 días sin fallar</li><li>Los 3 bloques de ingresos</li><li>Primera revisión de mes</li></ul></div>
-  </div>
-</section>
-
-<section id="dinero">
-  <span class="eyebrow">Proceso 3</span>
-  <h2>Ciclo para encontrar ingresos extra</h2>
-  <p class="lead">Buscar ideas sin probarlas también es perder tiempo. Este ciclo dura una semana y se repite hasta que algo funcione.</p>
-  <div class="loop">
-    <div class="node"><span class="mono">Lun</span><h3>Inventario</h3><p>Lista lo que sabes hacer, lo que te piden tus conocidos y lo que disfrutas.</p></div>
-    <div class="node"><span class="mono">Mar</span><h3>3 ideas</h3><p>Ej.: clases particulares, ventas en línea, servicio freelance, reventa.</p></div>
-    <div class="node"><span class="mono">Mié–Jue</span><h3>Prueba barata</h3><p>Publica una oferta a 10 personas o en un grupo local. Sin invertir dinero.</p></div>
-    <div class="node"><span class="mono">Vie</span><h3>Mide</h3><p>¿Alguien preguntó, pagó o pidió más? Anótalo en números.</p></div>
-    <div class="node"><span class="mono">Dom</span><h3>Decide</h3><p>Repite lo que tuvo respuesta. Descarta lo que no, sin culpa.</p></div>
-  </div>
-</section>
-
-<section id="registro">
-  <span class="eyebrow">Registro diario</span>
-  <h2>Marca tu día</h2>
-  <p class="lead">Dos minutos cada noche, en el paso de cierre de las 21:30. Ver la cadena crecer es la mejor motivación.</p>
+<section id="examen">
+  <div class="shead"><span class="num">II</span><h2>Examen nocturno</h2><p class="quote">¿Qué vicio has resistido hoy? ¿En qué eres mejor?<cite>Séneca · Sobre la ira III</cite></p></div>
   <div class="tracker">
     <div class="tbar">
       <div class="datenav">
@@ -347,56 +196,202 @@ footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);paddi
       <div class="habits" id="habits"></div>
       <div class="side">
         <svg class="ring" viewBox="0 0 130 130" aria-label="Progreso del día" role="img">
-          <circle cx="65" cy="65" r="54" fill="none" stroke="var(--line)" stroke-width="12"/>
-          <circle id="ringArc" cx="65" cy="65" r="54" fill="none" stroke="var(--pine)" stroke-width="12" stroke-linecap="round" transform="rotate(-90 65 65)" stroke-dasharray="339.3" stroke-dashoffset="339.3"/>
-          <text id="ringText" x="65" y="72" text-anchor="middle" font-size="22" fill="var(--ink)">0/7</text>
+          <circle cx="65" cy="65" r="54" fill="none" stroke="var(--line)" stroke-width="10"/>
+          <circle id="ringArc" cx="65" cy="65" r="54" fill="none" stroke="var(--laurel)" stroke-width="10" transform="rotate(-90 65 65)" stroke-dasharray="339.3" stroke-dashoffset="339.3"/>
+          <text id="ringText" x="65" y="72" text-anchor="middle" font-size="22" fill="var(--ink)">0/8</text>
         </svg>
-        <div class="field"><label for="phone">Minutos de pantalla</label><input type="number" id="phone" min="0" max="1440" step="5" placeholder="ej. 120"></div>
-        <div class="field"><label id="moodLbl">Cómo me siento (1–5)</label><div class="mood" id="mood" role="group" aria-labelledby="moodLbl"></div></div>
+        <div class="field"><label for="phone">Pantalla (min)</label><input type="number" id="phone" min="0" max="1440" step="5" placeholder="120"></div>
+        <div class="field"><span class="lbl" id="moodLbl">Ánimo</span><div class="mood" id="mood" role="group" aria-labelledby="moodLbl"></div></div>
       </div>
     </div>
-    <div class="field notes"><label for="note">Una línea sobre hoy</label><textarea id="note" placeholder="¿Qué funcionó? ¿Qué me distrajo?"></textarea></div>
+    <div class="field">
+      <label for="note">Examen</label>
+      <div class="questions"><span>¿Qué hice bien? ¿Qué me distrajo? ¿Qué cambio mañana?</span></div>
+      <textarea id="note"></textarea>
+    </div>
     <div class="stats">
-      <div class="stat"><span class="v" id="sStreak">0</span><span class="l">días seguidos con celular fuera</span></div>
-      <div class="stat"><span class="v" id="sAvg">0%</span><span class="l">cumplimiento últimos 14 días</span></div>
-      <div class="stat"><span class="v" id="sPhone">–</span><span class="l">pantalla promedio (min)</span></div>
+      <div class="fact"><span class="v" id="sStreak">0</span><span class="l">noches seguidas con celular fuera</span></div>
+      <div class="fact"><span class="v" id="sAvg">0%</span><span class="l">cumplido en 14 días</span></div>
+      <div class="fact"><span class="v" id="sPhone">–</span><span class="l">pantalla promedio (min)</span></div>
     </div>
     <div class="heat"><table id="heat" aria-label="Últimos 14 días por hábito"></table></div>
   </div>
 </section>
 
+<section id="ciclo">
+  <div class="shead"><span class="num">III</span><h2>El ciclo</h2><p class="quote">La felicidad de tu vida depende de la calidad de tus pensamientos.<cite>Marco Aurelio</cite></p></div>
+  <div class="cycles">
+    <div class="panel bad">
+      <span class="tag">AHORA</span>
+      <svg viewBox="0 0 300 260" role="img" aria-label="Ciclo actual: celular de noche, duermo tarde, no me levanto, día sin energía, me siento mal, busco escape">
+        <defs><marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--bad)"/></marker></defs>
+        <circle cx="150" cy="130" r="92" fill="none" stroke="var(--bad)" stroke-width="1" stroke-dasharray="3 5" opacity=".5"/>
+        <g font-size="13" font-weight="600" fill="var(--ink)" text-anchor="middle">
+          <rect x="95" y="18" width="110" height="28" rx="2" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="150" y="37">Celular de noche</text>
+          <rect x="200" y="74" width="92" height="28" rx="2" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="246" y="93">Duermo tarde</text>
+          <rect x="196" y="164" width="100" height="28" rx="2" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="246" y="183">No me levanto</text>
+          <rect x="100" y="214" width="100" height="28" rx="2" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="150" y="233">Sin energía</text>
+          <rect x="6" y="164" width="96" height="28" rx="2" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="54" y="183">Me siento mal</text>
+          <rect x="4" y="74" width="100" height="28" rx="2" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="54" y="93">Busco escape</text>
+        </g>
+        <g stroke="var(--bad)" stroke-width="1.5" fill="none" marker-end="url(#ab)">
+          <path d="M205 40 Q235 50 242 70"/><path d="M246 104 L246 160"/><path d="M240 194 Q225 215 204 224"/>
+          <path d="M98 224 Q72 214 60 196"/><path d="M54 162 L54 106"/><path d="M60 72 Q68 48 92 36"/>
+        </g>
+      </svg>
+    </div>
+    <div class="panel good">
+      <span class="tag">NUEVO</span>
+      <svg viewBox="0 0 300 260" role="img" aria-label="Ciclo nuevo: celular fuera a las 22:00, duermo 7 a 8 horas, me levanto 6:00, muevo, leo, inglés, logro pequeño, me siento capaz">
+        <defs><marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--laurel)"/></marker></defs>
+        <circle cx="150" cy="130" r="92" fill="none" stroke="var(--laurel)" stroke-width="1" stroke-dasharray="3 5" opacity=".5"/>
+        <g font-size="13" font-weight="600" fill="var(--ink)" text-anchor="middle">
+          <rect x="86" y="18" width="128" height="28" rx="2" fill="var(--porphyry-soft)" stroke="var(--porphyry)" stroke-width="2"/><text x="150" y="37">Celular fuera 22:00</text>
+          <rect x="200" y="74" width="92" height="28" rx="2" fill="var(--laurel-soft)" stroke="var(--laurel)"/><text x="246" y="93">Duermo 7,5 h</text>
+          <rect x="196" y="164" width="100" height="28" rx="2" fill="var(--laurel-soft)" stroke="var(--laurel)"/><text x="246" y="183">Arriba 6:00</text>
+          <rect x="94" y="214" width="112" height="28" rx="2" fill="var(--laurel-soft)" stroke="var(--laurel)"/><text x="150" y="233">Muevo · leo · tesis</text>
+          <rect x="6" y="164" width="96" height="28" rx="2" fill="var(--laurel-soft)" stroke="var(--laurel)"/><text x="54" y="183">Pequeño logro</text>
+          <rect x="4" y="74" width="100" height="28" rx="2" fill="var(--laurel-soft)" stroke="var(--laurel)"/><text x="54" y="93">Me siento capaz</text>
+        </g>
+        <g stroke="var(--laurel)" stroke-width="1.5" fill="none" marker-end="url(#ag)">
+          <path d="M214 40 Q235 50 242 70"/><path d="M246 104 L246 160"/><path d="M240 194 Q225 215 208 224"/>
+          <path d="M92 224 Q72 214 60 196"/><path d="M54 162 L54 106"/><path d="M60 72 Q68 48 84 36"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section id="amanecer">
+  <div class="shead"><span class="num">IV</span><h2>Al amanecer</h2><p class="quote">Cuando te cueste levantarte, piensa: me levanto para hacer el trabajo de un ser humano.<cite>Marco Aurelio · Meditaciones V</cite></p></div>
+  <div class="steps">
+    <div class="row key"><span class="mono">21:30</span><b>Plan de mañana en papel</b></div>
+    <div class="row key"><span class="mono">22:00</span><b>Celular fuera del cuarto</b></div>
+    <div class="row"><span class="mono">6:00</span><b>5-4-3-2-1 y de pie</b></div>
+    <div class="row"><span class="mono">6:05</span><b>Agua y luz</b></div>
+    <div class="row"><span class="mono">6:10</span><b>Ejercicio</b><small>20 min</small></div>
+    <div class="row"><span class="mono">6:30</span><b>Ducha y desayuno</b></div>
+    <div class="row"><span class="mono">7:00</span><b>Leer</b><small>15 min</small></div>
+    <div class="row key"><span class="mono">7:20</span><b>Salir · inglés en audio</b></div>
+  </div>
+</section>
+
+<section id="control">
+  <div class="shead"><span class="num">V</span><h2>Lo que depende de ti</h2><p class="quote">Algunas cosas dependen de nosotros y otras no.<cite>Epicteto · Enquiridión 1</cite></p></div>
+  <div class="panel decide">
+    <svg viewBox="0 0 640 330" role="img" aria-label="Antes de abrir el celular: ¿es para algo concreto? Sí: hazlo y suéltalo. No: respira 10 veces. ¿Sigues con ganas? No: vuelve a lo tuyo. Sí: 10 minutos con temporizador, de pie">
+      <defs><marker id="ad" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--muted)"/></marker></defs>
+      <g font-size="14" font-weight="600" fill="var(--ink)" text-anchor="middle">
+        <rect x="230" y="10" width="180" height="40" rx="2" fill="var(--porphyry-soft)" stroke="var(--porphyry)"/><text x="320" y="35">Ganas de abrirlo</text>
+        <polygon points="320,78 420,118 320,158 220,118" fill="var(--surface)" stroke="var(--ink)"/><text x="320" y="114">¿Para algo</text><text x="320" y="131">concreto?</text>
+        <rect x="470" y="98" width="160" height="40" rx="2" fill="var(--laurel-soft)" stroke="var(--laurel)"/><text x="550" y="123">Hazlo y suéltalo</text>
+        <rect x="230" y="186" width="180" height="40" rx="2" fill="var(--surface)" stroke="var(--ink)"/><text x="320" y="211">Respira 10 veces</text>
+        <polygon points="320,246 410,278 320,310 230,278" fill="var(--surface)" stroke="var(--ink)"/><text x="320" y="283">¿Sigues?</text>
+        <rect x="10" y="258" width="180" height="40" rx="2" fill="var(--laurel-soft)" stroke="var(--laurel)"/><text x="100" y="283">Vuelve a lo tuyo</text>
+        <rect x="450" y="258" width="180" height="40" rx="2" fill="var(--bad-soft)" stroke="var(--bad)"/><text x="540" y="283">10 min, de pie</text>
+      </g>
+      <g stroke="var(--muted)" stroke-width="1.5" fill="none" marker-end="url(#ad)">
+        <path d="M320 50 L320 74"/><path d="M420 118 L466 118"/><path d="M320 158 L320 182"/><path d="M320 226 L320 242"/><path d="M230 278 L194 278"/><path d="M410 278 L446 278"/>
+      </g>
+      <g font-family="var(--f-mono)" font-size="11" fill="var(--muted)">
+        <text x="430" y="110">sí</text><text x="328" y="174">no</text><text x="200" y="270">no</text><text x="418" y="270">sí</text>
+      </g>
+    </svg>
+  </div>
+  <ul class="rules">
+    <li><b>Pantalla en gris</b> · en accesibilidad</li>
+    <li><b>Redes fuera del inicio</b> · última página</li>
+    <li><b>Límite de 60 min</b> · en redes</li>
+    <li><b>Libro a mano</b> · donde tomas el celular</li>
+  </ul>
+</section>
+
+<section id="minimos">
+  <div class="shead"><span class="num">VI</span><h2>Para el día malo</h2><p class="quote">Prepara la mente para lo que puede pasar.<cite>Séneca · Cartas a Lucilio</cite></p></div>
+  <div class="tablewrap">
+    <table class="min">
+      <thead><tr><th>Hábito</th><th>Mínimo</th><th>Completo</th></tr></thead>
+      <tbody>
+        <tr><td>Levantarme</td><td>6:30</td><td>6:00</td></tr>
+        <tr><td>Ejercicio</td><td>10 sentadillas</td><td>20 min</td></tr>
+        <tr><td>Leer</td><td>1 página</td><td>15 min</td></tr>
+        <tr><td>Inglés</td><td>5 palabras</td><td>Podcast + 10 palabras</td></tr>
+        <tr><td>Tesis</td><td>25 min</td><td>Bloque del día</td></tr>
+        <tr><td>Ingresos</td><td>1 idea anotada</td><td>Bloque del día</td></tr>
+        <tr><td>Celular</td><td>Fuera al dormir</td><td>&lt; 2 h de pantalla</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="quote">Si fallas un día, retoma con el mínimo. Nunca dos seguidos.</p>
+</section>
+
+<section id="semanas">
+  <div class="shead"><span class="num">VII</span><h2>Cuatro semanas</h2><p class="quote">Nada grande se hace de repente.<cite>Epicteto · Disertaciones I</cite></p></div>
+  <div class="weeks">
+    <div class="week now"><span class="mono">Semana 1</span><h3>Dormir</h3><p>Celular fuera 22:00. Alarma −15 min cada 3 días.</p></div>
+    <div class="week"><span class="mono">Semana 2</span><h3>Moverme</h3><p>Ejercicio diario. Pantalla en gris. Arriba 6:00.</p></div>
+    <div class="week"><span class="mono">Semana 3</span><h3>Aprender</h3><p>Lectura e inglés completos. Redes ≤ 60 min.</p></div>
+    <div class="week"><span class="mono">Semana 4</span><h3>Construir</h3><p>Tesis 7 de 7. Los 3 bloques de ingresos.</p></div>
+  </div>
+</section>
+
+<section id="ingresos">
+  <div class="shead"><span class="num">VIII</span><h2>Ingresos</h2><p class="quote">Mientras se aplaza, la vida pasa.<cite>Séneca · Cartas a Lucilio 1</cite></p></div>
+  <div class="loop">
+    <div class="node"><span class="mono">MAR</span><h3>Inventario</h3><p>Qué sé hacer y qué me piden.</p></div>
+    <div class="node"><span class="mono">MAR</span><h3>3 ideas</h3><p>Clases, freelance, ventas.</p></div>
+    <div class="node"><span class="mono">JUE</span><h3>Prueba</h3><p>Ofrécelo a 10 personas.</p></div>
+    <div class="node"><span class="mono">SÁB</span><h3>Mide</h3><p>¿Quién preguntó o pagó?</p></div>
+    <div class="node"><span class="mono">DOM</span><h3>Decide</h3><p>Repite o descarta.</p></div>
+  </div>
+</section>
+
 <section id="revision">
-  <span class="eyebrow">Domingo, 20 minutos</span>
-  <h2>Revisión semanal</h2>
+  <div class="shead"><span class="num">IX</span><h2>Domingo · 30 min</h2></div>
   <ol class="review">
-    <li><span class="mono">1</span><span>Mira la cuadrícula de arriba. ¿Qué hábito tuvo más huecos?</span></li>
-    <li><span class="mono">2</span><span>Pregúntate qué lo bloqueó: hora, lugar, cansancio o celular. Cambia eso, no tu fuerza de voluntad.</span></li>
-    <li><span class="mono">3</span><span>Compara tus minutos de pantalla con la semana pasada.</span></li>
-    <li><span class="mono">4</span><span>Revisa el ciclo de ingresos: ¿qué idea pruebas esta semana?</span></li>
-    <li><span class="mono">5</span><span>Escribe una cosa que hiciste bien. Sentirte bien también se entrena.</span></li>
+    <li><span class="mono">I</span><span>¿Qué hábito tuvo más huecos?</span></li>
+    <li><span class="mono">II</span><span>¿Qué lo bloqueó: hora, lugar o celular? Cambia eso.</span></li>
+    <li><span class="mono">III</span><span>Pantalla: ¿subió o bajó?</span></li>
+    <li><span class="mono">IV</span><span>¿Qué idea de ingresos pruebo esta semana?</span></li>
+    <li><span class="mono">V</span><span>Una cosa que hice bien.</span></li>
   </ol>
 </section>
 
-<footer>Si un día fallas, no empiezas de cero: retomas al día siguiente con la versión mínima. Nunca falles dos días seguidos.</footer>
+<p class="closing">Amor fati</p>
 </div>
 
 <script>
 (function(){
-  // f = bloque de hábitos, o = libre/descanso, x = fijo (trabajo, clases, traslados), t = hora por confirmar
-  const ORO=["6:00–7:20","Bloque de oro","Agua y luz, 20 min de ejercicio, ducha y desayuno, 15 min de lectura.","f"];
-  const IDA=["7:20–8:20","Traslado al trabajo","Inglés en audio: podcast o app. En bus también puedes leer.","x"];
-  const TRAB=["8:30–13:00","Trabajo","Celular boca abajo en bloques de 50 min.","x"];
-  const A_U=["13:00–13:20","Traslado a la U","","x"];
-  const COM_U=["13:30–14:00","Almuerzo en la U","30 min. Aquí sí puedes ver redes.","o"];
-  const CIERRE=["21:30–22:00","Cierre del día","Plan de mañana en papel. Celular fuera del cuarto a las 22:00, luces apagadas a las 22:30.","f"];
+  const Q=[
+    ["No es que tengamos poco tiempo, sino que perdemos mucho.","Séneca · De la brevedad de la vida"],
+    ["Cuando te cueste levantarte, piensa: me levanto para hacer el trabajo de un ser humano.","Marco Aurelio · Meditaciones V"],
+    ["Primero di quién quieres ser; luego haz lo que tengas que hacer.","Epicteto · Disertaciones III"],
+    ["Algunas cosas dependen de nosotros y otras no.","Epicteto · Enquiridión 1"],
+    ["Mientras se aplaza, la vida pasa.","Séneca · Cartas a Lucilio 1"],
+    ["Nada grande se hace de repente.","Epicteto · Disertaciones I"],
+    ["La pérdida más vergonzosa es la que ocurre por descuido.","Séneca · Cartas a Lucilio 1"]
+  ];
+  const now=new Date();const doy=Math.floor((now-new Date(now.getFullYear(),0,0))/864e5);
+  const q=Q[doy%Q.length];
+  document.getElementById("qText").textContent=q[0];document.getElementById("qCite").textContent=q[1];
+  document.getElementById("heroDate").textContent="Diario estoico · "+now.toLocaleDateString("es",{weekday:"long",day:"numeric",month:"long"});
+})();
+(function(){
+  // f = hábito, o = libre, x = fijo (trabajo, clases, traslados), t = hora por confirmar
+  const ORO=["6:00–7:20","Rutina de amanecer","","f"];
+  const IDA=["7:20–8:20","Traslado","inglés en audio","x"];
+  const TRAB=["8:30–13:00","Trabajo","","x"];
+  const A_U=["13:00–13:20","A la U","","x"];
+  const COM_U=["13:30–14:00","Almuerzo","","o"];
+  const CIERRE=["21:30–22:00","Examen y celular fuera","","f"];
   const WEEK=[
-    {d:"Lun",n:"Lunes",s:"clases",b:[ORO,IDA,TRAB,A_U,COM_U,["14:00–15:00","Trabajo","Hasta que empieza la clase.","x"],["15:00–18:00","Clases","","x"],["18:00–19:00","Regreso a casa","Inglés en audio o música para desconectar.","x t"],["19:00–19:45","Cena","","o"],["19:45–20:30","Tesis ligera","45 min de bajo esfuerzo: leer fuentes, hacer fichas, ordenar referencias.","f"],["20:30–21:30","Libre","Día largo: descansa sin culpa.","o"],CIERRE]},
-    {d:"Mar",n:"Martes",s:"virtual",b:[["6:00–8:15","Bloque de oro largo","Sin traslado: 35 min de ejercicio, 20 de lectura y 20 de inglés.","f"],["8:30–10:30","Revisión de TIC","Virtual. Cámara y pestañas de trabajo; celular en otra habitación.","x"],["10:30–13:00","Trabajo virtual","Levántate 5 min cada hora; en casa es fácil quedarse pegado a la pantalla.","x"],["13:00–13:30","Almuerzo","","o"],["13:30–15:00","Descanso y pendientes","Trámites, mandados, casa.","o"],["15:00–16:30","Tesis (bloque profundo)","90 min en casa: escribir, no solo leer fuentes.","f"],["16:30–17:30","Tareas de la U","","f"],["18:30–19:30","Hora de ingresos","Una hora completa.","f"],["19:30–21:30","Libre","","o"],CIERRE]},
-    {d:"Mié",n:"Miércoles",s:"clases",b:[ORO,IDA,TRAB,A_U,COM_U,["14:00–16:00","Trabajo","Hasta que empieza la clase.","x"],["16:00–18:00","Clases","","x"],["18:00–19:00","Regreso a casa","","x t"],["19:00–19:45","Cena","","o"],["19:45–20:45","Tesis","1 hora: escribe un apartado corto o corrige lo del martes.","f"],["20:45–21:30","Libre","","o"],CIERRE]},
-    {d:"Jue",n:"Jueves",s:"sin clases",b:[ORO,IDA,TRAB,["13:00–13:30","Almuerzo","Cerca del trabajo, antes de regresar.","o"],["13:30–14:30","Regreso a casa","Inglés en audio.","x"],["14:30–15:30","Descanso","Una siesta de 20 min está bien; más de eso te quita el sueño de la noche.","o"],["15:30–17:00","Tesis (bloque profundo)","90 min.","f"],["17:00–17:45","Tareas de la U","","f"],["18:00–19:00","Hora de ingresos","","f"],["19:00–21:30","Libre","","o"],CIERRE]},
-    {d:"Vie",n:"Viernes",s:"clases",b:[ORO,IDA,TRAB,A_U,COM_U,["14:00–16:00","Trabajo","Hasta que empieza la clase.","x"],["16:00–19:00","Clases","","x"],["19:00–20:00","Regreso a casa","","x t"],["20:00–20:25","Tesis mínima","25 min: relee la semana y anota qué toca el sábado.","f"],["20:25–22:30","Noche libre","Tu premio de la semana.","o"],["22:30","Celular fuera del cuarto","Media hora más de margen, no más.","f"]]},
-    {d:"Sáb",n:"Sábado",s:"libre",b:[["7:00","Me levanto","Máximo una hora más tarde que entre semana.","f"],["7:15–8:15","Ejercicio largo","Sal a caminar, trotar o a un parque.","f"],["9:00–11:00","Tesis (bloque largo)","2 horas: el avance grande de la semana, como un capítulo o un apartado.","f"],["11:30–13:00","Bloque de ingresos","90 min.","f"],["13:00–21:30","Libre","Descansa, sal, ve a quien quieras ver.","o"],CIERRE]},
-    {d:"Dom",n:"Domingo",s:"libre",b:[["7:00","Me levanto","","f"],["8:00–9:00","Lectura larga e inglés","Una película o serie en inglés con subtítulos también cuenta.","f"],["9:00–10:30","Tesis","90 min: corregir y planear la semana de tesis.","f"],["10:30–11:30","Tareas de la U","Las de lunes, miércoles y viernes, que ya no tienen hueco entre semana.","f"],["11:30–18:00","Libre","","o"],["18:00–18:30","Revisión semanal","Los 5 pasos del final de esta página y el plan de la semana.","f"],["18:30–21:30","Libre","","o"],CIERRE]}
+    {d:"Lun",n:"Lunes",b:[ORO,IDA,TRAB,A_U,COM_U,["14:00–15:00","Trabajo","","x"],["15:00–18:00","Clases","","x"],["18:00–19:00","Regreso","","x t"],["19:00–19:45","Cena","","o"],["19:45–20:30","Tesis ligera","fuentes y fichas","f"],["20:30–21:30","Libre","","o"],CIERRE]},
+    {d:"Mar",n:"Martes",b:[["6:00–8:15","Amanecer largo","ejercicio, lectura, inglés","f"],["8:30–10:30","Revisión de TIC","virtual","x"],["10:30–13:00","Trabajo virtual","","x"],["13:00–13:30","Almuerzo","","o"],["13:30–15:00","Pendientes","","o"],["15:00–16:30","Tesis","escribir","f"],["16:30–17:30","Tareas de la U","","f"],["18:30–19:30","Ingresos","","f"],["19:30–21:30","Libre","","o"],CIERRE]},
+    {d:"Mié",n:"Miércoles",b:[ORO,IDA,TRAB,A_U,COM_U,["14:00–16:00","Trabajo","","x"],["16:00–18:00","Clases","","x"],["18:00–19:00","Regreso","","x t"],["19:00–19:45","Cena","","o"],["19:45–20:45","Tesis","apartado corto","f"],["20:45–21:30","Libre","","o"],CIERRE]},
+    {d:"Jue",n:"Jueves",b:[ORO,IDA,TRAB,["13:00–13:30","Almuerzo","","o"],["13:30–14:30","Regreso","inglés en audio","x"],["14:30–15:30","Descanso","","o"],["15:30–17:00","Tesis","escribir","f"],["17:00–17:45","Tareas de la U","","f"],["18:00–19:00","Ingresos","","f"],["19:00–21:30","Libre","","o"],CIERRE]},
+    {d:"Vie",n:"Viernes",b:[ORO,IDA,TRAB,A_U,COM_U,["14:00–16:00","Trabajo","","x"],["16:00–19:00","Clases","","x"],["19:00–20:00","Regreso","","x t"],["20:00–20:25","Tesis mínima","plan del sábado","f"],["20:25–22:30","Noche libre","","o"],["22:30","Celular fuera","","f"]]},
+    {d:"Sáb",n:"Sábado",b:[["7:00","Arriba","","f"],["7:15–8:15","Ejercicio largo","","f"],["9:00–11:00","Tesis","avance grande","f"],["11:30–13:00","Ingresos","","f"],["13:00–21:30","Libre","","o"],CIERRE]},
+    {d:"Dom",n:"Domingo",b:[["7:00","Arriba","","f"],["8:00–9:00","Lectura e inglés","","f"],["9:00–10:30","Tesis","corregir y planear","f"],["10:30–11:30","Tareas de la U","","f"],["11:30–18:00","Libre","","o"],["18:00–18:30","Revisión semanal","","f"],["18:30–21:30","Libre","","o"],CIERRE]}
   ];
   const tabs=document.getElementById("dayTabs"),blocks=document.getElementById("dayBlocks");
   const todayIdx=(new Date().getDay()+6)%7;
@@ -404,16 +399,16 @@ footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);paddi
     [...tabs.children].forEach((b,j)=>{b.setAttribute("aria-selected",String(i===j));b.tabIndex=i===j?0:-1});
     blocks.innerHTML="";
     WEEK[i].b.forEach(([t,n,d,c])=>{
-      const row=document.createElement("div");row.className="block "+({f:"focus",o:"off",x:"fixed"}[c[0]])+(c.includes("t")?" tbd":"");
-      row.innerHTML=`<span class="mono"></span><div><b></b><span class="d"></span></div>`;
-      row.querySelector(".mono").textContent=t;row.querySelector("b").textContent=n;row.querySelector(".d").textContent=d;
+      const row=document.createElement("div");row.className="row "+c;
+      row.innerHTML=`<span class="mono"></span><div><b></b><small></small></div>`;
+      row.querySelector(".mono").textContent=t;row.querySelector("b").textContent=n;row.querySelector("small").textContent=d;
       blocks.appendChild(row);
     });
     blocks.setAttribute("aria-label",WEEK[i].n);
   }
   WEEK.forEach((w,i)=>{
-    const b=document.createElement("button");b.type="button";b.setAttribute("role","tab");
-    b.innerHTML=`${w.d}<small>${w.s}</small>`;if(i===todayIdx)b.classList.add("today");
+    const b=document.createElement("button");b.type="button";b.setAttribute("role","tab");b.textContent=w.d;
+    if(i===todayIdx)b.classList.add("today");
     b.onclick=()=>showDay(i);
     b.onkeydown=e=>{if(e.key==="ArrowRight"||e.key==="ArrowLeft"){const k=(i+(e.key==="ArrowRight"?1:6))%7;showDay(k);tabs.children[k].focus()}};
     tabs.appendChild(b);
@@ -422,18 +417,18 @@ footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);paddi
 })();
 (function(){
   const HABITS=[
-    {k:"wake",n:"Me levanté a tiempo",d:"6:00 (mínimo 6:30)"},
-    {k:"phoneOut",n:"Celular fuera del cuarto",d:"anoche, a las 22:00"},
-    {k:"move",n:"Ejercicio",d:"20 min (mínimo 10 sentadillas)"},
-    {k:"read",n:"Lectura",d:"10 páginas (mínimo 1)"},
-    {k:"english",n:"Inglés",d:"audio en el traslado (mínimo 5 palabras)"},
-    {k:"thesis",n:"Tesis",d:"bloque del día (mínimo 25 min o un párrafo)"},
-    {k:"money",n:"Acción de ingresos",d:"bloque del día (mínimo anotar 1 idea)"},
-    {k:"close",n:"Cierre del día",d:"plan de mañana en papel"}
+    {k:"wake",n:"Arriba 6:00"},
+    {k:"phoneOut",n:"Celular fuera"},
+    {k:"move",n:"Ejercicio"},
+    {k:"read",n:"Lectura"},
+    {k:"english",n:"Inglés"},
+    {k:"thesis",n:"Tesis"},
+    {k:"money",n:"Ingresos"},
+    {k:"close",n:"Examen nocturno"}
   ];
-  const SHORT={wake:"Levantarme",phoneOut:"Celular fuera",move:"Ejercicio",read:"Leer",english:"Inglés",thesis:"Tesis",money:"Ingresos",close:"Cierre"};
+  const SHORT={wake:"Arriba",phoneOut:"Celular",move:"Ejercicio",read:"Leer",english:"Inglés",thesis:"Tesis",money:"Ingresos",close:"Examen"};
   const LS="plan-volver-registro";
-  const days={}; // date -> {h:{}, phone, mood, note}
+  const days={};
   let cur=iso(new Date()); let store=null; const $=id=>document.getElementById(id);
 
   function iso(d){const z=new Date(d.getTime()-d.getTimezoneOffset()*60000);return z.toISOString().slice(0,10)}
@@ -441,20 +436,20 @@ footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);paddi
   function get(s){return days[s]||(days[s]={h:{},phone:null,mood:null,note:""})}
   function status(t){$("status").textContent=t}
 
-  // --- almacenamiento: db privado por persona; si no hay, el navegador ---
+  // almacenamiento: db privado por persona; si no hay, el navegador
   const local={
     load(){try{Object.assign(days,JSON.parse(localStorage.getItem(LS)||"{}"))}catch(e){}},
     save(){try{localStorage.setItem(LS,JSON.stringify(days))}catch(e){}}
   };
   local.load();
-  let timers={};
+  const timers={};
   function save(s){
     local.save();
     if(!store){status("Guardado en este navegador");return}
     clearTimeout(timers[s]); status("Guardando…");
     timers[s]=setTimeout(async()=>{
       try{const d=get(s);await store.doc(s).set({date:s,h:d.h,phone:d.phone,mood:d.mood,note:d.note});status("Guardado")}
-      catch(e){status("No se pudo guardar en la nube; quedó en este navegador")}
+      catch(e){status("Sin conexión: guardado en este navegador")}
     },600);
   }
   (async()=>{
@@ -466,15 +461,14 @@ footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);paddi
       store=db.collection("data/users/"+id);
       const snap=await store.get();
       snap.docs.forEach(ds=>{const v=ds.data();if(v&&v.date)days[v.date]={h:v.h||{},phone:v.phone??null,mood:v.mood??null,note:v.note||""}});
-      local.save(); status("Sincronizado con tu cuenta"); render();
+      local.save(); status("Sincronizado"); render();
     }catch(e){status("Guardado en este navegador")}
   })();
 
-  // --- interfaz ---
   const hab=$("habits");
   HABITS.forEach(h=>{
     const l=document.createElement("label");l.className="habit";l.dataset.k=h.k;
-    l.innerHTML=`<input type="checkbox" id="h-${h.k}"><span class="t"><b>${h.n}</b><small>${h.d}</small></span>`;
+    l.innerHTML=`<input type="checkbox" id="h-${h.k}"><span>${h.n}</span>`;
     l.querySelector("input").addEventListener("change",e=>{get(cur).h[h.k]=e.target.checked;save(cur);render()});
     hab.appendChild(l);
   });
@@ -488,7 +482,7 @@ footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);paddi
 
   function label(s){
     const t=iso(new Date());if(s===t)return"Hoy";if(s===shift(t,-1))return"Ayer";
-    return new Date(s+"T12:00:00").toLocaleDateString("es",{weekday:"long",day:"numeric",month:"long"});
+    return new Date(s+"T12:00:00").toLocaleDateString("es",{weekday:"short",day:"numeric",month:"short"});
   }
   function render(){
     const d=days[cur]||{h:{},phone:null,mood:null,note:""};
@@ -505,7 +499,6 @@ footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);paddi
   }
   function renderStats(){
     const t=iso(new Date());const list=[];for(let i=13;i>=0;i--)list.push(shift(t,-i));
-    // racha de celular fuera (hoy cuenta si ya está marcado)
     let s=0,x=t;if(!days[x]?.h?.phoneOut)x=shift(x,-1);while(days[x]?.h?.phoneOut){s++;x=shift(x,-1)}
     $("sStreak").textContent=s;
     let done=0;list.forEach(dd=>HABITS.forEach(h=>{if(days[dd]?.h?.[h.k])done++}));
@@ -513,7 +506,7 @@ footer{color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);paddi
     const ph=list.map(dd=>days[dd]?.phone).filter(v=>typeof v==="number");
     $("sPhone").textContent=ph.length?Math.round(ph.reduce((a,b)=>a+b,0)/ph.length):"–";
     let html="<thead><tr><th></th>"+list.map(dd=>`<th>${+dd.slice(8)}</th>`).join("")+"</tr></thead><tbody>";
-    HABITS.forEach(h=>{html+=`<tr><th>${SHORT[h.k]}</th>`+list.map(dd=>`<td class="${days[dd]?.h?.[h.k]?"on":""}${dd===cur?" today":""}" title="${dd}"></td>`).join("")+"</tr>"});
+    HABITS.forEach(h=>{html+=`<tr><th>${SHORT[h.k]}</th>`+list.map(dd=>`<td class="${days[dd]?.h?.[h.k]?"on":""}${dd===cur?" cur":""}" title="${dd}"></td>`).join("")+"</tr>"});
     $("heat").innerHTML=html+"</tbody>";
   }
   render();

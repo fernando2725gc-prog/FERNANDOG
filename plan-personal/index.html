@@ -39,6 +39,11 @@ button{font:inherit;color:inherit;cursor:pointer}
 .brand{font-family:var(--f-display);font-size:.8rem;letter-spacing:.18em;color:var(--gold)}
 .top .mono{font-size:.75rem;color:var(--muted)}
 
+.sync{align-self:flex-start;margin-top:-16px;font-family:var(--f-mono);font-size:.68rem;letter-spacing:.04em;display:flex;align-items:center;gap:6px;color:var(--muted)}
+.sync::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--faint)}
+.sync.good::before{background:var(--laurel)} .sync.warn::before{background:var(--gold)} .sync.bad::before{background:var(--bad)}
+.sync.bad{color:var(--bad)}
+
 /* láminas */
 .plate{position:relative;margin:0;border-radius:var(--r);overflow:hidden;aspect-ratio:16/9;max-width:100%;background:var(--surface)}
 .plate canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -197,6 +202,7 @@ nav.bar a[aria-current="page"]{color:var(--gold)}
 <!-- ============ HOY ============ -->
 <main class="view" id="v-hoy">
   <div class="top"><span class="brand">VOLVER A EMPEZAR</span><span class="mono" id="topDate"></span></div>
+  <span class="sync warn" id="syncBadge" role="status">Conectando…</span>
   <figure class="plate">
     <canvas data-scene="dawn" aria-hidden="true"></canvas>
     <figcaption><p id="qText">No es que tengamos poco tiempo, sino que perdemos mucho.</p><span id="qCite">Séneca · De la brevedad de la vida</span></figcaption>
@@ -610,30 +616,61 @@ const HABITS=[
 const LS="plan-volver-registro";
 const days={};let cur=today(),store=null;
 const get=s=>days[s]||(days[s]={h:{},phone:null,mood:null,note:""});
-const status=t=>{$("status").textContent=t};
-const local={load(){try{Object.assign(days,JSON.parse(localStorage.getItem(LS)||"{}"))}catch(e){}},save(){try{localStorage.setItem(LS,JSON.stringify(days))}catch(e){}}};
+// sincronización: cada día lleva t (última edición). Lo editado sin conexión queda pendiente y se sube al conectar.
+const SYNC={ok:["good","Sincronizado con tu cuenta"],busy:["warn","Guardando…"],local:["bad","Solo en este dispositivo"],wait:["warn","Conectando…"]};
+function status(k){const [c,t]=SYNC[k];$("status").textContent=t;const b=$("syncBadge");b.className="sync "+c;b.textContent=t}
+const PEND=LS+"-pendientes";
+const local={
+  load(){try{Object.assign(days,JSON.parse(localStorage.getItem(LS)||"{}"))}catch(e){}},
+  save(){try{localStorage.setItem(LS,JSON.stringify(days));localStorage.setItem(PEND,JSON.stringify([...dirty]))}catch(e){}}
+};
+const dirty=new Set();
+try{JSON.parse(localStorage.getItem(PEND)||"[]").forEach(d=>dirty.add(d))}catch(e){}
 local.load();
-const timers={};
-function save(s){
-  local.save();
-  if(!store){status("Guardado en este navegador");return}
-  clearTimeout(timers[s]);status("Guardando…");
-  timers[s]=setTimeout(async()=>{
-    try{const d=get(s);await store.doc(s).set({date:s,h:d.h,phone:d.phone,mood:d.mood,note:d.note});status("Guardado en tu cuenta")}
-    catch(e){status("Sin conexión: guardado en este navegador")}
-  },600);
+let flushTimer=null,flushing=false;
+function save(s){get(s).t=Date.now();dirty.add(s);local.save();clearTimeout(flushTimer);flushTimer=setTimeout(flush,250);if(store)status("busy")}
+async function flush(){
+  if(!store||flushing||!dirty.size)return;
+  flushing=true;status("busy");
+  try{
+    for(const s of [...dirty]){const d=get(s);await store.doc(s).set({date:s,h:d.h,phone:d.phone,mood:d.mood,note:d.note,t:d.t||Date.now()});dirty.delete(s)}
+    local.save();status("ok");
+  }catch(e){status("local")}
+  flushing=false;if(dirty.size&&store)flushTimer=setTimeout(flush,5000);
 }
+// el celular puede congelar la página al cambiar de app: subir antes de que pase
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")flush()});
+window.addEventListener("pagehide",flush);
+function merge(s,v){
+  const l=days[s],cv={h:v.h||{},phone:v.phone??null,mood:v.mood??null,note:v.note||"",t:v.t||0};
+  if(!l){days[s]=cv;return}
+  if(dirty.has(s)&&(l.t||0)>=cv.t){                    // lo local es más nuevo: completa lo que no tocaste aquí
+    l.h=l.h||{};Object.keys(cv.h).forEach(k=>{if(!(k in l.h))l.h[k]=cv.h[k]});
+    if(l.phone==null)l.phone=cv.phone;if(l.mood==null)l.mood=cv.mood;if(!l.note)l.note=cv.note;return}
+  if(cv.t>(l.t||0)){days[s]=cv;dirty.delete(s);return} // la nube es más nueva
+  // empate o datos antiguos sin hora: unir sin perder nada
+  const h={...cv.h};Object.keys(l.h||{}).forEach(k=>{if(l.h[k])h[k]=true});
+  const m={h,phone:cv.phone??l.phone??null,mood:cv.mood??l.mood??null,note:cv.note||l.note||"",t:Math.max(cv.t,l.t||0)};
+  if(JSON.stringify(m.h)!==JSON.stringify(cv.h)||m.phone!==cv.phone||m.mood!==cv.mood||m.note!==cv.note)dirty.add(s);
+  days[s]=m;
+}
+status("wait");
 (async()=>{
   try{
-    if(!window.claude?.use){status("Guardado en este navegador");return}
+    if(!window.claude?.use){status("local");return}
     const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);
     const id=user?await user.id():null;
-    if(!db||!id){status("Guardado en este navegador");return}
+    if(!db||!id){status("local");return}
     store=db.collection("data/users/"+id);
-    const snap=await store.get();
-    snap.docs.forEach(ds=>{const v=ds.data();if(v&&v.date)days[v.date]={h:v.h||{},phone:v.phone??null,mood:v.mood??null,note:v.note||""}});
-    local.save();status("Sincronizado con tu cuenta");renderAll();
-  }catch(e){status("Guardado en este navegador")}
+    let first=true;
+    store.onSnapshot(snap=>{
+      const seen=new Set();
+      snap.docs.forEach(ds=>{const v=ds.data();if(v&&v.date){seen.add(v.date);merge(v.date,v)}});
+      if(first){first=false;Object.keys(days).forEach(s=>{const d=days[s];if(!seen.has(s)&&(Object.values(d.h||{}).some(Boolean)||d.phone!=null||d.mood!=null||d.note))dirty.add(s)})}
+      local.save();renderAll();
+      if(dirty.size)flush();else if(!flushing)status("ok");
+    },()=>status("local"));
+  }catch(e){status("local")}
 })();
 
 function toggle(date,k,val){get(date).h[k]=val;save(date);renderAll()}

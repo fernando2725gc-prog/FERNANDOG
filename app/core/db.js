@@ -181,7 +181,7 @@ const DB = (function () {
         valorKgProductor: 1.50, origenValorKg: "S",
         valorKgLocal: 0.60, origenValorLocal: "S",
         ingresoDiarioKg: 2000, origenIngreso: "E",
-        color: "#c0246b", activa: true },
+        color: "var(--linea-1)", activa: true },
       { id: "ln_tomate", codigo: "TOM", nombre: "Tomate de árbol",
         nombreSeleccion: "Clasificación y limpieza",
         pesoGavetaKg: 20, origenPesoGaveta: "M",
@@ -191,7 +191,7 @@ const DB = (function () {
         valorKgProductor: 1.54, origenValorKg: "S",
         valorKgLocal: 0.90, origenValorLocal: "E",
         ingresoDiarioKg: 1000, origenIngreso: "E",
-        color: "#c85a1e", activa: true },
+        color: "var(--linea-2)", activa: true },
       { id: "ln_granadilla", codigo: "GRA", nombre: "Granadilla",
         nombreSeleccion: "Clasificación por calibre",
         pesoGavetaKg: 12, origenPesoGaveta: "M",
@@ -201,7 +201,7 @@ const DB = (function () {
         valorKgProductor: 1.40, origenValorKg: "E",
         valorKgLocal: 0.70, origenValorLocal: "E",
         ingresoDiarioKg: 860, origenIngreso: "E",
-        color: "#b8860b", activa: true }
+        color: "var(--linea-3)", activa: true }
     ];
   }
 

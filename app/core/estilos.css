@@ -11,10 +11,33 @@
   --rojo: #b23a2e;
   --azul: #2f6f8f;
 
-  /* Las tres lineas de producto, tomadas del color de la propia fruta. */
-  --linea-1: #c0246b;        /* pitahaya roja */
-  --linea-2: #c85a1e;        /* tomate de arbol */
-  --linea-3: #b8860b;        /* granadilla */
+  /* ---- los colores de los graficos, y de paso los de las tres lineas ----
+
+     Esto empezo como un retrato de la fruta: magenta la pitahaya, naranja
+     el tomate de arbol, dorado la granadilla. La idea era bonita y fallaba
+     en lo unico que tenia que hacer. Pasadas por el validador de paleta,
+     naranja y dorado quedaban a 10,9 de distancia para la vista normal
+     —el minimo es 15— y a 5,3 para un deuteranope: en un grafico de tres
+     lineas, dos eran la misma. El color de una linea no esta para recordar
+     a que sabe: esta para decir cual es.
+
+     Granadilla pasa a azul. No hay tres colores calidos que se distingan
+     entre si, y el que menos pierde al salir del grupo es el dorado, que
+     ademas era el que peor contrastaba sobre blanco.
+
+     Los cuatro pasan las cinco comprobaciones contra TODAS las parejas, no
+     solo las contiguas. Un quinto no: la paleta se queda en cuatro y lo que
+     sobre se agrupa en «Otras», que es mejor que un color que nadie
+     distingue. El tema oscuro tiene sus propios escalones, validados contra
+     el fondo oscuro; no es el claro aclarado. */
+  --graf-1: #c0246b;
+  --graf-2: #d05a16;
+  --graf-3: #1f74a3;
+  --graf-4: #6b3fc0;
+
+  --linea-1: var(--graf-1);  /* pitahaya roja */
+  --linea-2: var(--graf-2);  /* tomate de arbol */
+  --linea-3: var(--graf-3);  /* granadilla */
   --bien: #2f7a56;
   --regular: #a8720f;
   --mal: #b23a2e;
@@ -61,9 +84,14 @@
     --rojo: #e0705f;
     --azul: #6ba3dc;
 
-    --linea-1: #e8639a;
-    --linea-2: #e5884b;
-    --linea-3: #d9ab3c;
+    --graf-1: #cf3a76;
+    --graf-2: #dd6621;
+    --graf-3: #3690c4;
+    --graf-4: #8259d6;
+
+    --linea-1: var(--graf-1);
+    --linea-2: var(--graf-2);
+    --linea-3: var(--graf-3);
     --bien: #59b087;
     --regular: #d9a13f;
     --mal: #e0705f;

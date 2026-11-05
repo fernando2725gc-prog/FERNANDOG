@@ -26,10 +26,33 @@
   --rojo: #b23a2e;
   --azul: #2f6f8f;
 
-  /* Las tres lineas de producto, tomadas del color de la propia fruta. */
-  --linea-1: #c0246b;        /* pitahaya roja */
-  --linea-2: #c85a1e;        /* tomate de arbol */
-  --linea-3: #b8860b;        /* granadilla */
+  /* ---- los colores de los graficos, y de paso los de las tres lineas ----
+
+     Esto empezo como un retrato de la fruta: magenta la pitahaya, naranja
+     el tomate de arbol, dorado la granadilla. La idea era bonita y fallaba
+     en lo unico que tenia que hacer. Pasadas por el validador de paleta,
+     naranja y dorado quedaban a 10,9 de distancia para la vista normal
+     —el minimo es 15— y a 5,3 para un deuteranope: en un grafico de tres
+     lineas, dos eran la misma. El color de una linea no esta para recordar
+     a que sabe: esta para decir cual es.
+
+     Granadilla pasa a azul. No hay tres colores calidos que se distingan
+     entre si, y el que menos pierde al salir del grupo es el dorado, que
+     ademas era el que peor contrastaba sobre blanco.
+
+     Los cuatro pasan las cinco comprobaciones contra TODAS las parejas, no
+     solo las contiguas. Un quinto no: la paleta se queda en cuatro y lo que
+     sobre se agrupa en «Otras», que es mejor que un color que nadie
+     distingue. El tema oscuro tiene sus propios escalones, validados contra
+     el fondo oscuro; no es el claro aclarado. */
+  --graf-1: #c0246b;
+  --graf-2: #d05a16;
+  --graf-3: #1f74a3;
+  --graf-4: #6b3fc0;
+
+  --linea-1: var(--graf-1);  /* pitahaya roja */
+  --linea-2: var(--graf-2);  /* tomate de arbol */
+  --linea-3: var(--graf-3);  /* granadilla */
   --bien: #2f7a56;
   --regular: #a8720f;
   --mal: #b23a2e;
@@ -76,9 +99,14 @@
     --rojo: #e0705f;
     --azul: #6ba3dc;
 
-    --linea-1: #e8639a;
-    --linea-2: #e5884b;
-    --linea-3: #d9ab3c;
+    --graf-1: #cf3a76;
+    --graf-2: #dd6621;
+    --graf-3: #3690c4;
+    --graf-4: #8259d6;
+
+    --linea-1: var(--graf-1);
+    --linea-2: var(--graf-2);
+    --linea-3: var(--graf-3);
     --bien: #59b087;
     --regular: #d9a13f;
     --mal: #e0705f;
@@ -3661,7 +3689,7 @@ const DB = (function () {
         valorKgProductor: 1.50, origenValorKg: "S",
         valorKgLocal: 0.60, origenValorLocal: "S",
         ingresoDiarioKg: 2000, origenIngreso: "E",
-        color: "#c0246b", activa: true },
+        color: "var(--linea-1)", activa: true },
       { id: "ln_tomate", codigo: "TOM", nombre: "Tomate de árbol",
         nombreSeleccion: "Clasificación y limpieza",
         pesoGavetaKg: 20, origenPesoGaveta: "M",
@@ -3671,7 +3699,7 @@ const DB = (function () {
         valorKgProductor: 1.54, origenValorKg: "S",
         valorKgLocal: 0.90, origenValorLocal: "E",
         ingresoDiarioKg: 1000, origenIngreso: "E",
-        color: "#c85a1e", activa: true },
+        color: "var(--linea-2)", activa: true },
       { id: "ln_granadilla", codigo: "GRA", nombre: "Granadilla",
         nombreSeleccion: "Clasificación por calibre",
         pesoGavetaKg: 12, origenPesoGaveta: "M",
@@ -3681,7 +3709,7 @@ const DB = (function () {
         valorKgProductor: 1.40, origenValorKg: "E",
         valorKgLocal: 0.70, origenValorLocal: "E",
         ingresoDiarioKg: 860, origenIngreso: "E",
-        color: "#b8860b", activa: true }
+        color: "var(--linea-3)", activa: true }
     ];
   }
 
@@ -6496,9 +6524,31 @@ const Graficos = (function () {
   function pctTexto(fraccion) { return FORMATO.format(fraccion * 100) + "%"; }
 
 
-  /* Los tres primeros colores son los de las lineas de producto: pitahaya
-     roja, tomate de arbol y granadilla. El resto completa la escala. */
-  const PALETA = ["#c0246b", "#c85a1e", "#b8860b", "#2f6f8f", "#5b8c3a", "#7a5ba8"];
+  /* Cuatro colores, no seis, y validados: ver el comentario largo en
+     estilos.css. Se piden como variables CSS para que el tema oscuro use
+     sus propios escalones sin que este archivo se entere, y para que un
+     cambio de tema del sistema se vea sin repintar nada.
+
+     Van en `style` y no en el atributo `fill`: `fill="var(--x)"` no es un
+     valor valido de atributo y el navegador lo ignora en silencio —la
+     barra sale negra—, mientras que `style="fill:var(--x)"` es CSS y
+     funciona. */
+  const PALETA = ["var(--graf-1)", "var(--graf-2)", "var(--graf-3)", "var(--graf-4)"];
+
+  /* Una serie que no cabe en la paleta no recibe un color inventado: se
+     suma a «Otras». Ciclar la paleta hace que la novena serie tenga el
+     color de la primera, que es peor que no distinguirla: es decir que son
+     la misma. */
+  function recortarSeries(datos, campo, maximo) {
+    if (datos.length <= maximo) return datos;
+    const cabeza = datos.slice(0, maximo - 1);
+    const cola = datos.slice(maximo - 1);
+    const suma = cola.reduce(function (a, d) { return a + (Number(d[campo]) || 0); }, 0);
+    const fuera = {};
+    fuera.nombre = "Otras (" + cola.length + ")";
+    fuera[campo] = suma;
+    return cabeza.concat([fuera]);
+  }
 
   function esc(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -6577,13 +6627,14 @@ const Graficos = (function () {
       }).join(" ");
       const area = d + " L" + x(puntos.length - 1).toFixed(1) + " " + (m.t + ih) +
         " L" + x(0).toFixed(1) + " " + (m.t + ih) + " Z";
-      svg += '<path d="' + area + '" fill="' + s.color + '" opacity="0.08"/>';
-      svg += '<path d="' + d + '" fill="none" stroke="' + s.color + '" stroke-width="2.5" ' +
+      svg += '<path d="' + area + '" style="fill:' + s.color + '" opacity="0.08"/>';
+      svg += '<path d="' + d + '" fill="none" style="stroke:' + s.color + '" stroke-width="2" ' +
         'stroke-linejoin="round" stroke-linecap="round"/>';
       puntos.forEach(function (p, i) {
         if (puntos.length > 40 && i % salto !== 0) return;
         svg += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(Number(p[s.campo]) || 0).toFixed(1) +
-          '" r="3" fill="' + s.color + '"><title>' + esc(p.periodo) + " · " + s.nombre + ": " +
+          '" r="4" style="fill:' + s.color + '" stroke="var(--superficie)" stroke-width="2">' +
+          "<title>" + esc(p.periodo) + " · " + s.nombre + ": " +
           fmt(p[s.campo]) + " kg</title></circle>";
       });
     });
@@ -6620,11 +6671,15 @@ const Graficos = (function () {
     filas.forEach(function (d, i) {
       const yy = i * alto + 6;
       const ancho = ((Number(d[campo]) || 0) / max) * (W - anchoEtiqueta - 90);
-      const color = o.color || PALETA[i % PALETA.length];
+      /* Un color por fila repartia la paleta por POSICION: al filtrar, el
+         proveedor que antes era magenta pasaba a naranja sin haber
+         cambiado de nada. Y no hacia falta ninguno: esto mide una sola
+         cosa y la longitud de la barra ya la dice. Un color para todas. */
+      const color = o.color || PALETA[0];
       svg += '<text x="0" y="' + (yy + 15) + '" class="chart-label">' +
         esc(String(d.nombre).slice(0, 26)) + "</text>";
       svg += '<rect x="' + anchoEtiqueta + '" y="' + yy + '" width="' + Math.max(ancho, 2) +
-        '" height="20" rx="4" fill="' + color + '"><title>' + esc(d.nombre) + ": " +
+        '" height="20" rx="4" style="fill:' + color + '"><title>' + esc(d.nombre) + ": " +
         fmt(d[campo]) + (o.sufijo || " kg") + "</title></rect>";
       svg += '<text x="' + (anchoEtiqueta + Math.max(ancho, 2) + 8) + '" y="' + (yy + 15) +
         '" class="chart-valor">' + fmt(d[campo]) + (o.sufijo || "") + "</text>";
@@ -6640,6 +6695,10 @@ const Graficos = (function () {
     if (!datos.length) return vacio();
 
     const campo = o.campo || "kg";
+    /* Mas porciones que colores no se puede: a partir de la cuarta se
+       agrupan. Una dona con doce causas tampoco se lee, asi que el limite
+       ayuda dos veces. */
+    datos = recortarSeries(datos, campo, PALETA.length);
     const total = datos.reduce(function (a, d) { return a + (Number(d[campo]) || 0); }, 0);
     if (total <= 0) return vacio();
 
@@ -6669,7 +6728,8 @@ const Graficos = (function () {
           " L" + x3.toFixed(2) + " " + y3.toFixed(2) +
           " A" + r + " " + r + " 0 " + grande + " 0 " + x4.toFixed(2) + " " + y4.toFixed(2) + " Z";
 
-      svg += '<path d="' + d1 + '" fill="' + PALETA[i % PALETA.length] + '" fill-rule="evenodd">' +
+      svg += '<path d="' + d1 + '" style="fill:' + PALETA[i] + '" fill-rule="evenodd" ' +
+        'stroke="var(--superficie)" stroke-width="2">' +
         "<title>" + esc(d.nombre) + ": " + fmt(d[campo]) + " kg (" +
         pctTexto(parte) + ")</title></path>";
       angulo = fin;
@@ -6682,7 +6742,7 @@ const Graficos = (function () {
     let leyenda = '<ul class="leyenda leyenda-col">';
     datos.forEach(function (d, i) {
       const parte = total > 0 ? (Number(d[campo]) || 0) / total : 0;
-      leyenda += '<li><span class="punto" style="background:' + PALETA[i % PALETA.length] + '"></span>' +
+      leyenda += '<li><span class="punto" style="background:' + PALETA[i] + '"></span>' +
         esc(d.nombre) + ' <strong>' + pctTexto(parte) + "</strong></li>";
     });
     leyenda += "</ul>";
@@ -6694,7 +6754,17 @@ const Graficos = (function () {
   /* ------------------------------------------------- Pareto de mermas */
 
   /* Barras ordenadas de mayor a menor mas la curva de porcentaje acumulado.
-     Sirve para ver que pocas causas explican la mayor parte de la merma. */
+     Sirve para ver que pocas causas explican la mayor parte de la merma.
+
+     Esto tiene dos escalas verticales, que como regla general es el peor
+     error que se puede cometer en un grafico. La regla existe porque al
+     juntar dos medidas sin relacion la alineacion de las escalas la elige
+     uno, y entonces el grafico sugiere una correlacion que no esta en los
+     datos. En un Pareto no se elige nada: la curva sale de las mismas
+     barras, las dos arrancan en cero y el 100 % cae exactamente sobre la
+     suma. La alineacion es aritmetica, no una decision de quien dibuja, y
+     por eso aqui la segunda escala si significa algo. Ademas es la forma
+     normalizada del analisis, que es lo que un tribunal espera ver. */
   function pareto(datos, opciones) {
     const o = opciones || {};
     if (!datos.length) return vacio();
@@ -6733,10 +6803,10 @@ const Graficos = (function () {
       const bw = ancho * 0.62;
       const bx = x + (ancho - bw) / 2;
       const by = y(valorDe(d));
-      const color = o.color ? o.color(d) : PALETA[i % PALETA.length];
+      const color = o.color ? o.color(d) : PALETA[0];
 
       svg += '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + bw.toFixed(1) +
-        '" height="' + (m.t + ih - by).toFixed(1) + '" rx="3" fill="' + color + '">' +
+        '" height="' + (m.t + ih - by).toFixed(1) + '" rx="4" style="fill:' + color + '">' +
         "<title>" + esc(d.nombre) + ": " + fmt(valorDe(d)) + unidad + " · " +
         pctTexto(d.porcentaje) + " del total</title></rect>";
 
@@ -6752,17 +6822,18 @@ const Graficos = (function () {
       return (i === 0 ? "M" : "L") + (m.l + i * ancho + ancho / 2).toFixed(1) + " " +
         yAcum(d.acumulado).toFixed(1);
     }).join(" ");
-    svg += '<path d="' + linea + '" fill="none" stroke="' + PALETA[3] +
+    svg += '<path d="' + linea + '" fill="none" style="stroke:' + PALETA[3] +
       '" stroke-width="2" stroke-dasharray="4 3"/>';
     filas.forEach(function (d, i) {
       svg += '<circle cx="' + (m.l + i * ancho + ancho / 2).toFixed(1) + '" cy="' +
-        yAcum(d.acumulado).toFixed(1) + '" r="3.5" fill="' + PALETA[3] + '">' +
+        yAcum(d.acumulado).toFixed(1) + '" r="4" style="fill:' + PALETA[3] + '" ' +
+        'stroke="var(--superficie)" stroke-width="2">' +
         "<title>Acumulado: " + pctTexto(d.acumulado) + "</title></circle>";
     });
 
     /* Referencia del 80%: la frontera clasica del analisis de Pareto */
     svg += '<line x1="' + m.l + '" y1="' + yAcum(0.8).toFixed(1) + '" x2="' + (W - m.r) +
-      '" y2="' + yAcum(0.8).toFixed(1) + '" stroke="' + PALETA[3] +
+      '" y2="' + yAcum(0.8).toFixed(1) + '" style="stroke:' + PALETA[3] +
       '" stroke-width="1" stroke-dasharray="2 4" opacity="0.55"/>';
 
     svg += "</svg>";

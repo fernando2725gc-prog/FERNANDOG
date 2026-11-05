@@ -216,7 +216,16 @@
 
   function ir(v) {
     vista = v; render();
-    const m = $("#contenido"); if (m) m.focus();
+    /* El foco va al contenido para que el teclado y el lector de pantalla
+       sigan a la navegación. Pero `focus()` a secas arrastra la página
+       hasta el elemento, y como la barra superior es fija, dejaba el
+       título y los botones de la pantalla tapados a medias detrás de
+       ella: se navegaba y lo primero que se veía era medio encabezado.
+       Con `preventScroll` el foco se mueve y la vista no, y arriba del
+       todo se pone a mano. */
+    const m = $("#contenido");
+    if (m) m.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
   }
 
   /* ============================== filtros ============================= */
@@ -334,8 +343,9 @@
     html += "</section>";
 
     html += '<section class="panel"><h2>¿Por qué causa raíz se pierde?</h2>' +
-      '<p class="sub panel-sub">Las causas a la izquierda del 80 % acumulado son las ' +
-      "que concentran la pérdida. Es el Pareto que sostiene la priorización del diagnóstico.</p>" +
+      UI.metodo("Cómo leer el Pareto",
+        "<p>Las causas a la izquierda del 80 % acumulado son las que concentran la " +
+        "pérdida. Es el Pareto que sostiene la priorización del diagnóstico.</p>") +
       Graficos.pareto(Indicadores.porCausaRaiz(filtros), {
         titulo: "Pareto de causas raíz",
         ejeX: function (d) { return d.codigo; },
@@ -349,10 +359,10 @@
     const bal = Indicadores.balanceMasa(filtros);
     const etapas = Indicadores.porEtapa(filtros);
     html += '<section class="panel"><h2>¿Dónde se pierde la fruta?</h2>' +
-      '<p class="sub panel-sub">El balance de masa, de la báscula a la caja. El pesaje ' +
-      "solo comprueba cantidad; la fruta se cae después, y cada etapa tiene su dueño: " +
-      "retirar al recibir es un problema del proveedor, caerse en selección es un " +
-      "problema de método.</p>";
+      UI.metodo("Por qué importa la etapa",
+        "<p>El pesaje solo comprueba cantidad; la fruta se cae después, y cada etapa " +
+        "tiene su dueño: retirar al recibir es un problema del proveedor, caerse en " +
+        "selección es un problema de método.</p>");
 
     if (bal.kgRecibidos <= 0) {
       html += '<p class="vacio">No hay fruta recibida en este período.</p></section>';
@@ -520,10 +530,11 @@
       planActual.eficiencia + '"></div>' +
       '<div class="campo campo-acciones"><button type="submit" class="btn btn-sec">Recalcular</button></div>' +
       "</form>" +
-      '<p class="nota-info">El reparto usa el <strong>contenido de trabajo</strong> ' +
-      "(minutos-persona por gaveta), no el tiempo de ciclo: una actividad atendida por " +
-      "dos personas tarda lo mismo y consume el doble de mano de obra. Los suplementos de " +
-      "la OIT ya están dentro de cada tiempo estándar, así que aquí no se vuelven a restar.</p>" +
+      UI.metodo("Cómo se reparte la gente",
+        "<p>El reparto usa el <strong>contenido de trabajo</strong> (minutos-persona por " +
+        "gaveta), no el tiempo de ciclo: una actividad atendida por dos personas tarda lo " +
+        "mismo y consume el doble de mano de obra. Los suplementos de la OIT ya están " +
+        "dentro de cada tiempo estándar, así que aquí no se vuelven a restar.</p>") +
       "</section>";
 
     /* --- demanda por línea --- */
@@ -791,24 +802,34 @@
         opciones: DB.CALIDADES.map(function (c) { return { valor: c.id, texto: c.nombre }; }),
         ayuda: "El proveedor declaró " + l.calidadDeclarada + "." },
       { nombre: "difCalc", etiqueta: "Contraste con lo anunciado", tipo: "calculado" },
-      { tipo: "separador", etiqueta: "¿Se retiró fruta al descargar?" },
-      { nombre: "kgRetirados", etiqueta: "Kilos retirados (si los hubo)", tipo: "number",
+      /* Lo normal es que entre todo. Preguntar por la causa y el destino del
+         retiro en todos los pesajes obliga a contestar algo cuando no hay
+         nada que contestar, y lo que se contesta entonces es «otros»: una
+         causa inventada envenena justo el análisis para el que se recoge.
+         Los tres campos aparecen cuando hay kilos retirados. */
+      { nombre: "kgRetirados", etiqueta: "¿Se retiró fruta al descargar? (kg)", tipo: "number",
         min: 0, paso: "0.1", ancho: "mitad",
         valor: corregir ? (l.kgRetirados || "") : "",
-        ayuda: "Fruta que no entra a proceso: bajo calibre, golpeada, podrida. " +
-          "Déjalo vacío si entró todo." },
+        ayuda: "Déjalo vacío si entró todo." },
       { nombre: "causaRetiro", etiqueta: "¿Por qué se retiró?", tipo: "select", ancho: "mitad",
         vacio: "—", valor: corregir ? (l.causaRetiro || "") : "",
+        mostrarSi: function (d) { return Number(d.kgRetirados) > 0; },
+        validar: function (v, d) {
+          return Number(d.kgRetirados) > 0 && !v
+            ? "Si se retiró fruta, hay que decir por qué: es lo que alimenta el análisis de causas."
+            : null;
+        },
         opciones: DB.all("causas").filter(function (c) { return c.origen === "Campo" || !c.definida; })
           .map(function (c) { return { valor: c.id, texto: c.codigo + " · " + c.nombre }; }) },
       { nombre: "destinoRetiro", etiqueta: "¿A dónde va lo retirado?", tipo: "select",
         ancho: "mitad", vacio: "—", valor: corregir ? (l.destinoRetiro || "") : "",
+        mostrarSi: function (d) { return Number(d.kgRetirados) > 0; },
         opciones: DB.all("destinos").map(function (d) {
           return { valor: d.id, texto: d.nombre };
         }) },
       { nombre: "observacionesRecepcion", etiqueta: "Observaciones", tipo: "textarea",
         valor: corregir ? l.observacionesRecepcion : "",
-        marcador: "Temperatura, estado de los envases, novedades del transporte." },
+        marcador: "Novedades del transporte, estado de los envases…" },
       { nombre: "motivo", etiqueta: "Motivo de la corrección", tipo: "text",
         requerido: !!corregir,
         marcador: "Por qué se corrige: error al teclear, recuento repetido…",
@@ -1879,7 +1900,7 @@
       '<div class="cab-acciones">' +
       '<button class="btn btn-plano" id="btnCsvReporte">Exportar a Excel</button>' +
       '<button class="btn btn-sec" id="btnLibroCompleto">Libro completo</button>' +
-      '<button class="btn btn-primario" id="btnImprimir">Imprimir / PDF</button></div></div>';
+      '<button class="btn btn-primario" id="btnImprimir">Imprimir</button></div></div>';
 
     html += '<div class="selector-reporte" role="tablist">';
     Object.keys(REPORTES).forEach(function (id) {
@@ -1978,7 +1999,7 @@
       "sobre el kilo de báscula.</p></div>" +
       '<div class="cab-acciones">' +
       '<button class="btn btn-plano" id="btnCsvLiquidacion">Exportar a Excel</button>' +
-      '<button class="btn btn-primario" id="btnImprimir">Imprimir / PDF</button></div></div>';
+      '<button class="btn btn-primario" id="btnImprimir">Imprimir</button></div></div>';
 
     html += barraFiltros({ buscar: false });
 
@@ -2030,11 +2051,11 @@
           csv: function () { return ""; } }
       ], todas, {}) + "</section>";
 
-    html += '<p class="nota-info">Se liquida sobre el <strong>kilo de báscula</strong>, ' +
-      "no sobre lo que el proveedor declaró ni sobre bultos: es el único dato que las dos " +
-      "partes vieron. Un lote pesado se paga aunque todavía esté en planta —lo que se " +
-      "liquida es lo que entró, no lo que salió— y los rechazados aparecen con importe " +
-      "cero y su motivo.</p>";
+    html += UI.metodo("Sobre qué se liquida",
+      "<p>Se liquida sobre el <strong>kilo de báscula</strong>, no sobre lo que el " +
+      "proveedor declaró ni sobre bultos: es el único dato que las dos partes vieron. " +
+      "Un lote pesado se paga aunque todavía esté en planta —lo que se liquida es lo que " +
+      "entró, no lo que salió— y los rechazados aparecen con importe cero y su motivo.</p>");
 
     return html;
   }
@@ -2160,19 +2181,20 @@
     const e = Indicadores.estudioTiempos(lineaTiempos);
     const p = DB.parametros();
 
-    let html = '<div class="vista-cab"><div><h1>Estudio de tiempos y asignación</h1>' +
+    let html = '<div class="vista-cab"><div><h1>Estudio de tiempos</h1>' +
       '<p class="sub">Del cronómetro al tiempo estándar, y del tiempo estándar a ' +
       "cuánta gente hace falta en cada estación.</p></div>" +
       '<div class="cab-acciones">' +
       '<button class="btn btn-plano" id="btnCsvTiempos">Exportar a Excel</button>' +
-      '<button class="btn btn-primario" id="btnImprimir">Imprimir / PDF</button></div></div>';
+      '<button class="btn btn-primario" id="btnImprimir">Imprimir</button></div></div>';
 
     /* --- comparativa de las tres líneas --- */
     html += '<section class="panel"><h2>Las tres líneas</h2>' +
-      '<p class="sub panel-sub">Dos relojes distintos. El <strong>ciclo</strong> es lo que ' +
-      "tarda una gaveta en recorrer la línea; el <strong>contenido de trabajo</strong> es la " +
-      "mano de obra que consume. Difieren en las actividades atendidas por más de una " +
-      "persona, y confundirlos es lo que hace que la asignación salga mal.</p>" +
+      UI.metodo("Ciclo y contenido: dos relojes distintos",
+        "<p>El <strong>ciclo</strong> es lo que tarda una gaveta en recorrer la línea; el " +
+        "<strong>contenido de trabajo</strong> es la mano de obra que consume. Difieren en " +
+        "las actividades atendidas por más de una persona, y confundirlos es lo que hace " +
+        "que la asignación salga mal.</p>") +
       UI.tabla([
         { titulo: "Línea", valor: function (x) { return UI.etiquetaLinea(x.linea.id); },
           csv: function (x) { return x.linea.nombre; } },
@@ -2201,10 +2223,10 @@
             pct(x.cuello.participacion, 0) + "</small>" : "—"; },
           csv: function (x) { return x.cuello ? x.cuello.estacion : ""; } }
       ], Indicadores.estudioTodas(), {}) +
-      '<p class="nota-info">Takt calculado con ' + nf(p.jornadaMin) + " min de jornada menos " +
-      nf(p.pausasMin) + " min de pausas = <strong>" + nf(p.jornadaMin - p.pausasMin) +
-      " min disponibles</strong>, y el ingreso diario de cada línea. Mano de obra a " +
-      money(p.costoHoraHombre) + "/hora " + UI.origen(p.origenCostoHora) + ".</p></section>";
+      '<p class="nota-info">' + nf(p.jornadaMin) + " min de jornada − " + nf(p.pausasMin) +
+      " min de pausas = <strong>" + nf(p.jornadaMin - p.pausasMin) +
+      " min disponibles</strong> · mano de obra a " + money(p.costoHoraHombre) + "/hora " +
+      UI.origen(p.origenCostoHora) + ".</p></section>";
 
     /* --- selector de línea --- */
     html += '<div class="selector-reporte" role="tablist">';
@@ -2218,9 +2240,11 @@
     /* --- cadena del cálculo --- */
     html += '<section class="panel"><h2>' + esc(e.linea.nombre) +
       ': de la lectura al estándar</h2>' +
-      '<p class="sub panel-sub">TN = TO × valoración · TE = TN × (1 + suplemento). ' +
-      "El tiempo estándar no se teclea: se calcula. Cuando se cronometren ciclos nuevos, " +
-      "basta cambiar el TO y se recalculan el takt, los operarios y el costo.</p>" +
+      '<p class="sub panel-sub">TN = TO × valoración · TE = TN × (1 + suplemento).</p>' +
+      UI.metodo("Por qué el estándar no se teclea",
+        "<p>Se calcula. Cuando se cronometren ciclos nuevos basta cambiar el TO: el " +
+        "takt, los operarios y el costo se recalculan solos, y no quedan dos cifras " +
+        "que mantener de acuerdo a mano.</p>") +
       UI.tabla(columnasActividad(), e.detalle, {}) + "</section>";
 
     /* --- asignación por estación --- */
@@ -2334,7 +2358,7 @@
     return '<div class="vista-cab"><div><h1>Guía de uso</h1>' +
       '<p class="sub">Escrita para quien usa el sistema, no para quien lo programó.</p></div>' +
       '<div class="cab-acciones">' +
-      '<button class="btn btn-primario" id="btnImprimir">Imprimir / PDF</button></div></div>' +
+      '<button class="btn btn-primario" id="btnImprimir">Imprimir</button></div></div>' +
       '<section class="panel">' + Guia.planta(usuario.rol) + "</section>";
   }
 
@@ -2362,7 +2386,7 @@
       '<p class="sub">Cuánto cuesta cada causa raíz al año y qué pasaría si se ataca.</p></div>' +
       '<div class="cab-acciones">' +
       '<button class="btn btn-plano" id="btnCsvCosteo">Exportar a Excel</button>' +
-      '<button class="btn btn-primario" id="btnImprimir">Imprimir / PDF</button></div></div>';
+      '<button class="btn btn-primario" id="btnImprimir">Imprimir</button></div></div>';
 
     html += barraFiltros({});
 
@@ -2550,10 +2574,14 @@
       filaComparativo("Descarte aprovechado", i.tasaValorizacion, i.tasaValorizacionConMejora, true, "") +
       "</div>";
 
-    html += '<p class="nota-info">Recupera ' + nf(i.kgRecuperados) + " kg y"
-      " cajas exportables en el período mostrado. El costo de la fruta, el precio por caja y " +
-      "el costo hora-hombre vienen de Parámetros; las reducciones y la tasa de descuento son " +
-      "supuestos " + UI.origen("S") + " que deben discutirse con la empresa.</p>";
+    html += '<p class="nota-info">Recupera ' + nf(i.kgRecuperados) + " kg — unas " +
+      nf(Math.round(i.cajasRecuperadas)) + " cajas exportables — en el período mostrado.</p>";
+    html += UI.metodo("De dónde salen estas cifras",
+      "<p>El costo de la fruta, el precio por caja y el costo hora-hombre vienen de " +
+      "Parámetros. Las reducciones de merma y la tasa de descuento son supuestos " +
+      UI.origen("S") + " que deben discutirse con la empresa antes de decidir nada. " +
+      "Las cajas recuperadas se obtienen al peso medio real de la caja del período, " +
+      "no al nominal de una línea.</p>");
 
     html += "</section>";
     return html;
@@ -2659,7 +2687,7 @@
   function vistaCatalogos() {
     const p = DB.parametros();
 
-    let html = '<div class="vista-cab"><div><h1>Parámetros del sistema</h1>' +
+    let html = '<div class="vista-cab"><div><h1>Parámetros</h1>' +
       '<p class="sub">Los valores que alimentan todos los cálculos. Cada uno declara su origen.</p></div></div>';
 
     /* --- identidad de quien usa el sistema ---
@@ -2688,18 +2716,19 @@
     html += idn.confidencial
       ? '<p class="nota-info"><strong>Modo confidencial activo.</strong> Ningún reporte, ' +
         "liquidación ni guía imprime el nombre real: todos dicen " +
-        "«" + esc(idn.aliasConfidencial || "la Empresa") + "», que es como se cita una empresa " +
-        "bajo acuerdo de confidencialidad en un trabajo académico. Desactívalo solo si la " +
-        "planta autorizó por escrito que su nombre aparezca.</p>"
+        "«" + esc(idn.aliasConfidencial || "la Empresa") + "». Desactívalo solo si la planta " +
+        "autorizó por escrito que su nombre aparezca.</p>" +
+        UI.metodo("Por qué un alias y no el nombre",
+          "<p>Es como se cita una empresa bajo acuerdo de confidencialidad en un trabajo " +
+          "académico: el nombre vive en los datos y nunca llega al documento.</p>")
       : '<p class="aviso-inline"><strong>Modo confidencial desactivado.</strong> Los documentos ' +
         "que generes imprimen la razón social. Asegúrate de tener la autorización.</p>";
     html += '<div class="acciones-fila"><button class="btn btn-primario" id="btnEditarIdentidad">' +
       "Editar identidad</button></div></section>";
 
     html += '<p class="nota-info"><strong>Origen del dato:</strong> ' +
-      UI.origen("M") + " medido en planta · " + UI.origen("E") + " estimado, pendiente de confirmar · " +
-      UI.origen("S") + " tomado de fuente secundaria. Los marcados con E deben validarse con la " +
-      "empresa antes de usarse en el documento.</p>";
+      UI.origen("M") + " medido en planta · " + UI.origen("E") + " estimado, validar con la " +
+      "empresa antes de publicarlo · " + UI.origen("S") + " fuente secundaria.</p>";
 
     /* --- líneas --- */
     html += '<section class="panel"><h2>Líneas de producto</h2>' +
@@ -2958,7 +2987,7 @@
       resumen[m.proveedorId] = m;
     });
 
-    let html = '<div class="vista-cab"><div><h1>Proveedores</h1>' +
+    let html = '<div class="vista-cab"><div><h1>Fincas y cooperativas</h1>' +
       '<p class="sub">Padrón único. La variabilidad entre proveedores es la causa raíz CR6.</p></div>' +
       '<div class="cab-acciones">' +
       '<button class="btn btn-primario" id="btnNuevoProveedor">+ Nuevo proveedor</button>' +
@@ -3011,9 +3040,10 @@
         return b; } }
     ], DB.all("proveedores"), {});
 
-    html += '<p class="nota-info">El <strong>índice de variabilidad</strong> combina la ' +
-      "desviación al declarar, la tasa de rechazo y el rendimiento de la fruta. Es la CR6 " +
-      "hecha número: cuanto más alto, más impredecible es el proveedor.</p>";
+    html += UI.metodo("Qué mide el índice de variabilidad",
+      "<p>Combina la desviación al declarar, la tasa de rechazo y el rendimiento de la " +
+      "fruta. Es la CR6 hecha número: cuanto más alto, más impredecible es el " +
+      "proveedor.</p>");
     return html;
   }
 
@@ -3181,12 +3211,13 @@
       "las comprueba el servidor y no pasan por aquí.</p></div>" +
       '<button class="btn btn-primario" id="btnNuevoAcceso">+ Nuevo acceso</button></div>';
 
-    html += '<p class="nota-info"><strong>Cómo funciona.</strong> Tú creas el acceso ' +
-      "con el nombre de usuario y el rol; la persona lo activa desde su pantalla y " +
-      "elige ahí su contraseña. <strong>Nunca tecleas la contraseña de otro</strong>: " +
-      "una contraseña que pasa por las manos de un tercero deja de serlo. El rol no se " +
-      "puede falsificar —la base solo acepta un perfil que coincida con la invitación " +
-      "que dejaste escrita—.</p>";
+    html += '<p class="nota-info">Tú creas el acceso con el usuario y el rol; la persona ' +
+      "lo activa desde su pantalla y elige ahí su contraseña. " +
+      "<strong>Nunca tecleas la contraseña de otro.</strong></p>";
+    html += UI.metodo("Por qué funciona así",
+      "<p>Una contraseña que pasa por las manos de un tercero deja de serlo. Y el rol no " +
+      "se puede falsificar al activarse: la base solo acepta un perfil que coincida con la " +
+      "invitación que dejaste escrita.</p>");
 
     if (!personas.cargado) {
       html += '<p class="vacio">Consultando las cuentas…</p>';
@@ -3331,10 +3362,10 @@
         return b; } }
     ], DB.all("usuarios"), {});
 
-    html += '<p class="nota-info"><strong>Cómo se guardan las claves.</strong> No se guardan: ' +
-      "se guarda el resultado de derivarlas con PBKDF2-SHA256 y una sal distinta por persona, " +
-      "así que desde el almacén no se puede llegar a la clave. Por eso una clave olvidada se " +
-      "<em>restablece</em>, nunca se consulta.</p>";
+    html += UI.metodo("Cómo se guardan las claves",
+      "<p>No se guardan: se guarda el resultado de derivarlas con PBKDF2-SHA256 y una sal " +
+      "distinta por persona, así que desde el almacén no se puede llegar a la clave. Por eso " +
+      "una clave olvidada se <em>restablece</em>, nunca se consulta.</p>");
     html += '<p class="nota-seguridad">' + UI.icono("alerta") + ' Límite del prototipo: la comprobación ocurre en el ' +
       "navegador, no en un servidor. Quien pueda leer el almacén ve los hashes y podría " +
       "intentar adivinarlos sin conexión. Es suficiente para que nadie entre haciéndose pasar " +

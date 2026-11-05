@@ -1331,7 +1331,14 @@ const Indicadores = (function () {
         tasaValorizacion: ind.tasaValorizacion,
         tasaValorizacionConMejora: kgMermaConMejora > 0
           ? kgValorizadoConMejora / kgMermaConMejora : 0,
-        kgRecuperados: kgRecuperados
+        kgRecuperados: kgRecuperados,
+        /* En cajas, que es la unidad en que se vende y en que piensa planta.
+           El divisor no es el peso de caja de una línea: es el peso medio
+           real del período, deducido de lo que de verdad se empacó, para que
+           la cifra respete la mezcla de líneas que hubo. */
+        cajasRecuperadas: ind.cajasExportables > 0
+          ? kgRecuperados / (ind.kgExportable / ind.cajasExportables)
+          : 0
       }
     };
   }

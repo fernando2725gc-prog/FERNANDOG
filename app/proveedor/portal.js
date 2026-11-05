@@ -1018,8 +1018,11 @@
         if (b.dataset.ir === "anunciar") { formAnunciar(); return; }
         vista = b.dataset.ir;
         render();
+        /* Igual que en planta: `focus()` a secas desplaza la página y deja
+           el encabezado debajo de la barra fija. */
         const m = $("#contenido");
-        if (m) m.focus();
+        if (m) m.focus({ preventScroll: true });
+        window.scrollTo(0, 0);
       });
     });
 

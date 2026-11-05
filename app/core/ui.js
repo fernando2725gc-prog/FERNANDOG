@@ -198,6 +198,20 @@ const UI = (function () {
     return icono(nombre) + "<span>" + esc(texto) + "</span>";
   }
 
+  /* ------------------------------------------------- cómo se calcula
+
+     La explicación del método no es relleno: sostiene cada cifra y un
+     tribunal puede querer leerla. Pero tenerla desplegada en todas las
+     pantallas convierte una herramienta de trabajo en un folleto, y quien
+     entra veinte veces al día deja de leer nada.
+
+     Así que se pliega. Queda a un clic para quien la necesite y fuera de
+     en medio para quien ya la sabe. */
+  function metodo(resumen, contenido) {
+    return '<details class="metodo"><summary>' + esc(resumen) + "</summary>" +
+      '<div class="metodo-cuerpo">' + contenido + "</div></details>";
+  }
+
   /* ---------------------------------------------------------- campana */
 
   /* El botón y el panel son iguales en las dos aplicaciones; lo que cambia
@@ -295,17 +309,30 @@ const UI = (function () {
     enlazarRepetibles(form, campos, o);
     enlazarTeclado(form);
 
-    if (o.alCambiar) {
-      const refrescar = function () { o.alCambiar(leer(form, campos), form); };
-      form.addEventListener("input", refrescar);
-      form.addEventListener("change", refrescar);
-      refrescar();
+    /* Los campos condicionales se evalúan siempre, haya o no `alCambiar`. */
+    const condicionales = campos.filter(function (c) { return c.mostrarSi; });
+
+    function revisarCondiciones() {
+      if (!condicionales.length) return;
+      const d = leerCrudo(form, campos);
+      condicionales.forEach(function (c) {
+        const caja = form.querySelector('[data-campo="' + (c.nombre || c.etiqueta) + '"]');
+        if (caja) caja.hidden = !c.mostrarSi(d);
+      });
     }
+
+    const refrescar = function () {
+      revisarCondiciones();
+      if (o.alCambiar) o.alCambiar(leer(form, campos), form);
+    };
+    form.addEventListener("input", refrescar);
+    form.addEventListener("change", refrescar);
+    refrescar();
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       const datos = leer(form, campos);
-      const problema = validar(campos, datos);
+      const problema = validar(campos, datos, form);
       if (problema) {
         error.innerHTML = problema;
         error.hidden = false;
@@ -356,7 +383,11 @@ const UI = (function () {
   }
 
   function campoHTML(c) {
-    if (c.tipo === "separador") return '<h3 class="form-sep">' + esc(c.etiqueta) + "</h3>";
+    if (c.tipo === "separador") {
+      return '<h3 class="form-sep"' +
+        (c.mostrarSi ? ' data-campo="' + esc(c.nombre || c.etiqueta) + '" hidden' : "") + ">" +
+        esc(c.etiqueta) + "</h3>";
+    }
     if (c.tipo === "html") return '<div class="campo campo-full">' + c.contenido + "</div>";
 
     if (c.tipo === "calculado") {
@@ -419,7 +450,8 @@ const UI = (function () {
         (c.marcador ? ' placeholder="' + esc(c.marcador) + '"' : "") + ">";
     }
 
-    return '<div class="campo campo-' + (c.ancho || "full") + '">' +
+    return '<div class="campo campo-' + (c.ancho || "full") + '"' +
+      (c.mostrarSi ? ' data-campo="' + esc(c.nombre) + '" hidden' : "") + ">" +
       (c.tipo === "checkbox" ? "" : '<label for="' + id + '">' + esc(c.etiqueta) +
         (c.requerido ? ' <span class="req" aria-hidden="true">*</span>' : "") + "</label>") +
       control +
@@ -564,14 +596,23 @@ const UI = (function () {
     });
   }
 
-  function leer(form, campos) {
+  /* Un campo que no está en pantalla no se lee ni se exige. Sin esto, pedir
+     «¿por qué se retiró?» cuando no se retiró nada obliga a inventar una
+     respuesta, y una causa inventada envenena justo el análisis de causa
+     raíz para el que se recogió. */
+  function oculto(form, c) {
+    if (!c.mostrarSi) return false;
+    const caja = form.querySelector('[data-campo="' + c.nombre + '"]');
+    return !!(caja && caja.hidden);
+  }
+
+  /* Para evaluar las condiciones hace falta leer el formulario SIN descartar
+     lo oculto: si no, un campo que depende de otro oculto no vuelve a
+     aparecer nunca. */
+  function leerCrudo(form, campos) {
     const datos = {};
     campos.forEach(function (c) {
-      if (c.tipo === "separador" || c.tipo === "calculado" || c.tipo === "html") return;
-      if (c.tipo === "repetible") {
-        datos[c.nombre] = leerRepetible(form, c.nombre, c.columnas);
-        return;
-      }
+      if (["separador", "calculado", "html", "repetible"].indexOf(c.tipo) !== -1) return;
       const el = form.elements[c.nombre];
       if (!el) return;
       const nodo = el.length && !el.tagName ? el[el.length - 1] : el;
@@ -582,10 +623,30 @@ const UI = (function () {
     return datos;
   }
 
-  function validar(campos, datos) {
+  function leer(form, campos) {
+    const datos = {};
+    campos.forEach(function (c) {
+      if (c.tipo === "separador" || c.tipo === "calculado" || c.tipo === "html") return;
+      if (c.tipo === "repetible") {
+        datos[c.nombre] = leerRepetible(form, c.nombre, c.columnas);
+        return;
+      }
+      const el = form.elements[c.nombre];
+      if (!el) return;
+      if (oculto(form, c)) { datos[c.nombre] = c.tipo === "checkbox" ? false : ""; return; }
+      const nodo = el.length && !el.tagName ? el[el.length - 1] : el;
+      if (c.tipo === "checkbox") datos[c.nombre] = nodo.checked;
+      else if (c.tipo === "number") datos[c.nombre] = nodo.value === "" ? "" : Number(nodo.value);
+      else datos[c.nombre] = String(nodo.value).trim();
+    });
+    return datos;
+  }
+
+  function validar(campos, datos, form) {
     for (let i = 0; i < campos.length; i += 1) {
       const c = campos[i];
       if (c.tipo === "separador" || c.tipo === "calculado" || c.tipo === "html") continue;
+      if (form && oculto(form, c)) continue;
       const v = datos[c.nombre];
       if (c.requerido && (v === "" || v === null || v === undefined)) {
         return "El campo «" + esc(c.etiqueta) + "» es obligatorio.";
@@ -768,6 +829,7 @@ const UI = (function () {
     cajas: cajas, minutos: minutos, fechaLarga: fechaLarga, fechaCorta: fechaCorta,
     origen: origen, aviso: aviso, tabla: tabla, kpi: kpi, insignia: insignia,
     campana: campana, panelNovedades: panelNovedades,
+    metodo: metodo,
     icono: icono, iconoTexto: iconoTexto, ICONOS: ICONOS,
     etiquetaLinea: etiquetaLinea,
     abrirFormulario: abrirFormulario, leerRepetible: leerRepetible,

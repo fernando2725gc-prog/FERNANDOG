@@ -1676,3 +1676,27 @@ th .ico, td .ico { color: var(--texto-tenue); }
 }
 .desvio-aviso { background: rgba(168, 114, 15, .14); color: var(--ambar); border-left: 3px solid var(--ambar); }
 .desvio-grave { background: rgba(178, 58, 46, .13); color: var(--rojo); border-left: 3px solid var(--rojo); }
+
+/* ---- «cómo se calcula»: el método, plegado ----
+   Desplegado en todas las pantallas convertía la herramienta en un folleto.
+   Plegado queda a un clic de quien lo necesite y fuera de en medio de quien
+   ya lo sabe. Al imprimir se abre solo: en un anexo sí tiene que leerse. */
+.metodo { margin: .6rem 0 0; font-size: .86rem; }
+.metodo summary {
+  cursor: pointer; color: var(--texto-tenue); font-weight: 600;
+  list-style: none; padding: .35rem 0; display: inline-flex; align-items: center; gap: .35rem;
+}
+.metodo summary::-webkit-details-marker { display: none; }
+.metodo summary::before { content: "▸"; font-size: .8em; transition: none; }
+.metodo[open] summary::before { content: "▾"; }
+.metodo summary:hover { color: var(--texto); }
+.metodo-cuerpo {
+  padding: .7rem .9rem; margin-top: .2rem; line-height: 1.55;
+  background: var(--superficie-2); border-left: 3px solid var(--borde);
+  border-radius: 0 7px 7px 0; color: var(--texto-tenue);
+}
+.metodo-cuerpo p:last-child { margin-bottom: 0; }
+@media print {
+  .metodo summary { display: none; }
+  .metodo-cuerpo { background: none; border-left: 0; padding: 0; }
+}

@@ -140,6 +140,8 @@ const UI = (function () {
      color de donde estén. Están dibujados aquí, sin librería: el proyecto
      no tiene dependencias y no va a empezar a tenerlas por un icono. */
   const ICONOS = {
+    /* Embudo: el filtro de toda la vida, tres trazos y nada que interpretar. */
+    filtro: "M3.5 5.5h17l-6.6 7.6v5.3l-3.8 2v-7.3z",
     brote: "M12 21v-7.5M12 13.5C8.4 13.5 6.5 11.6 6.5 8 10.1 8 12 9.9 12 13.5zM12 12.4c0-3.6 1.9-5.5 5.5-5.5 0 3.6-1.9 5.5-5.5 5.5z",
     balanza: "M12 4.2v16.6M8 20.8h8M4 7.5h16M4 7.5 1.4 13h5.2zM20 7.5 17.4 13h5.2z",
     planta: "M3 20.5h18M4.5 20.5V11l4.6 2.6V11L13.7 13.6V9l6.3 3.6v7.9M7.5 20.5v-3.2h3.2v3.2",

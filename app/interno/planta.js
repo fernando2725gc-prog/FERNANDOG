@@ -245,6 +245,16 @@
         "</div>";
     }
 
+    /* En el celular los seis filtros apilados ocupaban la pantalla entera:
+       antes de ver un solo indicador habia que pasar de largo seis campos
+       que casi nunca se tocan. Plegados, lo primero que se ve son los
+       datos. En el computador siguen abiertos, que es donde si se usan.
+       El estado se decide al pintar, no por CSS: un `details` cerrado
+       esconde a sus hijos desde el navegador y no hay regla que lo
+       deshaga de forma fiable. */
+    const filtrosAbiertos = typeof window === "undefined" || window.innerWidth > 760;
+    html += '<details class="filtros-caja"' + (filtrosAbiertos ? " open" : "") + ">" +
+      "<summary>" + UI.icono("filtro") + "Filtros" + resumenFiltros() + "</summary>";
     html += '<form class="filtros" id="formFiltros">';
     html += '<div class="campo"><label for="fDesde">Desde</label>' +
       '<input type="date" id="fDesde" name="desde" value="' + esc(filtros.desde) + '"></div>';
@@ -290,7 +300,21 @@
       '<button type="button" class="chip" data-rango="30">30 días</button>' +
       '<button type="button" class="chip" data-rango="90">90 días</button>' +
       '<button type="button" class="chip" data-rango="365">12 meses</button></div>';
+    html += "</details>";
     return html;
+  }
+
+  /* Lo que el resumen del plegable tiene que decir es si hay algo filtrado,
+     no cuales son los filtros: cerrado, el riesgo no es olvidar el valor,
+     es olvidar que hay un filtro puesto y leer medio periodo creyendo que
+     es entero. */
+  function resumenFiltros() {
+    const puestos = ["proveedorId", "lineaId", "estado", "calidad", "texto"]
+      .filter(function (k) { return filtros[k]; }).length;
+    return puestos
+      ? '<span class="filtros-marca">' + puestos + " activo" + (puestos > 1 ? "s" : "") + "</span>"
+      : '<span class="filtros-rango tenue">' + UI.fechaCorta(filtros.desde) + " – " +
+        UI.fechaCorta(filtros.hasta) + "</span>";
   }
 
   /* =============================== panel ============================== */

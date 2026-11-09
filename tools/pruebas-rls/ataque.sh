@@ -164,5 +164,47 @@ cuenta "ni puede escribir"                  $M "select count(*) from resumen_doc
 $PSQL -c "update perfiles set activo=true where uid='$M';" >/dev/null
 
 echo ""
+echo "[9] La puerta de la calle: solicitudes de acceso"
+# Es la unica tabla donde alguien sin cuenta puede escribir, asi que es la
+# que mas hay que golpear. Lo que no puede pasar de ninguna manera: que la
+# bandeja se pueda LEER desde fuera, porque es la lista de proveedores de
+# la planta con su RUC y su telefono.
+permitido "una finca sin cuenta puede pedir acceso"  anon \
+  "insert into solicitudes(ruc,nombre,contacto) values('9999999999','Finca Nueva','099');"
+denegado  "pero no puede leer su propia solicitud"   anon \
+  "select count(*) from solicitudes;"
+denegado  "ni la lista de quien ya pidio"            anon \
+  "select ruc from solicitudes limit 1;"
+denegado  "ni insertarse ya aprobada"                anon \
+  "insert into solicitudes(ruc,nombre,estado) values('8888888888','Trampa','aprobada');"
+denegado  "ni asignarse un codigo de acceso"         anon \
+  "insert into solicitudes(ruc,nombre,acceso) values('7777777777','Trampa','PRV-001');"
+denegado  "ni aprobar la suya despues"               anon \
+  "update solicitudes set estado='aprobada';"
+denegado  "ni borrar la bandeja"                     anon \
+  "delete from solicitudes;"
+
+# Dentro de la casa, tampoco la ve cualquiera: lleva datos de contacto.
+$PSQL -c "insert into solicitudes(ruc,nombre,contacto) values('1234567890','Finca Pendiente','098') on conflict (ruc) do nothing;" >/dev/null
+cuenta    "Recepcion no ve ninguna solicitud"        $REC "select count(*) from solicitudes;" 0
+cuenta    "Produccion tampoco"                       $PRO "select count(*) from solicitudes;" 0
+cuenta    "un proveedor tampoco"                     $M   "select count(*) from solicitudes;" 0
+sinefecto "Recepcion no puede aprobar"               $REC "update solicitudes set estado='aprobada' where ruc='1234567890'"
+sinefecto "un proveedor no puede aprobar"            $M   "update solicitudes set estado='aprobada' where ruc='1234567890'"
+sinefecto "ni borrarla para colarse otra vez"        $M   "delete from solicitudes where ruc='1234567890'"
+
+# Y aprobar no es solo marcar la solicitud: hay que dejar la invitacion.
+# Si Recepcion pudiera escribir invitaciones, podria fabricarse un
+# supervisor. Es la escalada de privilegio que mas importa cerrar.
+denegado  "Recepcion no fabrica invitaciones"        $REC \
+  "insert into invitaciones(acceso,rol,nombre) values('colado','supervisor','Colado');"
+denegado  "un proveedor tampoco"                     $M \
+  "insert into invitaciones(acceso,rol,nombre) values('colado2','supervisor','Colado');"
+permitido "Supervision si ve la bandeja"             $SUP "select count(*) from solicitudes;"
+permitido "y puede aprobar"                          $SUP \
+  "update solicitudes set estado='aprobada', acceso='PRV-900' where ruc='1234567890';"
+$PSQL -c "delete from solicitudes where ruc in ('1234567890','9999999999');" >/dev/null
+
+echo ""
 if [ $fallos -eq 0 ]; then echo "Todo en orden."; else echo "FALLOS: $fallos"; fi
 exit $fallos

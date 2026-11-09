@@ -407,6 +407,95 @@ const Sesion = (function () {
     }
   }
 
+  /* ------------------------------------------- solicitudes de acceso
+
+     Una finca que todavia no existe en el sistema pide entrar. Esto no
+     crea una cuenta ni da acceso a nada: deja un papel en la bandeja de
+     Supervision. Se escribe SIN sesion, que es lo que lo hace util y
+     tambien lo que obliga a que la politica de Postgres sea estricta:
+     `anon` tiene insert y no tiene select, asi que quien solicita no puede
+     leer ni lo suyo ni lo de nadie.
+
+     Inserción simple, NO «upsert». Lo primero que escribí fue un upsert por
+     RUC, para que insistir no llenara la bandeja, y Postgres lo rechazó:
+     un upsert necesita permiso de UPDATE además del de INSERT. Y ahí está
+     el fondo del asunto, que el error dejó a la vista: si `anon` pudiera
+     actualizar, cualquiera podría coger el RUC de una finca con solicitud
+     pendiente y cambiarle el teléfono de contacto. Es decir, quedarse con
+     la aprobación de otro.
+
+     Así que el RUC repetido choca contra la clave primaria y se contesta
+     con una frase, que además es información verdadera y útil: ya hay una
+     solicitud en curso. */
+  async function solicitarAcceso(datos) {
+    try {
+      await Nube.rest("solicitudes", {
+        method: "POST",
+        headers: { Prefer: "return=minimal" },
+        body: {
+          ruc: String(datos.ruc || "").trim(),
+          nombre: String(datos.nombre || "").trim(),
+          contacto: datos.contacto || null,
+          mensaje: datos.mensaje || null
+        }
+      });
+      return { ok: true };
+    } catch (e) {
+      /* El choque de clave primaria no es un fallo de la persona: es que ya
+         pidió antes. Decírselo así evita que vuelva a intentarlo creyendo
+         que no se envió. */
+      if (/duplicate key|23505|409/.test(String(e.detalle || e.message || ""))) {
+        return { error: "Ya hay una solicitud con ese RUC esperando respuesta. " +
+          "La planta la está revisando; si tarda, llámales." };
+      }
+      return { error: e.message };
+    }
+  }
+
+  async function solicitudes() {
+    try {
+      const filas = await Nube.rest(
+        "solicitudes?select=ruc,nombre,contacto,mensaje,estado,acceso,creada,resuelta" +
+        "&order=creada.desc") || [];
+      return filas;
+    } catch (e) { return []; }
+  }
+
+  /* Aprobar no es marcar la solicitud: es dejar la invitacion con el rol y
+     el codigo, que es lo unico que despues permite activarse. Si solo se
+     marcara, la finca quedaria aprobada y sin poder entrar.
+
+     La invitacion va PRIMERO. Si se marcara la solicitud y luego fallara la
+     invitacion, la bandeja diria «aprobada» y no habria nada que activar:
+     el peor estado posible, porque nadie vuelve a mirarlo. */
+  async function resolverSolicitud(ruc, decision, datos) {
+    const d = datos || {};
+    try {
+      if (decision === "aprobada") {
+        const inv = await invitar({
+          acceso: d.acceso, rol: "proveedor", proveedorId: d.proveedorId || d.acceso,
+          nombre: d.nombre, verificacion: ruc
+        });
+        if (inv.error) return inv;
+      }
+      await Nube.rest("solicitudes?ruc=eq." + encodeURIComponent(ruc), {
+        method: "PATCH",
+        headers: { Prefer: "return=minimal" },
+        body: {
+          estado: decision,
+          acceso: decision === "aprobada" ? d.acceso : null,
+          resuelta_por: sesion ? sesion.uid : null,
+          resuelta: new Date().toISOString()
+        }
+      });
+      return { ok: true };
+    } catch (e) {
+      return { error: e.codigo === "permiso-denegado"
+        ? "Solo Supervisión puede resolver solicitudes."
+        : e.message };
+    }
+  }
+
   async function invitaciones() {
     try {
       return await Nube.rest("invitaciones?select=acceso,rol,proveedor_id,nombre,verificacion,creada&order=creada.desc") || [];
@@ -472,6 +561,8 @@ const Sesion = (function () {
     uid: uid,
     cambiarClave: cambiarClave,
     invitar: invitar,
+    solicitarAcceso: solicitarAcceso, solicitudes: solicitudes,
+    resolverSolicitud: resolverSolicitud,
     invitaciones: invitaciones,
     perfiles: perfiles,
     activarPerfil: activarPerfil,

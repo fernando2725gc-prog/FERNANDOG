@@ -63,8 +63,36 @@ create table if not exists invitaciones (
   creada        timestamptz not null default now()
 );
 
+-- La solicitud es la puerta de la calle: una finca que todavía no existe
+-- en el sistema pide entrar. No es una cuenta ni da acceso a nada; es un
+-- papel en la bandeja de Supervisión, que decide.
+--
+-- Es la ÚNICA tabla donde alguien sin cuenta puede escribir, y por eso es
+-- la que hay que mirar con más cuidado. Tres cosas la contienen:
+--
+--   · Solo INSERT. No hay política de lectura para `anon`, así que quien
+--     escribe no puede leer lo que escribió, ni lo de nadie más. Sin esto,
+--     la tabla sería una lista pública de los proveedores de la planta.
+--   · El estado nace 'pendiente' y lo impone la política, no la aplicación:
+--     nadie puede insertarse ya aprobado.
+--   · El RUC es la clave primaria, así que insistir no llena la bandeja:
+--     la segunda solicitud del mismo RUC pisa a la primera.
+create table if not exists solicitudes (
+  ruc           text primary key,
+  nombre        text not null,
+  contacto      text,
+  mensaje       text,
+  estado        text not null default 'pendiente'
+                check (estado in ('pendiente','aprobada','rechazada')),
+  acceso        text,          -- el código que Supervisión le asigna al aprobar
+  resuelta_por  uuid,
+  resuelta      timestamptz,
+  creada        timestamptz not null default now()
+);
+
 alter table perfiles      enable row level security;
 alter table invitaciones  enable row level security;
+alter table solicitudes   enable row level security;
 
 
 -- ===================== 2. Preguntas que hace la base ======================
@@ -277,6 +305,37 @@ revoke all on documentos from anon;
 grant select, insert, update, delete on documentos to authenticated;
 grant select, insert, update, delete on perfiles to authenticated;
 grant select, insert, update, delete on invitaciones to authenticated;
+
+-- --- solicitudes de acceso ---
+-- Quien no tiene cuenta puede DEJAR una solicitud y nada más. `anon` recibe
+-- insert y ni una pizca de select: Postgres rechaza la lectura antes de
+-- llegar a la política.
+grant insert on solicitudes to anon;
+grant select, insert, update, delete on solicitudes to authenticated;
+
+drop policy if exists sol_crear_anon on solicitudes;
+create policy sol_crear_anon on solicitudes for insert to anon
+  with check (estado = 'pendiente' and resuelta_por is null and acceso is null);
+
+-- Alguien con sesión iniciada también puede dejarla (un proveedor que pide
+-- alta de una segunda finca), con la misma restricción.
+drop policy if exists sol_crear_auth on solicitudes;
+create policy sol_crear_auth on solicitudes for insert to authenticated
+  with check (estado = 'pendiente' and resuelta_por is null and acceso is null);
+
+-- Leerlas y resolverlas es cosa de Supervisión, y de nadie más. Recepción y
+-- Producción tampoco: una solicitud lleva el RUC y el teléfono de una finca.
+drop policy if exists sol_leer on solicitudes;
+create policy sol_leer on solicitudes for select to authenticated
+  using (acopia_es_supervisor());
+
+drop policy if exists sol_resolver on solicitudes;
+create policy sol_resolver on solicitudes for update to authenticated
+  using (acopia_es_supervisor()) with check (acopia_es_supervisor());
+
+drop policy if exists sol_borrar on solicitudes;
+create policy sol_borrar on solicitudes for delete to authenticated
+  using (acopia_es_supervisor());
 
 
 -- ====================== 5. La primera supervisión =========================

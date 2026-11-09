@@ -805,6 +805,14 @@
       '<button type="button" class="enlace" id="btnActivar">Activa tu cuenta aquí</button>' +
       " — creas tu propia contraseña, nadie te la dicta.<br>" +
       "¿La olvidaste? Pide en la planta que habiliten la reactivación y vuelve aquí.</p>";
+    /* La finca que todavia no esta en el sistema tenia que llamar por
+       telefono para existir. Desde aqui deja su RUC y Supervision decide:
+       no entra a nada hasta que alguien la aprueba. */
+    if (Sesion.disponible()) {
+      html += '<p class="acceso-ayuda">¿Tu finca todavía no está en el sistema? ' +
+        '<button type="button" class="enlace" id="btnSolicitar">Solicita acceso</button>' +
+        " — lo revisa Supervisión.</p>";
+    }
     html += '<p class="acceso-pie">¿Trabajas en la planta? ' +
       '<a ' + UI.rutaOtraApp("interno") + ">Entra al sistema interno</a></p>";
     html += "</div></div>";
@@ -814,6 +822,37 @@
   /* Activación: el proveedor elige su propia contraseña la primera vez. La
      planta solo le dio su código; nadie tuvo que dictarle una clave, que es
      el paso donde estas cosas se pierden o se filtran. */
+  /* Pedir acceso no crea cuenta ni da permiso: deja una solicitud en la
+     bandeja de Supervision. Se dice asi, con esas palabras, para que nadie
+     se quede esperando delante de la pantalla. */
+  function formSolicitarAcceso() {
+    UI.abrirFormulario("Solicitar acceso al portal", [
+      { tipo: "html", contenido: '<p class="modal-nota">Esto <strong>no crea una ' +
+        "cuenta</strong>: deja tu solicitud para que la planta la revise. Si la " +
+        "aprueban, te dan un código y entras con «Activa tu cuenta».</p>" },
+      { nombre: "nombre", etiqueta: "Nombre de la finca o cooperativa", tipo: "text",
+        requerido: true, marcador: "Hacienda San Miguel" },
+      { nombre: "ruc", etiqueta: "RUC", tipo: "text", requerido: true,
+        marcador: "1791234567001",
+        ayuda: "Es con lo que la planta te identifica.",
+        validar: function (v) {
+          const d = String(v || "").replace(/\D/g, "");
+          return d.length >= 10 && d.length <= 13
+            ? null : "Un RUC ecuatoriano tiene entre 10 y 13 dígitos.";
+        } },
+      { nombre: "contacto", etiqueta: "Teléfono o correo de contacto", tipo: "text",
+        requerido: true, marcador: "099 123 4567",
+        ayuda: "Por ahí te avisan si aprueban." },
+      { nombre: "mensaje", etiqueta: "¿Qué fruta entregas?", tipo: "textarea",
+        marcador: "Pitahaya roja, unas 40 gavetas por semana." }
+    ], function (d) {
+      return Sesion.solicitarAcceso(d).then(function (r) {
+        if (r.error) return { error: r.error };
+        UI.aviso("Solicitud enviada. La planta te avisará al " + d.contacto + ".");
+      });
+    }, { aceptar: "Enviar solicitud" });
+  }
+
   function formActivar() {
     UI.abrirFormulario("Activa tu cuenta", [
       { tipo: "html", contenido: '<p class="modal-nota">Necesitas el <strong>código' +
@@ -966,6 +1005,8 @@
     const boton = $("#btnEntrar");
     UI.vigilarFormulario(form);
 
+    const solicitar = $("#btnSolicitar");
+    if (solicitar) solicitar.addEventListener("click", formSolicitarAcceso);
     const activar = $("#btnActivar");
     if (activar) activar.addEventListener("click", formActivar);
 

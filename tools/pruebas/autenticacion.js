@@ -19,7 +19,7 @@ const CLAVE = "sb_publishable_prueba";
   };
 
   const nube = await G.crear(PUERTO, { clave: CLAVE });
-  nube.sql("truncate documentos, perfiles, invitaciones; delete from auth.users;", undefined);
+  nube.sql("truncate documentos, perfiles, invitaciones, solicitudes; delete from auth.users;", undefined);
   nube.sql("insert into invitaciones(acceso,rol,proveedor_id,nombre,verificacion) values " +
     "('supervision','supervisor',null,'Supervisión de planta',null);", undefined);
 
@@ -370,6 +370,88 @@ const CLAVE = "sb_publishable_prueba";
     if (!r.error) throw new Error("una segunda persona usó la misma invitación");
     await ctxF.close();
   });
+
+  console.log("\n[8] Una finca nueva pide acceso y Supervisión decide");
+
+  const ctxS = await nuevoCtx();
+
+  await paso("una finca sin cuenta deja su solicitud desde el portal", async () => {
+    const p = await abrir(ctxS, "/proveedor/");
+    await p.waitForSelector("#acceso", { timeout: 25000 });
+    const r = await p.evaluate(() => Sesion.solicitarAcceso({
+      ruc: "1791234567001", nombre: "Finca El Progreso",
+      contacto: "0991112223", mensaje: "Pitahaya roja"
+    }));
+    if (r.error) throw new Error(r.error);
+  });
+
+  await paso("y no puede leer la bandeja, ni la suya", async () => {
+    const p = ctxS.pages()[0];
+    const n = await p.evaluate(() => Sesion.solicitudes().then((f) => f.length));
+    if (n !== 0) throw new Error("sin sesión leyó " + n + " solicitud(es)");
+  });
+
+  await paso("ni colarse ya aprobada", async () => {
+    /* La politica impone el estado: no basta con que el formulario no lo
+       mande, porque el formulario no es lo que contiene a nadie. */
+    const filas = nube.sql(
+      "select count(*) from solicitudes where estado <> 'pendiente';", undefined);
+    if (String(filas).trim() !== "0") throw new Error("hay solicitudes no pendientes");
+  });
+
+  await paso("Supervisión la ve en su bandeja", async () => {
+    await planta.click('.nav-item[data-ir="panel"]');
+    await planta.waitForTimeout(400);
+    await planta.click('.nav-item[data-ir="usuarios"]');
+    await planta.waitForSelector("#btnNuevoAcceso", { timeout: 20000 });
+    await planta.waitForFunction(
+      () => /Finca El Progreso/.test(document.body.innerText), null, { timeout: 20000 });
+    const t = await planta.locator("main").innerText();
+    if (!/1791234567001/.test(t)) throw new Error("no enseña el RUC");
+    if (!/esperando respuesta/i.test(t)) throw new Error("no hay bandeja");
+  });
+
+  await paso("Recepción NO la ve, aunque entre a la misma pantalla", async () => {
+    /* Lleva el telefono de una finca: no es dato de todo el mundo. Y esto
+       no se comprueba mirando si el boton esta escondido, sino pidiendole
+       las filas a la base. */
+    const n = await recepcion.evaluate(() => Sesion.solicitudes().then((f) => f.length));
+    if (n !== 0) throw new Error("Recepción leyó " + n + " solicitud(es)");
+  });
+
+  await paso("aprobarla crea la invitación con el código asignado", async () => {
+    await planta.click("[data-aprobar-sol]");
+    await planta.waitForSelector(".modal", { timeout: 15000 });
+    await planta.fill("#campo_acceso", "PRV-901");
+    await planta.click(".modal button[type=submit]");
+    await planta.waitForTimeout(1200);
+    const inv = nube.sql(
+      "select rol || '|' || coalesce(verificacion,'') from invitaciones where acceso='PRV-901';",
+      undefined);
+    if (!/proveedor\|1791234567001/.test(String(inv))) {
+      throw new Error("la invitación no quedó bien: " + String(inv).trim());
+    }
+  });
+
+  await paso("y la finca ya puede activarse y elegir su contraseña", async () => {
+    const ctxN = await nuevoCtx();
+    const p = await abrir(ctxN, "/proveedor/");
+    await p.waitForSelector("#acceso", { timeout: 25000 });
+    const r = await activar(p, "PRV-901", "progreso2026", "1791234567001");
+    if (r.error) throw new Error(r.error);
+    await ctxN.close();
+  });
+
+  await paso("con el RUC equivocado no entra nadie", async () => {
+    const ctxX = await nuevoCtx();
+    const p = await abrir(ctxX, "/proveedor/");
+    await p.waitForSelector("#acceso", { timeout: 25000 });
+    const r = await activar(p, "PRV-901", "otraclave123", "0000000000");
+    if (!r.error) throw new Error("se activó con un RUC que no era");
+    await ctxX.close();
+  });
+
+  await ctxS.close();
 
   await b.close();
   await nube.cerrar();

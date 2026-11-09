@@ -215,6 +215,13 @@
   }
 
   function ir(v) {
+    /* Las cuentas y las solicitudes se piden al servidor y se guardaban en
+       memoria la primera vez. Para la lista de usuarios daba igual, pero la
+       bandeja de solicitudes tiene a alguien esperando al otro lado: una
+       finca pedía acceso y Supervisión no la veía hasta recargar la página
+       entera. Al ENTRAR a la pantalla se vuelven a pedir; es una consulta
+       de tres filas y no se nota. */
+    if (v === "usuarios") personas.cargado = false;
     vista = v; render();
     /* El foco va al contenido para que el teclado y el lector de pantalla
        sigan a la navegación. Pero `focus()` a secas arrastra la página
@@ -3223,12 +3230,100 @@
   function cargarPersonas() {
     if (personas.cargando) return;
     personas.cargando = true;
-    Promise.all([Sesion.perfiles(), Sesion.invitaciones()]).then(function (r) {
-      personas = { perfiles: r[0], invitaciones: r[1], cargando: false, cargado: true };
+    Promise.all([Sesion.perfiles(), Sesion.invitaciones(), Sesion.solicitudes()]).then(function (r) {
+      personas = { perfiles: r[0], invitaciones: r[1], solicitudes: r[2],
+        cargando: false, cargado: true };
       if (vista === "usuarios") render();
     }).catch(function () {
       personas.cargando = false; personas.cargado = true;
     });
+  }
+
+  /* La bandeja de solicitudes. Va ARRIBA de la lista de usuarios y no
+     abajo: es lo unico de esta pantalla que tiene a alguien esperando al
+     otro lado, y lo que esta abajo no se mira. */
+  function bandejaSolicitudes() {
+    const pendientes = (personas.solicitudes || [])
+      .filter(function (x) { return x.estado === "pendiente"; });
+    if (!pendientes.length) return "";
+
+    let html = '<section class="panel panel-destacado"><h2>Fincas esperando respuesta (' +
+      nf(pendientes.length) + ")</h2>" +
+      '<p class="sub panel-sub">Pidieron acceso desde el portal. Mientras no las apruebes ' +
+      "no ven absolutamente nada.</p>";
+
+    html += UI.tabla([
+      { titulo: "Finca", valor: function (x) { return "<strong>" + esc(x.nombre) + "</strong>"; } },
+      { titulo: "RUC", valor: function (x) { return "<code>" + esc(x.ruc) + "</code>"; } },
+      { titulo: "Contacto", valor: function (x) { return esc(x.contacto || "—"); } },
+      { titulo: "Qué entrega", valor: function (x) {
+        return '<span class="tenue">' + esc(x.mensaje || "—") + "</span>"; } },
+      { titulo: "Pedido", valor: function (x) { return UI.fechaCorta(x.creada); } },
+      { titulo: "", valor: function (x) {
+        return '<button class="btn-mini btn-mini-accion" data-aprobar-sol="' + esc(x.ruc) +
+          '">Aprobar</button>' +
+          '<button class="btn-mini btn-mini-peligro" data-rechazar-sol="' + esc(x.ruc) +
+          '">Rechazar</button>'; } }
+    ], pendientes, {});
+
+    return html + "</section>";
+  }
+
+  function solicitudPor(ruc) {
+    return (personas.solicitudes || []).filter(function (x) { return x.ruc === ruc; })[0];
+  }
+
+  /* Aprobar pide el codigo porque es la decision que no puede tomar la
+     maquina: el codigo de proveedor es el que la planta ya usa en sus
+     papeles, y deducirlo del RUC crearia un segundo codigo para una finca
+     que ya tiene uno. */
+  function formAprobarSolicitud(ruc) {
+    const sol = solicitudPor(ruc);
+    if (!sol) return;
+    UI.abrirFormulario("Aprobar a " + sol.nombre, [
+      { tipo: "html", contenido: '<p class="modal-nota">Al aprobar se crea la invitación. ' +
+        "La finca entra al portal, pulsa «Activa tu cuenta», escribe este código y su RUC, " +
+        "y elige <strong>su propia contraseña</strong>. Avísale por " +
+        esc(sol.contacto || "donde puedas") + ".</p>" },
+      { nombre: "acceso", etiqueta: "Código de proveedor", tipo: "text", requerido: true,
+        marcador: "PRV-004",
+        ayuda: "El que la planta ya usa para esta finca en sus papeles.",
+        validar: function (v) {
+          const usado = (personas.perfiles || []).some(function (pf) {
+            return String(pf.acceso).toUpperCase() === String(v || "").trim().toUpperCase();
+          });
+          return usado ? "Ese código ya es de otra persona." : null;
+        } },
+      { nombre: "nombre", etiqueta: "Nombre", tipo: "text", requerido: true, valor: sol.nombre }
+    ], function (d) {
+      return Sesion.resolverSolicitud(ruc, "aprobada", {
+        acceso: String(d.acceso).trim(), nombre: d.nombre
+      }).then(function (r) {
+        if (r.error) return { error: r.error };
+        DB.registrarBitacora(usuario.id, "Aprobación de solicitud",
+          sol.nombre + " · RUC " + ruc + " · código " + d.acceso);
+        personas.cargado = false;
+        cargarPersonas();
+        UI.aviso("Aprobada. Dile a " + sol.nombre + " que entre con el código " + d.acceso + ".");
+      });
+    }, { aceptar: "Aprobar y crear la invitación" });
+  }
+
+  function formRechazarSolicitud(ruc) {
+    const sol = solicitudPor(ruc);
+    if (!sol) return;
+    UI.abrirFormulario("Rechazar a " + sol.nombre, [
+      { tipo: "html", contenido: '<p class="modal-nota">No se crea ninguna cuenta y la ' +
+        "finca no recibe aviso automático. Puede volver a solicitarlo más adelante.</p>" }
+    ], function () {
+      return Sesion.resolverSolicitud(ruc, "rechazada", {}).then(function (r) {
+        if (r.error) return { error: r.error };
+        DB.registrarBitacora(usuario.id, "Rechazo de solicitud", sol.nombre + " · RUC " + ruc);
+        personas.cargado = false;
+        cargarPersonas();
+        UI.aviso("Solicitud rechazada.", "alerta");
+      });
+    }, { aceptar: "Rechazar", peligro: true });
   }
 
   function vistaUsuariosServidor() {
@@ -3246,6 +3341,8 @@
       "<p>Una contraseña que pasa por las manos de un tercero deja de serlo. Y el rol no " +
       "se puede falsificar al activarse: la base solo acepta un perfil que coincida con la " +
       "invitación que dejaste escrita.</p>");
+
+    html += bandejaSolicitudes();
 
     if (!personas.cargado) {
       html += '<p class="vacio">Consultando las cuentas…</p>';
@@ -4245,6 +4342,13 @@
 
     $$("[data-clave-usr]").forEach(function (b) {
       b.addEventListener("click", function () { restablecerClave(b.dataset.claveUsr); });
+    });
+
+    $$("[data-aprobar-sol]").forEach(function (b) {
+      b.addEventListener("click", function () { formAprobarSolicitud(b.dataset.aprobarSol); });
+    });
+    $$("[data-rechazar-sol]").forEach(function (b) {
+      b.addEventListener("click", function () { formRechazarSolicitud(b.dataset.rechazarSol); });
     });
 
     $$("[data-toggle-usr]").forEach(function (b) {

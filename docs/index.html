@@ -10,7 +10,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
 /* =========================================================================
@@ -19,9 +19,15 @@
    ========================================================================= */
 
 :root {
-  --verde: #14313f;          /* tinta principal: pizarra fria */
-  --verde-claro: #1d4756;
-  --verde-suave: #e4ecef;
+  /* Se llamaba verde y era pizarra azulada: en algun momento viro al frio
+     y arrastro con el los numeros del embudo, los botones y los filos de
+     los paneles. Sobre papel calido ese azul era el ultimo resto de
+     pantalla de instrumento. Vuelve a ser verde —uno profundo, de hoja en
+     sombra— que ademas es de la familia del verde de marca y del tema de
+     la aplicacion: fruta. */
+  --verde: #1a3f39;          /* tinta principal: verde profundo */
+  --verde-claro: #27574e;
+  --verde-suave: #e7eeea;
   --ambar: #a8720f;
   --rojo: #b23a2e;
   --azul: #2f6f8f;
@@ -57,28 +63,41 @@
   --regular: #a8720f;
   --mal: #b23a2e;
 
-  --fondo: #eef2f4;
+  /* ---- la temperatura ----
+
+     Todo el papel era gris azulado: fondo #eef2f4, bordes #e0e7ea, el
+     texto un negro de tinta fria. Un gris con azul dentro se lee como
+     metal y como pantalla de instrumento; el mismo gris con una gota de
+     amarillo se lee como papel. Es el cambio mas barato que hay y el que
+     mas quita de encima la sensacion de consola tecnica.
+
+     La barra lateral es tinta oscura del mismo verde: papel calido contra
+     tinta profunda es un contraste que se nota y que descansa, y siendo
+     del mismo tono no hay dos azules distintos peleandose. */
+  --fondo: #f4f2ef;
   --superficie: #ffffff;
-  --superficie-2: #f5f8f9;
-  --borde: #e0e7ea;
-  --borde-suave: #edf1f3;
-  --texto: #14202a;
-  --texto-tenue: #5a6b75;
+  --superficie-2: #faf8f5;
+  --borde: #e6e1d9;
+  --borde-suave: #f0ece5;
+  --texto: #221f1b;
+  --texto-tenue: #6b655c;
 
   /* Dos sombras, no una. La de arriba dibuja el borde del naipe; la de
      abajo lo despega del fondo. Juntas dan profundidad sin la mancha gris
      que deja un solo desenfoque grande. */
-  --sombra: 0 1px 2px rgba(20, 49, 63, .05), 0 1px 3px rgba(20, 49, 63, .04);
-  --sombra-media: 0 2px 4px rgba(20, 49, 63, .05), 0 8px 20px -6px rgba(20, 49, 63, .12);
-  --sombra-alta: 0 10px 34px -10px rgba(20, 49, 63, .25);
+  /* La sombra tambien tenia azul dentro, y una sombra azul sobre papel
+     calido se ve morada. Se tiñe del mismo marron del texto. */
+  --sombra: 0 1px 2px rgba(52, 44, 32, .05), 0 1px 3px rgba(52, 44, 32, .04);
+  --sombra-media: 0 2px 4px rgba(52, 44, 32, .05), 0 8px 20px -6px rgba(52, 44, 32, .13);
+  --sombra-alta: 0 10px 34px -10px rgba(52, 44, 32, .26);
 
   --marca: #1d6f5c;          /* solo el simbolo de la marca */
 
   /* La barra lateral es tinta, no papel. Es el cambio que mas distingue un
      panel de trabajo de una pagina cualquiera: separa de un vistazo donde
      se navega de donde se lee, y deja el blanco entero para los datos. */
-  --lateral-fondo: #122b36;
-  --lateral-fondo-2: #0d222b;
+  --lateral-fondo: #17332e;
+  --lateral-fondo-2: #102521;
   --lateral-texto: #c6d6dd;
   --lateral-tenue: #7e97a3;
   --lateral-activo: rgba(255, 255, 255, .11);
@@ -92,9 +111,9 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --verde: #7fb2c4;
-    --verde-claro: #9ac8d8;
-    --verde-suave: #1a2c35;
+    --verde: #7cc0a8;
+    --verde-claro: #9ad4bd;
+    --verde-suave: #1d2e29;
     --ambar: #d9a13f;
     --rojo: #e0705f;
     --azul: #6ba3dc;
@@ -111,13 +130,13 @@
     --regular: #d9a13f;
     --mal: #e0705f;
 
-    --fondo: #0d1215;
-    --superficie: #161d21;
-    --superficie-2: #1b2328;
-    --borde: #28343a;
-    --borde-suave: #202a2f;
-    --texto: #e8efeb;
-    --texto-tenue: #9aaaa3;
+    --fondo: #121110;
+    --superficie: #1b1917;
+    --superficie-2: #22201d;
+    --borde: #35312c;
+    --borde-suave: #2a2724;
+    --texto: #ece8e2;
+    --texto-tenue: #a8a299;
     --marca: #5fb391;
     --sombra: 0 1px 2px rgba(0, 0, 0, .45), 0 1px 3px rgba(0, 0, 0, .35);
     --sombra-media: 0 2px 4px rgba(0, 0, 0, .4), 0 8px 20px -6px rgba(0, 0, 0, .55);
@@ -125,8 +144,8 @@
 
     /* En oscuro la lateral no puede ser mas oscura que el fondo o
        desaparece: se separa hacia arriba, no hacia abajo. */
-    --lateral-fondo: #141d22;
-    --lateral-fondo-2: #111a1e;
+    --lateral-fondo: #18211d;
+    --lateral-fondo-2: #141c19;
     --lateral-texto: #c3d2d8;
     --lateral-tenue: #7e939c;
     --lateral-activo: rgba(255, 255, 255, .08);
@@ -143,8 +162,25 @@
 [hidden] { display: none !important; }
 
 :root {
-  --fuente: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --fuente-datos: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  /* ------------------------------- tipografia -------------------------
+
+     Plex Sans y Plex Mono son dos tipos excelentes y los dos dicen lo
+     mismo: ingenieria. Juntos, con el gris azulado del fondo, daban una
+     pantalla de consola tecnica. El problema de fondo no era la familia
+     del texto sino la de las CIFRAS: «2.654» en monoespaciada se lee como
+     codigo fuente, no como una cantidad de gavetas.
+
+     Jakarta Sans es geometrica y humanista a la vez: seria, pero con los
+     remates abiertos y la «a» de doble piso que le quitan la dureza. Y
+     trae cifras tabulares, que es lo unico que la monoespaciada aportaba
+     de verdad: una columna de kilos que cae a plomo.
+
+     La monoespaciada se queda SOLO donde se gana el sitio: codigos de
+     lote, RUC, claves temporales y bloques tecnicos, donde hay que poder
+     distinguir un cero de una O y dictarlo por telefono. */
+  --fuente: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fuente-datos: var(--fuente);
+  --fuente-codigo: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
 /* ================================= iconos =============================
@@ -174,8 +210,11 @@ h1, h2, h3 { margin: 0 0 .35em; line-height: 1.22; font-weight: 650; }
 h1 { font-size: 1.62rem; letter-spacing: -.022em; }
 h2 { font-size: 1.06rem; }
 p { margin: 0 0 .6em; }
-code { font-family: var(--fuente-datos); font-size: .86em; letter-spacing: -.01em; }
-.kpi-valor, .embudo-num, .hoja-kpis strong { font-family: var(--fuente-datos); font-variant-numeric: tabular-nums; }
+code { font-family: var(--fuente-codigo); font-size: .86em; letter-spacing: -.01em; }
+.kpi-valor, .embudo-num, .hoja-kpis strong {
+  font-family: var(--fuente); font-variant-numeric: tabular-nums lining;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
 .kpi-etiqueta { font-family: var(--fuente); }
 
 .salto {
@@ -974,7 +1013,7 @@ textarea { resize: vertical; }
 /* ---- el frente de tinta ---- */
 .portada-hero {
   position: relative; isolation: isolate; overflow: hidden;
-  background: linear-gradient(165deg, #1b3f4e 0%, var(--lateral-fondo) 45%, #0a1b22 100%);
+  background: linear-gradient(165deg, #22493f 0%, var(--lateral-fondo) 45%, #0c1e1a 100%);
   color: #fff; text-align: center;
   /* Abajo manda menos aire que arriba: los 84 px que las tarjetas suben ya
      cuentan como separacion, y repetir el relleno de arriba dejaba un vacio
@@ -1061,8 +1100,11 @@ textarea { resize: vertical; }
   border-color: color-mix(in srgb, var(--tono) 40%, var(--borde));
   box-shadow: 0 18px 44px -14px rgba(20, 49, 63, .32);
 }
+/* El azul de esta tarjeta se quedo sin sitio: desde que granadilla es azul
+   en los graficos, un azul aqui dice «granadilla» a quien ya conoce el
+   codigo de color. El sistema de planta usa el verde del sistema. */
 .portada-app-ext { --tono: var(--linea-1); }
-.portada-app-int { --tono: var(--azul); }
+.portada-app-int { --tono: var(--verde); }
 
 .portada-icono-caja {
   width: 46px; height: 46px; display: grid; place-items: center; margin-bottom: .5rem;
@@ -1102,7 +1144,7 @@ textarea { resize: vertical; }
 
 .acceso-capa { min-height: 100vh; display: grid; place-items: center; padding: 1.5rem; }
 .acceso-proveedor { background: linear-gradient(160deg, #c0246b 0%, #6d1340 100%); }
-.acceso-interno { background: linear-gradient(160deg, #1d4756 0%, #0d2029 100%); }
+.acceso-interno { background: linear-gradient(160deg, #27574e 0%, #102521 100%); }
 .acceso-caja {
   width: min(420px, 100%); background: var(--superficie); color: var(--texto);
   border-radius: 14px; padding: 1.8rem; box-shadow: 0 20px 50px rgba(0, 0, 0, .3);
@@ -1175,7 +1217,7 @@ textarea { resize: vertical; }
 }
 .lote-tarjeta:hover, .lote-tarjeta:focus-visible { border-color: var(--linea-1); transform: translateY(-2px); }
 .lote-cab { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin-bottom: .45rem; }
-.lote-codigo { font-family: var(--fuente-datos); font-size: .8rem; color: var(--texto-tenue); }
+.lote-codigo { font-family: var(--fuente-codigo); font-size: .8rem; color: var(--texto-tenue); }
 .lote-cuerpo { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; font-size: .9rem; margin-bottom: .6rem; }
 .lote-cuerpo strong { font-size: 1.05rem; }
 .lote-dato { margin: .5rem 0 0; font-size: .85rem; }
@@ -1305,7 +1347,7 @@ textarea { resize: vertical; }
 .demo-cuentas li strong { color: var(--texto); font-weight: 600; }
 .demo-cuentas p { margin: 0; font-size: .76rem; color: var(--texto-tenue); line-height: 1.45; }
 .demo {
-  font: inherit; font-family: var(--fuente-datos); font-size: .82rem; font-weight: 600;
+  font: inherit; font-family: var(--fuente-codigo); font-size: .82rem; font-weight: 600;
   background: var(--verde-suave); color: var(--verde); border: 1px solid transparent;
   border-radius: 6px; padding: .3rem .55rem; cursor: pointer; white-space: nowrap; flex: 0 0 auto;
 }
@@ -1855,7 +1897,7 @@ th .ico, td .ico { color: var(--texto-tenue); }
   border-top: 3px solid var(--marca);
 }
 .acceso-proveedor .acceso-caja { border-top-color: var(--linea-1); }
-.acceso-interno .acceso-caja { border-top-color: var(--azul); }
+.acceso-interno .acceso-caja { border-top-color: var(--verde); }
 
 /* El pie de los accesos lleva el nombre del producto, nunca el de la
    planta: la identidad del cliente se configura en Parámetros y por
@@ -1933,7 +1975,7 @@ th .ico, td .ico { color: var(--texto-tenue); }
 .detalle-tecnico pre {
   margin: .5rem 0 0; padding: .6rem .8rem; overflow-x: auto;
   background: var(--superficie-2); border: 1px solid var(--borde);
-  border-radius: 7px; font-family: var(--fuente-datos); font-size: .78rem;
+  border-radius: 7px; font-family: var(--fuente-codigo); font-size: .78rem;
   white-space: pre-wrap; word-break: break-word;
 }
 

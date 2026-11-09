@@ -113,7 +113,7 @@ partes.push('<meta name="viewport" content="width=device-width, initial-scale=1"
 partes.push("<title>Acopia</title>\n");
 partes.push('<link rel="preconnect" href="https://fonts.googleapis.com">');
 partes.push('<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>');
-partes.push('<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700' +
+partes.push('<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800' +
   '&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">\n');
 partes.push("<style>\n" + leer("core/estilos.css") + "\n</style>\n");
 partes.push('<a class="salto" href="#contenido">Saltar al contenido</a>');

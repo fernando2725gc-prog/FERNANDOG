@@ -200,6 +200,78 @@ const UI = (function () {
     return icono(nombre) + "<span>" + esc(texto) + "</span>";
   }
 
+  /* --------------------------------------------- código de barras
+
+     Code 39, dibujado a mano en SVG. Sin libreria y sin fuente de barras:
+     el simbolo es una secuencia de barras anchas y estrechas y eso cabe
+     en veinte lineas.
+
+     Se eligio Code 39 y no otro porque el codigo de lote ya esta escrito
+     en su alfabeto —PIT261109-001: mayusculas, digitos y guion— asi que no
+     hay que inventar un identificador nuevo ni una tabla de equivalencias
+     que alguien tendria que mantener. Code 128 seria mas compacto, pero
+     exige calcular un digito de control y aqui no compensa.
+
+     Lo que esto resuelve no es imprimir bonito. Un lector de codigo de
+     barras se presenta ante el sistema operativo como un TECLADO: apunta
+     al buscador, dispara, y escribe el codigo seguido de un Intro. Es
+     decir que la busqueda de lotes ya funciona con lector sin una linea de
+     codigo mas. Lo que se gana es que nadie teclee «PIT261109-001» con
+     guantes y a contraluz, que es donde se cambia un 0 por una O y el lote
+     se duplica. */
+
+  /* N = barra o espacio estrecho, W = ancho. Nueve elementos por caracter:
+     barra, espacio, barra, espacio... empezando y terminando en barra. */
+  const CODE39 = {
+    "0": "NNNWWNWNN", "1": "WNNWNNNNW", "2": "NNWWNNNNW", "3": "WNWWNNNNN",
+    "4": "NNNWWNNNW", "5": "WNNWWNNNN", "6": "NNWWWNNNN", "7": "NNNWNNWNW",
+    "8": "WNNWNNWNN", "9": "NNWWNNWNN", "A": "WNNNNWNNW", "B": "NNWNNWNNW",
+    "C": "WNWNNWNNN", "D": "NNNNWWNNW", "E": "WNNNWWNNN", "F": "NNWNWWNNN",
+    "G": "NNNNNWWNW", "H": "WNNNNWWNN", "I": "NNWNNWWNN", "J": "NNNNWWWNN",
+    "K": "WNNNNNNWW", "L": "NNWNNNNWW", "M": "WNWNNNNWN", "N": "NNNNWNNWW",
+    "O": "WNNNWNNWN", "P": "NNWNWNNWN", "Q": "NNNNNNWWW", "R": "WNNNNNWWN",
+    "S": "NNWNNNWWN", "T": "NNNNWNWWN", "U": "WWNNNNNNW", "V": "NWWNNNNNW",
+    "W": "WWWNNNNNN", "X": "NWNNWNNNW", "Y": "WWNNWNNNN", "Z": "NWWNWNNNN",
+    "-": "NWNNNNWNW", ".": "WWNNNNWNN", " ": "NWWNNNWNN", "*": "NWNNWNWNN"
+  };
+
+  function codigoBarras(valor, opciones) {
+    const o = opciones || {};
+    const alto = o.alto || 46;
+    const fino = o.fino || 2;          /* ancho del modulo estrecho, en px */
+    /* El asterisco delimita el simbolo por los dos lados: es parte del
+       estandar, no decoracion, y sin el ningun lector lo reconoce. */
+    const limpio = String(valor || "").toUpperCase().split("")
+      .filter(function (c) { return CODE39[c] && c !== "*"; }).join("");
+    if (!limpio) return "";
+
+    const barras = [];
+    let x = 0;
+    ("*" + limpio + "*").split("").forEach(function (ch) {
+      const patron = CODE39[ch];
+      for (let i = 0; i < patron.length; i++) {
+        const ancho = patron[i] === "W" ? fino * 3 : fino;
+        if (i % 2 === 0) barras.push({ x: x, w: ancho });   /* par = barra */
+        x += ancho;
+      }
+      x += fino;                       /* separacion entre caracteres */
+    });
+
+    let svg = '<svg class="barras-svg" width="' + x + '" height="' + alto +
+      '" viewBox="0 0 ' + x + " " + alto + '" role="img" aria-label="Código de barras ' +
+      esc(limpio) + '">';
+    svg += '<rect width="' + x + '" height="' + alto + '" fill="#fff"/>';
+    barras.forEach(function (b) {
+      svg += '<rect x="' + b.x + '" y="0" width="' + b.w + '" height="' + alto + '" fill="#000"/>';
+    });
+    svg += "</svg>";
+
+    /* El codigo tambien va en texto: si el lector falla o la etiqueta se
+       mancha, alguien tiene que poder leerlo y teclearlo. */
+    return '<div class="barras">' + svg +
+      '<span class="barras-texto">' + esc(limpio) + "</span></div>";
+  }
+
   /* ------------------------------------------------- cómo se calcula
 
      La explicación del método no es relleno: sostiene cada cifra y un
@@ -831,7 +903,7 @@ const UI = (function () {
     cajas: cajas, minutos: minutos, fechaLarga: fechaLarga, fechaCorta: fechaCorta,
     origen: origen, aviso: aviso, tabla: tabla, kpi: kpi, insignia: insignia,
     campana: campana, panelNovedades: panelNovedades,
-    metodo: metodo,
+    metodo: metodo, codigoBarras: codigoBarras,
     icono: icono, iconoTexto: iconoTexto, ICONOS: ICONOS,
     etiquetaLinea: etiquetaLinea,
     abrirFormulario: abrirFormulario, leerRepetible: leerRepetible,

@@ -179,7 +179,48 @@ const RECOGER_PORCENTAJES = () => {
     if (mal.length) throw new Error(mal.join(", "));
   });
 
-  s.bloque("[4] El portal del proveedor tampoco miente");
+  s.bloque("[4] Tambien dentro de las ventanas que hay que abrir");
+
+  await s.paso("ningun porcentaje imposible en la ficha de un lote", async () => {
+    /* Aqui se escondia un 644 %: la ficha calculaba el rendimiento como
+       cajas entre gavetas, y esta suite solo miraba las pantallas. Una
+       cifra dentro de un modal no la ve nadie hasta que alguien lo abre,
+       y entonces ya la ha creido. */
+    await ir("lotes");
+    const malos = [];
+    const cuantas = Math.min(6, await planta.locator("[data-ficha]").count());
+    for (let i = 0; i < cuantas; i++) {
+      await planta.locator("[data-ficha]").nth(i).click();
+      await planta.waitForTimeout(450);
+      const enFicha = await planta.evaluate(RECOGER_PORCENTAJES);
+      enFicha.forEach((m) => malos.push(m));
+      await planta.keyboard.press("Escape");
+      await planta.waitForTimeout(250);
+    }
+    if (malos.length) {
+      throw new Error(malos.slice(0, 3).map((m) => m.texto + " (" + m.donde + ")").join(" \u00b7 "));
+    }
+  });
+
+  await s.paso("el rendimiento de cada lote sale de kilos, no de gavetas", async () => {
+    /* La comprobacion de fondo, sin pasar por la pantalla: una tasa de
+       exportable es una fraccion de la fruta que entro, asi que no puede
+       pasar de 1. Si alguien vuelve a dividir cajas entre gavetas, esto
+       salta con el lote y la cifra. */
+    const malos = await planta.evaluate(() => {
+      return DB.all("lotes").map((l) => {
+        const f = Indicadores.fichaLote(l.id);
+        if (!f || f.tasaExportable === null) return null;
+        if (f.tasaExportable < 0 || f.tasaExportable > 1.05) {
+          return l.codigoLote + ": " + (f.tasaExportable * 100).toFixed(1) + "%";
+        }
+        return null;
+      }).filter(Boolean);
+    });
+    if (malos.length) throw new Error(malos.slice(0, 3).join(" \u00b7 "));
+  });
+
+  s.bloque("[5] El portal del proveedor tampoco miente");
 
   const portal = s.vigilar(await ctx.newPage(), "portal");
   await portal.goto(E.BASE + "/proveedor/", { waitUntil: "networkidle" });

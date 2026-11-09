@@ -89,8 +89,12 @@
   --lateral-borde: rgba(255, 255, 255, .07);
   --lateral-marca: #5fb391;
 
-  --radio: 14px;
-  --radio-chico: 9px;
+  /* 14 px de radio es el redondeo de una aplicacion de consumo, y en una
+     pantalla llena de tablas y cifras se lee como blando. Una herramienta
+     de planta pide la esquina mas seca: se nota profesional sin llegar al
+     canto vivo, que tampoco es agradable de mirar ocho horas. */
+  --radio: 8px;
+  --radio-chico: 6px;
   --lateral-ancho: 252px;
 }
 
@@ -191,9 +195,9 @@ body {
 
 body.sin-scroll { overflow: hidden; }
 
-h1, h2, h3 { margin: 0 0 .35em; line-height: 1.22; font-weight: 650; }
-h1 { font-size: 1.62rem; letter-spacing: -.022em; }
-h2 { font-size: 1.06rem; }
+h1, h2, h3 { margin: 0 0 .35em; line-height: 1.2; font-weight: 700; }
+h1 { font-size: 1.68rem; letter-spacing: -.028em; }
+h2 { font-size: 1.05rem; letter-spacing: -.015em; }
 p { margin: 0 0 .6em; }
 code { font-family: var(--fuente-codigo); font-size: .86em; letter-spacing: -.01em; }
 .kpi-valor, .embudo-num, .hoja-kpis strong {
@@ -448,7 +452,7 @@ textarea { resize: vertical; }
   --tono: var(--texto-tenue);
   position: relative; overflow: hidden;
   background: var(--superficie); border: 1px solid var(--borde);
-  border-radius: var(--radio); padding: .95rem 1.05rem; box-shadow: var(--sombra);
+  border-radius: var(--radio); padding: .85rem 1rem; box-shadow: var(--sombra);
   transition: box-shadow .16s, transform .16s;
 }
 /* El filo de color iba como `border-left`, y un borde recto de 4 px contra
@@ -467,8 +471,8 @@ textarea { resize: vertical; }
   letter-spacing: .07em; color: var(--texto-tenue);
 }
 .kpi-valor {
-  margin: .3rem 0 .2rem; font-size: 1.72rem; font-weight: 600;
-  letter-spacing: -.02em; line-height: 1.1;
+  margin: .25rem 0 .2rem; font-size: 1.8rem; font-weight: 700;
+  letter-spacing: -.035em; line-height: 1.05;
 }
 .kpi-detalle { margin: 0; font-size: .79rem; color: var(--texto-tenue); line-height: 1.4; }
 
@@ -476,7 +480,7 @@ textarea { resize: vertical; }
 
 .panel {
   background: var(--superficie); border: 1px solid var(--borde);
-  border-radius: var(--radio); padding: 1.25rem 1.3rem; margin-bottom: 1.3rem;
+  border-radius: var(--radio); padding: 1.15rem 1.2rem; margin-bottom: 1.1rem;
   box-shadow: var(--sombra);
 }
 .panel > h2 { letter-spacing: -.01em; }
@@ -754,8 +758,8 @@ textarea { resize: vertical; }
 }
 .embudo-paso:hover { border-color: var(--borde); box-shadow: var(--sombra); }
 .embudo-num {
-  font-size: 1.75rem; font-weight: 600; line-height: 1.1;
-  letter-spacing: -.02em; color: var(--verde);
+  font-size: 1.8rem; font-weight: 700; line-height: 1.05;
+  letter-spacing: -.035em; color: var(--verde);
 }
 .embudo-nombre { font-weight: 650; font-size: .88rem; }
 .embudo-ayuda { font-size: .75rem; color: var(--texto-tenue); line-height: 1.38; }
@@ -1907,6 +1911,24 @@ th .ico, td .ico { color: var(--texto-tenue); }
 .lateral nav > .nav-grupo:first-child { margin-top: .5rem; }
 .lateral-pie { flex: 0 0 auto; }
 .nav-item { transition: background .12s, color .12s; }
+
+/* ---- codigo de barras ----
+   Fondo blanco y barras negras SIEMPRE, tambien en tema oscuro: un lector
+   optico mide contraste, no estetica, y sobre fondo oscuro no lee nada. */
+.barras {
+  display: inline-flex; flex-direction: column; align-items: center; gap: .25rem;
+  background: #fff; padding: .5rem .6rem .35rem; border-radius: var(--radio-chico);
+  border: 1px solid var(--borde);
+}
+.barras-svg { display: block; max-width: 100%; height: auto; }
+.barras-texto {
+  font-family: var(--fuente-codigo); font-size: .74rem; letter-spacing: .14em;
+  color: #000; user-select: all;
+}
+.ficha-barras { display: flex; justify-content: flex-end; margin-bottom: .7rem; }
+@media (max-width: 560px) { .ficha-barras { justify-content: center; } }
+/* Al imprimir no lleva marco: la etiqueta se recorta por las barras. */
+@media print { .barras { border: 0; padding: 0; } }
 
 /* ---- tarjetas ---- */
 .tarjeta, .kpi, .portada-app, .medida { box-shadow: var(--sombra); }

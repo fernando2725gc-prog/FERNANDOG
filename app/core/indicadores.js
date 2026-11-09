@@ -970,8 +970,19 @@ const Indicadores = (function () {
       kgValorizado: prod ? mermaValorizada(prod) : 0,
       tasaValorizacion: prod && kgMerma > 0 ? mermaValorizada(prod) / kgMerma : null,
       valorDescarte: prod ? valorRecuperado(prod) : 0,
-      tasaExportable: prod && prod.gavetasProcesadas > 0
-        ? prod.cajasExportables / prod.gavetasProcesadas : null,
+      /* Cajas entre gavetas. Era el error de la version anterior y habia
+         sobrevivido aqui, en la ficha de un lote suelto: 174 cajas entre
+         27 gavetas daba una tasa de exportable del 644 %. Nada se rompia
+         —la ficha se abria y el resto de la pantalla era correcto— y
+         ninguna suite lo veia, porque `cordura` recorre las pantallas y
+         esta cifra vive dentro de una ventana que hay que abrir.
+
+         El rendimiento se calcula EN KILOS: lo que se empaco entre lo que
+         entro a proceso. Las cajas se vuelven kilos con el peso de caja de
+         la linea, que es un peso distinto del de la gaveta. */
+      tasaExportable: prod && linea && Number(prod.kgProcesados) > 0
+        ? (Number(prod.cajasExportables) || 0) * linea.pesoCajaKg / Number(prod.kgProcesados)
+        : null,
       meta: linea ? linea.metaRendimiento : null,
       tiempoEstandarMin: prod ? tiempoEstandar(prod) : 0,
       eficiencia: prod && prod.tiempoRealMin > 0

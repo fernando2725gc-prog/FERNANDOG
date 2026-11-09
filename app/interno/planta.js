@@ -1601,7 +1601,11 @@
   function fichaCompleta(f) {
     if (!f) return "<p>Lote no encontrado.</p>";
     const l = f.lote, p = f.produccion;
-    let html = '<div class="ficha"><div class="ficha-linea">';
+    /* La ficha impresa es lo que viaja con el pallet: el codigo de barras
+       va arriba, donde el lector lo encuentra sin buscarlo. */
+    let html = '<div class="ficha"><div class="ficha-barras">' +
+      UI.codigoBarras(l.codigoLote) + "</div>" +
+      '<div class="ficha-linea">';
 
     [["Anunciado", l.fecha, true, Indicadores.nombreUsuario(l.anunciadoPor)],
      [l.estado === "Rechazado" ? "Rechazado" : "Pesado", l.fechaRecepcion,
@@ -4030,6 +4034,32 @@
         /* Tras repintar, el foco vuelve al cuadro y al final del texto. */
         const otra = $("#buscarLote");
         if (otra) { otra.focus(); otra.setSelectionRange(otra.value.length, otra.value.length); }
+      });
+
+      /* Un lector de codigo de barras se comporta como un teclado: escribe
+         el codigo de golpe y termina con Intro. Eso hacia que la busqueda
+         funcionara «gratis»... salvo que el filtro de fechas sigue puesto.
+         Escanear un lote de hace seis semanas devolvia CERO resultados sin
+         decir por que, que es la peor respuesta posible: el lote existe y
+         lo tienes en la mano.
+
+         Con Intro, un codigo exacto abre su ficha venga de donde venga. Es
+         ademas lo que se quiere al escanear: no una lista de uno, la
+         ficha. */
+      buscar.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        const texto = buscar.value.trim().toUpperCase();
+        if (!texto) return;
+        const lote = DB.all("lotes").filter(function (l) {
+          return String(l.codigoLote).toUpperCase() === texto;
+        })[0];
+        if (lote) {
+          filtros.texto = "";
+          verFicha(lote.id);
+        } else {
+          UI.aviso("No hay ningún lote con el código " + texto + ".", "alerta");
+        }
       });
     }
     const limpiarBusca = $("#btnLimpiarBusca");

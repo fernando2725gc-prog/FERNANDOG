@@ -104,8 +104,12 @@
   --lateral-borde: rgba(255, 255, 255, .07);
   --lateral-marca: #5fb391;
 
-  --radio: 14px;
-  --radio-chico: 9px;
+  /* 14 px de radio es el redondeo de una aplicacion de consumo, y en una
+     pantalla llena de tablas y cifras se lee como blando. Una herramienta
+     de planta pide la esquina mas seca: se nota profesional sin llegar al
+     canto vivo, que tampoco es agradable de mirar ocho horas. */
+  --radio: 8px;
+  --radio-chico: 6px;
   --lateral-ancho: 252px;
 }
 
@@ -206,9 +210,9 @@ body {
 
 body.sin-scroll { overflow: hidden; }
 
-h1, h2, h3 { margin: 0 0 .35em; line-height: 1.22; font-weight: 650; }
-h1 { font-size: 1.62rem; letter-spacing: -.022em; }
-h2 { font-size: 1.06rem; }
+h1, h2, h3 { margin: 0 0 .35em; line-height: 1.2; font-weight: 700; }
+h1 { font-size: 1.68rem; letter-spacing: -.028em; }
+h2 { font-size: 1.05rem; letter-spacing: -.015em; }
 p { margin: 0 0 .6em; }
 code { font-family: var(--fuente-codigo); font-size: .86em; letter-spacing: -.01em; }
 .kpi-valor, .embudo-num, .hoja-kpis strong {
@@ -463,7 +467,7 @@ textarea { resize: vertical; }
   --tono: var(--texto-tenue);
   position: relative; overflow: hidden;
   background: var(--superficie); border: 1px solid var(--borde);
-  border-radius: var(--radio); padding: .95rem 1.05rem; box-shadow: var(--sombra);
+  border-radius: var(--radio); padding: .85rem 1rem; box-shadow: var(--sombra);
   transition: box-shadow .16s, transform .16s;
 }
 /* El filo de color iba como `border-left`, y un borde recto de 4 px contra
@@ -482,8 +486,8 @@ textarea { resize: vertical; }
   letter-spacing: .07em; color: var(--texto-tenue);
 }
 .kpi-valor {
-  margin: .3rem 0 .2rem; font-size: 1.72rem; font-weight: 600;
-  letter-spacing: -.02em; line-height: 1.1;
+  margin: .25rem 0 .2rem; font-size: 1.8rem; font-weight: 700;
+  letter-spacing: -.035em; line-height: 1.05;
 }
 .kpi-detalle { margin: 0; font-size: .79rem; color: var(--texto-tenue); line-height: 1.4; }
 
@@ -491,7 +495,7 @@ textarea { resize: vertical; }
 
 .panel {
   background: var(--superficie); border: 1px solid var(--borde);
-  border-radius: var(--radio); padding: 1.25rem 1.3rem; margin-bottom: 1.3rem;
+  border-radius: var(--radio); padding: 1.15rem 1.2rem; margin-bottom: 1.1rem;
   box-shadow: var(--sombra);
 }
 .panel > h2 { letter-spacing: -.01em; }
@@ -769,8 +773,8 @@ textarea { resize: vertical; }
 }
 .embudo-paso:hover { border-color: var(--borde); box-shadow: var(--sombra); }
 .embudo-num {
-  font-size: 1.75rem; font-weight: 600; line-height: 1.1;
-  letter-spacing: -.02em; color: var(--verde);
+  font-size: 1.8rem; font-weight: 700; line-height: 1.05;
+  letter-spacing: -.035em; color: var(--verde);
 }
 .embudo-nombre { font-weight: 650; font-size: .88rem; }
 .embudo-ayuda { font-size: .75rem; color: var(--texto-tenue); line-height: 1.38; }
@@ -1922,6 +1926,24 @@ th .ico, td .ico { color: var(--texto-tenue); }
 .lateral nav > .nav-grupo:first-child { margin-top: .5rem; }
 .lateral-pie { flex: 0 0 auto; }
 .nav-item { transition: background .12s, color .12s; }
+
+/* ---- codigo de barras ----
+   Fondo blanco y barras negras SIEMPRE, tambien en tema oscuro: un lector
+   optico mide contraste, no estetica, y sobre fondo oscuro no lee nada. */
+.barras {
+  display: inline-flex; flex-direction: column; align-items: center; gap: .25rem;
+  background: #fff; padding: .5rem .6rem .35rem; border-radius: var(--radio-chico);
+  border: 1px solid var(--borde);
+}
+.barras-svg { display: block; max-width: 100%; height: auto; }
+.barras-texto {
+  font-family: var(--fuente-codigo); font-size: .74rem; letter-spacing: .14em;
+  color: #000; user-select: all;
+}
+.ficha-barras { display: flex; justify-content: flex-end; margin-bottom: .7rem; }
+@media (max-width: 560px) { .ficha-barras { justify-content: center; } }
+/* Al imprimir no lleva marco: la etiqueta se recorta por las barras. */
+@media print { .barras { border: 0; padding: 0; } }
 
 /* ---- tarjetas ---- */
 .tarjeta, .kpi, .portada-app, .medida { box-shadow: var(--sombra); }
@@ -6103,8 +6125,19 @@ const Indicadores = (function () {
       kgValorizado: prod ? mermaValorizada(prod) : 0,
       tasaValorizacion: prod && kgMerma > 0 ? mermaValorizada(prod) / kgMerma : null,
       valorDescarte: prod ? valorRecuperado(prod) : 0,
-      tasaExportable: prod && prod.gavetasProcesadas > 0
-        ? prod.cajasExportables / prod.gavetasProcesadas : null,
+      /* Cajas entre gavetas. Era el error de la version anterior y habia
+         sobrevivido aqui, en la ficha de un lote suelto: 174 cajas entre
+         27 gavetas daba una tasa de exportable del 644 %. Nada se rompia
+         —la ficha se abria y el resto de la pantalla era correcto— y
+         ninguna suite lo veia, porque `cordura` recorre las pantallas y
+         esta cifra vive dentro de una ventana que hay que abrir.
+
+         El rendimiento se calcula EN KILOS: lo que se empaco entre lo que
+         entro a proceso. Las cajas se vuelven kilos con el peso de caja de
+         la linea, que es un peso distinto del de la gaveta. */
+      tasaExportable: prod && linea && Number(prod.kgProcesados) > 0
+        ? (Number(prod.cajasExportables) || 0) * linea.pesoCajaKg / Number(prod.kgProcesados)
+        : null,
       meta: linea ? linea.metaRendimiento : null,
       tiempoEstandarMin: prod ? tiempoEstandar(prod) : 0,
       eficiencia: prod && prod.tiempoRealMin > 0
@@ -7121,6 +7154,78 @@ const UI = (function () {
     return icono(nombre) + "<span>" + esc(texto) + "</span>";
   }
 
+  /* --------------------------------------------- código de barras
+
+     Code 39, dibujado a mano en SVG. Sin libreria y sin fuente de barras:
+     el simbolo es una secuencia de barras anchas y estrechas y eso cabe
+     en veinte lineas.
+
+     Se eligio Code 39 y no otro porque el codigo de lote ya esta escrito
+     en su alfabeto —PIT261109-001: mayusculas, digitos y guion— asi que no
+     hay que inventar un identificador nuevo ni una tabla de equivalencias
+     que alguien tendria que mantener. Code 128 seria mas compacto, pero
+     exige calcular un digito de control y aqui no compensa.
+
+     Lo que esto resuelve no es imprimir bonito. Un lector de codigo de
+     barras se presenta ante el sistema operativo como un TECLADO: apunta
+     al buscador, dispara, y escribe el codigo seguido de un Intro. Es
+     decir que la busqueda de lotes ya funciona con lector sin una linea de
+     codigo mas. Lo que se gana es que nadie teclee «PIT261109-001» con
+     guantes y a contraluz, que es donde se cambia un 0 por una O y el lote
+     se duplica. */
+
+  /* N = barra o espacio estrecho, W = ancho. Nueve elementos por caracter:
+     barra, espacio, barra, espacio... empezando y terminando en barra. */
+  const CODE39 = {
+    "0": "NNNWWNWNN", "1": "WNNWNNNNW", "2": "NNWWNNNNW", "3": "WNWWNNNNN",
+    "4": "NNNWWNNNW", "5": "WNNWWNNNN", "6": "NNWWWNNNN", "7": "NNNWNNWNW",
+    "8": "WNNWNNWNN", "9": "NNWWNNWNN", "A": "WNNNNWNNW", "B": "NNWNNWNNW",
+    "C": "WNWNNWNNN", "D": "NNNNWWNNW", "E": "WNNNWWNNN", "F": "NNWNWWNNN",
+    "G": "NNNNNWWNW", "H": "WNNNNWWNN", "I": "NNWNNWWNN", "J": "NNNNWWWNN",
+    "K": "WNNNNNNWW", "L": "NNWNNNNWW", "M": "WNWNNNNWN", "N": "NNNNWNNWW",
+    "O": "WNNNWNNWN", "P": "NNWNWNNWN", "Q": "NNNNNNWWW", "R": "WNNNNNWWN",
+    "S": "NNWNNNWWN", "T": "NNNNWNWWN", "U": "WWNNNNNNW", "V": "NWWNNNNNW",
+    "W": "WWWNNNNNN", "X": "NWNNWNNNW", "Y": "WWNNWNNNN", "Z": "NWWNWNNNN",
+    "-": "NWNNNNWNW", ".": "WWNNNNWNN", " ": "NWWNNNWNN", "*": "NWNNWNWNN"
+  };
+
+  function codigoBarras(valor, opciones) {
+    const o = opciones || {};
+    const alto = o.alto || 46;
+    const fino = o.fino || 2;          /* ancho del modulo estrecho, en px */
+    /* El asterisco delimita el simbolo por los dos lados: es parte del
+       estandar, no decoracion, y sin el ningun lector lo reconoce. */
+    const limpio = String(valor || "").toUpperCase().split("")
+      .filter(function (c) { return CODE39[c] && c !== "*"; }).join("");
+    if (!limpio) return "";
+
+    const barras = [];
+    let x = 0;
+    ("*" + limpio + "*").split("").forEach(function (ch) {
+      const patron = CODE39[ch];
+      for (let i = 0; i < patron.length; i++) {
+        const ancho = patron[i] === "W" ? fino * 3 : fino;
+        if (i % 2 === 0) barras.push({ x: x, w: ancho });   /* par = barra */
+        x += ancho;
+      }
+      x += fino;                       /* separacion entre caracteres */
+    });
+
+    let svg = '<svg class="barras-svg" width="' + x + '" height="' + alto +
+      '" viewBox="0 0 ' + x + " " + alto + '" role="img" aria-label="Código de barras ' +
+      esc(limpio) + '">';
+    svg += '<rect width="' + x + '" height="' + alto + '" fill="#fff"/>';
+    barras.forEach(function (b) {
+      svg += '<rect x="' + b.x + '" y="0" width="' + b.w + '" height="' + alto + '" fill="#000"/>';
+    });
+    svg += "</svg>";
+
+    /* El codigo tambien va en texto: si el lector falla o la etiqueta se
+       mancha, alguien tiene que poder leerlo y teclearlo. */
+    return '<div class="barras">' + svg +
+      '<span class="barras-texto">' + esc(limpio) + "</span></div>";
+  }
+
   /* ------------------------------------------------- cómo se calcula
 
      La explicación del método no es relleno: sostiene cada cifra y un
@@ -7752,7 +7857,7 @@ const UI = (function () {
     cajas: cajas, minutos: minutos, fechaLarga: fechaLarga, fechaCorta: fechaCorta,
     origen: origen, aviso: aviso, tabla: tabla, kpi: kpi, insignia: insignia,
     campana: campana, panelNovedades: panelNovedades,
-    metodo: metodo,
+    metodo: metodo, codigoBarras: codigoBarras,
     icono: icono, iconoTexto: iconoTexto, ICONOS: ICONOS,
     etiquetaLinea: etiquetaLinea,
     abrirFormulario: abrirFormulario, leerRepetible: leerRepetible,
@@ -11230,7 +11335,11 @@ Sesion.comprobar()
   function fichaCompleta(f) {
     if (!f) return "<p>Lote no encontrado.</p>";
     const l = f.lote, p = f.produccion;
-    let html = '<div class="ficha"><div class="ficha-linea">';
+    /* La ficha impresa es lo que viaja con el pallet: el codigo de barras
+       va arriba, donde el lector lo encuentra sin buscarlo. */
+    let html = '<div class="ficha"><div class="ficha-barras">' +
+      UI.codigoBarras(l.codigoLote) + "</div>" +
+      '<div class="ficha-linea">';
 
     [["Anunciado", l.fecha, true, Indicadores.nombreUsuario(l.anunciadoPor)],
      [l.estado === "Rechazado" ? "Rechazado" : "Pesado", l.fechaRecepcion,
@@ -13659,6 +13768,32 @@ Sesion.comprobar()
         /* Tras repintar, el foco vuelve al cuadro y al final del texto. */
         const otra = $("#buscarLote");
         if (otra) { otra.focus(); otra.setSelectionRange(otra.value.length, otra.value.length); }
+      });
+
+      /* Un lector de codigo de barras se comporta como un teclado: escribe
+         el codigo de golpe y termina con Intro. Eso hacia que la busqueda
+         funcionara «gratis»... salvo que el filtro de fechas sigue puesto.
+         Escanear un lote de hace seis semanas devolvia CERO resultados sin
+         decir por que, que es la peor respuesta posible: el lote existe y
+         lo tienes en la mano.
+
+         Con Intro, un codigo exacto abre su ficha venga de donde venga. Es
+         ademas lo que se quiere al escanear: no una lista de uno, la
+         ficha. */
+      buscar.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        const texto = buscar.value.trim().toUpperCase();
+        if (!texto) return;
+        const lote = DB.all("lotes").filter(function (l) {
+          return String(l.codigoLote).toUpperCase() === texto;
+        })[0];
+        if (lote) {
+          filtros.texto = "";
+          verFicha(lote.id);
+        } else {
+          UI.aviso("No hay ningún lote con el código " + texto + ".", "alerta");
+        }
       });
     }
     const limpiarBusca = $("#btnLimpiarBusca");

@@ -14,7 +14,7 @@ RAIZ="$(cd ../.. && pwd)"
 node "$RAIZ/tools/empaquetar.js" >/dev/null || { echo "No se pudo empaquetar."; exit 1; }
 
 if [ $# -gt 0 ]; then SUITES=("$@"); else
-  SUITES=(humo cordura coherencia tiempos bascula excel identidad autenticacion sin-servidor)
+  SUITES=(humo cordura coherencia tiempos bascula barras excel identidad autenticacion sin-servidor)
 fi
 
 fallos=0

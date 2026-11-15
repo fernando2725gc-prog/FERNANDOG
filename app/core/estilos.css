@@ -1930,6 +1930,21 @@ th .ico, td .ico { color: var(--texto-tenue); }
 /* Al imprimir no lleva marco: la etiqueta se recorta por las barras. */
 @media print { .barras { border: 0; padding: 0; } }
 
+/* ---- notas de la matriz de homologacion ----
+   El color NO es el unico portador: la nota va escrita dentro. Una celda
+   que solo se distinguiera por el fondo no la lee quien no distingue
+   rojos de verdes, y esta matriz decide a quien se le sigue comprando. */
+.nota-matriz {
+  display: inline-grid; place-items: center; width: 26px; height: 26px;
+  border-radius: 7px; font-weight: 700; font-size: .84rem;
+  font-variant-numeric: tabular-nums;
+}
+.nota-5 { background: color-mix(in srgb, var(--bien) 20%, transparent); color: var(--bien); }
+.nota-4 { background: color-mix(in srgb, var(--bien) 11%, transparent); color: var(--bien); }
+.nota-3 { background: var(--superficie-2); color: var(--texto-tenue); }
+.nota-2 { background: color-mix(in srgb, var(--regular) 16%, transparent); color: var(--regular); }
+.nota-1 { background: color-mix(in srgb, var(--mal) 16%, transparent); color: var(--mal); }
+
 /* ---- tarjetas ---- */
 .tarjeta, .kpi, .portada-app, .medida { box-shadow: var(--sombra); }
 .tarjeta, .medida { transition: box-shadow .16s, transform .16s; }

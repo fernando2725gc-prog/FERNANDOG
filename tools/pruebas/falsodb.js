@@ -24,6 +24,25 @@
 function falsoDB() {
   "use strict";
 
+  /* Esto tiene que ir lo PRIMERO, antes que nada.
+
+     `nube-config.js` trae escrita la dirección del Supabase de la planta, y
+     `db.js` prefiere el almacén propio sobre el del artefacto. Simular el
+     almacén del artefacto no bastaba: la aplicación encontraba la nube
+     configurada, la elegía, y las pruebas llevaban meses leyendo y
+     escribiendo contra la base de datos REAL. Funcionaba —y por eso no se
+     notó— porque las políticas del piloto dejaban entrar a cualquiera sin
+     cuenta.
+
+     Se descubrió el día que se instaló la autenticación de verdad: `anon`
+     dejó de tener acceso, la aplicación empezó a devolver 401 y ninguna
+     suite podía ni arrancar. El 401 no era el fallo: era el síntoma de que
+     las pruebas nunca habían estado aisladas.
+
+     Dos cadenas vacías y `Nube.configurada()` dice que no, así que se usa
+     el almacén simulado y nada sale de este navegador. */
+  window.ACOPIA_NUBE = { url: "", clave: "" };
+
   const PREFIJO = "falsodb:";
   const CANAL = "falsodb:cambio";
 

@@ -571,7 +571,38 @@ const DB = (function () {
          el momento —no reconstruirlo un mes después, cuando nadie recuerda
          qué pasó con ese camión. */
       toleranciaAviso: 0.03, origenToleranciaAviso: "E",
-      toleranciaGrave: 0.10, origenToleranciaGrave: "E"
+      toleranciaGrave: 0.10, origenToleranciaGrave: "E",
+
+      /* ---------------------- homologación de proveedores ----------------
+
+         Los pesos de una matriz de homologación son la pregunta que un
+         tribunal hace primero, y la peor respuesta posible es «venían en la
+         plantilla». Estos no vienen de una plantilla de logística genérica:
+         salen de dónde pierde dinero ESTA planta.
+
+         Una plantilla de compras típica pone el costo en 25 %, porque ahí
+         el margen se gana negociando el precio. Aquí no: la pérdida grande
+         es la fruta que entra y no sale a exportación, así que rendimiento
+         y calidad pesan 45 % entre los dos y el costo baja a 15 %. Comprar
+         barata una fruta que rinde 80 % sale más caro que comprar cara una
+         que rinde 95 %, y el sistema ya tiene los dos números para probarlo.
+
+         Exactitud al declarar pesa 15 % y no es manía administrativa: es la
+         CR6 del diagnóstico. Un proveedor impredecible rompe la
+         planificación del día, y eso cuesta horas-hombre que ya están
+         costeadas.
+
+         Suman 100. Si se cambian, la pantalla avisa cuando no suman. */
+      pesoRendimiento: 25, pesoCalidad: 20, pesoExactitud: 15,
+      pesoCosto: 15, pesoCapacidad: 10,
+      pesoDocumentacion: 8, pesoServicio: 4, pesoRiesgo: 3,
+      origenPesos: "E",
+
+      /* Dónde se corta cada clase. Un proveedor por debajo de 55 no es
+         «malo»: es uno con el que hay que sentarse, y por eso la clase se
+         llama así y no «rechazado». */
+      corteHomologadoA: 85, corteHomologadoB: 70, corteApto: 55,
+      origenCortes: "E"
     };
   }
 

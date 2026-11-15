@@ -3016,6 +3016,127 @@
 
   /* ====================== proveedores / usuarios ====================== */
 
+
+  /* ------------------------------------------- matriz de homologación */
+
+  function matrizHomologacion() {
+    const filas = Indicadores.homologacion({ desde: "0000-01-01", hasta: "9999-12-31" });
+    if (!filas.length) return "";
+
+    const pesoTotal = filas[0].pesoTotal;
+    let html = '<section class="panel"><h2>Homologación de proveedores</h2>' +
+      '<p class="sub panel-sub">A quién conservar, a quién ayudar y con quién hay que sentarse.</p>';
+
+    if (pesoTotal !== 100) {
+      html += '<p class="aviso-inline"><strong>Los pesos suman ' + nf(pesoTotal) +
+        ", no 100.</strong> El puntaje sigue saliendo, porque se calcula sobre el peso " +
+        "evaluado, pero conviene cuadrarlos en Parámetros para que la escala se lea como " +
+        "un porcentaje.</p>";
+    }
+
+    html += UI.metodo("Cómo se calcula este puntaje",
+      "<p>Cinco de los ocho criterios los <strong>mide el sistema</strong> con los lotes " +
+      "que ya tiene: rendimiento, calidad, exactitud al declarar, costo por kilo exportable " +
+      "y continuidad de entrega. Calificar eso a mano sería cambiar una medición por una " +
+      "opinión.</p><p>Los otros tres —documentación, servicio y riesgo— los califica " +
+      "Supervisión, porque no hay dato que los sustituya. Cada nota tiene escrito qué " +
+      "significa, para que dos personas puntúen igual.</p>" +
+      "<p><strong>Un criterio sin calificar no cuenta como cero</strong> ni como término " +
+      "medio: se queda fuera y el puntaje se calcula sobre el peso que de verdad se " +
+      "evaluó. Por eso cada fila dice sobre cuánto está evaluada.</p>");
+
+    html += UI.tabla([
+      { titulo: "Proveedor", valor: function (x) {
+        return "<strong>" + esc(x.nombre) + "</strong>" +
+          '<br><small class="tenue">' + nf(x.lotes) + " lotes · " +
+          nf(x.gavetasRecibidas) + " gavetas</small>"; },
+        csv: function (x) { return x.nombre; } },
+      { titulo: "Puntaje", num: true, valor: function (x) {
+        if (x.puntaje === null) return '<span class="tenue">—</span>';
+        return '<strong class="dato-num">' + nf(x.puntaje, 1) + "</strong>" +
+          '<br><small class="tenue">sobre ' + nf(x.pesoEvaluado) + "% del peso</small>"; },
+        csv: function (x) { return x.puntaje === null ? "" : x.puntaje.toFixed(1); } },
+      { titulo: "Clasificación", valor: function (x) {
+        return '<span class="etq ' + (x.tono === "bien" ? "etq-ok" : x.tono === "mal" ? "etq-bajo" : "") +
+          '">' + esc(x.clase) + "</span>"; },
+        csv: function (x) { return x.clase; } },
+      { titulo: "Revisar", valor: function (x) { return esc(x.frecuencia); } }
+    ].concat(filas[0].criterios.map(function (c, i) {
+      return { titulo: etiquetaCorta(c.id), num: true,
+        valor: function (x) {
+          const cc = x.criterios[i];
+          if (cc.nota === null) {
+            return '<span class="tenue" title="Sin calificar">—</span>';
+          }
+          return '<span class="nota-matriz nota-' + cc.nota + '">' + cc.nota + "</span>";
+        },
+        csv: function (x) { return x.criterios[i].nota === null ? "" : x.criterios[i].nota; } };
+    })).concat([
+      { titulo: "", valor: function (x) {
+        return '<button class="btn-mini btn-mini-accion" data-calificar="' +
+          esc(x.proveedorId) + '">Calificar</button>'; } }
+    ]), filas, {});
+
+    html += '<p class="nota-info">Las tres últimas columnas —documentación, servicio y ' +
+      "riesgo— son las que califica Supervisión. Mientras estén vacías, el puntaje se " +
+      "calcula sobre el " + nf(filas[0].pesoEvaluado) + "% del peso y nadie queda " +
+      "homologado del todo.</p>";
+
+    return html + "</section>";
+  }
+
+  function etiquetaCorta(id) {
+    const m = { rendimiento: "Rend.", calidad: "Calid.", exactitud: "Exact.",
+      costo: "Costo", capacidad: "Contin.", documentacion: "Docum.",
+      servicio: "Servic.", riesgo: "Riesgo" };
+    return m[id] || id;
+  }
+
+  /* Calificar es lo único de la matriz que hace una persona, así que el
+     formulario lleva escrito qué significa cada nota. Sin las anclas, dos
+     personas puntúan distinto y el número deja de significar nada: es
+     donde mueren estas matrices en la práctica. */
+  function formCalificarProveedor(proveedorId) {
+    const prov = DB.get("proveedores", proveedorId);
+    if (!prov) return;
+    const cal = prov.calificaciones || {};
+
+    const campos = [{ tipo: "html", contenido: '<p class="modal-nota">Solo estos tres. ' +
+      "Rendimiento, calidad, exactitud, costo y continuidad los mide el sistema con los " +
+      "lotes de <strong>" + esc(prov.nombre) + "</strong>, y no se tocan a mano.</p>" }];
+
+    Indicadores.CRITERIOS_JUICIO.forEach(function (c) {
+      campos.push({ nombre: c.id, etiqueta: c.nombre, tipo: "select",
+        valor: cal[c.id] === undefined || cal[c.id] === null ? "" : String(cal[c.id]),
+        opciones: [
+          { valor: "", texto: "Sin calificar" },
+          { valor: "5", texto: "5 · " + c.ancla5 },
+          { valor: "4", texto: "4 · entre el 5 y el 3" },
+          { valor: "3", texto: "3 · " + c.ancla3 },
+          { valor: "2", texto: "2 · entre el 3 y el 1" },
+          { valor: "1", texto: "1 · " + c.ancla1 }
+        ] });
+    });
+
+    UI.abrirFormulario("Calificar a " + prov.nombre, campos, function (d) {
+      const nuevas = {};
+      Indicadores.CRITERIOS_JUICIO.forEach(function (c) {
+        nuevas[c.id] = d[c.id] === "" || d[c.id] === undefined ? null : Number(d[c.id]);
+      });
+      DB.update("proveedores", proveedorId, {
+        calificaciones: nuevas,
+        calificadoPor: usuario.id,
+        calificado: DB.hoy()
+      });
+      DB.registrarBitacora(usuario.id, "Calificación de proveedor",
+        prov.nombre + " · " + Indicadores.CRITERIOS_JUICIO.map(function (c) {
+          return c.id + " " + (nuevas[c.id] === null ? "—" : nuevas[c.id]);
+        }).join(", "));
+      UI.aviso("Calificación guardada.");
+      render();
+    }, { aceptar: "Guardar calificación" });
+  }
+
   function vistaProveedores() {
     const resumen = {};
     Indicadores.porProveedor({ desde: "0000-01-01", hasta: "9999-12-31" }).forEach(function (m) {
@@ -3027,6 +3148,8 @@
       '<div class="cab-acciones">' +
       '<button class="btn btn-primario" id="btnNuevoProveedor">+ Nuevo proveedor</button>' +
       '<button class="btn btn-plano" id="btnCsvProveedores">Exportar a Excel</button></div></div>';
+
+    html += matrizHomologacion();
 
     html += UI.tabla([
       { titulo: "Código", valor: function (p) { return "<code>" + esc(p.codigo) + "</code>"; } },
@@ -4342,6 +4465,10 @@
 
     $$("[data-clave-usr]").forEach(function (b) {
       b.addEventListener("click", function () { restablecerClave(b.dataset.claveUsr); });
+    });
+
+    $$("[data-calificar]").forEach(function (b) {
+      b.addEventListener("click", function () { formCalificarProveedor(b.dataset.calificar); });
     });
 
     $$("[data-aprobar-sol]").forEach(function (b) {

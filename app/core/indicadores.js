@@ -991,6 +991,266 @@ const Indicadores = (function () {
     };
   }
 
+
+  /* ==================================================== homologación
+     Una matriz de homologación de proveedores, que es lo que pide una
+     certificadora de agroexportación y lo que convierte la CR6 del
+     diagnóstico en una decisión: a quién se conserva, a quién se ayuda y
+     a quién se deja de comprar.
+
+     La diferencia con la matriz de manual está aquí: de los ocho
+     criterios, CINCO los calcula el sistema con los lotes que ya tiene.
+     Poner «4 de 5 en calidad» a ojo para un proveedor del que hay
+     cuarenta y siete lotes pesados sería cambiar una medición por una
+     opinión. Solo se califican a mano los tres que de verdad necesitan
+     criterio humano, y cada nota lleva escrito qué significa.
+
+     La nota va de 1 a 5 porque es la escala de la norma y la que la gente
+     ya conoce; lo que no es de la norma es de dónde sale cada tramo, que
+     está en `ANCLAS` y se puede leer en pantalla. */
+
+  /* Para los criterios medidos, qué valor de la realidad vale qué nota.
+     Son fronteras, no opiniones: se derivan de la meta de la línea y de
+     las tolerancias que ya usa el pesaje. */
+  const ANCLAS = {
+    rendimiento: {
+      nombre: "Rendimiento exportable",
+      unidad: "% de la meta de su línea",
+      /* Cumplir la meta es un 4, no un 5: el 5 se reserva para quien la
+         supera, porque si cumplir fuera lo máximo nadie tendría a dónde
+         subir y la matriz dejaría de ordenar a los buenos entre sí. */
+      tramos: [[1.00, 5], [0.97, 4], [0.92, 3], [0.85, 2], [0, 1]]
+    },
+    calidad: {
+      nombre: "Calidad de entrada",
+      unidad: "% de gavetas calidad A, menos lo rechazado",
+      tramos: [[0.90, 5], [0.75, 4], [0.60, 3], [0.40, 2], [0, 1]]
+    },
+    exactitud: {
+      nombre: "Exactitud al declarar",
+      unidad: "desviación entre lo anunciado y lo pesado",
+      /* Las dos primeras fronteras NO son inventadas: son las mismas
+         tolerancias con las que la báscula avisa y se planta. Si fueran
+         otras, el sistema estaría diciendo dos cosas distintas sobre el
+         mismo hecho. */
+      tramos: null,   /* se construyen con los parámetros, ver `anclasVivas` */
+      invertido: true
+    },
+    costo: {
+      nombre: "Costo por kilo exportable",
+      unidad: "contra el promedio de su misma línea",
+      /* Lo que importa no es el precio de la gaveta: es lo que cuesta cada
+         kilo que SÍ llega a exportación. Una fruta barata que rinde poco
+         sale cara, y el sistema tiene los dos números para probarlo. */
+      tramos: [[0.90, 5], [0.97, 4], [1.05, 3], [1.15, 2], [99, 1]],
+      invertido: true
+    },
+    capacidad: {
+      nombre: "Capacidad y continuidad",
+      unidad: "semanas con entrega dentro del período",
+      /* Continuidad, no volumen. Un proveedor grande que entrega dos veces
+         al año no sostiene una línea; uno mediano que entrega cada semana,
+         sí. Lo que rompe la planificación es la intermitencia. */
+      tramos: [[0.80, 5], [0.60, 4], [0.40, 3], [0.20, 2], [0, 1]]
+    }
+  };
+
+  /* Los tres que sí son de criterio humano. Las anclas están escritas
+     porque sin ellas dos personas puntúan distinto y el número deja de
+     significar nada: es donde mueren estas matrices en la práctica. */
+  const CRITERIOS_JUICIO = [
+    { id: "documentacion", nombre: "Documentación y cumplimiento",
+      ancla5: "Entrega guía, factura y certificado sin que nadie se lo pida.",
+      ancla3: "Entrega todo, pero hay que recordárselo cada vez.",
+      ancla1: "Falta documentación con frecuencia o llega tarde." },
+    { id: "servicio", nombre: "Servicio y respuesta",
+      ancla5: "Contesta el mismo día y avisa él de los problemas.",
+      ancla3: "Contesta, pero hay que insistir.",
+      ancla1: "Difícil de localizar cuando hay un problema con su fruta." },
+    { id: "riesgo", nombre: "Riesgo y respaldo",
+      ancla5: "Finca propia, varios lotes de producción, sin dependencia de terceros.",
+      ancla3: "Opera normal, sin respaldo claro si falla una cosecha.",
+      ancla1: "Depende de un solo predio o de un intermediario." }
+  ];
+
+  /* Las fronteras de exactitud salen de las tolerancias del pesaje, no de
+     un número escrito aparte: si cambian allí, cambian aquí. */
+  function anclasVivas() {
+    const p = DB.parametros();
+    const aviso = Number(p.toleranciaAviso) || 0.03;
+    const grave = Number(p.toleranciaGrave) || 0.10;
+    const a = JSON.parse(JSON.stringify(ANCLAS));
+    a.exactitud.tramos = [
+      [aviso / 2, 5], [aviso, 4], [(aviso + grave) / 2, 3], [grave, 2], [99, 1]
+    ];
+    a.exactitud.unidad = "desviación (aviso " + (aviso * 100).toFixed(0) +
+      " %, grave " + (grave * 100).toFixed(0) + " %)";
+    return a;
+  }
+
+  /* Un valor y una escala dan una nota. `invertido` es para los criterios
+     donde MENOS es mejor: desviación y costo. */
+  function nota(valor, escala) {
+    if (valor === null || valor === undefined || !isFinite(valor)) return null;
+    const tramos = escala.tramos;
+    for (let i = 0; i < tramos.length; i++) {
+      if (escala.invertido ? valor <= tramos[i][0] : valor >= tramos[i][0]) {
+        return tramos[i][1];
+      }
+    }
+    return 1;
+  }
+
+  function pesos() {
+    const p = DB.parametros();
+    return [
+      { id: "rendimiento",   peso: Number(p.pesoRendimiento)   || 0, medido: true },
+      { id: "calidad",       peso: Number(p.pesoCalidad)       || 0, medido: true },
+      { id: "exactitud",     peso: Number(p.pesoExactitud)     || 0, medido: true },
+      { id: "costo",         peso: Number(p.pesoCosto)         || 0, medido: true },
+      { id: "capacidad",     peso: Number(p.pesoCapacidad)     || 0, medido: true },
+      { id: "documentacion", peso: Number(p.pesoDocumentacion) || 0, medido: false },
+      { id: "servicio",      peso: Number(p.pesoServicio)      || 0, medido: false },
+      { id: "riesgo",        peso: Number(p.pesoRiesgo)        || 0, medido: false }
+    ];
+  }
+
+  function homologacion(filtros) {
+    const f = filtros || {};
+    const base = porProveedor(f);
+    const esc = anclasVivas();
+    const ps = pesos();
+    const par = DB.parametros();
+    const lotes = filtrar(f).lotes;
+
+    /* El costo se compara DENTRO de la misma línea: una gaveta de pitahaya
+       y una de granadilla no cuestan lo mismo y compararlas castigaría al
+       proveedor de la fruta cara por serlo. */
+    const costoLinea = {};
+    base.forEach(function (m) {
+      const l = lineaDominante(lotes, m.proveedorId);
+      m.lineaId = l;
+      m.costoKgExportable = m.kgExportable > 0 ? m.valor / m.kgExportable : null;
+      if (m.costoKgExportable === null) return;
+      if (!costoLinea[l]) costoLinea[l] = { suma: 0, n: 0 };
+      costoLinea[l].suma += m.costoKgExportable;
+      costoLinea[l].n += 1;
+    });
+
+    /* Cuántas semanas distintas tuvieron entrega, sobre las del período.
+       Es continuidad, no volumen. */
+    const semanas = semanasConEntrega(lotes, f);
+
+    return base.map(function (m) {
+      const prov = DB.get("proveedores", m.proveedorId) || {};
+      const cal = prov.calificaciones || {};
+      const meta = metaDe(m.lineaId);
+      const prom = costoLinea[m.lineaId];
+
+      const valores = {
+        rendimiento: meta > 0 ? m.tasaExportable / meta : null,
+        calidad: Math.max(0, m.pctCalidadA - m.tasaRechazo),
+        exactitud: Math.max(Math.abs(m.tasaDiferencia), Math.abs(m.tasaDiferenciaKg)),
+        costo: (prom && prom.n > 0 && m.costoKgExportable !== null)
+          ? m.costoKgExportable / (prom.suma / prom.n) : null,
+        capacidad: semanas.total > 0
+          ? (semanas.por[m.proveedorId] || 0) / semanas.total : null
+      };
+
+      const criterios = ps.map(function (c) {
+        const n = c.medido
+          ? nota(valores[c.id], esc[c.id])
+          : (cal[c.id] === undefined || cal[c.id] === null ? null : Number(cal[c.id]));
+        return {
+          id: c.id, peso: c.peso, medido: c.medido, nota: n,
+          nombre: c.medido ? esc[c.id].nombre : nombreJuicio(c.id),
+          unidad: c.medido ? esc[c.id].unidad : "calificado por Supervisión",
+          valor: c.medido ? valores[c.id] : null
+        };
+      });
+
+      /* Un criterio sin calificar NO cuenta como cero ni como término
+         medio: se queda fuera y el puntaje se calcula sobre el peso que de
+         verdad se evaluó. Repartir el peso faltante sería inventar una
+         nota, y decir «92 sobre 100» cuando el 15 % no se miró es mentir
+         con un número redondo. */
+      const evaluados = criterios.filter(function (c) { return c.nota !== null; });
+      const pesoEval = evaluados.reduce(function (a, c) { return a + c.peso; }, 0);
+      const puntaje = pesoEval > 0
+        ? evaluados.reduce(function (a, c) { return a + c.peso * (c.nota / 5); }, 0) / pesoEval * 100
+        : null;
+
+      const clase = clasificar(puntaje, par, pesoEval);
+      return {
+        proveedorId: m.proveedorId, nombre: m.nombre, lineaId: m.lineaId,
+        lotes: m.lotes, gavetasRecibidas: m.gavetasRecibidas,
+        criterios: criterios, puntaje: puntaje,
+        pesoEvaluado: pesoEval, pesoTotal: ps.reduce(function (a, c) { return a + c.peso; }, 0),
+        clase: clase.clase, frecuencia: clase.frecuencia, tono: clase.tono,
+        calificado: prov.calificado || null, calificadoPor: prov.calificadoPor || null
+      };
+    }).sort(function (a, b) { return (b.puntaje || 0) - (a.puntaje || 0); });
+  }
+
+  function clasificar(puntaje, p, pesoEval) {
+    if (puntaje === null) {
+      return { clase: "Sin datos", frecuencia: "—", tono: "neutro" };
+    }
+    /* Con menos de la mitad del peso evaluado no se clasifica a nadie: un
+       sello de homologación sobre tres criterios de ocho no vale nada, y
+       darlo igual es lo que hace que estas matrices pierdan credibilidad. */
+    if (pesoEval < 50) {
+      return { clase: "Evaluación incompleta", frecuencia: "Completar", tono: "regular" };
+    }
+    if (puntaje >= (Number(p.corteHomologadoA) || 85)) {
+      return { clase: "Homologado A", frecuencia: "Semestral", tono: "bien" };
+    }
+    if (puntaje >= (Number(p.corteHomologadoB) || 70)) {
+      return { clase: "Homologado B", frecuencia: "Trimestral", tono: "bien" };
+    }
+    if (puntaje >= (Number(p.corteApto) || 55)) {
+      return { clase: "Apto con plan de mejora", frecuencia: "Trimestral", tono: "regular" };
+    }
+    return { clase: "Requiere decisión", frecuencia: "Mensual", tono: "mal" };
+  }
+
+  function nombreJuicio(id) {
+    const c = CRITERIOS_JUICIO.filter(function (x) { return x.id === id; })[0];
+    return c ? c.nombre : id;
+  }
+
+  function lineaDominante(lotes, proveedorId) {
+    const cuenta = {};
+    lotes.forEach(function (l) {
+      if (l.proveedorId !== proveedorId) return;
+      cuenta[l.lineaId] = (cuenta[l.lineaId] || 0) + 1;
+    });
+    return Object.keys(cuenta).sort(function (a, b) { return cuenta[b] - cuenta[a]; })[0] || null;
+  }
+
+  function metaDe(lineaId) {
+    const l = lineaId ? DB.linea(lineaId) : null;
+    return l ? Number(l.metaRendimiento) || 0 : 0;
+  }
+
+  /* Semanas distintas con al menos una entrega. Se cuenta por semana ISO
+     aproximada —el número de días entre la fecha y un lunes de
+     referencia— que para esto basta y no necesita una librería. */
+  function semanasConEntrega(lotes, f) {
+    const por = {}, todas = {};
+    lotes.forEach(function (l) {
+      if (!l.fecha) return;
+      const s = Math.floor(Date.parse(l.fecha) / 604800000);
+      todas[s] = true;
+      if (!por[l.proveedorId]) por[l.proveedorId] = {};
+      por[l.proveedorId][s] = true;
+    });
+    const total = Object.keys(todas).length;
+    const salida = {};
+    Object.keys(por).forEach(function (p) { salida[p] = Object.keys(por[p]).length; });
+    return { total: total, por: salida };
+  }
+
   /* ================================================================= costeo
      Cuánto cuesta cada causa raíz, en dinero. Es el puente entre el
      diagnóstico (kg perdidos por CR) y la decisión de inversión: mientras la
@@ -1382,6 +1642,8 @@ const Indicadores = (function () {
     coincideTexto: coincideTexto,
     calcular: calcular,
     porProveedor: porProveedor,
+    homologacion: homologacion,
+    CRITERIOS_JUICIO: CRITERIOS_JUICIO,
     porLinea: porLinea,
     porCausaRaiz: porCausaRaiz,
     porDestino: porDestino,

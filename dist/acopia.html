@@ -3856,8 +3856,8 @@ const DB = (function () {
            de masa de la base maestra. Sustituye a la «meta» inventada. */
         rendimientoExportable: 0.965, origenRendimiento: "M",
         metaRendimiento: 0.98, origenMeta: "E",
-        valorKgProductor: 1.50, origenValorKg: "S",
-        valorKgLocal: 0.60, origenValorLocal: "S",
+        valorKgProductor: 1.17, origenValorKg: "S",
+        valorKgLocal: 0.45, origenValorLocal: "S",
         ingresoDiarioKg: 2000, origenIngreso: "E",
         color: "var(--linea-1)", activa: true },
       { id: "ln_tomate", codigo: "TOM", nombre: "Tomate de árbol",
@@ -3866,8 +3866,8 @@ const DB = (function () {
         pesoCajaKg: 2.5, origenPesoCaja: "M",
         rendimientoExportable: 0.960, origenRendimiento: "M",
         metaRendimiento: 0.98, origenMeta: "E",
-        valorKgProductor: 1.54, origenValorKg: "S",
-        valorKgLocal: 0.90, origenValorLocal: "E",
+        valorKgProductor: 0.70, origenValorKg: "S",
+        valorKgLocal: 0.45, origenValorLocal: "E",
         ingresoDiarioKg: 1000, origenIngreso: "E",
         color: "var(--linea-2)", activa: true },
       { id: "ln_granadilla", codigo: "GRA", nombre: "Granadilla",
@@ -3876,8 +3876,8 @@ const DB = (function () {
         pesoCajaKg: 2, origenPesoCaja: "M",
         rendimientoExportable: 0.975, origenRendimiento: "M",
         metaRendimiento: 0.98, origenMeta: "E",
-        valorKgProductor: 1.40, origenValorKg: "E",
-        valorKgLocal: 0.70, origenValorLocal: "E",
+        valorKgProductor: 1.00, origenValorKg: "E",
+        valorKgLocal: 0.45, origenValorLocal: "E",
         ingresoDiarioKg: 860, origenIngreso: "E",
         color: "var(--linea-3)", activa: true }
     ];
@@ -4042,28 +4042,43 @@ const DB = (function () {
   }
 
   function causasBase() {
+    /* Las diez causas raíz del diagnóstico del TIC (Tabla 3.18), con el mismo
+       código y en el mismo orden de pérdida anual. Las seis primeras suman el
+       82,5 % de la pérdida y son las «principales» del Pareto. Antes la app
+       traía un catálogo de una versión anterior del diagnóstico (CR5 a CR8
+       con otros nombres) y las capturas contradecían al documento. */
     return [
-      { id: "CR1", codigo: "CR1", nombre: "Por definir", origen: "Por clasificar",
-        definida: false, principal: false, descripcion: "" },
-      { id: "CR2", codigo: "CR2", nombre: "Por definir", origen: "Por clasificar",
-        definida: false, principal: false, descripcion: "" },
-      { id: "CR3", codigo: "CR3", nombre: "Por definir", origen: "Por clasificar",
-        definida: false, principal: false, descripcion: "" },
-      { id: "CR4", codigo: "CR4", nombre: "Por definir", origen: "Por clasificar",
-        definida: false, principal: false,
-        descripcion: "El documento registra que su cronometraje fue corregido." },
-      { id: "CR5", codigo: "CR5", nombre: "Mermas sin segregar", origen: "Proceso",
+      { id: "CR1", codigo: "CR1", nombre: "Variabilidad de calidad entre proveedores", origen: "Campo",
+        definida: true, principal: true,
+        descripcion: "Calidad, calibre y peso de entrega dispares entre proveedores y entre envíos." },
+      { id: "CR2", codigo: "CR2", nombre: "Grupos de 2 a 4 personas sin configuración fija", origen: "Proceso",
+        definida: true, principal: true,
+        descripcion: "Cada mesa se arma distinto cada día y el tiempo-persona por gaveta varía." },
+      { id: "CR3", codigo: "CR3", nombre: "Descarte sin segregar", origen: "Proceso",
         definida: true, principal: true,
         descripcion: "El descarte sale mezclado, así que no puede valorizarse." },
-      { id: "CR6", codigo: "CR6", nombre: "Variabilidad de proveedor", origen: "Campo",
+      { id: "CR4", codigo: "CR4", nombre: "Lavado con producto sin etiquetar (tomate de árbol)", origen: "Proceso",
         definida: true, principal: true,
-        descripcion: "Calidad y peso de entrega dispares entre proveedores y entre envíos." },
-      { id: "CR7", codigo: "CR7", nombre: "Layout de planta", origen: "Proceso",
+        descripcion: "Paso de lavado y secado con una solución sin rotular ni estándar." },
+      { id: "CR5", codigo: "CR5", nombre: "Estaciones de sopleteado sin usar", origen: "Proceso",
         definida: true, principal: true,
-        descripcion: "Recorridos y transportes innecesarios entre estaciones." },
-      { id: "CR8", codigo: "CR8", nombre: "Subutilización del área de sopleteado",
-        origen: "Proceso", definida: true, principal: true,
-        descripcion: "La estación de sopleteado opera por debajo de su capacidad." }
+        descripcion: "La capacidad instalada de sopleteado queda ociosa mientras otras mesas se acumulan." },
+      { id: "CR6", codigo: "CR6", nombre: "Ritmo desigual entre operarios nuevos y experimentados", origen: "Proceso",
+        definida: true, principal: true,
+        descripcion: "El personal nuevo tarda más por gaveta y daña más fruta mientras aprende." },
+      { id: "CR7", codigo: "CR7", nombre: "Ausencia de un estándar de tiempos validado", origen: "Proceso",
+        definida: true, principal: false,
+        descripcion: "Sin estándar no se sabe cuánta gente asignar ni cuándo una mesa va lenta." },
+      { id: "CR8", codigo: "CR8", nombre: "Rechazo de granadilla bajo 70 g en recepción", origen: "Campo",
+        definida: true, principal: false,
+        descripcion: "Fruta bajo el peso mínimo que se retira al descargar." },
+      { id: "CR9", codigo: "CR9", nombre: "Personal sin planeación agregada", origen: "Proceso",
+        definida: true, principal: false,
+        descripcion: "Sin lote anunciado ni orden de llegada, la fruta espera en cámara." },
+      { id: "CR10", codigo: "CR10", nombre: "Mesas anchas de 130 cm", origen: "Proceso",
+        definida: true, principal: false,
+        descripcion: "Alcances largos y fruta acumulada en el centro de la mesa." }
+
     ];
   }
 
@@ -4100,11 +4115,11 @@ const DB = (function () {
       { id: "ds_segunda", nombre: "Segunda calidad — mercado nacional", nivel: 1,
         valoriza: true, valorKg: 0.45, origenValor: "E" },
       { id: "ds_subproducto", nombre: "Subproducto (pulpa, deshidratado, harina)", nivel: 2,
-        valoriza: true, valorKg: 0.30, origenValor: "E" },
+        valoriza: true, valorKg: 0.45, origenValor: "E" },
       { id: "ds_animal", nombre: "Alimentación animal", nivel: 3,
         valoriza: true, valorKg: 0.08, origenValor: "E" },
       { id: "ds_compost", nombre: "Compostaje", nivel: 4,
-        valoriza: true, valorKg: 0.03, origenValor: "E" },
+        valoriza: true, valorKg: 0.02, origenValor: "E" },
       { id: "ds_relleno", nombre: "Relleno sanitario", nivel: 5,
         valoriza: false, valorKg: -0.02, origenValor: "E" }
     ];
@@ -4266,7 +4281,7 @@ const DB = (function () {
          que rinde 95 %, y el sistema ya tiene los dos números para probarlo.
 
          Exactitud al declarar pesa 15 % y no es manía administrativa: es la
-         CR6 del diagnóstico. Un proveedor impredecible rompe la
+         CR1 del diagnóstico. Un proveedor impredecible rompe la
          planificación del día, y eso cuesta horas-hombre que ya están
          costeadas.
 
@@ -4340,7 +4355,7 @@ const DB = (function () {
     const usuarios = usuariosBase();
 
     /* Cada proveedor declara con su propio sesgo: es lo que hace visible la
-       CR6 (variabilidad de proveedor) en los indicadores. */
+       CR1 (variabilidad de proveedor) en los indicadores. */
     const sesgo = { pv_01: 0.995, pv_02: 0.972, pv_03: 0.999, pv_04: 0.962, pv_05: 0.988 };
 
     const lotes = [];
@@ -4370,7 +4385,7 @@ const DB = (function () {
           lineaId: linea.id,
           gavetasAnunciadas: gavetas,
           /* El proveedor declara cuánto pesa su gaveta: no todas vienen al
-             peso nominal, y esa diferencia es parte de la CR6. */
+             peso nominal, y esa diferencia es parte de la CR1. */
           pesoGavetaDeclarado: Number((linea.pesoGavetaKg * (0.97 + r() * 0.06)).toFixed(2)),
           kgAnunciados: 0,
           calidadDeclarada: calidad,
@@ -4428,7 +4443,7 @@ const DB = (function () {
               : 0.03 + r() * 0.05;
             lote.kgRetirados = Math.round(lote.kgRecibidos * tasaRetiro);
             lote.causaRetiro = lote.kgRetirados > 0
-              ? (lote.lineaId === "ln_granadilla" ? "CR6" : (r() < 0.6 ? "CR6" : "CR1")) : null;
+              ? (lote.lineaId === "ln_granadilla" ? "CR8" : "CR1") : null;
             lote.destinoRetiro = lote.kgRetirados > 0
               ? (d3Reciente(lote.fechaRecepcion) ? "ds_segunda" : "ds_relleno") : null;
             lote.estado = "Recibido";
@@ -4464,18 +4479,24 @@ const DB = (function () {
       const cajasExportables = Math.round(kgExportable / linea.pesoCajaKg);
       const kgMerma = kgProcesados - kgExportable;
 
-      /* Reparto entre causas raíz. CR5-CR8 concentran la mayor parte, como
-         indica el diagnóstico; las causas aún sin definir reciben poco. */
+      /* Reparto entre causas raíz en la proporción de la pérdida anual del
+         diagnóstico (Tabla 3.18): la CR1 pesa más en los lotes de peor calidad.
+         La CR4 solo existe en tomate de árbol y la CR8 en granadilla: su peso
+         va triplicado porque cada una es una de las tres líneas, y así su
+         parte del total queda cerca de la del diagnóstico. */
+      const esTomate = lote.lineaId === "ln_tomate";
+      const esGranadilla = lote.lineaId === "ln_granadilla";
       const pesos = {
-        CR5: 0.24,
-        CR6: lote.calidadVerificada === "A" ? 0.14 : 0.28,
-        CR7: 0.16,
-        CR8: 0.20,
-        CR1: 0.05, CR2: 0.04, CR3: 0.04, CR4: 0.03
+        CR1: lote.calidadVerificada === "A" ? 0.34 : 0.50,
+        CR2: 0.128, CR3: 0.086,
+        CR4: esTomate ? 0.17 : 0,
+        CR5: 0.056, CR6: 0.054, CR7: 0.051,
+        CR8: esGranadilla ? 0.14 : 0,
+        CR9: 0.047, CR10: 0.026
       };
       const suma = Object.keys(pesos).reduce(function (a, k) { return a + pesos[k]; }, 0);
 
-      /* Antes de segregar (CR5), casi todo el descarte va a relleno. En los
+      /* Antes de segregar (CR3), casi todo el descarte va a relleno. En los
          lotes recientes ya se aplica la segregación propuesta. */
       const segrega = d3Reciente(lote.fechaRecepcion);
       const mermas = [];
@@ -4491,7 +4512,7 @@ const DB = (function () {
         let destinoId;
         if (!segrega) {
           destinoId = r() < 0.82 ? "ds_relleno" : "ds_animal";
-        } else if (k === "CR6" || k === "CR5") {
+        } else if (k === "CR1" || k === "CR3") {
           destinoId = r() < 0.5 ? "ds_segunda" : "ds_subproducto";
         } else {
           const opciones = ["ds_subproducto", "ds_animal", "ds_compost", "ds_relleno"];
@@ -5580,7 +5601,7 @@ const Indicadores = (function () {
         ? (m.kgRecibidos - m.kgAnunPesados) / m.kgAnunPesados : 0;
       m.pesoGavetaReal = m.gavetasRecibidas > 0 ? m.kgRecibidos / m.gavetasRecibidas : 0;
       m.tasaRechazo = m.lotes > 0 ? m.rechazados / m.lotes : 0;
-      /* Indice de variabilidad: es la CR6 hecha numero. Combina lo que el
+      /* Indice de variabilidad: es la CR1 hecha numero. Combina lo que el
          proveedor falla al declarar, lo que le rechazan y lo que rinde. */
       m.indiceVariabilidad = Math.abs(m.tasaDiferencia) + m.tasaRechazo +
         Math.max(0, 0.8 - m.tasaExportable);
@@ -5634,7 +5655,7 @@ const Indicadores = (function () {
   }
 
   /* Pareto por causa raiz: cuanto pesa cada CR en la perdida total. Es el
-     indicador que sostiene la priorizacion CR5-CR8 del diagnostico. */
+     indicador que sostiene la priorizacion CR1-CR6 del diagnostico. */
   function porCausaRaiz(filtros) {
     const prod = filtrar(filtros).producciones;
     const mapa = {};
@@ -6286,7 +6307,7 @@ const Indicadores = (function () {
 
   /* ==================================================== homologación
      Una matriz de homologación de proveedores, que es lo que pide una
-     certificadora de agroexportación y lo que convierte la CR6 del
+     certificadora de agroexportación y lo que convierte la CR1 del
      diagnóstico en una decisión: a quién se conserva, a quién se ayuda y
      a quién se deja de comprar.
 
@@ -6681,70 +6702,83 @@ const Indicadores = (function () {
   const TASA_DESCUENTO = 0.12;          // costo de oportunidad anual, supuesto
   const ANIOS_VAN = 3;
 
-  /* Las ocho causas raíz de la matriz KPI de la base maestra, con su
-     indicador actual, su meta y la pérdida ya calculada allí. No son
-     invención de la app: vienen del diagnóstico, y por eso cada una dice
-     sobre qué base se calculó. La nº 5 no se monetiza —capacidad ociosa es
-     pérdida indirecta— y se deja a propósito en cero: inflarla sería el
-     tipo de número que hace desconfiar de todo lo demás. */
+  /* Las diez causas raíz de la matriz de indicadores del TIC (Tabla 3.21):
+     indicador actual, meta y pérdida anual actual y proyectada. No son
+     invención de la app: vienen del diagnóstico. La tesis tiene alcance
+     descriptivo y no estima inversiones, así que aquí van en cero; el
+     simulador deja escribirlas como supuesto. */
   const MEDIDAS = [
-    { id: "kpi_1", n: 1, causaId: "CR6", linea: "Pitahaya",
-      nombre: "Estandarizar la composición de los equipos",
-      indicador: "Sobre-tiempo-persona frente a la mejor mesa",
-      actual: 0.4336, meta: 0.10, reduccion: 0.7694,
-      perdidaAnual: 9279.36, proyectada: 2139.86, inversion: 600, recurrenteAnual: 0,
-      detalle: "Grupos con roles fijos según el mejor tiempo-persona medido (mesa 1).",
-      base: "Sobre-tiempo-persona × gavetas/año × costo hora. Depende de confirmar mesas 2 y 3." },
-    { id: "kpi_2", n: 2, causaId: "CR7", linea: "Tomate",
-      nombre: "Eliminar el lavado y secado del tomate",
-      indicador: "% del contenido de trabajo dedicado a limpieza y secado",
-      actual: 0.5176, meta: 0, reduccion: 1,
-      perdidaAnual: 24565.32, proyectada: 0, inversion: 0, recurrenteAnual: 0,
-      detalle: "ECRS — Eliminar: exigir fruta limpia al proveedor en el acuerdo comercial.",
-      base: "Min-persona de limpieza + secado por gaveta × gavetas/año × costo hora." },
-    { id: "kpi_3", n: 3, causaId: "CR6", linea: "Granadilla",
-      nombre: "Controlar el calibre de la granadilla en finca",
-      indicador: "% retirado en recepción",
-      actual: 0.0345, meta: 0.015, reduccion: 0.5657,
-      perdidaAnual: 5988.70, proyectada: 2600.64, inversion: 900, recurrenteAnual: 600,
-      detalle: "Muestreo de peso en finca, precio diferenciado por calibre y segunda " +
-        "calidad en vez de rechazo.",
-      base: "Pérdida neta del retiro en recepción (balance de masa), anualizada." },
-    { id: "kpi_4", n: 4, causaId: "CR7", linea: "Pitahaya",
-      nombre: "Rediseñar las mesas de sopleteado",
-      indicador: "% de daño en mesas anchas",
-      actual: 0.05, meta: 0.02, reduccion: 0.60,
-      perdidaAnual: 12960, proyectada: 5184, inversion: 4500, recurrenteAnual: 0,
-      detalle: "Ancho reducido según SLP y Guerchet, para acortar el alcance.",
-      base: "Daño extra frente a la mesa 1 × kg/año × (precio − precio local). Hipótesis a verificar." },
-    { id: "kpi_5", n: 5, causaId: "CR8", linea: "Pitahaya",
-      nombre: "Usar las estaciones de sopleteado ociosas",
-      indicador: "% de capacidad instalada sin usar",
-      actual: 0.40, meta: 0.20, reduccion: 0,
-      perdidaAnual: 0, proyectada: 0, inversion: 300, recurrenteAnual: 0,
-      detalle: "Redistribuir personal según la demanda del día (planeación agregada).",
-      base: "Capacidad ociosa: pérdida indirecta, no se monetiza." },
-    { id: "kpi_6", n: 6, causaId: "CR5", linea: "Pitahaya",
-      nombre: "Bajar la merma de pitahaya al 2%",
-      indicador: "% merma real sobre kg recibidos",
-      actual: 0.0406, meta: 0.02, reduccion: 0.5069,
-      perdidaAnual: 40440.82, proyectada: 19940.52, inversion: 1800, recurrenteAnual: 900,
-      detalle: "Clasificación de proveedores A–D, segregación en origen y destino circular.",
-      base: "Balance de masa de la línea; meta 2% = mejor caso reportado en Ecuador." },
-    { id: "kpi_7", n: 7, causaId: "CR5", linea: "Tomate",
-      nombre: "Bajar la merma de tomate al 2%",
-      indicador: "% merma real sobre kg recibidos",
-      actual: 0.0538, meta: 0.02, reduccion: 0.6284,
-      perdidaAnual: 24938.74, proyectada: 9266.92, inversion: 1200, recurrenteAnual: 600,
-      detalle: "Clasificación de proveedores A–D, segregación en origen y destino circular.",
-      base: "Balance de masa de la línea; meta 2% = mejor caso reportado en Ecuador." },
-    { id: "kpi_8", n: 8, causaId: "CR5", linea: "Granadilla",
-      nombre: "Bajar la merma de granadilla al 2%",
-      indicador: "% merma real sobre kg recibidos",
-      actual: 0.023, meta: 0.02, reduccion: 0.1388,
-      perdidaAnual: 11812.28, proyectada: 10172.47, inversion: 800, recurrenteAnual: 400,
-      detalle: "Clasificación de proveedores A–D, segregación en origen y destino circular.",
-      base: "Balance de masa de la línea; meta 2% = mejor caso reportado en Ecuador." }
+    { id: "kpi_1", n: 1, causaId: "CR1", linea: "Todas",
+      nombre: "Clasificar a los proveedores de A a D por rendimiento exportable y devolverles un reporte por lote",
+      indicador: "Merma ponderada en recepción",
+      actual: 0.138, meta: 0.08, reduccion: 0.422,
+      perdidaAnual: 76509, proyectada: 44226, inversion: 0, recurrenteAnual: 0,
+      detalle: "Categoría por rendimiento exportable, reporte por lote y acción comercial por categoría.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." },
+    { id: "kpi_2", n: 2, causaId: "CR2", linea: "Todas",
+      nombre: "Grupos fijos de cuatro personas con un experto y roles definidos",
+      indicador: "Variación del tiempo-persona por gaveta",
+      actual: 0.24, meta: 0.08, reduccion: 0.6667,
+      perdidaAnual: 23036, proyectada: 7679, inversion: 0, recurrenteAnual: 0,
+      detalle: "Roles fijos en la mesa según el mejor tiempo-persona medido.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." },
+    { id: "kpi_3", n: 3, causaId: "CR3", linea: "Todas",
+      nombre: "Segregar en origen y dar destino según la jerarquía",
+      indicador: "Descarte que va a desecho",
+      actual: 1.0, meta: 0.3, reduccion: 0.7,
+      perdidaAnual: 15545, proyectada: 4663, inversion: 0, recurrenteAnual: 0,
+      detalle: "Segunda calidad al mercado nacional, subproducto, alimento animal y compostaje antes que relleno.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." },
+    { id: "kpi_4", n: 4, causaId: "CR4", linea: "Tomate",
+      nombre: "Pactar fruta limpia con el proveedor y retirar el paso; mientras exista, etiquetar la solución",
+      indicador: "Tiempo de ciclo dedicado al lavado",
+      actual: 0.065, meta: 0.0, reduccion: 1.0,
+      perdidaAnual: 10337, proyectada: 0, inversion: 0, recurrenteAnual: 0,
+      detalle: "ECRS: eliminar el lavado del tomate de árbol cuando el proveedor entrega fruta limpia.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." },
+    { id: "kpi_5", n: 5, causaId: "CR5", linea: "Pitahaya",
+      nombre: "Abrir estaciones de sopleteado según el volumen anunciado",
+      indicador: "Capacidad instalada ociosa",
+      actual: 0.6, meta: 0.25, reduccion: 0.5833,
+      perdidaAnual: 10109, proyectada: 4212, inversion: 0, recurrenteAnual: 0,
+      detalle: "El plan diario reparte el personal con el volumen que anuncian los proveedores.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." },
+    { id: "kpi_6", n: 6, causaId: "CR6", linea: "Todas",
+      nombre: "Acompañar al personal nuevo con un experto",
+      indicador: "Tiempo adicional del operario nuevo",
+      actual: 0.338, meta: 0.1, reduccion: 0.7043,
+      perdidaAnual: 9735, proyectada: 2879, inversion: 0, recurrenteAnual: 0,
+      detalle: "Pareja nuevo-experto desde el primer día y seguimiento de su tiempo por gaveta.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." },
+    { id: "kpi_7", n: 7, causaId: "CR7", linea: "Todas",
+      nombre: "Usar el tiempo estándar como referencia de cada puesto",
+      indicador: "Subestimación del ciclo por falta de estándar",
+      actual: 0.192, meta: 0.02, reduccion: 0.8958,
+      perdidaAnual: 9214, proyectada: 960, inversion: 0, recurrenteAnual: 0,
+      detalle: "Estándar por actividad con valoración del ritmo y suplementos.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." },
+    { id: "kpi_8", n: 8, causaId: "CR8", linea: "Granadilla",
+      nombre: "Pactar el criterio de peso con el proveedor",
+      indicador: "Fruta rechazada por peso en recepción",
+      actual: 0.09, meta: 0.04, reduccion: 0.5555,
+      perdidaAnual: 8554, proyectada: 3802, inversion: 0, recurrenteAnual: 0,
+      detalle: "Muestreo de peso en finca y segunda calidad en vez de rechazo.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." },
+    { id: "kpi_9", n: 9, causaId: "CR9", linea: "Todas",
+      nombre: "Planificación diaria con lote anunciado y orden de llegada",
+      indicador: "Horas tercerizadas",
+      actual: 0.35, meta: 0.15, reduccion: 0.5714,
+      perdidaAnual: 8398, proyectada: 3599, inversion: 0, recurrenteAnual: 0,
+      detalle: "El anuncio del proveedor permite planear el personal del día.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." },
+    { id: "kpi_10", n: 10, causaId: "CR10", linea: "Todas",
+      nombre: "Mesas de 100 cm con dos personas por lado",
+      indicador: "Efecto del ancho de mesa en el ciclo",
+      actual: 0.12, meta: 0.04, reduccion: 0.6666,
+      perdidaAnual: 4607, proyectada: 1536, inversion: 0, recurrenteAnual: 0,
+      detalle: "Ancho reducido para acortar el alcance y evitar la acumulación.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." }
+
   ];
 
   /* Compatibilidad con el simulador por causa raíz: cada medida se expresa
@@ -6752,7 +6786,7 @@ const Indicadores = (function () {
   const ESCENARIOS = MEDIDAS.map(function (m) {
     return {
       id: m.id, nombre: m.nombre, causas: [m.causaId],
-      reduccion: m.reduccion, valorizacion: m.causaId === "CR5" ? 0.4 : 0,
+      reduccion: m.reduccion, valorizacion: m.causaId === "CR3" ? 0.4 : 0,
       inversion: m.inversion, recurrenteAnual: m.recurrenteAnual,
       detalle: m.detalle
     };
@@ -7024,6 +7058,19 @@ const Graficos = (function () {
     return cabeza.concat([fuera]);
   }
 
+  /* Un rótulo largo se corta en un espacio y con puntos suspensivos. Cortarlo
+     a ciegas dejaba «Variabilidad de calidad en»: una frase a medias que se
+     lee como si el sistema hubiera querido decir otra cosa. */
+  const CONECTOR_FINAL = /\s(y|o|u|e|de|del|con|sin|por|para|que|en|al|a|el|la|los|las|un|una|entre)$/i;
+  function rotuloCorto(texto, maximo) {
+    if (texto.length <= maximo) return texto;
+    let corto = texto.slice(0, maximo - 1);
+    const espacio = corto.lastIndexOf(" ");
+    if (espacio > maximo / 2) corto = corto.slice(0, espacio);
+    while (CONECTOR_FINAL.test(corto)) corto = corto.replace(CONECTOR_FINAL, "");
+    return corto + "…";
+  }
+
   function esc(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
@@ -7151,7 +7198,7 @@ const Graficos = (function () {
          cosa y la longitud de la barra ya la dice. Un color para todas. */
       const color = o.color || PALETA[0];
       svg += '<text x="0" y="' + (yy + 15) + '" class="chart-label">' +
-        esc(String(d.nombre).slice(0, 26)) + "</text>";
+        esc(rotuloCorto(String(d.nombre), 26)) + "</text>";
       svg += '<rect x="' + anchoEtiqueta + '" y="' + yy + '" width="' + Math.max(ancho, 2) +
         '" height="20" rx="4" style="fill:' + color + '"><title>' + esc(d.nombre) + ": " +
         fmt(d[campo]) + (o.sufijo || " kg") + "</title></rect>";
@@ -8626,7 +8673,7 @@ const Guia = (function () {
            "y los kilos de la báscula."],
           ["Mira la diferencia que calcula la pantalla",
            "Si lo pesado se aparta mucho de lo anunciado, el sistema lo señala. Esa " +
-           "diferencia es la causa raíz <strong>CR6</strong> hecha número, y es la base " +
+           "diferencia es la causa raíz <strong>CR1</strong> hecha número, y es la base " +
            "de la conversación con el proveedor."],
           ["¿Se retiró fruta al descargar?",
            "Si parte del lote no entra —bajo calibre, golpeada, podrida— se anota en " +
@@ -10556,7 +10603,7 @@ Sesion.comprobar()
         ejeX: function (d) { return d.codigo; },
         etiqueta: function (d) { return d.etiqueta; },
         color: function (d) { return d.principal ? "#c0246b" : d.definida ? "#c85a1e" : "#8b96a3"; },
-        leyenda: [["Causa principal (CR5-CR8)", "#c0246b"], ["Otra causa definida", "#c85a1e"],
+        leyenda: [["Causa principal (CR1-CR6, 80 % de la pérdida)", "#c0246b"], ["Otra causa definida", "#c85a1e"],
           ["Por definir", "#8b96a3"]]
       }) + "</section>";
 
@@ -11510,9 +11557,9 @@ Sesion.comprobar()
           return { etapa: m.etapa || "seleccion", causaId: m.causaId, kg: m.kg,
                    destinoId: m.destinoId };
         }) : [
-          { etapa: "seleccion", causaId: "CR5", destinoId: "ds_subproducto" },
-          { etapa: "seleccion", causaId: "CR6", destinoId: "ds_segunda" },
-          { etapa: "empaque", causaId: "CR8", destinoId: "ds_animal" }
+          { etapa: "seleccion", causaId: "CR1", destinoId: "ds_segunda" },
+          { etapa: "seleccion", causaId: "CR3", destinoId: "ds_subproducto" },
+          { etapa: "empaque", causaId: "CR2", destinoId: "ds_animal" }
         ]
       },
       alCambiar: function (d, form) {
@@ -11969,7 +12016,7 @@ Sesion.comprobar()
     proveedor: {
       titulo: "Consolidado por proveedor",
       descripcion: "Volumen, exactitud al declarar, calidad y resultado en planta. " +
-        "Sostiene la liquidación y hace visible la variabilidad de proveedor (CR6).",
+        "Sostiene la liquidación y hace visible la variabilidad de proveedor (CR1).",
       datos: function () { return Indicadores.porProveedor(filtros); },
       columnas: [
         { titulo: "Proveedor", valor: function (m) { return "<strong>" + esc(m.nombre) + "</strong>"; },
@@ -12969,8 +13016,7 @@ Sesion.comprobar()
     html += '<section class="panel"><h2>Causas raíz del diagnóstico</h2>';
     if (sinDefinir > 0) {
       html += '<p class="aviso-inline">Hay <strong>' + sinDefinir + " causas sin definir</strong>. " +
-        "El documento del TIC solo nombra CR5 a CR8; las demás debes completarlas tú con " +
-        "los nombres reales de tu diagnóstico.</p>";
+        "Complétalas con los nombres de las causas raíz del diagnóstico.</p>";
     }
     html += UI.tabla([
       { titulo: "Código", valor: function (c) {
@@ -13318,7 +13364,7 @@ Sesion.comprobar()
     });
 
     let html = '<div class="vista-cab"><div><h1>Fincas y cooperativas</h1>' +
-      '<p class="sub">Padrón único. La variabilidad entre proveedores es la causa raíz CR6.</p></div>' +
+      '<p class="sub">Padrón único. La variabilidad entre proveedores es la causa raíz CR1.</p></div>' +
       '<div class="cab-acciones">' +
       '<button class="btn btn-primario" id="btnNuevoProveedor">+ Nuevo proveedor</button>' +
       '<button class="btn btn-plano" id="btnCsvProveedores">Exportar a Excel</button></div></div>';
@@ -13374,7 +13420,7 @@ Sesion.comprobar()
 
     html += UI.metodo("Qué mide el índice de variabilidad",
       "<p>Combina la desviación al declarar, la tasa de rechazo y el rendimiento de la " +
-      "fruta. Es la CR6 hecha número: cuanto más alto, más impredecible es el " +
+      "fruta. Es la CR1 hecha número: cuanto más alto, más impredecible es el " +
       "proveedor.</p>");
     return html;
   }

@@ -48,6 +48,19 @@ const Graficos = (function () {
     return cabeza.concat([fuera]);
   }
 
+  /* Un rótulo largo se corta en un espacio y con puntos suspensivos. Cortarlo
+     a ciegas dejaba «Variabilidad de calidad en»: una frase a medias que se
+     lee como si el sistema hubiera querido decir otra cosa. */
+  const CONECTOR_FINAL = /\s(y|o|u|e|de|del|con|sin|por|para|que|en|al|a|el|la|los|las|un|una|entre)$/i;
+  function rotuloCorto(texto, maximo) {
+    if (texto.length <= maximo) return texto;
+    let corto = texto.slice(0, maximo - 1);
+    const espacio = corto.lastIndexOf(" ");
+    if (espacio > maximo / 2) corto = corto.slice(0, espacio);
+    while (CONECTOR_FINAL.test(corto)) corto = corto.replace(CONECTOR_FINAL, "");
+    return corto + "…";
+  }
+
   function esc(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
@@ -175,7 +188,7 @@ const Graficos = (function () {
          cosa y la longitud de la barra ya la dice. Un color para todas. */
       const color = o.color || PALETA[0];
       svg += '<text x="0" y="' + (yy + 15) + '" class="chart-label">' +
-        esc(String(d.nombre).slice(0, 26)) + "</text>";
+        esc(rotuloCorto(String(d.nombre), 26)) + "</text>";
       svg += '<rect x="' + anchoEtiqueta + '" y="' + yy + '" width="' + Math.max(ancho, 2) +
         '" height="20" rx="4" style="fill:' + color + '"><title>' + esc(d.nombre) + ": " +
         fmt(d[campo]) + (o.sufijo || " kg") + "</title></rect>";

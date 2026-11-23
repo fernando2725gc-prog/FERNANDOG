@@ -162,7 +162,7 @@ const Guia = (function () {
            "y los kilos de la báscula."],
           ["Mira la diferencia que calcula la pantalla",
            "Si lo pesado se aparta mucho de lo anunciado, el sistema lo señala. Esa " +
-           "diferencia es la causa raíz <strong>CR6</strong> hecha número, y es la base " +
+           "diferencia es la causa raíz <strong>CR1</strong> hecha número, y es la base " +
            "de la conversación con el proveedor."],
           ["¿Se retiró fruta al descargar?",
            "Si parte del lote no entra —bajo calibre, golpeada, podrida— se anota en " +

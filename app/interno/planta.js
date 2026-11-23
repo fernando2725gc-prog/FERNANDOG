@@ -382,7 +382,7 @@
         ejeX: function (d) { return d.codigo; },
         etiqueta: function (d) { return d.etiqueta; },
         color: function (d) { return d.principal ? "#c0246b" : d.definida ? "#c85a1e" : "#8b96a3"; },
-        leyenda: [["Causa principal (CR5-CR8)", "#c0246b"], ["Otra causa definida", "#c85a1e"],
+        leyenda: [["Causa principal (CR1-CR6, 80 % de la pérdida)", "#c0246b"], ["Otra causa definida", "#c85a1e"],
           ["Por definir", "#8b96a3"]]
       }) + "</section>";
 
@@ -1336,9 +1336,9 @@
           return { etapa: m.etapa || "seleccion", causaId: m.causaId, kg: m.kg,
                    destinoId: m.destinoId };
         }) : [
-          { etapa: "seleccion", causaId: "CR5", destinoId: "ds_subproducto" },
-          { etapa: "seleccion", causaId: "CR6", destinoId: "ds_segunda" },
-          { etapa: "empaque", causaId: "CR8", destinoId: "ds_animal" }
+          { etapa: "seleccion", causaId: "CR1", destinoId: "ds_segunda" },
+          { etapa: "seleccion", causaId: "CR3", destinoId: "ds_subproducto" },
+          { etapa: "empaque", causaId: "CR2", destinoId: "ds_animal" }
         ]
       },
       alCambiar: function (d, form) {
@@ -1795,7 +1795,7 @@
     proveedor: {
       titulo: "Consolidado por proveedor",
       descripcion: "Volumen, exactitud al declarar, calidad y resultado en planta. " +
-        "Sostiene la liquidación y hace visible la variabilidad de proveedor (CR6).",
+        "Sostiene la liquidación y hace visible la variabilidad de proveedor (CR1).",
       datos: function () { return Indicadores.porProveedor(filtros); },
       columnas: [
         { titulo: "Proveedor", valor: function (m) { return "<strong>" + esc(m.nombre) + "</strong>"; },
@@ -2795,8 +2795,7 @@
     html += '<section class="panel"><h2>Causas raíz del diagnóstico</h2>';
     if (sinDefinir > 0) {
       html += '<p class="aviso-inline">Hay <strong>' + sinDefinir + " causas sin definir</strong>. " +
-        "El documento del TIC solo nombra CR5 a CR8; las demás debes completarlas tú con " +
-        "los nombres reales de tu diagnóstico.</p>";
+        "Complétalas con los nombres de las causas raíz del diagnóstico.</p>";
     }
     html += UI.tabla([
       { titulo: "Código", valor: function (c) {
@@ -3144,7 +3143,7 @@
     });
 
     let html = '<div class="vista-cab"><div><h1>Fincas y cooperativas</h1>' +
-      '<p class="sub">Padrón único. La variabilidad entre proveedores es la causa raíz CR6.</p></div>' +
+      '<p class="sub">Padrón único. La variabilidad entre proveedores es la causa raíz CR1.</p></div>' +
       '<div class="cab-acciones">' +
       '<button class="btn btn-primario" id="btnNuevoProveedor">+ Nuevo proveedor</button>' +
       '<button class="btn btn-plano" id="btnCsvProveedores">Exportar a Excel</button></div></div>';
@@ -3200,7 +3199,7 @@
 
     html += UI.metodo("Qué mide el índice de variabilidad",
       "<p>Combina la desviación al declarar, la tasa de rechazo y el rendimiento de la " +
-      "fruta. Es la CR6 hecha número: cuanto más alto, más impredecible es el " +
+      "fruta. Es la CR1 hecha número: cuanto más alto, más impredecible es el " +
       "proveedor.</p>");
     return html;
   }

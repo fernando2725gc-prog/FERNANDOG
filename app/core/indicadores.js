@@ -288,7 +288,7 @@ const Indicadores = (function () {
         ? (m.kgRecibidos - m.kgAnunPesados) / m.kgAnunPesados : 0;
       m.pesoGavetaReal = m.gavetasRecibidas > 0 ? m.kgRecibidos / m.gavetasRecibidas : 0;
       m.tasaRechazo = m.lotes > 0 ? m.rechazados / m.lotes : 0;
-      /* Indice de variabilidad: es la CR6 hecha numero. Combina lo que el
+      /* Indice de variabilidad: es la CR1 hecha numero. Combina lo que el
          proveedor falla al declarar, lo que le rechazan y lo que rinde. */
       m.indiceVariabilidad = Math.abs(m.tasaDiferencia) + m.tasaRechazo +
         Math.max(0, 0.8 - m.tasaExportable);
@@ -342,7 +342,7 @@ const Indicadores = (function () {
   }
 
   /* Pareto por causa raiz: cuanto pesa cada CR en la perdida total. Es el
-     indicador que sostiene la priorizacion CR5-CR8 del diagnostico. */
+     indicador que sostiene la priorizacion CR1-CR6 del diagnostico. */
   function porCausaRaiz(filtros) {
     const prod = filtrar(filtros).producciones;
     const mapa = {};
@@ -994,7 +994,7 @@ const Indicadores = (function () {
 
   /* ==================================================== homologación
      Una matriz de homologación de proveedores, que es lo que pide una
-     certificadora de agroexportación y lo que convierte la CR6 del
+     certificadora de agroexportación y lo que convierte la CR1 del
      diagnóstico en una decisión: a quién se conserva, a quién se ayuda y
      a quién se deja de comprar.
 
@@ -1389,70 +1389,83 @@ const Indicadores = (function () {
   const TASA_DESCUENTO = 0.12;          // costo de oportunidad anual, supuesto
   const ANIOS_VAN = 3;
 
-  /* Las ocho causas raíz de la matriz KPI de la base maestra, con su
-     indicador actual, su meta y la pérdida ya calculada allí. No son
-     invención de la app: vienen del diagnóstico, y por eso cada una dice
-     sobre qué base se calculó. La nº 5 no se monetiza —capacidad ociosa es
-     pérdida indirecta— y se deja a propósito en cero: inflarla sería el
-     tipo de número que hace desconfiar de todo lo demás. */
+  /* Las diez causas raíz de la matriz de indicadores del TIC (Tabla 3.21):
+     indicador actual, meta y pérdida anual actual y proyectada. No son
+     invención de la app: vienen del diagnóstico. La tesis tiene alcance
+     descriptivo y no estima inversiones, así que aquí van en cero; el
+     simulador deja escribirlas como supuesto. */
   const MEDIDAS = [
-    { id: "kpi_1", n: 1, causaId: "CR6", linea: "Pitahaya",
-      nombre: "Estandarizar la composición de los equipos",
-      indicador: "Sobre-tiempo-persona frente a la mejor mesa",
-      actual: 0.4336, meta: 0.10, reduccion: 0.7694,
-      perdidaAnual: 9279.36, proyectada: 2139.86, inversion: 600, recurrenteAnual: 0,
-      detalle: "Grupos con roles fijos según el mejor tiempo-persona medido (mesa 1).",
-      base: "Sobre-tiempo-persona × gavetas/año × costo hora. Depende de confirmar mesas 2 y 3." },
-    { id: "kpi_2", n: 2, causaId: "CR7", linea: "Tomate",
-      nombre: "Eliminar el lavado y secado del tomate",
-      indicador: "% del contenido de trabajo dedicado a limpieza y secado",
-      actual: 0.5176, meta: 0, reduccion: 1,
-      perdidaAnual: 24565.32, proyectada: 0, inversion: 0, recurrenteAnual: 0,
-      detalle: "ECRS — Eliminar: exigir fruta limpia al proveedor en el acuerdo comercial.",
-      base: "Min-persona de limpieza + secado por gaveta × gavetas/año × costo hora." },
-    { id: "kpi_3", n: 3, causaId: "CR6", linea: "Granadilla",
-      nombre: "Controlar el calibre de la granadilla en finca",
-      indicador: "% retirado en recepción",
-      actual: 0.0345, meta: 0.015, reduccion: 0.5657,
-      perdidaAnual: 5988.70, proyectada: 2600.64, inversion: 900, recurrenteAnual: 600,
-      detalle: "Muestreo de peso en finca, precio diferenciado por calibre y segunda " +
-        "calidad en vez de rechazo.",
-      base: "Pérdida neta del retiro en recepción (balance de masa), anualizada." },
-    { id: "kpi_4", n: 4, causaId: "CR7", linea: "Pitahaya",
-      nombre: "Rediseñar las mesas de sopleteado",
-      indicador: "% de daño en mesas anchas",
-      actual: 0.05, meta: 0.02, reduccion: 0.60,
-      perdidaAnual: 12960, proyectada: 5184, inversion: 4500, recurrenteAnual: 0,
-      detalle: "Ancho reducido según SLP y Guerchet, para acortar el alcance.",
-      base: "Daño extra frente a la mesa 1 × kg/año × (precio − precio local). Hipótesis a verificar." },
-    { id: "kpi_5", n: 5, causaId: "CR8", linea: "Pitahaya",
-      nombre: "Usar las estaciones de sopleteado ociosas",
-      indicador: "% de capacidad instalada sin usar",
-      actual: 0.40, meta: 0.20, reduccion: 0,
-      perdidaAnual: 0, proyectada: 0, inversion: 300, recurrenteAnual: 0,
-      detalle: "Redistribuir personal según la demanda del día (planeación agregada).",
-      base: "Capacidad ociosa: pérdida indirecta, no se monetiza." },
-    { id: "kpi_6", n: 6, causaId: "CR5", linea: "Pitahaya",
-      nombre: "Bajar la merma de pitahaya al 2%",
-      indicador: "% merma real sobre kg recibidos",
-      actual: 0.0406, meta: 0.02, reduccion: 0.5069,
-      perdidaAnual: 40440.82, proyectada: 19940.52, inversion: 1800, recurrenteAnual: 900,
-      detalle: "Clasificación de proveedores A–D, segregación en origen y destino circular.",
-      base: "Balance de masa de la línea; meta 2% = mejor caso reportado en Ecuador." },
-    { id: "kpi_7", n: 7, causaId: "CR5", linea: "Tomate",
-      nombre: "Bajar la merma de tomate al 2%",
-      indicador: "% merma real sobre kg recibidos",
-      actual: 0.0538, meta: 0.02, reduccion: 0.6284,
-      perdidaAnual: 24938.74, proyectada: 9266.92, inversion: 1200, recurrenteAnual: 600,
-      detalle: "Clasificación de proveedores A–D, segregación en origen y destino circular.",
-      base: "Balance de masa de la línea; meta 2% = mejor caso reportado en Ecuador." },
-    { id: "kpi_8", n: 8, causaId: "CR5", linea: "Granadilla",
-      nombre: "Bajar la merma de granadilla al 2%",
-      indicador: "% merma real sobre kg recibidos",
-      actual: 0.023, meta: 0.02, reduccion: 0.1388,
-      perdidaAnual: 11812.28, proyectada: 10172.47, inversion: 800, recurrenteAnual: 400,
-      detalle: "Clasificación de proveedores A–D, segregación en origen y destino circular.",
-      base: "Balance de masa de la línea; meta 2% = mejor caso reportado en Ecuador." }
+    { id: "kpi_1", n: 1, causaId: "CR1", linea: "Todas",
+      nombre: "Clasificar a los proveedores de A a D por rendimiento exportable y devolverles un reporte por lote",
+      indicador: "Merma ponderada en recepción",
+      actual: 0.138, meta: 0.08, reduccion: 0.422,
+      perdidaAnual: 76509, proyectada: 44226, inversion: 0, recurrenteAnual: 0,
+      detalle: "Categoría por rendimiento exportable, reporte por lote y acción comercial por categoría.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." },
+    { id: "kpi_2", n: 2, causaId: "CR2", linea: "Todas",
+      nombre: "Grupos fijos de cuatro personas con un experto y roles definidos",
+      indicador: "Variación del tiempo-persona por gaveta",
+      actual: 0.24, meta: 0.08, reduccion: 0.6667,
+      perdidaAnual: 23036, proyectada: 7679, inversion: 0, recurrenteAnual: 0,
+      detalle: "Roles fijos en la mesa según el mejor tiempo-persona medido.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." },
+    { id: "kpi_3", n: 3, causaId: "CR3", linea: "Todas",
+      nombre: "Segregar en origen y dar destino según la jerarquía",
+      indicador: "Descarte que va a desecho",
+      actual: 1.0, meta: 0.3, reduccion: 0.7,
+      perdidaAnual: 15545, proyectada: 4663, inversion: 0, recurrenteAnual: 0,
+      detalle: "Segunda calidad al mercado nacional, subproducto, alimento animal y compostaje antes que relleno.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." },
+    { id: "kpi_4", n: 4, causaId: "CR4", linea: "Tomate",
+      nombre: "Pactar fruta limpia con el proveedor y retirar el paso; mientras exista, etiquetar la solución",
+      indicador: "Tiempo de ciclo dedicado al lavado",
+      actual: 0.065, meta: 0.0, reduccion: 1.0,
+      perdidaAnual: 10337, proyectada: 0, inversion: 0, recurrenteAnual: 0,
+      detalle: "ECRS: eliminar el lavado del tomate de árbol cuando el proveedor entrega fruta limpia.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." },
+    { id: "kpi_5", n: 5, causaId: "CR5", linea: "Pitahaya",
+      nombre: "Abrir estaciones de sopleteado según el volumen anunciado",
+      indicador: "Capacidad instalada ociosa",
+      actual: 0.6, meta: 0.25, reduccion: 0.5833,
+      perdidaAnual: 10109, proyectada: 4212, inversion: 0, recurrenteAnual: 0,
+      detalle: "El plan diario reparte el personal con el volumen que anuncian los proveedores.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." },
+    { id: "kpi_6", n: 6, causaId: "CR6", linea: "Todas",
+      nombre: "Acompañar al personal nuevo con un experto",
+      indicador: "Tiempo adicional del operario nuevo",
+      actual: 0.338, meta: 0.1, reduccion: 0.7043,
+      perdidaAnual: 9735, proyectada: 2879, inversion: 0, recurrenteAnual: 0,
+      detalle: "Pareja nuevo-experto desde el primer día y seguimiento de su tiempo por gaveta.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." },
+    { id: "kpi_7", n: 7, causaId: "CR7", linea: "Todas",
+      nombre: "Usar el tiempo estándar como referencia de cada puesto",
+      indicador: "Subestimación del ciclo por falta de estándar",
+      actual: 0.192, meta: 0.02, reduccion: 0.8958,
+      perdidaAnual: 9214, proyectada: 960, inversion: 0, recurrenteAnual: 0,
+      detalle: "Estándar por actividad con valoración del ritmo y suplementos.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." },
+    { id: "kpi_8", n: 8, causaId: "CR8", linea: "Granadilla",
+      nombre: "Pactar el criterio de peso con el proveedor",
+      indicador: "Fruta rechazada por peso en recepción",
+      actual: 0.09, meta: 0.04, reduccion: 0.5555,
+      perdidaAnual: 8554, proyectada: 3802, inversion: 0, recurrenteAnual: 0,
+      detalle: "Muestreo de peso en finca y segunda calidad en vez de rechazo.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." },
+    { id: "kpi_9", n: 9, causaId: "CR9", linea: "Todas",
+      nombre: "Planificación diaria con lote anunciado y orden de llegada",
+      indicador: "Horas tercerizadas",
+      actual: 0.35, meta: 0.15, reduccion: 0.5714,
+      perdidaAnual: 8398, proyectada: 3599, inversion: 0, recurrenteAnual: 0,
+      detalle: "El anuncio del proveedor permite planear el personal del día.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." },
+    { id: "kpi_10", n: 10, causaId: "CR10", linea: "Todas",
+      nombre: "Mesas de 100 cm con dos personas por lado",
+      indicador: "Efecto del ancho de mesa en el ciclo",
+      actual: 0.12, meta: 0.04, reduccion: 0.6666,
+      perdidaAnual: 4607, proyectada: 1536, inversion: 0, recurrenteAnual: 0,
+      detalle: "Ancho reducido para acortar el alcance y evitar la acumulación.",
+      base: "Matriz de indicadores del TIC (Tabla 3.21); parámetros validados de la Tabla 2.7." }
+
   ];
 
   /* Compatibilidad con el simulador por causa raíz: cada medida se expresa
@@ -1460,7 +1473,7 @@ const Indicadores = (function () {
   const ESCENARIOS = MEDIDAS.map(function (m) {
     return {
       id: m.id, nombre: m.nombre, causas: [m.causaId],
-      reduccion: m.reduccion, valorizacion: m.causaId === "CR5" ? 0.4 : 0,
+      reduccion: m.reduccion, valorizacion: m.causaId === "CR3" ? 0.4 : 0,
       inversion: m.inversion, recurrenteAnual: m.recurrenteAnual,
       detalle: m.detalle
     };

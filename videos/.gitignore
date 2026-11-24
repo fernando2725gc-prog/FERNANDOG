@@ -1,0 +1,4 @@
+node_modules/
+renders/
+referencias/*
+!referencias/.gitkeep

@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "historyId": "ce376614-f2b6-4d55-8002-5cd60b3fda31",
+  "currentRevision": null,
+  "pendingChanges": false,
+  "files": {
+    "AGENTS.md": {
+      "hash": "729e31835a21c7b42ee006e2aacc63016abc05d26883f871ad3bf206943f2cfb",
+      "content": "/root/.cache/hyperframes/history/ce376614-f2b6-4d55-8002-5cd60b3fda31/blobs/72/729e31835a21c7b42ee006e2aacc63016abc05d26883f871ad3bf206943f2cfb"
+    },
+    "CLAUDE.md": {
+      "hash": "729e31835a21c7b42ee006e2aacc63016abc05d26883f871ad3bf206943f2cfb",
+      "content": "/root/.cache/hyperframes/history/ce376614-f2b6-4d55-8002-5cd60b3fda31/blobs/72/729e31835a21c7b42ee006e2aacc63016abc05d26883f871ad3bf206943f2cfb"
+    },
+    "hyperframes.json": {
+      "hash": "53dbce1e19aa713cbb12ee0bc4d206143b45ab15e6ffbfcaa8f69572d4d24d50",
+      "content": "/root/.cache/hyperframes/history/ce376614-f2b6-4d55-8002-5cd60b3fda31/blobs/53/53dbce1e19aa713cbb12ee0bc4d206143b45ab15e6ffbfcaa8f69572d4d24d50"
+    },
+    "index.html": {
+      "hash": "8efe7a8e12e4a3b069db40caffd7a0c7f9afca755ab27beeb07e6681707d8728",
+      "content": "/root/.cache/hyperframes/history/ce376614-f2b6-4d55-8002-5cd60b3fda31/blobs/8e/8efe7a8e12e4a3b069db40caffd7a0c7f9afca755ab27beeb07e6681707d8728"
+    },
+    "meta.json": {
+      "hash": "eded1af115dfe6093e1125226d9c19a3e622611eeca0448dca4d85c3934fd0bb",
+      "content": "/root/.cache/hyperframes/history/ce376614-f2b6-4d55-8002-5cd60b3fda31/blobs/ed/eded1af115dfe6093e1125226d9c19a3e622611eeca0448dca4d85c3934fd0bb"
+    },
+    "package.json": {
+      "hash": "9f2801d3439cfe733ea38b41de66dfae7f19f8b7c27f1e45827a8b4e4043c50a",
+      "content": "/root/.cache/hyperframes/history/ce376614-f2b6-4d55-8002-5cd60b3fda31/blobs/9f/9f2801d3439cfe733ea38b41de66dfae7f19f8b7c27f1e45827a8b4e4043c50a"
+    }
+  },
+  "revisions": {},
+  "checks": {
+    "latest": null,
+    "revisions": {},
+    "unversioned": []
+  },
+  "snapshots": {
+    "latest": null,
+    "revisions": {},
+    "unversioned": []
+  },
+  "renders": {
+    "latest": {
+      "id": "46ad84fc-da26-49c9-98c7-fdc6351341ac",
+      "completedAt": 1795557131221,
+      "output": "/home/user/FERNANDOG/videos/mi-primer-video/prueba.mp4",
+      "status": "completed",
+      "revision": null
+    },
+    "retainedRevisions": []
+  },
+  "pendingArtifactCleanup": []
+}

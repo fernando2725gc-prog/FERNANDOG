@@ -1,0 +1,4871 @@
+{
+ "cola": 2,
+ "capitulos": [
+  "793|Saqueadores del mar|galera",
+  "865|El Gran Ejército|espada",
+  "862|Hacia el este|moneda",
+  "911|Normandía|castillo",
+  "874|Hacia el oeste|ancla",
+  "965|Reyes vikingos|corona",
+  "1066|El final|calavera"
+ ],
+ "musica": [
+  {
+   "desde": 0,
+   "pista": "epica--call-to-adventure.mp3"
+  },
+  {
+   "desde": "Escandinavia hacia el",
+   "pista": "medieval--lord-of-the-land.mp3"
+  },
+  {
+   "desde": "Inglaterra año 865",
+   "pista": "guerra--crusade-heavy-industry.mp3"
+  },
+  {
+   "desde": "Mientras los daneses",
+   "pista": "misterio--hidden-past.mp3"
+  },
+  {
+   "desde": "Francia año 911",
+   "pista": "gracia--sneaky-snitch.mp3"
+  },
+  {
+   "desde": "Mientras tanto otros",
+   "pista": "epica--rising-tide.mp3"
+  },
+  {
+   "desde": "Dinamarca hacia el",
+   "pista": "barroco--procession-of-the-king.mp3"
+  },
+  {
+   "desde": "Pero cuando murió",
+   "pista": "triste--decline.mp3"
+  },
+  {
+   "desde": "Inglaterra septiembre de 1066",
+   "pista": "guerra--undaunted.mp3"
+  },
+  {
+   "desde": "Y qué queda hoy",
+   "pista": "reflexion--rumination.mp3"
+  }
+ ],
+ "planos": [
+  {
+   "en": 0,
+   "tipo": "mapa",
+   "mapa": "vik-norte",
+   "cam": {
+    "lon": 6,
+    "lat": 58,
+    "grados": 26
+   },
+   "hasta": {
+    "lon": 3,
+    "lat": 57,
+    "grados": 22
+   },
+   "fecha": "793",
+   "guia": false,
+   "capas": [
+    {
+     "en": "barcos",
+     "id": "noruega",
+     "color": "rojo",
+     "op": 0.6
+    }
+   ],
+   "barcos": [
+    {
+     "en": "barcos",
+     "de": [
+      6,
+      60.5
+     ],
+     "a": [
+      -1.4,
+      55.9
+     ],
+     "d": 3,
+     "flota": 3,
+     "curva": 0.1
+    }
+   ]
+  },
+  {
+   "en": "en la costa",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": -1.5,
+    "lat": 55.3,
+    "grados": 9
+   },
+   "hasta": {
+    "lon": -1.6,
+    "lat": 55.6,
+    "grados": 7
+   },
+   "fecha": "793",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "inglaterra",
+     "color": "rojo",
+     "etiqueta": "Inglaterra",
+     "cara": "susto",
+     "cara_en": "Inglaterra"
+    }
+   ],
+   "pins": [
+    {
+     "en": 0,
+     "lon": -1.8,
+     "lat": 55.68,
+     "nombre": "Lindisfarne",
+     "izquierda": true
+    }
+   ]
+  },
+  {
+   "en": "En la isla",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "monje",
+     "traje": "monje",
+     "x": 640,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "armas",
+       "hace": "piensa"
+      },
+      {
+       "en": "encima",
+       "hace": "susto"
+      }
+     ]
+    },
+    {
+     "q": "monje2",
+     "traje": "monje",
+     "x": 860,
+     "s": 1.0,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "murallas",
+       "hace": "encoge"
+      }
+     ],
+     "lleva": "libro"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "En la isla",
+     "a": "monje",
+     "texto": "Hoy, día tranquilo.",
+     "ancho": 360
+    },
+    {
+     "en": "armas",
+     "a": "monje2",
+     "texto": "¿Eso de ahí son velas?",
+     "ancho": 400
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Lindisfarne, 793"
+    }
+   ]
+  },
+  {
+   "en": "Venían",
+   "tipo": "mapa",
+   "mapa": "vik-norte",
+   "cam": {
+    "lon": 15,
+    "lat": 62,
+    "grados": 34
+   },
+   "hasta": {
+    "lon": 15,
+    "lat": 62,
+    "grados": 30
+   },
+   "fecha": "793",
+   "guia": false,
+   "capas": [
+    {
+     "en": "Noruega",
+     "id": "noruega",
+     "color": "rojo",
+     "etiqueta": "Noruega"
+    },
+    {
+     "en": "Suecia",
+     "id": "suecia",
+     "color": "naranja",
+     "etiqueta": "Suecia"
+    },
+    {
+     "en": "Dinamarca",
+     "id": "dinamarca",
+     "color": "amarillo",
+     "etiqueta": "Dinamarca"
+    }
+   ]
+  },
+  {
+   "en": "Y durante casi",
+   "tipo": "mapa",
+   "mapa": "vik-norte",
+   "cam": {
+    "lon": 8,
+    "lat": 58,
+    "grados": 50
+   },
+   "hasta": {
+    "lon": 8,
+    "lat": 58,
+    "grados": 54
+   },
+   "fecha": "793-1066",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "escandinavia",
+     "color": "rojo",
+     "etiqueta": "Vikingos",
+     "cara": "malo",
+     "cara_en": "siglos",
+     "cara_lugar": [
+      15,
+      63
+     ]
+    }
+   ],
+   "barcos": [
+    {
+     "en": "iban",
+     "de": [
+      5,
+      61
+     ],
+     "a": [
+      -15,
+      64
+     ],
+     "d": 2.2,
+     "flota": 2
+    },
+    {
+     "en": "poner",
+     "de": [
+      6,
+      58
+     ],
+     "a": [
+      -3,
+      54
+     ],
+     "d": 2,
+     "flota": 2
+    },
+    {
+     "en": "mundo",
+     "de": [
+      18,
+      59
+     ],
+     "a": [
+      30,
+      59
+     ],
+     "d": 2,
+     "flota": 2,
+     "curva": -0.1
+    }
+   ]
+  },
+  {
+   "en": "Asediaron París",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": 1,
+    "lat": 49.6,
+    "grados": 9
+   },
+   "hasta": {
+    "lon": 1.6,
+    "lat": 49.2,
+    "grados": 7.5
+   },
+   "fecha": "845",
+   "guia": false,
+   "barcos": [
+    {
+     "en": "Asediaron",
+     "de": [
+      -0.5,
+      49.9
+     ],
+     "a": [
+      2.2,
+      48.95
+     ],
+     "d": 1.4,
+     "flota": 3,
+     "curva": 0.15
+    }
+   ],
+   "pins": [
+    {
+     "en": "Asediaron",
+     "lon": 2.35,
+     "lat": 48.86,
+     "nombre": "París"
+    }
+   ],
+   "fuegos": [
+    {
+     "en": "París",
+     "lon": 2.35,
+     "lat": 48.86
+    }
+   ]
+  },
+  {
+   "en": "Le dieron",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Le",
+     "pais": "vik-este:rus"
+    },
+    {
+     "en": "Rusia",
+     "palabra": "Rus → Rusia",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Hicieron de guardaespaldas",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "emperador",
+     "traje": "sultan",
+     "x": 1210,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "Constantinopla",
+       "hace": "orgulloso"
+      }
+     ],
+     "sentado": true,
+     "y": 710,
+     "colores": {
+      "color": "#6b2a8a",
+      "capa": "#d9a521"
+     }
+    },
+    {
+     "q": "guardia",
+     "traje": "vikingo",
+     "x": 800,
+     "s": 1.2,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "emperador",
+       "hace": "saca_pecho"
+      }
+     ],
+     "lleva": "alabarda"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "Hicieron",
+     "a": "guardia",
+     "texto": "Nadie toca al jefe.",
+     "ancho": 360
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Constantinopla"
+    }
+   ]
+  },
+  {
+   "en": "Y pisaron",
+   "tipo": "mapa",
+   "mapa": "vik-oeste",
+   "cam": {
+    "lon": -45,
+    "lat": 60,
+    "grados": 70
+   },
+   "hasta": {
+    "lon": -50,
+    "lat": 57,
+    "grados": 60
+   },
+   "fecha": "1000",
+   "guia": false,
+   "capas": [
+    {
+     "en": "América",
+     "id": "terranova",
+     "color": "verde",
+     "etiqueta": "América"
+    }
+   ],
+   "barcos": [
+    {
+     "en": "pisaron",
+     "de": [
+      -45,
+      60.5
+     ],
+     "a": [
+      -55.5,
+      51.8
+     ],
+     "d": 2.5,
+     "flota": 2,
+     "curva": 0.1
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "Colón",
+     "texto": "500 años antes que Colón",
+     "x": 960,
+     "y": 900,
+     "tam": 64,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Su rey más",
+   "tipo": "archivo",
+   "imagen": "archivo/canuto.jpg",
+   "pie": "Canuto el Grande",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "gobernó",
+   "tipo": "mapa",
+   "mapa": "vik-norte",
+   "cam": {
+    "lon": 3,
+    "lat": 57.5,
+    "grados": 40
+   },
+   "hasta": {
+    "lon": 3,
+    "lat": 57.5,
+    "grados": 37
+   },
+   "fecha": "1016-1035",
+   "guia": false,
+   "encuadre": false,
+   "capas": [
+    {
+     "en": "Inglaterra",
+     "id": "inglaterra",
+     "color": "naranja",
+     "cara": "feliz",
+     "cara_en": "Inglaterra"
+    },
+    {
+     "en": "Dinamarca",
+     "id": "dinamarca",
+     "color": "naranja",
+     "cara": "feliz",
+     "cara_en": "Dinamarca"
+    },
+    {
+     "en": "Noruega",
+     "id": "noruega",
+     "color": "naranja",
+     "cara": "feliz",
+     "cara_en": "Noruega",
+     "cara_lugar": [
+      9,
+      61
+     ]
+    }
+   ],
+   "iconos": [
+    {
+     "en": "vez",
+     "lon": 3,
+     "lat": 57,
+     "cosa": "corona",
+     "tam": 0.8
+    }
+   ]
+  },
+  {
+   "en": "Cómo un puñado",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "granjero",
+     "traje": "vikingo",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "granjeros",
+       "hace": "encoge"
+      }
+     ],
+     "lleva": "pico"
+    },
+    {
+     "q": "granjera",
+     "traje": "campesina",
+     "x": 1000,
+     "s": 1.1,
+     "mira": -0.3,
+     "acciones": [
+      {
+       "en": "lejos",
+       "hace": "piensa"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "Cómo",
+     "a": "granjero",
+     "texto": "Yo solo venía a arar.",
+     "ancho": 380
+    }
+   ],
+   "cosas": [
+    {
+     "en": "norte",
+     "cosa": "oveja",
+     "x": 1380,
+     "y": 950
+    }
+   ]
+  },
+  {
+   "en": "Y por qué",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "por qué",
+     "palabra": "¿Desaparecieron?",
+     "rojo": true
+    },
+    {
+     "en": "repente",
+     "cosa": "calavera",
+     "pie": "1066"
+    }
+   ]
+  },
+  {
+   "en": "Esta es la historia",
+   "tipo": "capitulo",
+   "numero": 0,
+   "titulo": "La historia entera"
+  },
+  {
+   "en": "Escandinavia hacia el",
+   "tipo": "capitulo",
+   "numero": 1
+  },
+  {
+   "en": "Casi todo es",
+   "tipo": "mapa",
+   "mapa": "vik-norte",
+   "cam": {
+    "lon": 14,
+    "lat": 63,
+    "grados": 26
+   },
+   "hasta": {
+    "lon": 15,
+    "lat": 63.5,
+    "grados": 22
+   },
+   "fecha": "790",
+   "guia": false,
+   "capas": [
+    {
+     "en": "Casi",
+     "id": "escandinavia",
+     "color": "verde",
+     "op": 0.45,
+     "etiqueta": "Escandinavia"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "montaña",
+     "lon": 9,
+     "lat": 62,
+     "cosa": "muralla",
+     "tam": 0.6
+    },
+    {
+     "en": "frío",
+     "lon": 20,
+     "lat": 67,
+     "cosa": "islote",
+     "tam": 0.6
+    }
+   ]
+  },
+  {
+   "en": "La buena tierra",
+   "tipo": "papel",
+   "titulo": "El problema",
+   "cosas": [
+    {
+     "en": "poca",
+     "cosa": "trigo",
+     "pie": "Poca tierra buena"
+    },
+    {
+     "en": "familias",
+     "cosa": "bebe",
+     "pie": "Muchas bocas"
+    }
+   ]
+  },
+  {
+   "en": "Pero los escandinavos tienen",
+   "tipo": "escena",
+   "decorado": "mar",
+   "actores": [],
+   "paisaje": true,
+   "barco": "galera",
+   "rotulos": [
+    {
+     "en": "Pero",
+     "texto": "Lo que nadie más tiene…",
+     "x": 960,
+     "y": 200,
+     "tam": 64
+    }
+   ]
+  },
+  {
+   "en": "el barco largo",
+   "tipo": "archivo",
+   "imagen": "archivo/gokstad.jpg",
+   "pie": "Barco de Gokstad, hacia el año 890",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "Ligero",
+   "tipo": "papel",
+   "titulo": "El barco largo",
+   "cosas": [
+    {
+     "en": "Ligero",
+     "palabra": "Ligero"
+    },
+    {
+     "en": "rápido",
+     "palabra": "Rápido"
+    },
+    {
+     "en": "fondo",
+     "cosa": "galera",
+     "pie": "Casi sin fondo"
+    }
+   ]
+  },
+  {
+   "en": "cruzar el mar",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": 0,
+    "lat": 53,
+    "grados": 20
+   },
+   "hasta": {
+    "lon": 1.5,
+    "lat": 50.5,
+    "grados": 14
+   },
+   "guia": false,
+   "barcos": [
+    {
+     "en": "cruzar",
+     "de": [
+      8,
+      57
+     ],
+     "a": [
+      0,
+      50.3
+     ],
+     "d": 2.2,
+     "flota": 2,
+     "curva": 0.1
+    },
+    {
+     "en": "río",
+     "de": [
+      0.2,
+      49.6
+     ],
+     "a": [
+      2.3,
+      48.9
+     ],
+     "d": 2,
+     "flota": 1,
+     "curva": 0.2
+    },
+    {
+     "en": "centro",
+     "de": [
+      4.2,
+      52
+     ],
+     "a": [
+      7,
+      51.4
+     ],
+     "d": 1.8,
+     "flota": 1
+    }
+   ],
+   "flechas": [
+    {
+     "en": "subir",
+     "de": [
+      0.2,
+      49.6
+     ],
+     "a": [
+      2.3,
+      48.9
+     ],
+     "curva": 0.2
+    }
+   ]
+  },
+  {
+   "en": "Era como tener",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "carreras",
+     "palabra": "Coche de carreras"
+    },
+    {
+     "en": "submarino",
+     "cosa": "submarino",
+     "pie": "+ submarino"
+    }
+   ]
+  },
+  {
+   "en": "Y por cierto",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "vikingo",
+     "traje": "vikingo",
+     "x": 900,
+     "s": 1.25,
+     "mira": 0.2,
+     "acciones": [
+      {
+       "en": "cierto",
+       "hace": "mira_camara"
+      },
+      {
+       "en": "cuernos",
+       "hace": "encoge"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "Y por cierto",
+     "a": "vikingo",
+     "texto": "¿Cuernos? ¿Yo? ¿Cuándo?",
+     "ancho": 380
+    }
+   ]
+  },
+  {
+   "en": "Eso se lo",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "ópera",
+     "cifra": "1876",
+     "sub": "trajes de una ópera",
+     "icono": "pergamino"
+    }
+   ],
+   "guia": {
+    "acciones": [
+     {
+      "en": "inventaron",
+      "hace": "rie"
+     }
+    ]
+   }
+  },
+  {
+   "en": "Un casco con",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "v1",
+     "traje": "vikingo",
+     "x": 760,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "batalla",
+       "hace": "ataca"
+      }
+     ]
+    },
+    {
+     "q": "v2",
+     "traje": "vikingo",
+     "x": 1100,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "agarren",
+       "hace": "golpeado"
+      },
+      {
+       "en": "cabeza",
+       "hace": "cae"
+      }
+     ],
+     "colores": {
+      "color": "#7a3b1f"
+     }
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "Un casco",
+     "a": "v1",
+     "texto": "¡Hombre, qué buen asa!",
+     "ancho": 360
+    }
+   ]
+  },
+  {
+   "en": "Al principio",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": -1,
+    "lat": 56.5,
+    "grados": 22
+   },
+   "hasta": {
+    "lon": -1.5,
+    "lat": 56,
+    "grados": 18
+   },
+   "fecha": "800",
+   "guia": false,
+   "barcos": [
+    {
+     "en": "rápidos",
+     "de": [
+      7,
+      58
+     ],
+     "a": [
+      -1.6,
+      55.7
+     ],
+     "d": 2,
+     "flota": 2
+    },
+    {
+     "en": "llegar",
+     "de": [
+      6,
+      58.5
+     ],
+     "a": [
+      -6.2,
+      56.4
+     ],
+     "d": 2,
+     "flota": 2,
+     "curva": -0.1
+    }
+   ],
+   "pins": [
+    {
+     "en": "Al principio",
+     "lon": -1.8,
+     "lat": 55.68,
+     "nombre": "Lindisfarne",
+     "izquierda": true
+    },
+    {
+     "en": "rápidos",
+     "lon": -6.4,
+     "lat": 56.33,
+     "nombre": "Iona",
+     "izquierda": true
+    }
+   ]
+  },
+  {
+   "en": "saquear el monasterio",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "vikingo",
+     "traje": "vikingo",
+     "x": 1000,
+     "s": 1.2,
+     "mira": -0.2,
+     "acciones": [
+      {
+       "en": "saquear",
+       "hace": "celebra"
+      }
+     ],
+     "lleva": "saco"
+    }
+   ],
+   "cosas": [
+    {
+     "en": "saquear",
+     "cosa": "oro",
+     "x": 700,
+     "y": 650,
+     "salta": -90
+    },
+    {
+     "en": "monasterio",
+     "cosa": "cruz",
+     "x": 1350,
+     "y": 650,
+     "salta": -90
+    }
+   ]
+  },
+  {
+   "en": "volver a casa",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": 2,
+    "lat": 56.5,
+    "grados": 22
+   },
+   "hasta": {
+    "lon": 3,
+    "lat": 57,
+    "grados": 20
+   },
+   "fecha": "800",
+   "guia": false,
+   "barcos": [
+    {
+     "en": "volver",
+     "de": [
+      -1.6,
+      55.7
+     ],
+     "a": [
+      8,
+      58
+     ],
+     "d": 2,
+     "flota": 2,
+     "curva": 0.1
+    }
+   ],
+   "iconos": [
+    {
+     "en": "invierno",
+     "lon": 5,
+     "lat": 58.5,
+     "cosa": "islote",
+     "tam": 0.6
+    }
+   ]
+  },
+  {
+   "en": "Los monasterios eran",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "perfectos",
+     "tarjeta": "Monasterio",
+     "cosa": "cruz"
+    },
+    {
+     "en": "oro",
+     "cosa": "oro",
+     "pie": "Oro"
+    },
+    {
+     "en": "lejos",
+     "cosa": "mapa_abierto",
+     "pie": "Lejos de todo"
+    }
+   ]
+  },
+  {
+   "en": "y defendidos por",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "monje",
+     "traje": "monje",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "monjes",
+       "hace": "piensa"
+      },
+      {
+       "en": "rezaban",
+       "hace": "mira_arriba"
+      }
+     ]
+    },
+    {
+     "q": "vikingo",
+     "traje": "vikingo",
+     "x": 1250,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "rezaban",
+       "hace": "rie"
+      }
+     ],
+     "lleva": "saco"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "y defendidos",
+     "a": "monje",
+     "texto": "Señor, mándanos un muro.",
+     "ancho": 400
+    }
+   ]
+  },
+  {
+   "en": "Pero pronto",
+   "tipo": "escena",
+   "decorado": "nieve",
+   "actores": [
+    {
+     "q": "v1",
+     "traje": "vikingo",
+     "x": 720,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "Pero pronto",
+       "hace": "piensa"
+      }
+     ]
+    },
+    {
+     "q": "v2",
+     "traje": "vikingo",
+     "x": 1000,
+     "s": 1.1,
+     "mira": -0.3,
+     "acciones": [
+      {
+       "en": "invierno",
+       "hace": "asiente"
+      }
+     ],
+     "colores": {
+      "color": "#2f5d7a"
+     }
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "Pero pronto",
+     "a": "v1",
+     "texto": "¿Y si no volvemos?",
+     "ancho": 360
+    },
+    {
+     "en": "Se quedan",
+     "a": "v2",
+     "texto": "Aquí hay menos nieve.",
+     "ancho": 380
+    }
+   ]
+  },
+  {
+   "en": "Y en el año 845",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": 0.5,
+    "lat": 50,
+    "grados": 10
+   },
+   "hasta": {
+    "lon": 0.8,
+    "lat": 49.8,
+    "grados": 9
+   },
+   "fecha": "845",
+   "guia": false,
+   "capas": [
+    {
+     "en": "845",
+     "id": "francia",
+     "color": "morado",
+     "op": 0.35,
+     "etiqueta": "Francos"
+    }
+   ],
+   "barcos": [
+    {
+     "en": "845",
+     "de": [
+      -1,
+      50.6
+     ],
+     "a": [
+      0,
+      49.6
+     ],
+     "d": 1.5,
+     "flota": 4,
+     "curva": 0.1
+    }
+   ]
+  },
+  {
+   "en": "ciento veinte",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "ciento",
+     "cifra": "120",
+     "sub": "barcos",
+     "icono": "galera"
+    }
+   ]
+  },
+  {
+   "en": "suben por el río",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": 1.2,
+    "lat": 49.3,
+    "grados": 7.5
+   },
+   "hasta": {
+    "lon": 1.8,
+    "lat": 49.1,
+    "grados": 6.5
+   },
+   "fecha": "845",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "francia",
+     "color": "morado",
+     "op": 0.35
+    }
+   ],
+   "barcos": [
+    {
+     "en": "suben",
+     "de": [
+      0,
+      49.55
+     ],
+     "a": [
+      2.25,
+      48.95
+     ],
+     "d": 2.6,
+     "flota": 6,
+     "curva": 0.15
+    }
+   ],
+   "pins": [
+    {
+     "en": "Sena",
+     "lon": 2.35,
+     "lat": 48.86,
+     "nombre": "París"
+    }
+   ]
+  },
+  {
+   "en": "El rey de los francos",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "carlos",
+     "traje": "rey",
+     "x": 1210,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "atreve",
+       "hace": "susto"
+      }
+     ],
+     "sentado": true,
+     "y": 710
+    },
+    {
+     "q": "noble",
+     "traje": "noble",
+     "x": 760,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "francos",
+       "hace": "senala"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "Calvo",
+     "a": "carlos",
+     "texto": "Mejor pagamos.",
+     "ancho": 300
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Carlos el Calvo, 845"
+    }
+   ]
+  },
+  {
+   "en": "Les paga",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "siete",
+     "cifra": "7.000",
+     "sub": "libras de plata",
+     "icono": "monton_monedas"
+    }
+   ]
+  },
+  {
+   "en": "Los vikingos aprenden",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "vikingo",
+     "traje": "vikingo",
+     "x": 900,
+     "s": 1.2,
+     "mira": 0.2,
+     "acciones": [
+      {
+       "en": "lección",
+       "hace": "celebra"
+      },
+      {
+       "en": "cuenta",
+       "hace": "mira_camara"
+      }
+     ],
+     "lleva": "saco"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "aprenden",
+     "a": "vikingo",
+     "texto": "¡Volveremos el año que viene!",
+     "ancho": 420
+    }
+   ],
+   "cosas": [
+    {
+     "en": "amenazar",
+     "cosa": "moneda",
+     "x": 1250,
+     "y": 700,
+     "salta": -90
+    }
+   ]
+  },
+  {
+   "en": "Inglaterra año 865",
+   "tipo": "capitulo",
+   "numero": 2
+  },
+  {
+   "en": "Esta vez no",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": 0,
+    "lat": 54,
+    "grados": 13
+   },
+   "hasta": {
+    "lon": -0.5,
+    "lat": 53.5,
+    "grados": 10
+   },
+   "fecha": "865",
+   "guia": false,
+   "capas": [
+    {
+     "en": "Esta",
+     "id": "inglaterra",
+     "color": "verde",
+     "op": 0.4,
+     "etiqueta": "Inglaterra"
+    }
+   ],
+   "barcos": [
+    {
+     "en": "ejército",
+     "de": [
+      7,
+      56
+     ],
+     "a": [
+      1.4,
+      52.6
+     ],
+     "d": 2.5,
+     "flota": 7,
+     "curva": 0.1
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "entero",
+     "de": [
+      1.2,
+      52.5
+     ],
+     "a": [
+      -0.5,
+      53.5
+     ],
+     "d": 2.5,
+     "color": "rojo"
+    }
+   ]
+  },
+  {
+   "en": "Los ingleses lo",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "v1",
+     "traje": "vikingo",
+     "x": 600,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "Ejército",
+       "hace": "saca_pecho"
+      }
+     ],
+     "lleva": "escudo"
+    },
+    {
+     "q": "v2",
+     "traje": "vikingo",
+     "x": 900,
+     "s": 1.1,
+     "mira": 0.2,
+     "acciones": [
+      {
+       "en": "Pagano",
+       "hace": "ataca"
+      }
+     ],
+     "lleva": "espada",
+     "colores": {
+      "color": "#7a3b1f"
+     }
+    },
+    {
+     "q": "v3",
+     "traje": "vikingo",
+     "x": 1200,
+     "s": 1.1,
+     "mira": 0.1,
+     "acciones": [
+      {
+       "en": "Pagano",
+       "hace": "celebra"
+      }
+     ],
+     "lleva": "arco",
+     "colores": {
+      "color": "#2f5d7a"
+     }
+    },
+    {
+     "q": "ingles",
+     "traje": "campesino",
+     "x": 1550,
+     "s": 1.0,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "llaman",
+       "hace": "susto"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "ingleses",
+     "a": "ingles",
+     "texto": "Son… muchos.",
+     "ancho": 280
+    }
+   ]
+  },
+  {
+   "en": "Lo mandan unos",
+   "tipo": "escena",
+   "decorado": "campamento",
+   "actores": [
+    {
+     "q": "ivar",
+     "traje": "vikingo",
+     "x": 900,
+     "s": 1.25,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "Deshuesado",
+       "hace": "orgulloso"
+      }
+     ],
+     "lleva": "espada",
+     "colores": {
+      "color": "#3a2a1a"
+     }
+    },
+    {
+     "q": "hermano",
+     "traje": "vikingo",
+     "x": 1250,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "película",
+       "hace": "rie"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "hermanos",
+     "a": "ivar",
+     "texto": "Lo del apodo, no preguntes.",
+     "ancho": 400
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "Ivar",
+     "texto": "Ivar el Deshuesado",
+     "x": 960,
+     "y": 200,
+     "tam": 64
+    }
+   ]
+  },
+  {
+   "en": "En pocos años",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": -1.5,
+    "lat": 53.5,
+    "grados": 10
+   },
+   "hasta": {
+    "lon": -1.5,
+    "lat": 53.2,
+    "grados": 9
+   },
+   "fecha": "866-874",
+   "guia": false,
+   "capas": [
+    {
+     "en": "Northumbria",
+     "id": "northumbria",
+     "color": "rojo",
+     "modo": "crece",
+     "etiqueta": "Northumbria"
+    },
+    {
+     "en": "Oriental",
+     "id": "anglia",
+     "color": "rojo",
+     "modo": "crece",
+     "etiqueta": "Anglia Oriental"
+    },
+    {
+     "en": "Mercia",
+     "id": "mercia",
+     "color": "rojo",
+     "modo": "crece",
+     "etiqueta": "Mercia",
+     "cara": "muerto",
+     "cara_en": "Mercia"
+    }
+   ]
+  },
+  {
+   "en": "En el año 866 toman",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": -1.2,
+    "lat": 54,
+    "grados": 6
+   },
+   "hasta": {
+    "lon": -1.1,
+    "lat": 54,
+    "grados": 5.5
+   },
+   "fecha": "866",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "northumbria",
+     "color": "rojo",
+     "op": 0.5
+    }
+   ],
+   "pins": [
+    {
+     "en": "866",
+     "lon": -1.08,
+     "lat": 53.96,
+     "nombre": "York"
+    }
+   ],
+   "fuegos": [
+    {
+     "en": "toman",
+     "lon": -1.08,
+     "lat": 53.96
+    }
+   ],
+   "iconos": [
+    {
+     "en": "capitales",
+     "lon": -1.08,
+     "lat": 54.4,
+     "cosa": "bandera",
+     "tam": 0.6
+    }
+   ]
+  },
+  {
+   "en": "En el año 878 solo",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": -2,
+    "lat": 53,
+    "grados": 10
+   },
+   "hasta": {
+    "lon": -2.2,
+    "lat": 52.5,
+    "grados": 9
+   },
+   "fecha": "878",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "northumbria",
+     "color": "rojo"
+    },
+    {
+     "en": 0,
+     "id": "anglia",
+     "color": "rojo"
+    },
+    {
+     "en": 0,
+     "id": "mercia",
+     "color": "rojo"
+    },
+    {
+     "en": "Wessex",
+     "id": "wessex",
+     "color": "verde",
+     "etiqueta": "Wessex",
+     "cara": "susto",
+     "cara_en": "Wessex"
+    }
+   ]
+  },
+  {
+   "en": "Su rey Alfredo",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": -2.8,
+    "lat": 51.2,
+    "grados": 6
+   },
+   "hasta": {
+    "lon": -2.9,
+    "lat": 51.1,
+    "grados": 5.5
+   },
+   "fecha": "878",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "wessex",
+     "color": "verde"
+    }
+   ],
+   "pins": [
+    {
+     "en": "pantanos",
+     "lon": -2.93,
+     "lat": 51.06,
+     "nombre": "Athelney"
+    }
+   ],
+   "foco": {
+    "en": "pantanos",
+    "lon": -2.93,
+    "lat": 51.06,
+    "radio": 60
+   },
+   "iconos": [
+    {
+     "en": "Alfredo",
+     "lon": -1.6,
+     "lat": 51.6,
+     "cosa": "corona",
+     "tam": 0.5
+    }
+   ]
+  },
+  {
+   "en": "Cuenta la leyenda que una",
+   "tipo": "escena",
+   "decorado": "interior",
+   "actores": [
+    {
+     "q": "campesina",
+     "traje": "campesina",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "vigilara",
+       "hace": "senala"
+      },
+      {
+       "en": "quemar",
+       "hace": "enfada"
+      }
+     ]
+    },
+    {
+     "q": "alfredo",
+     "traje": "rey",
+     "x": 1150,
+     "s": 1.1,
+     "mira": -0.2,
+     "acciones": [
+      {
+       "en": "problemas",
+       "hace": "piensa"
+      },
+      {
+       "en": "quemar",
+       "hace": "susto"
+      }
+     ],
+     "sentado": true
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "Cuenta",
+     "a": "campesina",
+     "texto": "Vigila las tortas, ¿eh?",
+     "ancho": 380
+    },
+    {
+     "en": "pensando",
+     "a": "campesina",
+     "texto": "¡¿Y tú eres rey?!",
+     "ancho": 320
+    }
+   ],
+   "cosas": [
+    {
+     "en": "fuego",
+     "cosa": "fuego",
+     "x": 950,
+     "y": 900
+    }
+   ]
+  },
+  {
+   "en": "Pero Alfredo vuelve",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": -2.3,
+    "lat": 51.4,
+    "grados": 6
+   },
+   "hasta": {
+    "lon": -2.1,
+    "lat": 51.3,
+    "grados": 5.5
+   },
+   "fecha": "878",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "wessex",
+     "color": "verde"
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "vuelve",
+     "de": [
+      -2.9,
+      51.06
+     ],
+     "a": [
+      -2.2,
+      51.25
+     ],
+     "d": 2,
+     "color": "verde"
+    },
+    {
+     "en": "mayo",
+     "de": [
+      -1.5,
+      51.8
+     ],
+     "a": [
+      -2.05,
+      51.32
+     ],
+     "d": 1.5,
+     "color": "rojo"
+    }
+   ],
+   "pins": [
+    {
+     "en": "derrota",
+     "lon": -2.1,
+     "lat": 51.28,
+     "nombre": "Edington"
+    }
+   ],
+   "asedios": [
+    {
+     "en": "Edington",
+     "lon": -2.1,
+     "lat": 51.28
+    }
+   ]
+  },
+  {
+   "en": "y su jefe Guthrum",
+   "tipo": "escena",
+   "decorado": "rio",
+   "actores": [
+    {
+     "q": "obispo",
+     "traje": "obispo",
+     "x": 750,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "bautizarse",
+       "hace": "levanta"
+      }
+     ],
+     "lleva": "cruz"
+    },
+    {
+     "q": "guthrum",
+     "traje": "vikingo",
+     "x": 1100,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "acepta",
+       "hace": "traga"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "y su jefe",
+     "a": "guthrum",
+     "texto": "¿El agua está fría?",
+     "ancho": 340
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "Guthrum",
+     "texto": "Guthrum",
+     "x": 1100,
+     "y": 220,
+     "tam": 64
+    }
+   ]
+  },
+  {
+   "en": "Inglaterra queda partida",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": -1.8,
+    "lat": 53,
+    "grados": 10
+   },
+   "hasta": {
+    "lon": -1.8,
+    "lat": 53,
+    "grados": 9.5
+   },
+   "fecha": "878",
+   "guia": false,
+   "capas": [
+    {
+     "en": "sur",
+     "id": "reino_alfredo",
+     "color": "verde",
+     "etiqueta": "Alfredo",
+     "cara": "feliz",
+     "cara_en": "sur"
+    },
+    {
+     "en": "norte",
+     "id": "danelaw",
+     "color": "rojo",
+     "etiqueta": "Vikingos",
+     "cara": "malo",
+     "cara_en": "este"
+    }
+   ]
+  },
+  {
+   "en": "el Danelaw",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Danelaw",
+     "pais": "vik-inglaterra:danelaw"
+    },
+    {
+     "en": "ley",
+     "palabra": "Danelaw",
+     "rojo": true
+    },
+    {
+     "en": "danesa",
+     "palabra": "= ley danesa"
+    }
+   ]
+  },
+  {
+   "en": "Por eso a Alfredo",
+   "tipo": "archivo",
+   "imagen": "archivo/alfredo.jpg",
+   "pie": "Alfredo el Grande",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "Es el único",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "único",
+     "cosa": "corona",
+     "pie": "«El Grande»"
+    },
+    {
+     "en": "inglés",
+     "palabra": "El único",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Mientras los daneses",
+   "tipo": "capitulo",
+   "numero": 3
+  },
+  {
+   "en": "los suecos miran",
+   "tipo": "mapa",
+   "mapa": "vik-este",
+   "cam": {
+    "lon": 25,
+    "lat": 56,
+    "grados": 40
+   },
+   "hasta": {
+    "lon": 26,
+    "lat": 55,
+    "grados": 38
+   },
+   "fecha": "860",
+   "guia": false,
+   "capas": [
+    {
+     "en": "suecos",
+     "id": "suecia",
+     "color": "naranja",
+     "etiqueta": "Suecos"
+    }
+   ],
+   "flechas": [
+    {
+     "en": "suecos",
+     "de": [
+      17,
+      60
+     ],
+     "a": [
+      32,
+      57
+     ],
+     "curva": 0.1
+    }
+   ]
+  },
+  {
+   "en": "Bajan por los",
+   "tipo": "mapa",
+   "mapa": "vik-este",
+   "cam": {
+    "lon": 32,
+    "lat": 53,
+    "grados": 32
+   },
+   "hasta": {
+    "lon": 33,
+    "lat": 51,
+    "grados": 30
+   },
+   "fecha": "860",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "suecia",
+     "color": "naranja"
+    }
+   ],
+   "barcos": [
+    {
+     "en": "ríos",
+     "de": [
+      18,
+      59
+     ],
+     "a": [
+      30.5,
+      50.5
+     ],
+     "d": 3,
+     "flota": 2,
+     "curva": 0.1
+    },
+    {
+     "en": "Volga",
+     "de": [
+      20,
+      59.5
+     ],
+     "a": [
+      48,
+      46.5
+     ],
+     "d": 3,
+     "flota": 2,
+     "curva": -0.15
+    }
+   ],
+   "pins": [
+    {
+     "en": "Dniéper",
+     "lon": 32,
+     "lat": 47.5,
+     "nombre": "Dniéper",
+     "izquierda": true
+    },
+    {
+     "en": "Volga",
+     "lon": 46,
+     "lat": 49,
+     "nombre": "Volga"
+    }
+   ]
+  },
+  {
+   "en": "arrastrando los barcos",
+   "tipo": "escena",
+   "decorado": "estepa",
+   "actores": [
+    {
+     "q": "v1",
+     "traje": "vikingo",
+     "x": 330,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "arrastrando",
+       "hace": "sujeta"
+      }
+     ]
+    },
+    {
+     "q": "v2",
+     "traje": "vikingo",
+     "x": 520,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "tierra",
+       "hace": "traga"
+      }
+     ],
+     "colores": {
+      "color": "#2f5d7a"
+     }
+    },
+    {
+     "q": "eslavo",
+     "traje": "campesino",
+     "x": 1790,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "eslavos",
+       "hace": "piensa"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "arrastrando",
+     "a": "v2",
+     "texto": "¡Esto no estaba en el plan!",
+     "ancho": 400
+    },
+    {
+     "en": "Los pueblos",
+     "a": "eslavo",
+     "texto": "Los del barco andante.",
+     "ancho": 380
+    }
+   ],
+   "cosas": [
+    {
+     "en": 0,
+     "cosa": "galera",
+     "x": 980,
+     "y": 960
+    }
+   ]
+  },
+  {
+   "en": "En el año 862",
+   "tipo": "mapa",
+   "mapa": "vik-este",
+   "cam": {
+    "lon": 31,
+    "lat": 55,
+    "grados": 22
+   },
+   "hasta": {
+    "lon": 31,
+    "lat": 54,
+    "grados": 20
+   },
+   "fecha": "862",
+   "guia": false,
+   "capas": [
+    {
+     "en": "crónica",
+     "id": "rus",
+     "color": "rojo",
+     "modo": "crece",
+     "etiqueta": "Rus"
+    }
+   ],
+   "pins": [
+    {
+     "en": "862",
+     "lon": 31.27,
+     "lat": 58.52,
+     "nombre": "Nóvgorod"
+    },
+    {
+     "en": "jefe",
+     "lon": 30.52,
+     "lat": 50.45,
+     "nombre": "Kiev"
+    }
+   ]
+  },
+  {
+   "en": "Rurik se hace",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "rurik",
+     "traje": "vikingo",
+     "x": 1210,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "poder",
+       "hace": "orgulloso"
+      }
+     ],
+     "sentado": true,
+     "y": 710,
+     "lleva": "espada"
+    },
+    {
+     "q": "eslavo",
+     "traje": "campesino",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "Nóvgorod",
+       "hace": "quita_sombrero"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "Rurik",
+     "a": "rurik",
+     "texto": "Tranquilos, vengo a mandar.",
+     "ancho": 380
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Rurik, Nóvgorod, 862"
+    }
+   ]
+  },
+  {
+   "en": "De esos rus",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "rus",
+     "pais": "vik-este:rus"
+    },
+    {
+     "en": "Rusia",
+     "palabra": "Rusia",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Al final de los ríos",
+   "tipo": "mapa",
+   "mapa": "vik-este",
+   "cam": {
+    "lon": 28,
+    "lat": 45,
+    "grados": 24
+   },
+   "hasta": {
+    "lon": 29,
+    "lat": 42.5,
+    "grados": 18
+   },
+   "fecha": "860",
+   "guia": false,
+   "capas": [
+    {
+     "en": "ciudad",
+     "id": "bizancio",
+     "color": "morado",
+     "etiqueta": "Bizancio"
+    }
+   ],
+   "pins": [
+    {
+     "en": "rica",
+     "lon": 28.98,
+     "lat": 41.01,
+     "nombre": "Constantinopla"
+    }
+   ],
+   "foco": {
+    "en": "Constantinopla",
+    "lon": 28.98,
+    "lat": 41.01,
+    "radio": 120
+   }
+  },
+  {
+   "en": "Los vikingos la atacan",
+   "tipo": "escena",
+   "decorado": "ciudad",
+   "actores": [
+    {
+     "q": "v1",
+     "traje": "vikingo",
+     "x": 650,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "atacan",
+       "hace": "ataca"
+      },
+      {
+       "en": "murallas",
+       "hace": "golpeado"
+      }
+     ],
+     "lleva": "espada"
+    },
+    {
+     "q": "v2",
+     "traje": "vikingo",
+     "x": 950,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "murallas",
+       "hace": "encoge"
+      },
+      {
+       "en": "trabajar",
+       "hace": "asiente"
+      }
+     ],
+     "colores": {
+      "color": "#7a3b1f"
+     }
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "atacan",
+     "a": "v1",
+     "texto": "Vale, son muy gordas.",
+     "ancho": 360
+    },
+    {
+     "en": "murallas",
+     "a": "v2",
+     "texto": "¿Y si nos contratan?",
+     "ancho": 360
+    }
+   ],
+   "estilo": "oriente",
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Constantinopla, 860"
+    }
+   ]
+  },
+  {
+   "en": "En el año 988",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "basilio",
+     "traje": "sultan",
+     "x": 1210,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "Basilio",
+       "hace": "orgulloso"
+      }
+     ],
+     "sentado": true,
+     "y": 710,
+     "colores": {
+      "color": "#6b2a8a",
+      "capa": "#d9a521"
+     }
+    },
+    {
+     "q": "v1",
+     "traje": "vikingo",
+     "x": 600,
+     "s": 1.1,
+     "mira": 0.4,
+     "lleva": "alabarda"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "En el año",
+     "a": "basilio",
+     "texto": "Quiero a esos grandotes.",
+     "ancho": 360
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "Basilio",
+     "texto": "Basilio II",
+     "x": 420,
+     "y": 420,
+     "tam": 64,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "recibe seis mil",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "seis",
+     "cifra": "6.000",
+     "sub": "guerreros del norte",
+     "icono": "escudo"
+    }
+   ]
+  },
+  {
+   "en": "Así nace la Guardia",
+   "tipo": "escena",
+   "decorado": "ciudad",
+   "actores": [
+    {
+     "q": "g1",
+     "traje": "vikingo",
+     "x": 600,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "Varega",
+       "hace": "saca_pecho"
+      }
+     ],
+     "lleva": "alabarda"
+    },
+    {
+     "q": "g2",
+     "traje": "vikingo",
+     "x": 900,
+     "s": 1.1,
+     "mira": 0.2,
+     "lleva": "alabarda",
+     "colores": {
+      "color": "#7a3b1f"
+     }
+    },
+    {
+     "q": "g3",
+     "traje": "vikingo",
+     "x": 1200,
+     "s": 1.1,
+     "mira": 0.1,
+     "acciones": [
+      {
+       "en": "guardaespaldas",
+       "hace": "saluda"
+      }
+     ],
+     "lleva": "alabarda",
+     "colores": {
+      "color": "#2f5d7a"
+     }
+    }
+   ],
+   "estilo": "oriente",
+   "rotulos": [
+    {
+     "en": "Guardia",
+     "texto": "Guardia Varega",
+     "x": 960,
+     "y": 220,
+     "tam": 76
+    }
+   ]
+  },
+  {
+   "en": "Uno de ellos aburrido",
+   "tipo": "escena",
+   "decorado": "interior",
+   "actores": [
+    {
+     "q": "halfdan",
+     "traje": "vikingo",
+     "x": 900,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "aburrido",
+       "hace": "encoge"
+      },
+      {
+       "en": "grabó",
+       "hace": "agacha"
+      },
+      {
+       "en": "Halfdan",
+       "hace": "orgulloso"
+      }
+     ],
+     "lleva": "espada"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "grabó",
+     "a": "halfdan",
+     "texto": "Halfdan estuvo aquí.",
+     "ancho": 340
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Santa Sofía"
+    }
+   ]
+  },
+  {
+   "en": "La pintada sigue",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "La",
+     "tarjeta": "Santa Sofía",
+     "cosa": "cupula"
+    },
+    {
+     "en": "allí",
+     "palabra": "«Halfdan»",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Y más al sur",
+   "tipo": "mapa",
+   "mapa": "vik-este",
+   "cam": {
+    "lon": 38,
+    "lat": 42,
+    "grados": 40
+   },
+   "hasta": {
+    "lon": 40,
+    "lat": 40,
+    "grados": 38
+   },
+   "fecha": "900",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "rus",
+     "color": "rojo"
+    },
+    {
+     "en": "islámico",
+     "id": "califato",
+     "color": "verde",
+     "etiqueta": "Califato"
+    }
+   ],
+   "barcos": [
+    {
+     "en": "compraban",
+     "de": [
+      48,
+      50
+     ],
+     "a": [
+      50,
+      40
+     ],
+     "d": 2.5,
+     "flota": 2,
+     "curva": 0.1
+    }
+   ],
+   "pins": [
+    {
+     "en": "Bagdad",
+     "lon": 44.36,
+     "lat": 33.31,
+     "nombre": "Bagdad"
+    }
+   ]
+  },
+  {
+   "en": "A cambio de",
+   "tipo": "papel",
+   "titulo": "El trato",
+   "cosas": [
+    {
+     "en": "pieles",
+     "palabra": "Pieles"
+    },
+    {
+     "en": "ámbar",
+     "palabra": "Ámbar"
+    },
+    {
+     "en": "esclavizadas",
+     "cosa": "cadenas",
+     "pie": "Personas"
+    },
+    {
+     "en": "plata",
+     "cosa": "moneda",
+     "pie": "Plata"
+    }
+   ]
+  },
+  {
+   "en": "En Suecia han",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Suecia",
+     "pais": "vik-este:suecia"
+    },
+    {
+     "en": "miles",
+     "cosa": "monton_monedas",
+     "pie": "Decenas de miles"
+    }
+   ]
+  },
+  {
+   "en": "Francia año 911",
+   "tipo": "capitulo",
+   "numero": 4
+  },
+  {
+   "en": "Los vikingos llevan casi",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": 1,
+    "lat": 49.5,
+    "grados": 9
+   },
+   "hasta": {
+    "lon": 1.2,
+    "lat": 49.4,
+    "grados": 8
+   },
+   "fecha": "911",
+   "guia": false,
+   "capas": [
+    {
+     "en": "siglo",
+     "id": "francia",
+     "color": "morado",
+     "op": 0.4,
+     "etiqueta": "Francia"
+    }
+   ],
+   "barcos": [
+    {
+     "en": "atacando",
+     "de": [
+      -0.5,
+      49.9
+     ],
+     "a": [
+      1.1,
+      49.44
+     ],
+     "d": 2.2,
+     "flota": 3,
+     "curva": 0.15
+    }
+   ],
+   "pins": [
+    {
+     "en": "Sena",
+     "lon": 1.1,
+     "lat": 49.44,
+     "nombre": "Ruan",
+     "izquierda": true
+    }
+   ]
+  },
+  {
+   "en": "y el rey Carlos el Simple",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "carlos",
+     "traje": "rey",
+     "x": 1210,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "idea",
+       "hace": "piensa"
+      },
+      {
+       "en": "tierra",
+       "hace": "senala"
+      }
+     ],
+     "sentado": true,
+     "y": 710,
+     "colores": {
+      "color": "#2a4d8f"
+     }
+    },
+    {
+     "q": "noble",
+     "traje": "noble",
+     "x": 760,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "tierra",
+       "hace": "susto"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "y el rey",
+     "a": "carlos",
+     "texto": "Tengo una idea genial.",
+     "ancho": 340
+    },
+    {
+     "en": "puedes",
+     "a": "noble",
+     "texto": "¿Regalarles tierra? ¿A ellos?",
+     "ancho": 400
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Carlos el Simple"
+    }
+   ]
+  },
+  {
+   "en": "Le ofrece",
+   "tipo": "archivo",
+   "imagen": "archivo/rolon.jpg",
+   "pie": "Rolón (estatua en Ruan)",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "la región alrededor",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": 0,
+    "lat": 49.2,
+    "grados": 7
+   },
+   "hasta": {
+    "lon": 0,
+    "lat": 49.2,
+    "grados": 6.5
+   },
+   "fecha": "911",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "francia",
+     "color": "morado",
+     "op": 0.35
+    },
+    {
+     "en": "región",
+     "id": "normandia",
+     "color": "naranja",
+     "modo": "crece"
+    }
+   ],
+   "pins": [
+    {
+     "en": "Ruan",
+     "lon": 1.1,
+     "lat": 49.44,
+     "nombre": "Ruan"
+    }
+   ]
+  },
+  {
+   "en": "con una condición",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "bautice",
+     "cosa": "cruz",
+     "pie": "Bautizarse"
+    },
+    {
+     "en": "defienda",
+     "cosa": "escudo",
+     "pie": "Defender el río"
+    }
+   ]
+  },
+  {
+   "en": "Cuenta la leyenda que en la ceremonia",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "carlos",
+     "traje": "rey",
+     "x": 1210,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "besar",
+       "hace": "orgulloso"
+      },
+      {
+       "en": "cayó",
+       "hace": "cae"
+      }
+     ],
+     "sentado": true,
+     "y": 710,
+     "colores": {
+      "color": "#2a4d8f"
+     }
+    },
+    {
+     "q": "rolon",
+     "traje": "vikingo",
+     "x": 700,
+     "s": 1.2,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "negó",
+       "hace": "niega"
+      }
+     ]
+    },
+    {
+     "q": "hombre",
+     "traje": "vikingo",
+     "x": 950,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "Mandó",
+       "hace": "camina"
+      },
+      {
+       "en": "levantó",
+       "hace": "levanta"
+      }
+     ],
+     "colores": {
+      "color": "#7a3b1f"
+     }
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "ceremonia",
+     "a": "rolon",
+     "texto": "Ni loco beso eso.",
+     "ancho": 320
+    },
+    {
+     "en": "levantó",
+     "a": "hombre",
+     "texto": "Uy. Perdón, majestad.",
+     "ancho": 360
+    }
+   ]
+  },
+  {
+   "en": "Esa tierra de los",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": 0.3,
+    "lat": 49.2,
+    "grados": 7
+   },
+   "hasta": {
+    "lon": 0.3,
+    "lat": 49.2,
+    "grados": 6.5
+   },
+   "fecha": "911",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "normandia",
+     "color": "naranja",
+     "etiqueta": "Normandía",
+     "cara": "feliz",
+     "cara_en": "Normandía"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "norte",
+     "texto": "Normandos = hombres del norte",
+     "x": 960,
+     "y": 930,
+     "tam": 52
+    }
+   ]
+  },
+  {
+   "en": "Y de Rolón",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Rolón",
+     "imagen": "archivo/rolon.jpg",
+     "pie": "Rolón"
+    },
+    {
+     "en": "Guillermo",
+     "tarjeta": "Guillermo el Conquistador",
+     "cosa": "corona"
+    }
+   ]
+  },
+  {
+   "en": "Mientras tanto otros",
+   "tipo": "capitulo",
+   "numero": 5
+  },
+  {
+   "en": "al océano vacío",
+   "tipo": "mapa",
+   "mapa": "vik-oeste",
+   "cam": {
+    "lon": -25,
+    "lat": 62,
+    "grados": 70
+   },
+   "hasta": {
+    "lon": -28,
+    "lat": 62,
+    "grados": 64
+   },
+   "fecha": "870",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "noruega",
+     "color": "rojo",
+     "op": 0.6
+    }
+   ],
+   "flechas": [
+    {
+     "en": 0,
+     "de": [
+      4,
+      61
+     ],
+     "a": [
+      -40,
+      62
+     ],
+     "curva": 0.05
+    }
+   ]
+  },
+  {
+   "en": "Hacia el año 874",
+   "tipo": "mapa",
+   "mapa": "vik-oeste",
+   "cam": {
+    "lon": -10,
+    "lat": 63,
+    "grados": 36
+   },
+   "hasta": {
+    "lon": -14,
+    "lat": 64,
+    "grados": 30
+   },
+   "fecha": "874",
+   "guia": false,
+   "capas": [
+    {
+     "en": "Islandia",
+     "id": "islandia",
+     "color": "rojo",
+     "etiqueta": "Islandia"
+    }
+   ],
+   "barcos": [
+    {
+     "en": "874",
+     "de": [
+      5,
+      61
+     ],
+     "a": [
+      -21,
+      64.2
+     ],
+     "d": 2.5,
+     "flota": 2,
+     "curva": -0.1
+    }
+   ]
+  },
+  {
+   "en": "una isla de volcanes",
+   "tipo": "escena",
+   "decorado": "montana",
+   "actores": [
+    {
+     "q": "colono",
+     "traje": "vikingo",
+     "x": 800,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "volcanes",
+       "hace": "susto"
+      },
+      {
+       "en": "gente",
+       "hace": "jarras"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "una isla",
+     "a": "colono",
+     "texto": "Por fin, sin vecinos.",
+     "ancho": 340
+    }
+   ],
+   "humo": true,
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Islandia, 874"
+    }
+   ]
+  },
+  {
+   "en": "En el año 930",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "ley",
+     "traje": "vikingo",
+     "x": 960,
+     "s": 1.2,
+     "mira": 0,
+     "acciones": [
+      {
+       "en": "asamblea",
+       "hace": "levanta"
+      }
+     ],
+     "lleva": "pergamino"
+    },
+    {
+     "q": "a1",
+     "traje": "vikingo",
+     "x": 600,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "libres",
+       "hace": "asiente"
+      }
+     ],
+     "colores": {
+      "color": "#7a3b1f"
+     }
+    },
+    {
+     "q": "a2",
+     "traje": "campesina",
+     "x": 1350,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "leyes",
+       "hace": "levanta"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "Althing",
+     "a": "ley",
+     "texto": "¿Quién vota que sí?",
+     "ancho": 340
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "Althing",
+     "texto": "Althing",
+     "x": 960,
+     "y": 200,
+     "tam": 76
+    }
+   ]
+  },
+  {
+   "en": "Es uno de los",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "parlamentos",
+     "cifra": "930",
+     "sub": "el Althing",
+     "icono": "balanza"
+    },
+    {
+     "en": "antiguos",
+     "palabra": "De los más antiguos",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Hacia el año 982",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "982",
+     "cifra": "982",
+     "sub": "Islandia"
+    },
+    {
+     "en": "genio",
+     "palabra": "Muy mal genio",
+     "rojo": true
+    }
+   ],
+   "guia": {
+    "acciones": [
+     {
+      "en": "genio",
+      "hace": "enfada"
+     }
+    ]
+   }
+  },
+  {
+   "en": "Erik el Rojo",
+   "tipo": "archivo",
+   "imagen": "archivo/erik.jpg",
+   "pie": "Erik el Rojo (grabado de 1688)",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "lo echan de",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "erik",
+     "traje": "vikingo",
+     "x": 1300,
+     "s": 1.2,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "echan",
+       "hace": "enfada"
+      },
+      {
+       "en": "matar",
+       "hace": "sale"
+      }
+     ],
+     "colores": {
+      "color": "#a3261c"
+     }
+    },
+    {
+     "q": "juez",
+     "traje": "vikingo",
+     "x": 650,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "echan",
+       "hace": "senala"
+      }
+     ],
+     "lleva": "pergamino"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "lo echan",
+     "a": "juez",
+     "texto": "Fuera. Tres años.",
+     "ancho": 320
+    }
+   ]
+  },
+  {
+   "en": "Navega hacia el oeste",
+   "tipo": "mapa",
+   "mapa": "vik-oeste",
+   "cam": {
+    "lon": -30,
+    "lat": 64,
+    "grados": 34
+   },
+   "hasta": {
+    "lon": -34,
+    "lat": 63.5,
+    "grados": 32
+   },
+   "fecha": "982",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "islandia",
+     "color": "rojo",
+     "etiqueta": "Islandia"
+    }
+   ],
+   "barcos": [
+    {
+     "en": "Navega",
+     "de": [
+      -22,
+      64.5
+     ],
+     "a": [
+      -41,
+      61.5
+     ],
+     "d": 2,
+     "flota": 1,
+     "curva": 0.1
+    }
+   ]
+  },
+  {
+   "en": "y encuentra una tierra",
+   "tipo": "mapa",
+   "mapa": "vik-oeste",
+   "cam": {
+    "lon": -38,
+    "lat": 66,
+    "grados": 62
+   },
+   "hasta": {
+    "lon": -39,
+    "lat": 66,
+    "grados": 58
+   },
+   "fecha": "982",
+   "guia": false,
+   "encuadre": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "islandia",
+     "color": "rojo"
+    },
+    {
+     "en": 0,
+     "id": "groenlandia",
+     "color": "amarillo",
+     "modo": "dibuja",
+     "op": 0.8
+    }
+   ],
+   "pins": [
+    {
+     "en": "enorme",
+     "lon": -45.5,
+     "lat": 61.15,
+     "nombre": "Brattahlid",
+     "izquierda": true
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "helada",
+     "texto": "Enorme y helada",
+     "x": 1250,
+     "y": 990,
+     "tam": 64
+    }
+   ]
+  },
+  {
+   "en": "Le pone un nombre",
+   "tipo": "escena",
+   "decorado": "nieve",
+   "actores": [
+    {
+     "q": "erik",
+     "traje": "vikingo",
+     "x": 850,
+     "s": 1.2,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "verde",
+       "hace": "mira_camara"
+      },
+      {
+       "en": "quiera",
+       "hace": "rie"
+      }
+     ],
+     "colores": {
+      "color": "#a3261c"
+     },
+     "lleva": "bandera"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "Le pone",
+     "a": "erik",
+     "texto": "¡Verdísima! Palabra.",
+     "ancho": 340
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "Groenlandia",
+     "texto": "Groenlandia = tierra verde",
+     "x": 960,
+     "y": 200,
+     "tam": 64
+    }
+   ]
+  },
+  {
+   "en": "Funciona",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "veinticinco",
+     "cifra": "25",
+     "sub": "barcos salen",
+     "icono": "galera"
+    },
+    {
+     "en": "catorce",
+     "cifra": "14",
+     "sub": "llegan",
+     "icono": "ancla"
+    }
+   ]
+  },
+  {
+   "en": "Y hacia el año 1000",
+   "tipo": "archivo",
+   "imagen": "archivo/leif.jpg",
+   "pie": "Leif Erikson (estatua)",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "sigue todavía",
+   "tipo": "mapa",
+   "mapa": "vik-oeste",
+   "cam": {
+    "lon": -50,
+    "lat": 57,
+    "grados": 40
+   },
+   "hasta": {
+    "lon": -53,
+    "lat": 55,
+    "grados": 34
+   },
+   "fecha": "1000",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "groenlandia",
+     "color": "amarillo"
+    },
+    {
+     "en": "más",
+     "id": "terranova",
+     "color": "verde",
+     "etiqueta": "Vinlandia"
+    }
+   ],
+   "barcos": [
+    {
+     "en": "sigue",
+     "de": [
+      -45,
+      60.8
+     ],
+     "a": [
+      -55.5,
+      51.7
+     ],
+     "d": 2,
+     "flota": 1,
+     "curva": 0.1
+    }
+   ]
+  },
+  {
+   "en": "Encuentra bosques",
+   "tipo": "escena",
+   "decorado": "rio",
+   "actores": [
+    {
+     "q": "leif",
+     "traje": "vikingo",
+     "x": 850,
+     "s": 1.2,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "salmón",
+       "hace": "celebra"
+      },
+      {
+       "en": "uvas",
+       "hace": "rie"
+      }
+     ],
+     "colores": {
+      "color": "#3e6b2f"
+     }
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "Encuentra",
+     "a": "leif",
+     "texto": "¡Uvas! Esto es otro nivel.",
+     "ancho": 380
+    }
+   ],
+   "cosas": [
+    {
+     "en": "salmón",
+     "cosa": "pez",
+     "x": 1250,
+     "y": 820,
+     "salta": -90
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Vinlandia, hacia el año 1000"
+    }
+   ]
+  },
+  {
+   "en": "Durante siglos",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "siglos",
+     "cosa": "libro",
+     "pie": "¿Una leyenda?",
+     "tachar_en": "leyenda"
+    }
+   ]
+  },
+  {
+   "en": "Hasta que en 1960",
+   "tipo": "mapa",
+   "mapa": "vik-oeste",
+   "cam": {
+    "lon": -56,
+    "lat": 51.5,
+    "grados": 18
+   },
+   "hasta": {
+    "lon": -55.6,
+    "lat": 51.6,
+    "grados": 16
+   },
+   "fecha": "1960",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "terranova",
+     "color": "verde",
+     "etiqueta": "Terranova"
+    }
+   ],
+   "pins": [
+    {
+     "en": "1960",
+     "lon": -55.53,
+     "lat": 51.6,
+     "nombre": "L'Anse aux Meadows"
+    }
+   ]
+  },
+  {
+   "en": "Terranova en Canadá",
+   "tipo": "archivo",
+   "imagen": "archivo/lanse.jpg",
+   "pie": "L'Anse aux Meadows, Terranova (Canadá)",
+   "modo": "pantalla"
+  },
+  {
+   "en": "Y en 2021",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "anillos",
+     "cosa": "reloj",
+     "pie": "Anillos de los troncos"
+    }
+   ]
+  },
+  {
+   "en": "los vikingos estaban",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "estaban",
+     "cifra": "1021",
+     "sub": "vikingos en América"
+    }
+   ],
+   "guia": {
+    "acciones": [
+     {
+      "en": "América",
+      "hace": "celebra"
+     }
+    ]
+   }
+  },
+  {
+   "en": "Dinamarca hacia el",
+   "tipo": "capitulo",
+   "numero": 6
+  },
+  {
+   "en": "Los vikingos ya no",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "rey",
+     "traje": "vikingo",
+     "x": 1210,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "reyes",
+       "hace": "orgulloso"
+      }
+     ],
+     "sentado": true,
+     "y": 710,
+     "llevaI": "corona"
+    },
+    {
+     "q": "guerrero",
+     "traje": "vikingo",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "bandas",
+       "hace": "encoge"
+      },
+      {
+       "en": "reyes",
+       "hace": "quita_sombrero"
+      }
+     ],
+     "colores": {
+      "color": "#7a3b1f"
+     }
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "Los vikingos",
+     "a": "guerrero",
+     "texto": "Ahora hay que hacer cola.",
+     "ancho": 380
+    }
+   ]
+  },
+  {
+   "en": "El rey Harald",
+   "tipo": "mapa",
+   "mapa": "vik-norte",
+   "cam": {
+    "lon": 10,
+    "lat": 56,
+    "grados": 14
+   },
+   "hasta": {
+    "lon": 9.8,
+    "lat": 56,
+    "grados": 12
+   },
+   "fecha": "965",
+   "guia": false,
+   "capas": [
+    {
+     "en": "une",
+     "id": "dinamarca",
+     "color": "naranja",
+     "etiqueta": "Dinamarca",
+     "cara": "feliz",
+     "cara_en": "cristiana"
+    }
+   ],
+   "pins": [
+    {
+     "en": "Azul",
+     "lon": 9.42,
+     "lat": 55.75,
+     "nombre": "Jelling",
+     "izquierda": true
+    }
+   ],
+   "iconos": [
+    {
+     "en": "cristiana",
+     "lon": 11.8,
+     "lat": 55.5,
+     "cosa": "cruz",
+     "tam": 0.6
+    }
+   ]
+  },
+  {
+   "en": "Mil años después",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "cables",
+     "cosa": "radar",
+     "pie": "Sin cables"
+    },
+    {
+     "en": "Bluetooth",
+     "palabra": "Bluetooth",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Su símbolo son",
+   "tipo": "archivo",
+   "imagen": "archivo/jelling.jpg",
+   "pie": "Piedra de Jelling, mandada grabar por Harald",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "Su hijo Sven",
+   "tipo": "mapa",
+   "mapa": "vik-norte",
+   "cam": {
+    "lon": 3,
+    "lat": 55,
+    "grados": 20
+   },
+   "hasta": {
+    "lon": 0,
+    "lat": 53.5,
+    "grados": 16
+   },
+   "fecha": "1013",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "dinamarca",
+     "color": "naranja"
+    },
+    {
+     "en": "conquista",
+     "id": "inglaterra",
+     "color": "naranja",
+     "modo": "crece"
+    }
+   ],
+   "barcos": [
+    {
+     "en": "Sven",
+     "de": [
+      9,
+      56
+     ],
+     "a": [
+      0.5,
+      53
+     ],
+     "d": 2.5,
+     "flota": 5,
+     "curva": 0.1
+    }
+   ]
+  },
+  {
+   "en": "Pero muere a",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "sven",
+     "traje": "vikingo",
+     "x": 1210,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "muere",
+       "hace": "cae"
+      }
+     ],
+     "sentado": true,
+     "y": 710,
+     "llevaI": "corona"
+    },
+    {
+     "q": "canuto",
+     "traje": "vikingo",
+     "x": 700,
+     "s": 1.0,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "semanas",
+       "hace": "susto"
+      }
+     ],
+     "colores": {
+      "color": "#2f5d7a"
+     }
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "Pero",
+     "a": "canuto",
+     "texto": "¿Papá? ¿Ya está?",
+     "ancho": 320
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "1014"
+    }
+   ]
+  },
+  {
+   "en": "Y el nieto",
+   "tipo": "archivo",
+   "imagen": "archivo/canuto.jpg",
+   "pie": "Canuto el Grande",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "En 1016 es rey",
+   "tipo": "mapa",
+   "mapa": "vik-norte",
+   "cam": {
+    "lon": 2,
+    "lat": 56,
+    "grados": 24
+   },
+   "hasta": {
+    "lon": 1,
+    "lat": 55,
+    "grados": 20
+   },
+   "fecha": "1016",
+   "guia": false,
+   "capas": [
+    {
+     "en": "Inglaterra",
+     "id": "inglaterra",
+     "color": "naranja",
+     "etiqueta": "Inglaterra",
+     "cara": "feliz",
+     "cara_en": "Inglaterra"
+    }
+   ]
+  },
+  {
+   "en": "En 1018 de",
+   "tipo": "mapa",
+   "mapa": "vik-norte",
+   "cam": {
+    "lon": 3,
+    "lat": 56,
+    "grados": 30
+   },
+   "hasta": {
+    "lon": 3.5,
+    "lat": 56,
+    "grados": 28
+   },
+   "fecha": "1018",
+   "guia": false,
+   "encuadre": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "inglaterra",
+     "color": "naranja"
+    },
+    {
+     "en": "Dinamarca",
+     "id": "dinamarca",
+     "color": "naranja",
+     "etiqueta": "Dinamarca",
+     "cara": "feliz",
+     "cara_en": "Dinamarca"
+    }
+   ]
+  },
+  {
+   "en": "En 1028 de",
+   "tipo": "mapa",
+   "mapa": "vik-norte",
+   "cam": {
+    "lon": 3,
+    "lat": 57.5,
+    "grados": 40
+   },
+   "hasta": {
+    "lon": 3,
+    "lat": 57.5,
+    "grados": 38
+   },
+   "fecha": "1028",
+   "guia": false,
+   "encuadre": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "inglaterra",
+     "color": "naranja"
+    },
+    {
+     "en": 0,
+     "id": "dinamarca",
+     "color": "naranja"
+    },
+    {
+     "en": "Noruega",
+     "id": "noruega",
+     "color": "naranja",
+     "etiqueta": "Noruega",
+     "cara": "feliz",
+     "cara_en": "Noruega",
+     "cara_lugar": [
+      9,
+      61
+     ]
+    }
+   ],
+   "iconos": [
+    {
+     "en": "imperio",
+     "lon": 3,
+     "lat": 57,
+     "cosa": "corona",
+     "tam": 0.8
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "mar del Norte",
+     "texto": "Imperio del mar del Norte",
+     "x": 960,
+     "y": 960,
+     "tam": 56
+    }
+   ]
+  },
+  {
+   "en": "Cuenta la leyenda que Canuto",
+   "tipo": "escena",
+   "decorado": "puerto",
+   "actores": [
+    {
+     "q": "canuto",
+     "traje": "rey",
+     "x": 900,
+     "s": 1.15,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "ordenó",
+       "hace": "senala"
+      },
+      {
+       "en": "caso",
+       "hace": "susto"
+      }
+     ],
+     "sentado": true
+    },
+    {
+     "q": "cortesano",
+     "traje": "noble",
+     "x": 1350,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "caso",
+       "hace": "se_tapa"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "mandó",
+     "a": "canuto",
+     "texto": "¡Olas, quietas!",
+     "ancho": 300
+    },
+    {
+     "en": "Las olas",
+     "a": "cortesano",
+     "texto": "Majestad, se moja.",
+     "ancho": 320
+    }
+   ]
+  },
+  {
+   "en": "Quería demostrar",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "rey",
+     "cosa": "corona",
+     "pie": "Un rey",
+     "tachar_en": "mar"
+    },
+    {
+     "en": "mar",
+     "palabra": "< el mar",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Pero cuando murió",
+   "tipo": "mapa",
+   "mapa": "vik-norte",
+   "cam": {
+    "lon": 3,
+    "lat": 57.5,
+    "grados": 38
+   },
+   "hasta": {
+    "lon": 3,
+    "lat": 57.5,
+    "grados": 36
+   },
+   "fecha": "1035",
+   "guia": false,
+   "encuadre": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "inglaterra",
+     "color": "naranja",
+     "cara": "muerto",
+     "cara_en": "murió"
+    },
+    {
+     "en": 0,
+     "id": "dinamarca",
+     "color": "naranja",
+     "cara": "muerto",
+     "cara_en": "murió"
+    },
+    {
+     "en": 0,
+     "id": "noruega",
+     "color": "naranja",
+     "cara": "muerto",
+     "cara_en": "murió",
+     "cara_lugar": [
+      9,
+      61
+     ]
+    }
+   ]
+  },
+  {
+   "en": "sus hijos no",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "h1",
+     "traje": "vikingo",
+     "x": 760,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "hijos",
+       "hace": "enfada"
+      },
+      {
+       "en": "mantenerlo",
+       "hace": "ataca"
+      }
+     ],
+     "colores": {
+      "color": "#2f5d7a"
+     }
+    },
+    {
+     "q": "h2",
+     "traje": "vikingo",
+     "x": 1150,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "hijos",
+       "hace": "jarras"
+      },
+      {
+       "en": "mantenerlo",
+       "hace": "golpeado"
+      }
+     ],
+     "colores": {
+      "color": "#7a3b1f"
+     }
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "sus hijos",
+     "a": "h1",
+     "texto": "¡Mía!",
+     "ancho": 200
+    }
+   ],
+   "cosas": [
+    {
+     "en": "hijos",
+     "cosa": "corona",
+     "x": 960,
+     "y": 560
+    }
+   ]
+  },
+  {
+   "en": "En siete años",
+   "tipo": "mapa",
+   "mapa": "vik-norte",
+   "cam": {
+    "lon": 3,
+    "lat": 57.5,
+    "grados": 38
+   },
+   "hasta": {
+    "lon": 3,
+    "lat": 57.5,
+    "grados": 35
+   },
+   "fecha": "1042",
+   "guia": false,
+   "encuadre": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "inglaterra",
+     "color": "naranja",
+     "cara": "muerto",
+     "rompe_en": "rompió"
+    },
+    {
+     "en": 0,
+     "id": "dinamarca",
+     "color": "naranja",
+     "cara": "muerto",
+     "rompe_en": "rompió"
+    },
+    {
+     "en": 0,
+     "id": "noruega",
+     "color": "naranja",
+     "cara": "muerto",
+     "rompe_en": "rompió",
+     "cara_lugar": [
+      9,
+      61
+     ]
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "siete",
+     "texto": "7 años",
+     "x": 1500,
+     "y": 300,
+     "tam": 70,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Inglaterra septiembre de 1066",
+   "tipo": "capitulo",
+   "numero": 7
+  },
+  {
+   "en": "El último gran",
+   "tipo": "mapa",
+   "mapa": "vik-norte",
+   "cam": {
+    "lon": 3,
+    "lat": 57.5,
+    "grados": 22
+   },
+   "hasta": {
+    "lon": 0,
+    "lat": 56,
+    "grados": 16
+   },
+   "fecha": "1066",
+   "guia": false,
+   "capas": [
+    {
+     "en": "rey",
+     "id": "noruega",
+     "color": "rojo",
+     "etiqueta": "Noruega"
+    },
+    {
+     "en": "llega",
+     "id": "inglaterra",
+     "color": "verde",
+     "op": 0.5
+    }
+   ],
+   "barcos": [
+    {
+     "en": "llega",
+     "de": [
+      5,
+      60.5
+     ],
+     "a": [
+      -0.9,
+      54.2
+     ],
+     "d": 3,
+     "flota": 8,
+     "curva": 0.1
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "trescientos",
+     "texto": "300 barcos",
+     "x": 1400,
+     "y": 820,
+     "tam": 70,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Se llama",
+   "tipo": "archivo",
+   "imagen": "archivo/hardrada.jpg",
+   "pie": "Harald Hardrada",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "Ha sido guardia",
+   "tipo": "escena",
+   "decorado": "ciudad",
+   "actores": [
+    {
+     "q": "hardrada",
+     "traje": "vikingo",
+     "x": 900,
+     "s": 1.3,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "Constantinopla",
+       "hace": "saca_pecho"
+      },
+      {
+       "en": "corona",
+       "hace": "senala"
+      }
+     ],
+     "lleva": "alabarda",
+     "colores": {
+      "color": "#1f3b5a"
+     }
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "Ha sido",
+     "a": "hardrada",
+     "texto": "Currículum impecable.",
+     "ancho": 340
+    },
+    {
+     "en": "Quiere",
+     "a": "hardrada",
+     "texto": "Ahora, Inglaterra.",
+     "ancho": 320
+    }
+   ],
+   "estilo": "oriente"
+  },
+  {
+   "en": "El veinticinco de",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": -1,
+    "lat": 53.5,
+    "grados": 8
+   },
+   "hasta": {
+    "lon": -0.9,
+    "lat": 53.9,
+    "grados": 6
+   },
+   "fecha": "25/9/1066",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "inglaterra",
+     "color": "verde",
+     "op": 0.35
+    }
+   ],
+   "pins": [
+    {
+     "en": "Stamford",
+     "lon": -0.91,
+     "lat": 53.99,
+     "nombre": "Stamford Bridge"
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "Haroldo",
+     "de": [
+      -1.3,
+      52.6
+     ],
+     "a": [
+      -0.95,
+      53.9
+     ],
+     "d": 2.2,
+     "color": "verde"
+    }
+   ],
+   "asedios": [
+    {
+     "en": "sorprende",
+     "lon": -0.91,
+     "lat": 53.99
+    }
+   ]
+  },
+  {
+   "en": "Hardrada muere",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "hardrada",
+     "traje": "vikingo",
+     "x": 700,
+     "s": 1.2,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "flecha",
+       "hace": "cae"
+      }
+     ],
+     "colores": {
+      "color": "#1f3b5a"
+     }
+    },
+    {
+     "q": "haroldo",
+     "traje": "caballero",
+     "x": 1250,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "garganta",
+       "hace": "celebra"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "Hardrada",
+     "a": "haroldo",
+     "texto": "¿Sin armadura? ¿En serio?",
+     "ancho": 380
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Stamford Bridge, 1066"
+    }
+   ]
+  },
+  {
+   "en": "Para llevar",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Para",
+     "cifra": "300",
+     "sub": "barcos llegan",
+     "icono": "galera",
+     "tachar_en": "veinticuatro"
+    },
+    {
+     "en": "veinticuatro",
+     "cifra": "24",
+     "sub": "vuelven",
+     "icono": "galera"
+    }
+   ]
+  },
+  {
+   "en": "Tres días después",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": 0,
+    "lat": 50.8,
+    "grados": 9
+   },
+   "hasta": {
+    "lon": 0.3,
+    "lat": 50.6,
+    "grados": 7.5
+   },
+   "fecha": "28/9/1066",
+   "guia": false,
+   "capas": [
+    {
+     "en": "ejército",
+     "id": "normandia",
+     "color": "naranja",
+     "etiqueta": "Normandía"
+    }
+   ],
+   "barcos": [
+    {
+     "en": "desembarca",
+     "de": [
+      0,
+      49.4
+     ],
+     "a": [
+      0.33,
+      50.8
+     ],
+     "d": 2.5,
+     "flota": 6,
+     "curva": -0.1
+    }
+   ],
+   "pins": [
+    {
+     "en": "sur",
+     "lon": 0.57,
+     "lat": 50.85,
+     "nombre": "Hastings"
+    }
+   ]
+  },
+  {
+   "en": "Lo manda Guillermo",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Guillermo",
+     "tarjeta": "Guillermo de Normandía",
+     "cosa": "corona"
+    },
+    {
+     "en": "descendiente",
+     "imagen": "archivo/rolon.jpg",
+     "pie": "Rolón"
+    }
+   ]
+  },
+  {
+   "en": "El catorce de octubre",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "guillermo",
+     "traje": "caballero",
+     "x": 900,
+     "s": 1.25,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "gana",
+       "hace": "celebra"
+      }
+     ],
+     "montado": true,
+     "colores": {
+      "color": "#c08a1e"
+     }
+    },
+    {
+     "q": "haroldo",
+     "traje": "caballero",
+     "x": 1450,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "Hastings",
+       "hace": "cae"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "El catorce",
+     "a": "guillermo",
+     "texto": "Saludos del tatarabuelo Rolón.",
+     "ancho": 420
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Hastings, 14 de octubre de 1066"
+    }
+   ]
+  },
+  {
+   "en": "Los nietos de",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "nietos",
+     "palabra": "Normandos",
+     "rojo": true
+    },
+    {
+     "en": "acabaron",
+     "cosa": "calavera",
+     "pie": "La era vikinga"
+    }
+   ]
+  },
+  {
+   "en": "Y qué queda hoy",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "queda",
+     "cosa": "globo",
+     "pie": "¿Qué queda?"
+    },
+    {
+     "en": "parece",
+     "palabra": "Mucho",
+     "rojo": true
+    }
+   ],
+   "guia": {
+    "acciones": [
+     {
+      "en": "queda",
+      "hace": "piensa"
+     }
+    ]
+   }
+  },
+  {
+   "en": "Los días de la",
+   "tipo": "papel",
+   "titulo": "Thursday",
+   "cosas": [
+    {
+     "en": "jueves",
+     "palabra": "Jueves"
+    },
+    {
+     "en": "Thor",
+     "cosa": "pico",
+     "pie": "Día de Thor"
+    }
+   ]
+  },
+  {
+   "en": "Palabras como",
+   "tipo": "papel",
+   "titulo": "Palabras vikingas",
+   "cosas": [
+    {
+     "en": "sky",
+     "palabra": "sky"
+    },
+    {
+     "en": "egg",
+     "palabra": "egg"
+    },
+    {
+     "en": "knife",
+     "palabra": "knife"
+    },
+    {
+     "en": "Palabras",
+     "cosa": "libro",
+     "pie": "En inglés"
+    }
+   ]
+  },
+  {
+   "en": "Pueblos ingleses",
+   "tipo": "mapa",
+   "mapa": "vik-inglaterra",
+   "cam": {
+    "lon": -1.2,
+    "lat": 53.6,
+    "grados": 7
+   },
+   "hasta": {
+    "lon": -1.2,
+    "lat": 53.8,
+    "grados": 6
+   },
+   "fecha": "Hoy",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "danelaw",
+     "color": "rojo",
+     "op": 0.4
+    }
+   ],
+   "pins": [
+    {
+     "en": "Derby",
+     "lon": -1.48,
+     "lat": 52.92,
+     "nombre": "Derby"
+    },
+    {
+     "en": "Whitby",
+     "lon": -0.61,
+     "lat": 54.49,
+     "nombre": "Whitby"
+    }
+   ]
+  },
+  {
+   "en": "El nombre de Rusia",
+   "tipo": "mapa",
+   "mapa": "vik-este",
+   "cam": {
+    "lon": 34,
+    "lat": 56,
+    "grados": 34
+   },
+   "hasta": {
+    "lon": 34,
+    "lat": 56,
+    "grados": 32
+   },
+   "fecha": "Hoy",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "rus",
+     "color": "rojo"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "Rusia",
+     "texto": "Rus → Rusia",
+     "x": 960,
+     "y": 930,
+     "tam": 76,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "El parlamento de Islandia",
+   "tipo": "mapa",
+   "mapa": "vik-oeste",
+   "cam": {
+    "lon": -19,
+    "lat": 64.8,
+    "grados": 14
+   },
+   "hasta": {
+    "lon": -20,
+    "lat": 64.5,
+    "grados": 12
+   },
+   "fecha": "Hoy",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "islandia",
+     "color": "rojo",
+     "etiqueta": "Islandia",
+     "cara": "feliz",
+     "cara_en": "reuniéndose"
+    }
+   ],
+   "pins": [
+    {
+     "en": "parlamento",
+     "lon": -21.13,
+     "lat": 64.26,
+     "nombre": "Þingvellir",
+     "izquierda": true
+    }
+   ]
+  },
+  {
+   "en": "Y cada vez que",
+   "tipo": "escena",
+   "decorado": "calle",
+   "actores": [
+    {
+     "q": "chico",
+     "traje": "civil",
+     "x": 900,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "conectas",
+       "hace": "agacha"
+      },
+      {
+       "en": "llamando",
+       "hace": "mira_camara"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "Y cada",
+     "a": "chico",
+     "texto": "Gracias, Harald.",
+     "ancho": 300
+    }
+   ]
+  },
+  {
+   "en": "No llevaban cuernos",
+   "tipo": "escena",
+   "decorado": "mar",
+   "actores": [],
+   "paisaje": true,
+   "barco": "galera",
+   "atardecer": true
+  },
+  {
+   "en": "desde una isla",
+   "tipo": "mapa",
+   "mapa": "vik-oeste",
+   "cam": {
+    "lon": -25,
+    "lat": 60,
+    "grados": 80
+   },
+   "hasta": {
+    "lon": -25,
+    "lat": 60,
+    "grados": 86
+   },
+   "fecha": "793-1066",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "noruega",
+     "color": "rojo"
+    },
+    {
+     "en": "isla",
+     "id": "islandia",
+     "color": "rojo"
+    },
+    {
+     "en": 0,
+     "id": "groenlandia",
+     "color": "rojo",
+     "op": 0.8
+    },
+    {
+     "en": "América",
+     "id": "terranova",
+     "color": "rojo",
+     "cara": "feliz",
+     "cara_en": "marca"
+    }
+   ],
+   "barcos": [
+    {
+     "en": "isla",
+     "de": [
+      5,
+      60.5
+     ],
+     "a": [
+      -1.8,
+      55.7
+     ],
+     "d": 2,
+     "flota": 2
+    },
+    {
+     "en": "costas",
+     "de": [
+      -22,
+      64
+     ],
+     "a": [
+      -45,
+      61
+     ],
+     "d": 2,
+     "flota": 2
+    },
+    {
+     "en": "América",
+     "de": [
+      -45,
+      61
+     ],
+     "a": [
+      -55.5,
+      51.7
+     ],
+     "d": 2,
+     "flota": 2
+    }
+   ],
+   "pins": [
+    {
+     "en": "monjes",
+     "lon": -1.8,
+     "lat": 55.68,
+     "nombre": "Lindisfarne"
+    },
+    {
+     "en": "América",
+     "lon": -55.53,
+     "lat": 51.6,
+     "nombre": "Vinlandia"
+    }
+   ]
+  }
+ ]
+}

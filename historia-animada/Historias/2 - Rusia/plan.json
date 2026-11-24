@@ -1,0 +1,5336 @@
+{
+ "cola": 2,
+ "capitulos": [
+  "862|Los rus|galera",
+  "1237|Los mongoles|arco",
+  "1547|Iván el Terrible|corona",
+  "1697|Pedro el Grande|ancla",
+  "1812|Napoleón|fuego",
+  "1917|La revolución|bandera_urss",
+  "1947|Guerra Fría y final|bomba"
+ ],
+ "musica": [
+  {
+   "desde": 0,
+   "pista": "epica--call-to-adventure.mp3"
+  },
+  {
+   "desde": "Año 862",
+   "pista": "medieval--lord-of-the-land.mp3"
+  },
+  {
+   "desde": "Año 1237",
+   "pista": "guerra--crusade-heavy-industry.mp3"
+  },
+  {
+   "desde": "Año 1547",
+   "pista": "misterio--hidden-past.mp3"
+  },
+  {
+   "desde": "Año 1697",
+   "pista": "barroco--procession-of-the-king.mp3"
+  },
+  {
+   "desde": "Año 1812",
+   "pista": "guerra--undaunted.mp3"
+  },
+  {
+   "desde": "Año 1917",
+   "pista": "triste--heavy-heart.mp3"
+  },
+  {
+   "desde": "Después vino",
+   "pista": "curiosidad--investigations.mp3"
+  },
+  {
+   "desde": "Hoy Rusia",
+   "pista": "reflexion--rumination.mp3"
+  }
+ ],
+ "planos": [
+  {
+   "en": 0,
+   "tipo": "mapa",
+   "mapa": "rusia-asia",
+   "cam": {
+    "lon": 100,
+    "lat": 60,
+    "grados": 150
+   },
+   "hasta": {
+    "lon": 100,
+    "lat": 59,
+    "grados": 135
+   },
+   "fecha": "Hoy",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rusia",
+     "color": "rojo",
+     "modo": "crece",
+     "cara": "feliz",
+     "cara_en": "grande"
+    }
+   ],
+   "pins": [
+    {
+     "en": "Moscú",
+     "lon": 37.6,
+     "lat": 55.75,
+     "nombre": "Moscú"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "texto": "RUSIA",
+     "x": 1100,
+     "y": 250,
+     "tam": 70
+    }
+   ],
+   "guia": false
+  },
+  {
+   "en": "en el otro extremo",
+   "tipo": "mapa",
+   "mapa": "rusia-asia",
+   "cam": {
+    "lon": 110,
+    "lat": 60,
+    "grados": 140
+   },
+   "hasta": {
+    "lon": 120,
+    "lat": 60,
+    "grados": 130
+   },
+   "fecha": "Hoy",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rusia",
+     "color": "rojo"
+    }
+   ],
+   "pins": [
+    {
+     "en": 0,
+     "lon": 37.6,
+     "lat": 55.75,
+     "nombre": "Moscú"
+    },
+    {
+     "en": "extremo",
+     "lon": 158.6,
+     "lat": 53.0,
+     "nombre": "Kamchatka",
+     "izquierda": true
+    }
+   ],
+   "iconos": [
+    {
+     "en": 0,
+     "lon": 40,
+     "lat": 60,
+     "cosa": "reloj",
+     "tam": 0.7
+    },
+    {
+     "en": "amaneciendo",
+     "lon": 156,
+     "lat": 58,
+     "cosa": "sol",
+     "tam": 0.9
+    }
+   ],
+   "guia": false
+  },
+  {
+   "en": "Tiene once",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "once",
+     "cifra": "11",
+     "sub": "husos horarios",
+     "icono": "reloj"
+    }
+   ]
+  },
+  {
+   "en": "Es más grande",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "grande",
+     "pais": "rusia-asia:rusia",
+     "pie": "Rusia"
+    },
+    {
+     "en": "Plutón",
+     "tarjeta": "Plutón",
+     "cosa": "globo"
+    }
+   ]
+  },
+  {
+   "en": "Pero hace mil",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "mil",
+     "cifra": "1.100 años",
+     "sub": "atrás"
+    },
+    {
+     "en": "existía",
+     "cosa": "bandera",
+     "tachar_en": "existía"
+    }
+   ]
+  },
+  {
+   "en": "Solo había bosques",
+   "tipo": "escena",
+   "decorado": "rio",
+   "actores": [
+    {
+     "q": "c1",
+     "traje": "campesino",
+     "x": 560,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "tribus",
+       "hace": "enfada"
+      },
+      {
+       "en": 1.51,
+       "hace": "asiente"
+      }
+     ]
+    },
+    {
+     "q": "c2",
+     "traje": "campesino",
+     "x": 960,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "acuerdo",
+       "hace": "niega"
+      }
+     ],
+     "colores": {
+      "color": "#7a5230"
+     }
+    },
+    {
+     "q": "c3",
+     "traje": "campesina",
+     "x": 1360,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "nada",
+       "hace": "jarras"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "c1",
+     "texto": "¡Este río es mío!",
+     "ancho": 380
+    },
+    {
+     "en": 3.12,
+     "a": "c2",
+     "texto": "¡Ni hablar!",
+     "ancho": 300
+    }
+   ]
+  },
+  {
+   "en": "En estos mil",
+   "tipo": "mapa",
+   "mapa": "rusia-asia",
+   "cam": {
+    "lon": 78,
+    "lat": 52,
+    "grados": 110
+   },
+   "hasta": {
+    "lon": 72,
+    "lat": 52,
+    "grados": 100
+   },
+   "fecha": "1237",
+   "capas": [
+    {
+     "en": 0,
+     "id": "mongoles",
+     "color": "naranja",
+     "etiqueta": "Mongoles",
+     "cara": "malo",
+     "cara_en": "mongoles"
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "arrasaron",
+     "de": [
+      100,
+      47
+     ],
+     "a": [
+      48,
+      54
+     ],
+     "d": 3,
+     "banderas": 3,
+     "color": "naranja"
+    }
+   ],
+   "guia": {
+    "lado": "izquierda"
+   }
+  },
+  {
+   "en": "la gobernó un zar",
+   "tipo": "archivo",
+   "imagen": "archivo/ivan.jpg",
+   "pie": "Iván el Terrible",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "un emperador de dos",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "pedro",
+     "traje": "rey",
+     "x": 800,
+     "s": 1.4,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "barba",
+       "hace": "senala"
+      }
+     ]
+    },
+    {
+     "q": "noble",
+     "traje": "noble",
+     "x": 1250,
+     "s": 1.05,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "barba",
+       "hace": "susto"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "noble",
+     "texto": "¡Mi barba no!",
+     "ancho": 320
+    }
+   ]
+  },
+  {
+   "en": "y Napoleón entró",
+   "tipo": "escena",
+   "decorado": "ciudad",
+   "actores": [
+    {
+     "q": "napo",
+     "traje": "napoleon",
+     "x": 900,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "ardiendo",
+       "hace": "susto"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "napo",
+     "texto": "Esto no era el plan",
+     "ancho": 360
+    }
+   ],
+   "humo": true,
+   "cosas": [
+    {
+     "en": "Moscú",
+     "cosa": "fuego",
+     "x": 1350,
+     "y": 760
+    },
+    {
+     "en": "ardiendo",
+     "cosa": "fuego",
+     "x": 500,
+     "y": 780
+    }
+   ]
+  },
+  {
+   "en": "Luego llegó una revolución",
+   "tipo": "escena",
+   "decorado": "calle",
+   "actores": [
+    {
+     "q": "rev",
+     "traje": "revolucionario",
+     "x": 960,
+     "s": 1.2,
+     "mira": 0,
+     "acciones": [
+      {
+       "en": "revolución",
+       "hace": "celebra"
+      }
+     ],
+     "lleva": "bandera_urss"
+    }
+   ],
+   "multitud": {
+    "n": 14,
+    "agita": true,
+    "antorchas": true
+   }
+  },
+  {
+   "en": "un imperio rojo",
+   "tipo": "mapa",
+   "mapa": "rusia-mundo",
+   "cam": {
+    "lon": 5,
+    "lat": 40,
+    "grados": 340
+   },
+   "hasta": {
+    "lon": 5,
+    "lat": 40,
+    "grados": 330
+   },
+   "fecha": "1945-1991",
+   "capas": [
+    {
+     "en": 0,
+     "id": "urss_m",
+     "color": "rojo",
+     "modo": "crece",
+     "cara": "malo",
+     "cara_en": "rojo"
+    },
+    {
+     "en": 0,
+     "id": "eeuu",
+     "color": "verde",
+     "cara": "enfado",
+     "cara_en": "mundo",
+     "cara_lugar": [
+      -100,
+      42
+     ]
+    }
+   ],
+   "guia": false,
+   "rotulos": [
+    {
+     "en": "rojo",
+     "texto": "URSS",
+     "x": 1450,
+     "y": 250,
+     "tam": 60
+    },
+    {
+     "en": "mundo",
+     "texto": "EE. UU.",
+     "x": 370,
+     "y": 330,
+     "tam": 60
+    }
+   ]
+  },
+  {
+   "en": "y, en 1991",
+   "tipo": "mapa",
+   "mapa": "rusia-asia",
+   "cam": {
+    "lon": 95,
+    "lat": 58,
+    "grados": 145
+   },
+   "hasta": {
+    "lon": 95,
+    "lat": 58,
+    "grados": 135
+   },
+   "fecha": "1991",
+   "capas": [
+    {
+     "en": 0,
+     "id": "urss",
+     "color": "rojo",
+     "cara": "muerto",
+     "cara_en": "1991",
+     "rompe_en": "partió"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "quince",
+     "texto": "15 países",
+     "x": 960,
+     "y": 980,
+     "tam": 90,
+     "rojo": true
+    }
+   ],
+   "pins": [
+    {
+     "en": "todo",
+     "lon": 37.6,
+     "lat": 55.75,
+     "nombre": "Moscú"
+    }
+   ],
+   "guia": false
+  },
+  {
+   "en": "¿Cómo un puñado",
+   "tipo": "papel",
+   "titulo": "¿Cómo?",
+   "cosas": [
+    {
+     "en": "aldeas",
+     "cosa": "choza",
+     "pie": "862"
+    },
+    {
+     "en": "acabó",
+     "palabra": "→"
+    },
+    {
+     "en": "grande",
+     "pais": "rusia-asia:rusia",
+     "pie": "Hoy"
+    }
+   ]
+  },
+  {
+   "en": "Esta es la historia",
+   "tipo": "capitulo",
+   "numero": 0,
+   "titulo": "La historia entera de Rusia"
+  },
+  {
+   "en": "Año 862",
+   "tipo": "capitulo",
+   "numero": 1
+  },
+  {
+   "en": "En la ciudad",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 33,
+    "lat": 57,
+    "grados": 30
+   },
+   "hasta": {
+    "lon": 32,
+    "lat": 57.5,
+    "grados": 24
+   },
+   "fecha": "862",
+   "capas": [
+    {
+     "en": "tribus",
+     "id": "rus900",
+     "color": "verde",
+     "op": 0.55,
+     "etiqueta": "Eslavos"
+    }
+   ],
+   "pins": [
+    {
+     "en": "Nóvgorod",
+     "lon": 31.27,
+     "lat": 58.52,
+     "nombre": "Nóvgorod"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "eslavas",
+     "lon": 36.5,
+     "lat": 58,
+     "cosa": "choza",
+     "tam": 0.6
+    },
+    {
+     "en": "pelearse",
+     "lon": 28.5,
+     "lat": 56,
+     "cosa": "espada",
+     "tam": 0.6
+    }
+   ]
+  },
+  {
+   "en": "Según la crónica",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "n1",
+     "traje": "noble",
+     "x": 650,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "rarísimo",
+       "hace": "piensa"
+      }
+     ]
+    },
+    {
+     "q": "n2",
+     "traje": "campesino",
+     "x": 1250,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "extranjero",
+       "hace": "susto"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "n1",
+     "texto": "¿Y si mandara otro?",
+     "ancho": 380
+    },
+    {
+     "en": 3.15,
+     "a": "n2",
+     "texto": "¿Un extranjero?",
+     "ancho": 320
+    }
+   ]
+  },
+  {
+   "en": "Llaman a un vikingo",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 24,
+    "lat": 59,
+    "grados": 30
+   },
+   "hasta": {
+    "lon": 26,
+    "lat": 59,
+    "grados": 26
+   },
+   "fecha": "862",
+   "capas": [
+    {
+     "en": "vikingo",
+     "id": "escandinavia",
+     "color": "rojo",
+     "etiqueta": "Escandinavia"
+    }
+   ],
+   "barcos": [
+    {
+     "en": "Escandinavia",
+     "de": [
+      18.5,
+      59.8
+     ],
+     "a": [
+      29.5,
+      59.7
+     ],
+     "d": 3,
+     "flota": 3,
+     "curva": 0.1
+    }
+   ],
+   "pins": [
+    {
+     "en": 0,
+     "lon": 31.27,
+     "lat": 58.52,
+     "nombre": "Nóvgorod"
+    }
+   ]
+  },
+  {
+   "en": "llamado Rúrik",
+   "tipo": "escena",
+   "decorado": "rio",
+   "actores": [
+    {
+     "q": "rurik",
+     "traje": "vikingo",
+     "x": 1250,
+     "s": 1.2,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": 0,
+       "hace": "entra"
+      },
+      {
+       "en": "Rúrik",
+       "hace": "orgulloso"
+      }
+     ],
+     "lleva": "espada"
+    },
+    {
+     "q": "e1",
+     "traje": "campesino",
+     "x": 600,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "Rúrik",
+       "hace": "quita_sombrero"
+      },
+      {
+       "en": 2.16,
+       "hace": "mira_camara"
+      }
+     ]
+    },
+    {
+     "q": "e2",
+     "traje": "campesina",
+     "x": 380,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "Rúrik",
+       "hace": "saluda"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "rurik",
+     "texto": "Vale, ahora mando yo",
+     "ancho": 380
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "rus.",
+     "texto": "RUS",
+     "x": 960,
+     "y": 250,
+     "tam": 120,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Y de ellos",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": 0,
+     "palabra": "RUS",
+     "rojo": true
+    },
+    {
+     "en": "nombre",
+     "pais": "rusia-asia:rusia",
+     "pie": "Rusia"
+    }
+   ]
+  },
+  {
+   "en": "Veinte años después",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 31.5,
+    "lat": 57.5,
+    "grados": 20
+   },
+   "hasta": {
+    "lon": 31.3,
+    "lat": 58,
+    "grados": 17
+   },
+   "fecha": "882",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rus900",
+     "color": "verde",
+     "op": 0.4
+    }
+   ],
+   "pins": [
+    {
+     "en": 0,
+     "lon": 31.27,
+     "lat": 58.52,
+     "nombre": "Nóvgorod"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "882,",
+     "lon": 33.5,
+     "lat": 59,
+     "cosa": "corona",
+     "tam": 0.6
+    }
+   ]
+  },
+  {
+   "en": "el sucesor de Rúrik",
+   "tipo": "escena",
+   "decorado": "rio",
+   "actores": [
+    {
+     "q": "oleg",
+     "traje": "vikingo",
+     "x": 900,
+     "s": 1.2,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "Oleg,",
+       "hace": "orgulloso"
+      }
+     ],
+     "lleva": "espada",
+     "colores": {
+      "capa": "#2f5d8a"
+     }
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "oleg",
+     "texto": "¡A Kiev!",
+     "ancho": 340
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Oleg"
+    }
+   ]
+  },
+  {
+   "en": "bajó por el río",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 31,
+    "lat": 54.5,
+    "grados": 26
+   },
+   "hasta": {
+    "lon": 31,
+    "lat": 54,
+    "grados": 22
+   },
+   "fecha": "882",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rus900",
+     "color": "verde",
+     "op": 0.4
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "bajó",
+     "de": [
+      31.27,
+      58.52
+     ],
+     "a": [
+      30.5,
+      50.45
+     ],
+     "d": 3.5,
+     "color": "rojo"
+    }
+   ],
+   "pins": [
+    {
+     "en": 0,
+     "lon": 31.27,
+     "lat": 58.52,
+     "nombre": "Nóvgorod"
+    },
+    {
+     "en": "Dniéper",
+     "lon": 30.1,
+     "lat": 53.1,
+     "nombre": "Río Dniéper",
+     "izquierda": true
+    },
+    {
+     "en": "Kiev.",
+     "lon": 30.5,
+     "lat": 50.45,
+     "nombre": "Kiev"
+    }
+   ]
+  },
+  {
+   "en": "Así nació",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 33,
+    "lat": 53,
+    "grados": 36
+   },
+   "hasta": {
+    "lon": 33,
+    "lat": 53,
+    "grados": 32
+   },
+   "fecha": "882",
+   "capas": [
+    {
+     "en": "nació",
+     "id": "rus900",
+     "color": "rojo",
+     "modo": "crece",
+     "etiqueta": "Rus de Kiev",
+     "cara": "feliz",
+     "cara_en": "Báltico"
+    }
+   ],
+   "pins": [
+    {
+     "en": 0,
+     "lon": 30.5,
+     "lat": 50.45,
+     "nombre": "Kiev"
+    }
+   ],
+   "flechas": [
+    {
+     "en": "Báltico",
+     "de": [
+      29,
+      59.5
+     ],
+     "a": [
+      32,
+      46.5
+     ],
+     "curva": 0.1,
+     "puntos": true
+    }
+   ],
+   "guia": {
+    "lado": "izquierda"
+   },
+   "iconos": [
+    {
+     "en": "unía",
+     "lon": 21,
+     "lat": 58.3,
+     "cosa": "ancla",
+     "tam": 0.6
+    },
+    {
+     "en": "Negro",
+     "lon": 34,
+     "lat": 43.6,
+     "cosa": "ancla",
+     "tam": 0.6
+    }
+   ]
+  },
+  {
+   "en": "Por esos ríos",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "pieles",
+     "tarjeta": "Pieles",
+     "cosa": "saco"
+    },
+    {
+     "en": "miel",
+     "tarjeta": "Miel",
+     "cosa": "barril"
+    },
+    {
+     "en": "esclavos",
+     "tarjeta": "Esclavos",
+     "cosa": "cadenas"
+    }
+   ]
+  },
+  {
+   "en": "hacia la ciudad",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 31,
+    "lat": 46,
+    "grados": 26
+   },
+   "hasta": {
+    "lon": 30,
+    "lat": 45.5,
+    "grados": 22
+   },
+   "fecha": "900",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rus900",
+     "color": "rojo"
+    }
+   ],
+   "barcos": [
+    {
+     "en": "hacia",
+     "de": [
+      32.2,
+      46.4
+     ],
+     "a": [
+      29.2,
+      41.3
+     ],
+     "d": 2.5,
+     "flota": 2,
+     "curva": -0.15
+    }
+   ],
+   "pins": [
+    {
+     "en": 0,
+     "lon": 30.5,
+     "lat": 50.45,
+     "nombre": "Kiev"
+    },
+    {
+     "en": "Constantinopla",
+     "lon": 28.97,
+     "lat": 41.01,
+     "nombre": "Constantinopla"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "rica",
+     "lon": 31.5,
+     "lat": 42.4,
+     "cosa": "monton_monedas",
+     "tam": 0.8
+    }
+   ]
+  },
+  {
+   "en": "En el año 988",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "vlad",
+     "traje": "rey",
+     "x": 1210,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "elegir",
+       "hace": "piensa"
+      }
+     ],
+     "y": 710,
+     "sentado": true
+    },
+    {
+     "q": "ob",
+     "traje": "obispo",
+     "x": 380,
+     "s": 1.1,
+     "mira": 0.5,
+     "lleva": "cruz"
+    },
+    {
+     "q": "su",
+     "traje": "sultan",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "lleva": "media_luna",
+     "acciones": [
+      {
+       "en": 1.96,
+       "hace": "piensa"
+      }
+     ]
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Kiev, 988"
+    }
+   ]
+  },
+  {
+   "en": "La crónica cuenta",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "vlad",
+     "traje": "rey",
+     "x": 1210,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "alcohol",
+       "hace": "niega"
+      },
+      {
+       "en": "beber",
+       "hace": "rie"
+      },
+      {
+       "en": 6.16,
+       "hace": "asiente"
+      }
+     ],
+     "y": 710,
+     "sentado": true
+    },
+    {
+     "q": "su",
+     "traje": "sultan",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "alcohol",
+       "hace": "encoge"
+      },
+      {
+       "en": 1.67,
+       "hace": "encoge"
+      }
+     ],
+     "lleva": "media_luna"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "vlad",
+     "texto": "¿Sin vino? Ni hablar.",
+     "ancho": 360
+    }
+   ],
+   "cosas": [
+    {
+     "en": "beber",
+     "cosa": "barril",
+     "x": 960,
+     "y": 860
+    }
+   ]
+  },
+  {
+   "en": "Al final eligió",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 31,
+    "lat": 47,
+    "grados": 34
+   },
+   "hasta": {
+    "lon": 31,
+    "lat": 48,
+    "grados": 30
+   },
+   "fecha": "988",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rus900",
+     "color": "rojo"
+    }
+   ],
+   "flechas": [
+    {
+     "en": "cristianismo",
+     "de": [
+      28.97,
+      41.01
+     ],
+     "a": [
+      30.5,
+      50.45
+     ],
+     "curva": 0.15
+    }
+   ],
+   "pins": [
+    {
+     "en": 0,
+     "lon": 28.97,
+     "lat": 41.01,
+     "nombre": "Constantinopla"
+    },
+    {
+     "en": 0,
+     "lon": 30.5,
+     "lat": 50.45,
+     "nombre": "Kiev"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "ortodoxo",
+     "lon": 33.5,
+     "lat": 52,
+     "cosa": "cruz",
+     "tam": 0.9
+    }
+   ]
+  },
+  {
+   "en": "y bautizó",
+   "tipo": "escena",
+   "decorado": "rio",
+   "actores": [
+    {
+     "q": "ob",
+     "traje": "obispo",
+     "x": 500,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "bautizó",
+       "hace": "senala"
+      }
+     ],
+     "lleva": "cruz"
+    },
+    {
+     "q": "p1",
+     "traje": "campesino",
+     "x": 950,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "pueblo",
+       "hace": "agacha"
+      }
+     ]
+    },
+    {
+     "q": "p2",
+     "traje": "campesina",
+     "x": 1250,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "río.",
+       "hace": "susto"
+      }
+     ]
+    },
+    {
+     "q": "p3",
+     "traje": "nino",
+     "x": 1480,
+     "s": 0.6,
+     "mira": -0.5
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "p2",
+     "texto": "¡Está helada!",
+     "ancho": 300
+    }
+   ]
+  },
+  {
+   "en": "Con su hijo",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "yar",
+     "traje": "rey",
+     "x": 1210,
+     "s": 1.1,
+     "mira": -0.3,
+     "acciones": [
+      {
+       "en": "oro.",
+       "hace": "orgulloso"
+      },
+      {
+       "en": 2.92,
+       "hace": "mira_camara"
+      }
+     ],
+     "y": 710,
+     "sentado": true,
+     "llevaI": "libro"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Kiev, siglo XI"
+    }
+   ],
+   "cosas": [
+    {
+     "en": "oro.",
+     "cosa": "monton_monedas",
+     "x": 700,
+     "y": 900
+    },
+    {
+     "en": "Sabio",
+     "cosa": "libro",
+     "x": 500,
+     "y": 880
+    }
+   ]
+  },
+  {
+   "en": "Pero cuando Yaroslav",
+   "tipo": "mapa",
+   "mapa": "rusia-europa-ancha",
+   "cam": {
+    "lon": 36,
+    "lat": 54,
+    "grados": 46
+   },
+   "hasta": {
+    "lon": 36,
+    "lat": 54,
+    "grados": 42
+   },
+   "fecha": "1054",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rus1100",
+     "color": "rojo",
+     "etiqueta": "Rus de Kiev",
+     "cara": "muerto",
+     "cara_en": "murió"
+    }
+   ],
+   "guia": {
+    "lado": "izquierda"
+   },
+   "iconos": [
+    {
+     "en": "Yaroslav",
+     "lon": 31,
+     "lat": 51,
+     "cosa": "corona",
+     "tam": 0.6
+    }
+   ]
+  },
+  {
+   "en": "los príncipes se",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "a",
+     "traje": "noble",
+     "x": 400,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "repartieron",
+       "hace": "enfada"
+      }
+     ]
+    },
+    {
+     "q": "b",
+     "traje": "rey",
+     "x": 800,
+     "s": 1.0,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "reino",
+       "hace": "ataca"
+      }
+     ]
+    },
+    {
+     "q": "c",
+     "traje": "noble",
+     "x": 1150,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "herencia",
+       "hace": "enfada"
+      }
+     ],
+     "colores": {
+      "color": "#2f5d8a"
+     }
+    },
+    {
+     "q": "d",
+     "traje": "caballero",
+     "x": 1500,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "herencia",
+       "hace": "jarras"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "a",
+     "texto": "¡Kiev es mía!",
+     "ancho": 300
+    }
+   ]
+  },
+  {
+   "en": "Y la Rus se",
+   "tipo": "mapa",
+   "mapa": "rusia-europa-ancha",
+   "cam": {
+    "lon": 40,
+    "lat": 55,
+    "grados": 72
+   },
+   "hasta": {
+    "lon": 40,
+    "lat": 55,
+    "grados": 68
+   },
+   "fecha": "1054-1237",
+   "encuadre": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "rus1100",
+     "color": "rojo",
+     "cara": "muerto",
+     "cara_en": 0,
+     "rompe_en": "rompió"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "docena",
+     "texto": "12 principados",
+     "x": 960,
+     "y": 990,
+     "tam": 80,
+     "rojo": true
+    }
+   ],
+   "guia": {
+    "lado": "izquierda"
+   },
+   "iconos": [
+    {
+     "en": "peleaban",
+     "lon": 36,
+     "lat": 57,
+     "cosa": "espada",
+     "tam": 0.7
+    },
+    {
+     "en": "entre",
+     "lon": 30,
+     "lat": 53,
+     "cosa": "escudo",
+     "tam": 0.7
+    }
+   ]
+  },
+  {
+   "en": "Justo lo peor",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "peor",
+     "palabra": "Lo peor…",
+     "rojo": true
+    },
+    {
+     "en": "venía",
+     "cosa": "arco",
+     "pie": "Lo que venía"
+    }
+   ]
+  },
+  {
+   "en": "Año 1237",
+   "tipo": "capitulo",
+   "numero": 2
+  },
+  {
+   "en": "Desde el este",
+   "tipo": "mapa",
+   "mapa": "rusia-asia",
+   "cam": {
+    "lon": 75,
+    "lat": 50,
+    "grados": 105
+   },
+   "hasta": {
+    "lon": 68,
+    "lat": 51,
+    "grados": 95
+   },
+   "fecha": "1237",
+   "capas": [
+    {
+     "en": 0,
+     "id": "mongoles",
+     "color": "naranja",
+     "etiqueta": "Imperio mongol"
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "ejército",
+     "de": [
+      95,
+      47
+     ],
+     "a": [
+      52,
+      53
+     ],
+     "d": 3.5,
+     "banderas": 3,
+     "color": "naranja"
+    }
+   ],
+   "guia": {
+    "lado": "izquierda"
+   }
+  },
+  {
+   "en": "Batu, nieto de",
+   "tipo": "escena",
+   "decorado": "estepa",
+   "actores": [
+    {
+     "q": "batu",
+     "traje": "mongol",
+     "x": 900,
+     "s": 1.2,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "Kan.",
+       "hace": "orgulloso"
+      }
+     ],
+     "montado": true,
+     "lleva": "arco"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "batu",
+     "texto": "Como el abuelo",
+     "ancho": 300
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Batu, 1237"
+    }
+   ]
+  },
+  {
+   "en": "Los principados rusos",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 39,
+    "lat": 53.5,
+    "grados": 30
+   },
+   "hasta": {
+    "lon": 38,
+    "lat": 53,
+    "grados": 26
+   },
+   "fecha": "1237-1240",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rus1100",
+     "color": "rojo",
+     "op": 0.35
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": 0,
+     "de": [
+      52,
+      53
+     ],
+     "a": [
+      40,
+      55
+     ],
+     "d": 3,
+     "banderas": 2,
+     "color": "naranja"
+    }
+   ],
+   "fuegos": [
+    {
+     "en": "caen",
+     "lon": 39.7,
+     "lat": 54.6
+    },
+    {
+     "en": "otro.",
+     "lon": 40.4,
+     "lat": 56.1
+    },
+    {
+     "en": "otro.",
+     "lon": 37.6,
+     "lat": 55.75
+    }
+   ]
+  },
+  {
+   "en": "En diciembre de 1240",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 31,
+    "lat": 50.5,
+    "grados": 16
+   },
+   "hasta": {
+    "lon": 30.6,
+    "lat": 50.5,
+    "grados": 13
+   },
+   "fecha": "1240",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rus1100",
+     "color": "rojo",
+     "op": 0.35,
+     "cara": "susto",
+     "cara_en": "Kiev,",
+     "cara_lugar": [
+      31.5,
+      51.2
+     ]
+    }
+   ],
+   "asedios": [
+    {
+     "en": "Kiev,",
+     "lon": 30.5,
+     "lat": 50.45,
+     "color": "naranja"
+    }
+   ],
+   "fuegos": [
+    {
+     "en": "arrasada",
+     "lon": 30.5,
+     "lat": 50.45,
+     "tam": 1.2
+    }
+   ],
+   "pins": [
+    {
+     "en": 0,
+     "lon": 30.5,
+     "lat": 50.45,
+     "nombre": "Kiev",
+     "izquierda": true
+    }
+   ]
+  },
+  {
+   "en": "Durante casi doscientos",
+   "tipo": "mapa",
+   "mapa": "rusia-europa-ancha",
+   "cam": {
+    "lon": 58,
+    "lat": 52,
+    "grados": 80
+   },
+   "hasta": {
+    "lon": 58,
+    "lat": 52,
+    "grados": 76
+   },
+   "fecha": "1240-1480",
+   "capas": [
+    {
+     "en": "tributo",
+     "id": "horda",
+     "color": "naranja",
+     "modo": "crece",
+     "etiqueta": "Horda de Oro",
+     "cara": "malo",
+     "cara_en": "Horda"
+    },
+    {
+     "en": "rusos",
+     "id": "novgorod",
+     "color": "rojo",
+     "op": 0.7
+    }
+   ],
+   "guia": {
+    "lado": "izquierda"
+   },
+   "rotulos": [
+    {
+     "en": "cincuenta",
+     "texto": "250 años",
+     "x": 960,
+     "y": 990,
+     "tam": 80,
+     "rojo": true
+    }
+   ],
+   "pins": [
+    {
+     "en": "Oro,",
+     "lon": 47.4,
+     "lat": 46.9,
+     "nombre": "Sarái"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "pagar",
+     "lon": 38,
+     "lat": 57,
+     "cosa": "monton_monedas",
+     "tam": 0.7
+    }
+   ]
+  },
+  {
+   "en": "Para gobernar",
+   "tipo": "escena",
+   "decorado": "estepa",
+   "actores": [
+    {
+     "q": "kan",
+     "traje": "mongol",
+     "x": 1350,
+     "s": 1.2,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "permiso",
+       "hace": "jarras"
+      },
+      {
+       "en": 2.23,
+       "hace": "piensa"
+      }
+     ]
+    },
+    {
+     "q": "prin",
+     "traje": "noble",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "rodillas.",
+       "hace": "agacha"
+      }
+     ],
+     "lleva": "saco"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "kan",
+     "texto": "Más oro, príncipe.",
+     "ancho": 320
+    }
+   ]
+  },
+  {
+   "en": "Y aquí aparece",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 38,
+    "lat": 55.6,
+    "grados": 16
+   },
+   "hasta": {
+    "lon": 37.6,
+    "lat": 55.7,
+    "grados": 13
+   },
+   "fecha": "1300",
+   "capas": [
+    {
+     "en": "pequeña",
+     "id": "moscu",
+     "color": "amarillo",
+     "etiqueta": "Moscú"
+    }
+   ],
+   "foco": {
+    "en": "pequeña",
+    "lon": 37.6,
+    "lat": 55.75,
+    "radio": 3
+   },
+   "iconos": [
+    {
+     "en": "hablar:",
+     "lon": 38.6,
+     "lat": 56.3,
+     "cosa": "castillo",
+     "tam": 0.5
+    }
+   ],
+   "pins": [
+    {
+     "en": "Moscú.",
+     "lon": 37.6,
+     "lat": 55.75,
+     "nombre": "Moscú",
+     "izquierda": true
+    }
+   ]
+  },
+  {
+   "en": "Sus príncipes fueron",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "cam",
+     "traje": "campesino",
+     "x": 450,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "Cobraban",
+       "hace": "levanta"
+      }
+     ],
+     "lleva": "saco"
+    },
+    {
+     "q": "mos",
+     "traje": "noble",
+     "x": 960,
+     "s": 1.15,
+     "mira": 0,
+     "acciones": [
+      {
+       "en": "listos.",
+       "hace": "orgulloso"
+      },
+      {
+       "en": "quedaban",
+       "hace": "rie"
+      }
+     ]
+    },
+    {
+     "q": "mon",
+     "traje": "mongol",
+     "x": 1450,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "mongoles",
+       "hace": "jarras"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "mos",
+     "texto": "Uno para ti, dos para mí",
+     "ancho": 400
+    }
+   ],
+   "cosas": [
+    {
+     "en": "trozo.",
+     "cosa": "monton_monedas",
+     "x": 960,
+     "y": 880
+    }
+   ]
+  },
+  {
+   "en": "Poco a poco",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 42,
+    "lat": 57,
+    "grados": 28
+   },
+   "hasta": {
+    "lon": 42,
+    "lat": 57,
+    "grados": 30
+   },
+   "fecha": "1300-1462",
+   "capas": [
+    {
+     "en": 0,
+     "id": "moscu",
+     "color": "amarillo",
+     "etiqueta": "Moscú"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "comprando",
+     "lon": 33.5,
+     "lat": 57.5,
+     "cosa": "moneda",
+     "tam": 0.7
+    },
+    {
+     "en": "heredando",
+     "lon": 42,
+     "lat": 59,
+     "cosa": "corona",
+     "tam": 0.7
+    },
+    {
+     "en": "conquistando",
+     "lon": 44,
+     "lat": 55,
+     "cosa": "espada",
+     "tam": 0.7
+    }
+   ]
+  },
+  {
+   "en": "Su gran príncipe",
+   "tipo": "mapa",
+   "mapa": "rusia-europa-ancha",
+   "cam": {
+    "lon": 48,
+    "lat": 60,
+    "grados": 56
+   },
+   "hasta": {
+    "lon": 48,
+    "lat": 60,
+    "grados": 52
+   },
+   "fecha": "1462-1505",
+   "capas": [
+    {
+     "en": 0,
+     "id": "moscu",
+     "color": "amarillo"
+    },
+    {
+     "en": "multiplicó",
+     "id": "moscu1500",
+     "color": "amarillo",
+     "modo": "crece",
+     "etiqueta": "Moscovia",
+     "cara": "feliz",
+     "cara_en": "tres."
+    }
+   ],
+   "copias": [
+    {
+     "en": "tres.",
+     "capa": "moscu",
+     "puntos": [
+      [
+       45,
+       62
+      ],
+      [
+       52,
+       62
+      ]
+     ],
+     "color": "amarillo",
+     "d": 1
+    }
+   ],
+   "pins": [
+    {
+     "en": "Iván",
+     "lon": 37.6,
+     "lat": 55.75,
+     "nombre": "Moscú"
+    }
+   ]
+  },
+  {
+   "en": "Y en 1480",
+   "tipo": "mapa",
+   "mapa": "rusia-europa-ancha",
+   "cam": {
+    "lon": 38,
+    "lat": 52.5,
+    "grados": 30
+   },
+   "hasta": {
+    "lon": 36.5,
+    "lat": 53.5,
+    "grados": 24
+   },
+   "fecha": "1480",
+   "capas": [
+    {
+     "en": 0,
+     "id": "moscu1500",
+     "color": "amarillo",
+     "op": 0.45
+    },
+    {
+     "en": 0,
+     "id": "horda",
+     "color": "naranja",
+     "op": 0.45
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "ruso",
+     "de": [
+      37.6,
+      55.75
+     ],
+     "a": [
+      35.9,
+      54.9
+     ],
+     "d": 2.5,
+     "color": "amarillo"
+    },
+    {
+     "en": "mongol",
+     "de": [
+      45,
+      48
+     ],
+     "a": [
+      35.6,
+      54.1
+     ],
+     "d": 2.5,
+     "color": "naranja"
+    }
+   ],
+   "pins": [
+    {
+     "en": "Ugrá",
+     "lon": 35.8,
+     "lat": 54.5,
+     "nombre": "Río Ugrá",
+     "izquierda": true
+    }
+   ]
+  },
+  {
+   "en": "se miraron durante",
+   "tipo": "escena",
+   "decorado": "rio",
+   "actores": [
+    {
+     "q": "ru",
+     "traje": "caballero",
+     "x": 420,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "semanas",
+       "hace": "piensa"
+      }
+     ],
+     "lleva": "espada"
+    },
+    {
+     "q": "mo",
+     "traje": "mongol",
+     "x": 1480,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "cruzar.",
+       "hace": "encoge"
+      }
+     ],
+     "lleva": "arco"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "ru",
+     "texto": "Cruza tú primero",
+     "ancho": 320
+    },
+    {
+     "en": 3.06,
+     "a": "mo",
+     "texto": "No, tú",
+     "ancho": 220
+    }
+   ]
+  },
+  {
+   "en": "Al final, los mongoles",
+   "tipo": "mapa",
+   "mapa": "rusia-europa-ancha",
+   "cam": {
+    "lon": 55,
+    "lat": 54,
+    "grados": 70
+   },
+   "hasta": {
+    "lon": 55,
+    "lat": 54,
+    "grados": 74
+   },
+   "fecha": "1480",
+   "capas": [
+    {
+     "en": 0,
+     "id": "moscu1500",
+     "color": "amarillo",
+     "cara": "feliz",
+     "cara_en": "vuelta.",
+     "cara_lugar": [
+      42,
+      60
+     ]
+    },
+    {
+     "en": 0,
+     "id": "horda",
+     "color": "naranja",
+     "cara": "muerto",
+     "cara_en": "dieron",
+     "rompe_en": "vuelta."
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "vuelta.",
+     "de": [
+      35.6,
+      54.1
+     ],
+     "a": [
+      47,
+      47
+     ],
+     "d": 2.5,
+     "color": "naranja"
+    }
+   ]
+  },
+  {
+   "en": "Así, sin una",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "batalla,",
+     "cosa": "bandera_blanca",
+     "pie": "Sin batalla"
+    },
+    {
+     "en": "yugo",
+     "palabra": "Fin del yugo mongol",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Año 1547",
+   "tipo": "capitulo",
+   "numero": 3
+  },
+  {
+   "en": "Un joven",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "ivan",
+     "traje": "rey",
+     "x": 1210,
+     "s": 0.95,
+     "mira": -0.3,
+     "acciones": [
+      {
+       "en": "corona",
+       "hace": "orgulloso"
+      }
+     ],
+     "y": 710,
+     "sentado": true
+    },
+    {
+     "q": "ob",
+     "traje": "obispo",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "corona",
+       "hace": "levanta"
+      },
+      {
+       "en": 3.2,
+       "hace": "encoge"
+      }
+     ]
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Moscú, 1547"
+    }
+   ],
+   "cosas": [
+    {
+     "en": "corona",
+     "cosa": "corona",
+     "x": 1210,
+     "y": 420,
+     "salta": -90
+    }
+   ]
+  },
+  {
+   "en": "zar, que viene",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "zar,",
+     "palabra": "ZAR",
+     "rojo": true
+    },
+    {
+     "en": "césar.",
+     "tarjeta": "César",
+     "cosa": "corona"
+    }
+   ]
+  },
+  {
+   "en": "Se llamaba Iván",
+   "tipo": "archivo",
+   "imagen": "archivo/ivan.jpg",
+   "pie": "Iván IV, el Terrible",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "Empezó bien",
+   "tipo": "mapa",
+   "mapa": "rusia-europa-ancha",
+   "cam": {
+    "lon": 47,
+    "lat": 56,
+    "grados": 48
+   },
+   "hasta": {
+    "lon": 47,
+    "lat": 55,
+    "grados": 42
+   },
+   "fecha": "1552-1556",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rusia1530",
+     "color": "amarillo",
+     "etiqueta": "Rusia"
+    },
+    {
+     "en": "Kazán",
+     "id": "kazan",
+     "color": "morado",
+     "etiqueta": "Kazán"
+    },
+    {
+     "en": "Astracán",
+     "id": "astrakan",
+     "color": "granate",
+     "etiqueta": "Astracán"
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "Conquistó",
+     "de": [
+      37.6,
+      55.75
+     ],
+     "a": [
+      49.1,
+      55.8
+     ],
+     "d": 2.5,
+     "color": "amarillo"
+    }
+   ],
+   "flechas": [
+    {
+     "en": "Volga",
+     "de": [
+      49,
+      56.5
+     ],
+     "a": [
+      47.8,
+      46.5
+     ],
+     "curva": 0.2,
+     "color": "amarillo"
+    }
+   ],
+   "guia": {
+    "lado": "izquierda"
+   },
+   "iconos": [
+    {
+     "en": "ruso.",
+     "lon": 49.1,
+     "lat": 55.8,
+     "cosa": "castillo",
+     "tam": 0.6
+    },
+    {
+     "en": "ruso.",
+     "lon": 48,
+     "lat": 46.4,
+     "cosa": "castillo",
+     "tam": 0.6
+    }
+   ]
+  },
+  {
+   "en": "Luego mandó",
+   "tipo": "mapa",
+   "mapa": "rusia-asia",
+   "cam": {
+    "lon": 72,
+    "lat": 59,
+    "grados": 70
+   },
+   "hasta": {
+    "lon": 75,
+    "lat": 59,
+    "grados": 60
+   },
+   "fecha": "1582",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rusia1530b",
+     "color": "amarillo",
+     "etiqueta": "Rusia"
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "Yermak",
+     "de": [
+      56,
+      58
+     ],
+     "a": [
+      68.3,
+      58.2
+     ],
+     "d": 3,
+     "color": "amarillo"
+    }
+   ],
+   "pins": [
+    {
+     "en": "Urales",
+     "lon": 59.5,
+     "lat": 61,
+     "nombre": "Montes Urales",
+     "izquierda": true
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "Siberia.",
+     "texto": "SIBERIA",
+     "x": 1250,
+     "y": 420,
+     "tam": 110
+    }
+   ]
+  },
+  {
+   "en": "Pero Iván se volvió",
+   "tipo": "escena",
+   "decorado": "interior",
+   "actores": [
+    {
+     "q": "ivan",
+     "traje": "rey",
+     "x": 960,
+     "s": 1.2,
+     "mira": 0.2,
+     "acciones": [
+      {
+       "en": "paranoico.",
+       "hace": "piensa"
+      }
+     ],
+     "ojos": "entornados"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "ivan",
+     "texto": "Traidores…",
+     "ancho": 380
+    }
+   ],
+   "noche": true
+  },
+  {
+   "en": "Creó una policía",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "o1",
+     "traje": "noble",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "aterrorizó",
+       "hace": "ataca"
+      }
+     ],
+     "montado": true,
+     "colores": {
+      "color": "#151515",
+      "capa": "#151515",
+      "sombreroColor": "#151515"
+     }
+    },
+    {
+     "q": "o2",
+     "traje": "noble",
+     "x": 1050,
+     "s": 1.1,
+     "mira": 0.5,
+     "montado": true,
+     "colores": {
+      "color": "#151515",
+      "capa": "#151515",
+      "sombreroColor": "#151515"
+     }
+    },
+    {
+     "q": "ca",
+     "traje": "campesino",
+     "x": 1520,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "aterrorizó",
+       "hace": "susto"
+      }
+     ]
+    }
+   ],
+   "noche": true
+  },
+  {
+   "en": "y en un ataque",
+   "tipo": "archivo",
+   "imagen": "archivo/ivan_hijo.jpg",
+   "pie": "Iván el Terrible y su hijo (I. Repin)",
+   "modo": "pantalla"
+  },
+  {
+   "en": "Cuando su dinastía",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "dinastía",
+     "cosa": "corona",
+     "tachar_en": "apagó,"
+    },
+    {
+     "en": "Tumultuoso.",
+     "palabra": "Período Tumultuoso",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Hambre, falsos",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "z1",
+     "traje": "rey",
+     "x": 500,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "zares",
+       "hace": "orgulloso"
+      }
+     ]
+    },
+    {
+     "q": "z2",
+     "traje": "rey",
+     "x": 900,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "zares",
+       "hace": "senala"
+      }
+     ],
+     "colores": {
+      "color": "#2f5d8a"
+     }
+    },
+    {
+     "q": "z3",
+     "traje": "rey",
+     "x": 1300,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "zares",
+       "hace": "enfada"
+      }
+     ],
+     "colores": {
+      "color": "#3d7a3d"
+     }
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "zares",
+     "texto": "¿Zar?",
+     "x": 960,
+     "y": 300,
+     "tam": 100,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "y un ejército polaco",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 29,
+    "lat": 54,
+    "grados": 32
+   },
+   "hasta": {
+    "lon": 31,
+    "lat": 54.5,
+    "grados": 28
+   },
+   "fecha": "1610",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "rusia1530",
+     "color": "amarillo",
+     "op": 0.7
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "polaco",
+     "de": [
+      21,
+      52.2
+     ],
+     "a": [
+      37.6,
+      55.75
+     ],
+     "d": 3,
+     "banderas": 2,
+     "color": "rosa"
+    }
+   ],
+   "pins": [
+    {
+     "en": "Kremlin.",
+     "lon": 37.6,
+     "lat": 55.75,
+     "nombre": "Moscú"
+    }
+   ]
+  },
+  {
+   "en": "En 1613",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "mig",
+     "traje": "noble",
+     "x": 1210,
+     "s": 0.9,
+     "mira": -0.3,
+     "acciones": [
+      {
+       "en": "Románov.",
+       "hace": "susto"
+      }
+     ]
+    },
+    {
+     "q": "n1",
+     "traje": "noble",
+     "x": 600,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "eligió",
+       "hace": "senala"
+      }
+     ]
+    },
+    {
+     "q": "n2",
+     "traje": "obispo",
+     "x": 350,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "Románov.",
+       "hace": "asiente"
+      },
+      {
+       "en": 4.12,
+       "hace": "asiente"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "mig",
+     "texto": "¿Yo? ¿En serio?",
+     "ancho": 300
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Moscú, 1613"
+    }
+   ]
+  },
+  {
+   "en": "Su familia gobernaría",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "familia",
+     "cifra": "304",
+     "sub": "años de Románov",
+     "icono": "corona"
+    }
+   ]
+  },
+  {
+   "en": "Y mientras tanto",
+   "tipo": "mapa",
+   "mapa": "rusia-asia",
+   "cam": {
+    "lon": 100,
+    "lat": 58,
+    "grados": 125
+   },
+   "hasta": {
+    "lon": 105,
+    "lat": 58,
+    "grados": 115
+   },
+   "fecha": "1580-1639",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rusia1530b",
+     "color": "amarillo"
+    },
+    {
+     "en": 0,
+     "id": "rusia1700b",
+     "color": "amarillo",
+     "modo": "crece"
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "río",
+     "de": [
+      62,
+      58
+     ],
+     "a": [
+      140,
+      59.5
+     ],
+     "d": 5,
+     "banderas": 2,
+     "color": "amarillo"
+    }
+   ],
+   "guia": {
+    "lado": "izquierda"
+   },
+   "iconos": [
+    {
+     "en": "cosacos",
+     "lon": 70,
+     "lat": 62,
+     "cosa": "caballo",
+     "tam": 0.8
+    }
+   ]
+  },
+  {
+   "en": "En 1639",
+   "tipo": "mapa",
+   "mapa": "rusia-asia",
+   "cam": {
+    "lon": 138,
+    "lat": 59,
+    "grados": 45
+   },
+   "hasta": {
+    "lon": 142,
+    "lat": 59,
+    "grados": 38
+   },
+   "fecha": "1639",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rusia1700b",
+     "color": "amarillo"
+    }
+   ],
+   "pins": [
+    {
+     "en": "Pacífico.",
+     "lon": 143.2,
+     "lat": 59.36,
+     "nombre": "Ojotsk",
+     "izquierda": true
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "océano",
+     "texto": "Océano Pacífico",
+     "x": 1350,
+     "y": 760,
+     "tam": 70
+    }
+   ],
+   "iconos": [
+    {
+     "en": "1639",
+     "lon": 140,
+     "lat": 61.5,
+     "cosa": "castillo",
+     "tam": 0.7
+    }
+   ]
+  },
+  {
+   "en": "En menos de sesenta",
+   "tipo": "mapa",
+   "mapa": "rusia-asia",
+   "cam": {
+    "lon": 98,
+    "lat": 58,
+    "grados": 150
+   },
+   "hasta": {
+    "lon": 98,
+    "lat": 58,
+    "grados": 140
+   },
+   "fecha": "1639",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rusia1700b",
+     "color": "amarillo",
+     "cara": "feliz",
+     "cara_en": "continente",
+     "cara_lugar": [
+      100,
+      62
+     ]
+    }
+   ],
+   "flechas": [
+    {
+     "en": "cruzado",
+     "de": [
+      45,
+      56
+     ],
+     "a": [
+      143,
+      59
+     ],
+     "curva": 0.12,
+     "color": "amarillo"
+    }
+   ],
+   "guia": false
+  },
+  {
+   "en": "Año 1697",
+   "tipo": "capitulo",
+   "numero": 4
+  },
+  {
+   "en": "El zar Pedro",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "pedro",
+     "traje": "rey",
+     "x": 820,
+     "s": 1.45,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "metros",
+       "hace": "orgulloso"
+      }
+     ]
+    },
+    {
+     "q": "no",
+     "traje": "noble",
+     "x": 1250,
+     "s": 1.0,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "obsesión",
+       "hace": "encoge"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "no",
+     "texto": "¿Qué tal se ve desde ahí?",
+     "ancho": 380
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "metros",
+     "texto": "+2 m",
+     "x": 560,
+     "y": 300,
+     "tam": 90,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "que Rusia deje",
+   "tipo": "archivo",
+   "imagen": "archivo/pedro.jpg",
+   "pie": "Pedro I",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "Viaja de incógnito",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 17,
+    "lat": 55,
+    "grados": 46
+   },
+   "hasta": {
+    "lon": 16,
+    "lat": 55,
+    "grados": 44
+   },
+   "fecha": "1697",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "rusia1700",
+     "color": "amarillo",
+     "op": 0.7
+    }
+   ],
+   "flechas": [
+    {
+     "en": "Viaja",
+     "de": [
+      37.6,
+      55.75
+     ],
+     "a": [
+      4.9,
+      52.4
+     ],
+     "curva": 0.15,
+     "puntos": true
+    }
+   ],
+   "pins": [
+    {
+     "en": "Europa",
+     "lon": 4.8,
+     "lat": 52.44,
+     "nombre": "Holanda",
+     "izquierda": true
+    }
+   ]
+  },
+  {
+   "en": "trabaja como carpintero",
+   "tipo": "escena",
+   "decorado": "puerto",
+   "actores": [
+    {
+     "q": "pedro",
+     "traje": "campesino",
+     "x": 800,
+     "s": 1.45,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "carpintero",
+       "hace": "levanta"
+      }
+     ],
+     "lleva": "pico"
+    },
+    {
+     "q": "ho",
+     "traje": "mercader",
+     "x": 1350,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "Holanda.",
+       "hace": "piensa"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "ho",
+     "texto": "El nuevo es altísimo",
+     "ancho": 340
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Holanda, 1697"
+    }
+   ]
+  },
+  {
+   "en": "Cuando vuelve",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "pedro",
+     "traje": "rey",
+     "x": 700,
+     "s": 1.4,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "tijeras",
+       "hace": "ataca"
+      }
+     ]
+    },
+    {
+     "q": "no",
+     "traje": "noble",
+     "x": 1200,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "barba",
+       "hace": "susto"
+      }
+     ]
+    },
+    {
+     "q": "no2",
+     "traje": "noble",
+     "x": 1500,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "nobles.",
+       "hace": "cae"
+      }
+     ],
+     "colores": {
+      "color": "#6b3b8a"
+     }
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "no",
+     "texto": "¡Mi barba no!",
+     "ancho": 300
+    }
+   ]
+  },
+  {
+   "en": "Al que quería",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "conservarla",
+     "tarjeta": "Impuesto de la barba",
+     "cosa": "moneda"
+    },
+    {
+     "en": "impuesto.",
+     "cosa": "monton_monedas",
+     "pie": "A pagar"
+    }
+   ]
+  },
+  {
+   "en": "Pedro quería",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 25,
+    "lat": 59,
+    "grados": 32
+   },
+   "hasta": {
+    "lon": 26,
+    "lat": 59,
+    "grados": 28
+   },
+   "fecha": "1700",
+   "rotulos": [
+    {
+     "en": 0,
+     "texto": "RUSIA",
+     "x": 1350,
+     "y": 300,
+     "tam": 70
+    }
+   ],
+   "capas": [
+    {
+     "en": 0,
+     "id": "rusia1700",
+     "color": "amarillo"
+    },
+    {
+     "en": "Suecia.",
+     "id": "suecia1700",
+     "color": "azul",
+     "etiqueta": "Suecia",
+     "cara": "malo",
+     "cara_en": "Suecia."
+    }
+   ],
+   "foco": {
+    "en": "Báltico,",
+    "lon": 21,
+    "lat": 58.5,
+    "radio": 6
+   },
+   "guia": {
+    "lado": "izquierda"
+   },
+   "iconos": [
+    {
+     "en": "puerto",
+     "lon": 29.5,
+     "lat": 59.9,
+     "cosa": "ancla",
+     "tam": 0.7
+    }
+   ]
+  },
+  {
+   "en": "Así que en 1703",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 30.6,
+    "lat": 59.9,
+    "grados": 16
+   },
+   "hasta": {
+    "lon": 30.3,
+    "lat": 59.9,
+    "grados": 13
+   },
+   "fecha": "1703",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rusia1700",
+     "color": "amarillo",
+     "op": 0.7
+    }
+   ],
+   "pins": [
+    {
+     "en": "Petersburgo.",
+     "lon": 30.3,
+     "lat": 59.94,
+     "nombre": "San Petersburgo",
+     "izquierda": true
+    }
+   ],
+   "iconos": [
+    {
+     "en": "nueva",
+     "lon": 31.6,
+     "lat": 60.4,
+     "cosa": "castillo",
+     "tam": 0.8
+    },
+    {
+     "en": "suecos:",
+     "lon": 29.2,
+     "lat": 59.4,
+     "cosa": "espada",
+     "tam": 0.6
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "pantano",
+     "texto": "Pantano",
+     "x": 700,
+     "y": 850,
+     "tam": 70
+    }
+   ]
+  },
+  {
+   "en": "En 1709",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 32,
+    "lat": 53,
+    "grados": 30
+   },
+   "hasta": {
+    "lon": 33,
+    "lat": 51.5,
+    "grados": 24
+   },
+   "fecha": "1709",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rusia1700",
+     "color": "amarillo",
+     "op": 0.4
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "aplastó",
+     "de": [
+      26,
+      54.5
+     ],
+     "a": [
+      34.3,
+      49.8
+     ],
+     "d": 2.5,
+     "color": "azul"
+    },
+    {
+     "en": "suecos",
+     "de": [
+      37.6,
+      55.75
+     ],
+     "a": [
+      34.8,
+      49.7
+     ],
+     "d": 2.5,
+     "color": "amarillo"
+    }
+   ],
+   "pins": [
+    {
+     "en": "Poltava",
+     "lon": 34.55,
+     "lat": 49.59,
+     "nombre": "Poltava"
+    }
+   ]
+  },
+  {
+   "en": "y, al ganar",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "pedro",
+     "traje": "rey",
+     "x": 1210,
+     "s": 1.15,
+     "mira": -0.3,
+     "acciones": [
+      {
+       "en": "emperador.",
+       "hace": "orgulloso"
+      }
+     ],
+     "y": 710,
+     "sentado": true
+    },
+    {
+     "q": "no",
+     "traje": "noble",
+     "x": 650,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "emperador.",
+       "hace": "celebra"
+      },
+      {
+       "en": 3.64,
+       "hace": "mira_camara"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "pedro",
+     "texto": "Zar se me quedaba corto",
+     "ancho": 360
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "San Petersburgo"
+    }
+   ],
+   "cosas": [
+    {
+     "en": "proclamó",
+     "cosa": "corona",
+     "x": 1210,
+     "y": 400,
+     "salta": -90
+    }
+   ]
+  },
+  {
+   "en": "Sesenta años",
+   "tipo": "archivo",
+   "imagen": "archivo/catalina.jpg",
+   "pie": "Catalina la Grande",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "una princesa alemana",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "cat",
+     "traje": "reina",
+     "x": 1210,
+     "s": 1.1,
+     "mira": -0.3,
+     "acciones": [
+      {
+       "en": "trono",
+       "hace": "orgulloso"
+      }
+     ],
+     "y": 710,
+     "sentado": true
+    },
+    {
+     "q": "mar",
+     "traje": "rey",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "marido.",
+       "hace": "sale"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "cat",
+     "texto": "Ahora me siento yo",
+     "ancho": 320
+    }
+   ]
+  },
+  {
+   "en": "Con ella",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 32,
+    "lat": 52,
+    "grados": 40
+   },
+   "hasta": {
+    "lon": 31,
+    "lat": 51,
+    "grados": 34
+   },
+   "fecha": "1783-1795",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rusia1700",
+     "color": "amarillo",
+     "op": 0.6
+    },
+    {
+     "en": 0,
+     "id": "imperio1815",
+     "color": "amarillo",
+     "modo": "crece",
+     "cara": "feliz",
+     "cara_en": "Polonia.",
+     "cara_lugar": [
+      40,
+      56
+     ]
+    }
+   ],
+   "pins": [
+    {
+     "en": "Crimea",
+     "lon": 34.1,
+     "lat": 44.95,
+     "nombre": "Crimea"
+    },
+    {
+     "en": "Polonia.",
+     "lon": 21,
+     "lat": 52.2,
+     "nombre": "Polonia",
+     "izquierda": true
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "texto": "IMPERIO RUSO",
+     "x": 1000,
+     "y": 140,
+     "tam": 70
+    }
+   ]
+  },
+  {
+   "en": "Año 1812",
+   "tipo": "capitulo",
+   "numero": 5
+  },
+  {
+   "en": "Napoleón cruza",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 22,
+    "lat": 52,
+    "grados": 50
+   },
+   "hasta": {
+    "lon": 26,
+    "lat": 53,
+    "grados": 44
+   },
+   "fecha": "1812",
+   "rotulos": [
+    {
+     "en": 0,
+     "texto": "RUSIA",
+     "x": 1400,
+     "y": 250,
+     "tam": 70
+    }
+   ],
+   "capas": [
+    {
+     "en": 0,
+     "id": "imperio1815",
+     "color": "amarillo"
+    },
+    {
+     "en": "Napoleón",
+     "id": "francia",
+     "color": "azul",
+     "etiqueta": "Francia",
+     "cara": "malo",
+     "cara_en": "Napoleón"
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "cruza",
+     "de": [
+      23.9,
+      54.9
+     ],
+     "a": [
+      36,
+      55.6
+     ],
+     "d": 4,
+     "banderas": 3,
+     "color": "azul"
+    }
+   ]
+  },
+  {
+   "en": "medio millón",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": 0,
+     "cifra": "+500.000",
+     "sub": "soldados",
+     "icono": "espada"
+    }
+   ]
+  },
+  {
+   "en": "Los rusos no le",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "r1",
+     "traje": "campesino",
+     "x": 650,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "queman",
+       "hace": "camina"
+      },
+      {
+       "en": 1.75,
+       "hace": "piensa"
+      }
+     ],
+     "lleva": "antorcha"
+    },
+    {
+     "q": "r2",
+     "traje": "campesina",
+     "x": 1000,
+     "s": 1.1,
+     "mira": 0.5,
+     "lleva": "antorcha"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "r1",
+     "texto": "Que no encuentre ni una patata",
+     "ancho": 420
+    }
+   ],
+   "cosas": [
+    {
+     "en": "queman",
+     "cosa": "fuego",
+     "x": 1450,
+     "y": 780
+    },
+    {
+     "en": "atrás.",
+     "cosa": "fuego",
+     "x": 1650,
+     "y": 760
+    }
+   ],
+   "humo": true
+  },
+  {
+   "en": "Tras la sangrienta",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 36.5,
+    "lat": 55.6,
+    "grados": 16
+   },
+   "hasta": {
+    "lon": 37.2,
+    "lat": 55.7,
+    "grados": 13
+   },
+   "fecha": "1812",
+   "capas": [
+    {
+     "en": 0,
+     "id": "imperio1815",
+     "color": "amarillo",
+     "op": 0.35
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": 0,
+     "de": [
+      33,
+      55
+     ],
+     "a": [
+      35.8,
+      55.5
+     ],
+     "d": 2,
+     "color": "azul"
+    }
+   ],
+   "pins": [
+    {
+     "en": "Borodinó",
+     "lon": 35.82,
+     "lat": 55.52,
+     "nombre": "Borodinó",
+     "izquierda": true
+    },
+    {
+     "en": "Moscú",
+     "lon": 37.6,
+     "lat": 55.75,
+     "nombre": "Moscú"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "Borodinó",
+     "lon": 35.5,
+     "lat": 56.1,
+     "cosa": "calavera",
+     "tam": 0.6
+    }
+   ],
+   "fuegos": [
+    {
+     "en": "Moscú…",
+     "lon": 37.6,
+     "lat": 55.75,
+     "tam": 1.3
+    }
+   ]
+  },
+  {
+   "en": "y la ciudad empieza",
+   "tipo": "archivo",
+   "imagen": "archivo/moscu_arde.jpg",
+   "pie": "El incendio de Moscú, 1812",
+   "modo": "pantalla"
+  },
+  {
+   "en": "Napoleón esperó",
+   "tipo": "escena",
+   "decorado": "despacho",
+   "actores": [
+    {
+     "q": "napo",
+     "traje": "napoleon",
+     "x": 900,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "contestó.",
+       "hace": "enfada"
+      },
+      {
+       "en": 2.88,
+       "hace": "encoge"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "napo",
+     "texto": "¿Y el zar?",
+     "ancho": 260
+    }
+   ],
+   "cosas": [
+    {
+     "en": "mes",
+     "cosa": "reloj",
+     "x": 1400,
+     "y": 700
+    }
+   ]
+  },
+  {
+   "en": "Y entonces llegó el invierno",
+   "tipo": "escena",
+   "decorado": "nieve",
+   "actores": [
+    {
+     "q": "f1",
+     "traje": "soldado_frances",
+     "x": 500,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "invierno",
+       "hace": "triste"
+      }
+     ]
+    },
+    {
+     "q": "f2",
+     "traje": "soldado_frances",
+     "x": 900,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "ruso.",
+       "hace": "cae"
+      }
+     ]
+    },
+    {
+     "q": "f3",
+     "traje": "soldado_frances",
+     "x": 1300,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "ruso.",
+       "hace": "susto"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "f1",
+     "texto": "Nadie avisó de esto",
+     "ancho": 320
+    }
+   ],
+   "tormenta": true
+  },
+  {
+   "en": "De aquel enorme",
+   "tipo": "papel",
+   "titulo": "El ejército de Napoleón",
+   "cosas": [
+    {
+     "en": "enorme",
+     "cifra": "+500.000",
+     "sub": "fueron"
+    },
+    {
+     "en": "volvieron",
+     "cifra": "<100.000",
+     "sub": "volvieron",
+     "icono": "calavera"
+    }
+   ]
+  },
+  {
+   "en": "Rusia se convirtió",
+   "tipo": "mapa",
+   "mapa": "rusia-asia",
+   "cam": {
+    "lon": 98,
+    "lat": 57,
+    "grados": 155
+   },
+   "hasta": {
+    "lon": 98,
+    "lat": 57,
+    "grados": 145
+   },
+   "fecha": "1866",
+   "capas": [
+    {
+     "en": 0,
+     "id": "imperio1880",
+     "color": "amarillo",
+     "modo": "crece",
+     "cara": "feliz",
+     "cara_en": "potencia"
+    }
+   ],
+   "pins": [
+    {
+     "en": "gran",
+     "lon": 37.6,
+     "lat": 55.75,
+     "nombre": "Moscú"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "texto": "IMPERIO RUSO",
+     "x": 1000,
+     "y": 200,
+     "tam": 70
+    }
+   ],
+   "guia": false
+  },
+  {
+   "en": "Llegó a medir",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "veintitrés",
+     "cifra": "casi 23 millones",
+     "sub": "de km²",
+     "tam": 130
+    },
+    {
+     "en": "Polonia",
+     "tarjeta": "Polonia",
+     "cosa": "castillo"
+    },
+    {
+     "en": "Alaska.",
+     "tarjeta": "Alaska",
+     "cosa": "mapa_abierto"
+    }
+   ]
+  },
+  {
+   "en": "Pero por dentro",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "problema",
+     "cosa": "cadenas",
+     "pie": "Siervos"
+    },
+    {
+     "en": "millones",
+     "palabra": "Millones de siervos",
+     "rojo": true
+    },
+    {
+     "en": "esclavos",
+     "tarjeta": "Casi esclavos",
+     "cosa": "balanza"
+    }
+   ]
+  },
+  {
+   "en": "que se compraban",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "no",
+     "traje": "noble",
+     "x": 1350,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "vendían",
+       "hace": "senala"
+      }
+     ]
+    },
+    {
+     "q": "s1",
+     "traje": "campesino",
+     "x": 600,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "compraban",
+       "hace": "triste"
+      }
+     ],
+     "lleva": "cadenas"
+    },
+    {
+     "q": "s2",
+     "traje": "campesina",
+     "x": 900,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "tierra.",
+       "hace": "triste"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "no",
+     "texto": "Vienen con la tierra",
+     "ancho": 320
+    }
+   ]
+  },
+  {
+   "en": "El zar Alejandro",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "zar",
+     "traje": "rey",
+     "x": 1350,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": 0,
+       "hace": "entra"
+      },
+      {
+       "en": "liberó",
+       "hace": "senala"
+      }
+     ]
+    },
+    {
+     "q": "s1",
+     "traje": "campesino",
+     "x": 600,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "liberó",
+       "hace": "celebra"
+      }
+     ]
+    },
+    {
+     "q": "s2",
+     "traje": "campesina",
+     "x": 900,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "1861.",
+       "hace": "celebra"
+      }
+     ]
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "1861"
+    }
+   ],
+   "cosas": [
+    {
+     "en": "liberó",
+     "cosa": "cadenas",
+     "x": 750,
+     "y": 900
+    }
+   ]
+  },
+  {
+   "en": "Seis años después",
+   "tipo": "archivo",
+   "imagen": "archivo/alaska.jpg",
+   "pie": "Pago por Alaska: 7.200.000 $",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "Año 1917",
+   "tipo": "capitulo",
+   "numero": 6
+  },
+  {
+   "en": "Rusia lleva tres",
+   "tipo": "escena",
+   "decorado": "trinchera",
+   "actores": [
+    {
+     "q": "s1",
+     "traje": "soldado_1914",
+     "x": 600,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "Mundial",
+       "hace": "triste"
+      }
+     ]
+    },
+    {
+     "q": "s2",
+     "traje": "soldado_1914",
+     "x": 1100,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "millones",
+       "hace": "triste"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "s2",
+     "texto": "¿Cuándo volvemos a casa?",
+     "ancho": 360
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "1914-1917"
+    }
+   ]
+  },
+  {
+   "en": "En las ciudades",
+   "tipo": "escena",
+   "decorado": "calle",
+   "actores": [
+    {
+     "q": "m",
+     "traje": "civil_mujer",
+     "x": 800,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "pan.",
+       "hace": "enfada"
+      }
+     ],
+     "lleva": "cesta"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "m",
+     "texto": "¡Pan!",
+     "ancho": 200
+    }
+   ],
+   "multitud": {
+    "n": 12,
+    "agita": true
+   }
+  },
+  {
+   "en": "En febrero estalla",
+   "tipo": "archivo",
+   "imagen": "archivo/nicolas.jpg",
+   "pie": "Nicolás II",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "tiene que renunciar",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "renunciar",
+     "cosa": "corona",
+     "tachar_en": "corona."
+    },
+    {
+     "en": "corona.",
+     "palabra": "Febrero de 1917",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "En octubre",
+   "tipo": "archivo",
+   "imagen": "archivo/lenin.jpg",
+   "pie": "Lenin",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "toman el poder",
+   "tipo": "escena",
+   "decorado": "calle",
+   "actores": [
+    {
+     "q": "r1",
+     "traje": "revolucionario",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "poder",
+       "hace": "celebra"
+      }
+     ],
+     "lleva": "bandera_urss"
+    },
+    {
+     "q": "r2",
+     "traje": "obrero",
+     "x": 1100,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "Petrogrado.",
+       "hace": "ataca"
+      }
+     ],
+     "lleva": "fusil"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Petrogrado, 1917"
+    }
+   ],
+   "multitud": {
+    "n": 12,
+    "agita": true,
+    "lanzas": true
+   }
+  },
+  {
+   "en": "Al año siguiente",
+   "tipo": "escena",
+   "decorado": "interior",
+   "actores": [
+    {
+     "q": "ni",
+     "traje": "rey",
+     "x": 650,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "fusilados",
+       "hace": "triste"
+      },
+      {
+       "en": 1.28,
+       "hace": "asiente"
+      }
+     ]
+    },
+    {
+     "q": "al",
+     "traje": "reina",
+     "x": 950,
+     "s": 1.1,
+     "mira": 0.2,
+     "acciones": [
+      {
+       "en": "familia",
+       "hace": "triste"
+      }
+     ]
+    },
+    {
+     "q": "h1",
+     "traje": "nino",
+     "x": 1220,
+     "s": 0.6,
+     "mira": -0.2
+    },
+    {
+     "q": "h2",
+     "traje": "nino",
+     "x": 1400,
+     "s": 0.6,
+     "mira": -0.2
+    }
+   ],
+   "noche": true
+  },
+  {
+   "en": "Trescientos años",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Trescientos",
+     "cifra": "300 años",
+     "sub": "de Románov"
+    },
+    {
+     "en": "noche.",
+     "cosa": "corona",
+     "tachar_en": "terminados"
+    }
+   ]
+  },
+  {
+   "en": "En 1922",
+   "tipo": "mapa",
+   "mapa": "rusia-asia",
+   "cam": {
+    "lon": 98,
+    "lat": 56,
+    "grados": 155
+   },
+   "hasta": {
+    "lon": 98,
+    "lat": 56,
+    "grados": 145
+   },
+   "fecha": "1922",
+   "capas": [
+    {
+     "en": 0,
+     "id": "urss",
+     "color": "rojo",
+     "modo": "crece",
+     "cara": "malo",
+     "cara_en": "Soviética."
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "texto": "URSS",
+     "x": 1000,
+     "y": 200,
+     "tam": 70
+    }
+   ],
+   "pins": [
+    {
+     "en": "nació",
+     "lon": 37.6,
+     "lat": 55.75,
+     "nombre": "Moscú"
+    }
+   ],
+   "guia": false
+  },
+  {
+   "en": "Cuando Lenin",
+   "tipo": "archivo",
+   "imagen": "archivo/stalin.jpg",
+   "pie": "Stalin",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "Stalin convirtió",
+   "tipo": "escena",
+   "decorado": "fabrica",
+   "actores": [
+    {
+     "q": "st",
+     "traje": "stalin",
+     "x": 1350,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "fábricas",
+       "hace": "senala"
+      }
+     ]
+    },
+    {
+     "q": "o1",
+     "traje": "obrero",
+     "x": 550,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "campesinos",
+       "hace": "levanta"
+      }
+     ]
+    },
+    {
+     "q": "o2",
+     "traje": "obrero",
+     "x": 850,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "fuerza.",
+       "hace": "triste"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "st",
+     "texto": "Más rápido, camaradas",
+     "ancho": 340
+    }
+   ]
+  },
+  {
+   "en": "Millones de personas",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "hambre",
+     "cosa": "calavera",
+     "pie": "Hambre"
+    },
+    {
+     "en": "Gulag.",
+     "tarjeta": "Gulag",
+     "cosa": "cadenas"
+    }
+   ]
+  },
+  {
+   "en": "Y en 1941",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 30,
+    "lat": 53,
+    "grados": 42
+   },
+   "hasta": {
+    "lon": 32,
+    "lat": 53.5,
+    "grados": 36
+   },
+   "fecha": "1941",
+   "rotulos": [
+    {
+     "en": 0,
+     "texto": "URSS",
+     "x": 1450,
+     "y": 250,
+     "tam": 70
+    }
+   ],
+   "capas": [
+    {
+     "en": 0,
+     "id": "urss1938",
+     "color": "rojo"
+    },
+    {
+     "en": "Hitler",
+     "id": "alemania",
+     "color": "gris",
+     "etiqueta": "Alemania",
+     "cara": "malo",
+     "cara_en": "Hitler"
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "invadió",
+     "de": [
+      20,
+      52.5
+     ],
+     "a": [
+      36.5,
+      55.3
+     ],
+     "d": 3.5,
+     "banderas": 3,
+     "color": "gris"
+    }
+   ],
+   "pins": [
+    {
+     "en": "Moscú,",
+     "lon": 37.6,
+     "lat": 55.75,
+     "nombre": "Moscú"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "llegaron",
+     "lon": 31,
+     "lat": 54.5,
+     "cosa": "tanque",
+     "tam": 0.7
+    }
+   ],
+   "asedios": [
+    {
+     "en": "puertas",
+     "lon": 37.6,
+     "lat": 55.75,
+     "color": "gris"
+    }
+   ]
+  },
+  {
+   "en": "pero en Stalingrado",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 42,
+    "lat": 51,
+    "grados": 26
+   },
+   "hasta": {
+    "lon": 41,
+    "lat": 51,
+    "grados": 24
+   },
+   "fecha": "1942-1943",
+   "capas": [
+    {
+     "en": 0,
+     "id": "urss1938",
+     "color": "rojo",
+     "op": 0.4
+    }
+   ],
+   "asedios": [
+    {
+     "en": "Stalingrado",
+     "lon": 44.5,
+     "lat": 48.7,
+     "color": "gris"
+    }
+   ],
+   "flechas": [
+    {
+     "en": "cambió.",
+     "de": [
+      44,
+      49
+     ],
+     "a": [
+      32,
+      51
+     ],
+     "curva": 0.15,
+     "color": "rojo"
+    }
+   ],
+   "pins": [
+    {
+     "en": "Stalingrado",
+     "lon": 44.5,
+     "lat": 48.7,
+     "nombre": "Stalingrado",
+     "izquierda": true
+    }
+   ],
+   "guia": {
+    "lado": "izquierda"
+   }
+  },
+  {
+   "en": "La guerra costó",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "veintisiete",
+     "cifra": "27 millones",
+     "sub": "de vidas",
+     "tam": 150
+    }
+   ]
+  },
+  {
+   "en": "En mayo de 1945",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 26,
+    "lat": 53,
+    "grados": 36
+   },
+   "hasta": {
+    "lon": 20,
+    "lat": 52.5,
+    "grados": 28
+   },
+   "fecha": "1945",
+   "capas": [
+    {
+     "en": 0,
+     "id": "urss1938",
+     "color": "rojo"
+    },
+    {
+     "en": 0,
+     "id": "alemania",
+     "color": "gris",
+     "cara": "muerto",
+     "cara_en": "1945,"
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "mayo",
+     "de": [
+      33,
+      53
+     ],
+     "a": [
+      13.6,
+      52.5
+     ],
+     "d": 3,
+     "banderas": 3,
+     "color": "rojo"
+    }
+   ],
+   "pins": [
+    {
+     "en": "1945,",
+     "lon": 13.4,
+     "lat": 52.5,
+     "nombre": "Berlín",
+     "izquierda": true
+    }
+   ]
+  },
+  {
+   "en": "la bandera roja",
+   "tipo": "escena",
+   "decorado": "ciudad",
+   "actores": [
+    {
+     "q": "so",
+     "traje": "soldado_sovietico",
+     "x": 960,
+     "s": 1.2,
+     "mira": 0,
+     "acciones": [
+      {
+       "en": "ondeaba",
+       "hace": "levanta"
+      }
+     ],
+     "lleva": "bandera_urss"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Berlín, 1945"
+    }
+   ],
+   "humo": true
+  },
+  {
+   "en": "Después vino",
+   "tipo": "capitulo",
+   "numero": 7
+  },
+  {
+   "en": "Medio mundo con",
+   "tipo": "mapa",
+   "mapa": "rusia-mundo",
+   "cam": {
+    "lon": 5,
+    "lat": 40,
+    "grados": 340
+   },
+   "hasta": {
+    "lon": 5,
+    "lat": 40,
+    "grados": 330
+   },
+   "fecha": "1947-1991",
+   "capas": [
+    {
+     "en": 0,
+     "id": "eeuu",
+     "color": "verde",
+     "cara": "enfado",
+     "cara_en": "Unidos",
+     "cara_lugar": [
+      -100,
+      42
+     ]
+    },
+    {
+     "en": 0,
+     "id": "urss_m",
+     "color": "rojo",
+     "cara": "enfado",
+     "cara_en": "Soviética,"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "Unidos",
+     "texto": "EE. UU.",
+     "x": 370,
+     "y": 330,
+     "tam": 60
+    },
+    {
+     "en": "Soviética,",
+     "texto": "URSS",
+     "x": 1450,
+     "y": 250,
+     "tam": 60
+    }
+   ],
+   "iconos": [
+    {
+     "en": "Soviética,",
+     "lon": -100,
+     "lat": 38,
+     "cosa": "bomba",
+     "tam": 0.8
+    },
+    {
+     "en": "Soviética,",
+     "lon": 60,
+     "lat": 55,
+     "cosa": "bomba",
+     "tam": 0.8
+    }
+   ],
+   "guia": false
+  },
+  {
+   "en": "apuntándose",
+   "tipo": "escena",
+   "decorado": "interior",
+   "actores": [
+    {
+     "q": "us",
+     "traje": "politico",
+     "x": 650,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "miles",
+       "hace": "orgulloso"
+      }
+     ],
+     "lleva": "bomba"
+    },
+    {
+     "q": "so",
+     "traje": "politico",
+     "x": 1300,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "atómicas.",
+       "hace": "enfada"
+      }
+     ],
+     "colores": {
+      "color": "#5a2a2a"
+     },
+     "lleva": "bomba"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "us",
+     "texto": "Yo tengo más",
+     "ancho": 260
+    }
+   ]
+  },
+  {
+   "en": "En 1957",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "1957,",
+     "cifra": "1957"
+    },
+    {
+     "en": "primer",
+     "palabra": "Primer satélite",
+     "rojo": true
+    },
+    {
+     "en": "Sputnik.",
+     "tarjeta": "Sputnik",
+     "cosa": "globo"
+    }
+   ]
+  },
+  {
+   "en": "Y en 1961",
+   "tipo": "archivo",
+   "imagen": "archivo/gagarin.jpg",
+   "pie": "Yuri Gagarin, 1961",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "Pero en la Tierra",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Tierra",
+     "cosa": "globo",
+     "pie": "Mientras, en casa…"
+    },
+    {
+     "en": "peor.",
+     "palabra": "Peor",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Las tiendas estaban",
+   "tipo": "escena",
+   "decorado": "calle",
+   "actores": [
+    {
+     "q": "c1",
+     "traje": "civil",
+     "x": 450,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "zapatos",
+       "hace": "triste"
+      }
+     ]
+    },
+    {
+     "q": "c2",
+     "traje": "civil_mujer",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5
+    },
+    {
+     "q": "c3",
+     "traje": "civil",
+     "x": 950,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "cola.",
+       "hace": "encoge"
+      }
+     ]
+    },
+    {
+     "q": "c4",
+     "traje": "anciano",
+     "x": 1200,
+     "s": 1.1,
+     "mira": 0.5
+    },
+    {
+     "q": "t",
+     "traje": "obrero",
+     "x": 1600,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "vacías,",
+       "hace": "niega"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "t",
+     "texto": "Vuelva mañana",
+     "ancho": 260
+    },
+    {
+     "en": 2.86,
+     "a": "c1",
+     "texto": "¿Quedan zapatos?",
+     "ancho": 300
+    }
+   ]
+  },
+  {
+   "en": "En 1985",
+   "tipo": "escena",
+   "decorado": "despacho",
+   "actores": [
+    {
+     "q": "gor",
+     "traje": "politico",
+     "x": 900,
+     "s": 1.15,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "arreglarlo",
+       "hace": "senala"
+      },
+      {
+       "en": 1.89,
+       "hace": "mira_camara"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "gor",
+     "texto": "Vamos a abrir un poco",
+     "ancho": 340
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Moscú, 1985"
+    }
+   ]
+  },
+  {
+   "en": "Al año siguiente",
+   "tipo": "mapa",
+   "mapa": "rusia-europa",
+   "cam": {
+    "lon": 30.5,
+    "lat": 51.3,
+    "grados": 16
+   },
+   "hasta": {
+    "lon": 30.1,
+    "lat": 51.3,
+    "grados": 13
+   },
+   "fecha": "1986",
+   "capas": [
+    {
+     "en": 0,
+     "id": "ucrania",
+     "color": "rojo",
+     "op": 0.4,
+     "etiqueta": "Ucrania"
+    }
+   ],
+   "pins": [
+    {
+     "en": "Chernóbil.",
+     "lon": 30.1,
+     "lat": 51.27,
+     "nombre": "Chernóbil",
+     "izquierda": true
+    }
+   ],
+   "fuegos": [
+    {
+     "en": "explotó",
+     "lon": 30.1,
+     "lat": 51.27,
+     "tam": 1.3
+    }
+   ]
+  },
+  {
+   "en": "En 1989",
+   "tipo": "escena",
+   "decorado": "ciudad",
+   "actores": [
+    {
+     "q": "a",
+     "traje": "civil",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "cayó",
+       "hace": "celebra"
+      }
+     ]
+    },
+    {
+     "q": "b",
+     "traje": "civil_mujer",
+     "x": 1200,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "Berlín.",
+       "hace": "celebra"
+      }
+     ]
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Berlín, 1989"
+    }
+   ],
+   "cosas": [
+    {
+     "en": "muro",
+     "cosa": "muro",
+     "x": 960,
+     "y": 800
+    }
+   ]
+  },
+  {
+   "en": "Y el 25 de diciembre",
+   "tipo": "escena",
+   "decorado": "despacho",
+   "actores": [
+    {
+     "q": "gor",
+     "traje": "politico",
+     "x": 960,
+     "s": 1.15,
+     "mira": 0,
+     "acciones": [
+      {
+       "en": "dimitió",
+       "hace": "triste"
+      },
+      {
+       "en": 2.23,
+       "hace": "piensa"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "gor",
+     "texto": "Bueno… ha sido un placer",
+     "ancho": 380
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Moscú, 25-12-1991"
+    }
+   ]
+  },
+  {
+   "en": "Al día siguiente",
+   "tipo": "mapa",
+   "mapa": "rusia-asia",
+   "cam": {
+    "lon": 95,
+    "lat": 57,
+    "grados": 150
+   },
+   "hasta": {
+    "lon": 95,
+    "lat": 57,
+    "grados": 140
+   },
+   "fecha": "1991",
+   "rotulos": [
+    {
+     "en": 0,
+     "texto": "URSS",
+     "x": 1000,
+     "y": 200,
+     "tam": 70
+    }
+   ],
+   "capas": [
+    {
+     "en": 0,
+     "id": "urss",
+     "color": "rojo",
+     "cara": "muerto",
+     "cara_en": "Soviética",
+     "rompe_en": "existir."
+    }
+   ],
+   "guia": false
+  },
+  {
+   "en": "En su lugar",
+   "tipo": "mapa",
+   "mapa": "rusia-asia",
+   "cam": {
+    "lon": 85,
+    "lat": 52,
+    "grados": 120
+   },
+   "hasta": {
+    "lon": 85,
+    "lat": 52,
+    "grados": 112
+   },
+   "fecha": "1991",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rusia",
+     "color": "rojo"
+    },
+    {
+     "en": "quince",
+     "id": "republicas",
+     "color": "naranja",
+     "etiqueta": "14 repúblicas más"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "quince",
+     "texto": "15 países",
+     "x": 960,
+     "y": 990,
+     "tam": 80,
+     "rojo": true
+    }
+   ],
+   "guia": false
+  },
+  {
+   "en": "Hoy Rusia",
+   "tipo": "mapa",
+   "mapa": "rusia-asia",
+   "cam": {
+    "lon": 100,
+    "lat": 60,
+    "grados": 150
+   },
+   "hasta": {
+    "lon": 100,
+    "lat": 59,
+    "grados": 140
+   },
+   "fecha": "Hoy",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rusia",
+     "color": "rojo",
+     "modo": "crece",
+     "cara": "feliz",
+     "cara_en": "grande"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "texto": "RUSIA",
+     "x": 1000,
+     "y": 200,
+     "tam": 70
+    }
+   ],
+   "guia": false
+  },
+  {
+   "en": "Diecisiete millones",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Diecisiete",
+     "cifra": "17 millones",
+     "sub": "de km²"
+    },
+    {
+     "en": "cuadrados,",
+     "pais": "rusia-asia:rusia",
+     "pie": "Rusia"
+    }
+   ]
+  },
+  {
+   "en": "desde el Báltico",
+   "tipo": "mapa",
+   "mapa": "rusia-asia",
+   "cam": {
+    "lon": 95,
+    "lat": 55,
+    "grados": 150
+   },
+   "hasta": {
+    "lon": 95,
+    "lat": 55,
+    "grados": 145
+   },
+   "fecha": "Hoy",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rusia",
+     "color": "rojo"
+    }
+   ],
+   "pins": [
+    {
+     "en": "Báltico",
+     "lon": 30.3,
+     "lat": 59.94,
+     "nombre": "San Petersburgo"
+    },
+    {
+     "en": "Pacífico.",
+     "lon": 131.9,
+     "lat": 43.1,
+     "nombre": "Vladivostok",
+     "izquierda": true
+    }
+   ],
+   "flechas": [
+    {
+     "en": "hasta",
+     "de": [
+      32,
+      59
+     ],
+     "a": [
+      131,
+      44
+     ],
+     "curva": 0.15
+    }
+   ],
+   "guia": false
+  },
+  {
+   "en": "Empezó con unos",
+   "tipo": "escena",
+   "decorado": "rio",
+   "actores": [
+    {
+     "q": "vik",
+     "traje": "vikingo",
+     "x": 1250,
+     "s": 1.15,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "vikingos",
+       "hace": "saluda"
+      }
+     ]
+    },
+    {
+     "q": "e1",
+     "traje": "campesino",
+     "x": 650,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "orden",
+       "hace": "asiente"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "vik",
+     "texto": "Solo venía a poner orden",
+     "ancho": 380
+    }
+   ]
+  },
+  {
+   "en": "Mil cien años después",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Mil",
+     "palabra": "1.100 años después"
+    },
+    {
+     "en": "herederos",
+     "cifra": "+1/10",
+     "sub": "de la tierra firme"
+    }
+   ]
+  },
+  {
+   "en": "Y en toda su",
+   "tipo": "papel",
+   "titulo": "El ciclo de Rusia",
+   "cosas": [
+    {
+     "en": "imperio",
+     "tarjeta": "Imperio",
+     "cosa": "corona"
+    },
+    {
+     "en": "rompe",
+     "tarjeta": "Se rompe",
+     "cosa": "calavera"
+    },
+    {
+     "en": "juntarse.",
+     "tarjeta": "Se junta",
+     "cosa": "escudo"
+    }
+   ]
+  },
+  {
+   "en": "La pregunta es",
+   "tipo": "mapa",
+   "mapa": "rusia-asia",
+   "cam": {
+    "lon": 95,
+    "lat": 56,
+    "grados": 150
+   },
+   "hasta": {
+    "lon": 95,
+    "lat": 56,
+    "grados": 160
+   },
+   "fecha": "¿?",
+   "capas": [
+    {
+     "en": 0,
+     "id": "rusia",
+     "color": "rojo",
+     "cara": "susto",
+     "cara_en": "próxima"
+    },
+    {
+     "en": "cuándo",
+     "id": "republicas",
+     "color": "naranja",
+     "modo": "dibuja",
+     "op": 0.5
+    }
+   ],
+   "pins": [
+    {
+     "en": "pregunta",
+     "lon": 37.6,
+     "lat": 55.75,
+     "nombre": "Moscú"
+    }
+   ],
+   "guia": false
+  }
+ ]
+}

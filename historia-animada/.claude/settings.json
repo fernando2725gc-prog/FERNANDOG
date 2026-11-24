@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash instalar/instalar.sh)",
+      "Bash(powershell -ExecutionPolicy Bypass -File instalar/instalar.ps1)",
+      "Bash(powershell -ExecutionPolicy Bypass -File instalar\\instalar.ps1)",
+      "Bash(./historia:*)",
+      "Bash(./historia.cmd:*)",
+      "Bash(historia.cmd:*)",
+      "Bash(.\\historia.cmd:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(uname:*)",
+      "Read(**)",
+      "Edit(**/Historias/**)",
+      "Write(**/Historias/**)",
+      "WebSearch",
+      "WebFetch"
+    ],
+    "deny": [
+      "Edit(**/herramientas/**)",
+      "Edit(**/instalar/**)",
+      "Edit(**/.claude/**)",
+      "Edit(**/CLAUDE.md)",
+      "Edit(**/GUIA-HISTORIA-PROPIA.md)"
+    ]
+  }
+}

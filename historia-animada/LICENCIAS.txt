@@ -1,0 +1,30 @@
+LICENCIAS DE LO QUE LLEVA LA PLANTILLA
+======================================
+
+USO DE LA PLANTILLA
+Puedes usarla para hacer y publicar tus propios vídeos, también para monetizarlos.
+No está permitido revenderla, compartirla ni volver a distribuirla.
+
+MÚSICA
+Piezas de Kevin MacLeod (incompetech.com), licencia Creative Commons BY 4.0: hay que citarlas en la
+descripción del vídeo. La plantilla pone el crédito exacto de las que use cada vídeo en su .txt
+(lista completa en public/musica/creditos.tsv).
+
+MAPAS
+Satélite: NASA Blue Marble (dominio público). Fronteras de hoy: Natural Earth (dominio público).
+Fronteras históricas: historical-basemaps de A. Ourednik (GPL-3.0); se descargan al preparar cada mapa.
+El .txt de cada vídeo lleva el crédito.
+
+IMÁGENES DE ARCHIVO
+Retratos y cuadros de Wikimedia Commons, solo de dominio público o con licencias libres (CC0, CC BY, CC BY-SA).
+Cada vídeo apunta el autor y la licencia de cada imagen en su .txt: déjalos en la descripción.
+
+EFECTOS DE SONIDO
+Kenney (CC0, dominio público) y sintetizados por código: no hace falta citarlos.
+
+TIPOGRAFÍAS
+Patrick Hand, Kalam, Mali y las demás de public/fuentes (SIL Open Font License 1.1): uso comercial libre, sin crédito.
+
+MOTOR
+Remotion (licencia de Remotion: gratis para particulares y empresas de hasta 3 personas; consulta remotion.dev/license).
+React (MIT). faster-whisper (MIT). ffmpeg (LGPL/GPL, a través de imageio-ffmpeg).

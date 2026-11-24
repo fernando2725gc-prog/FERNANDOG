@@ -1,0 +1,2 @@
+Efectos de Kenney (kenney.nl): RPG Audio, Impact Sounds e Interface Sounds. Licencia CC0 (dominio público): no hace
+falta citarlos. olas, viento, cascos, lluvia, trago, pop, clic y whoosh: hechos con ffmpeg para este motor.

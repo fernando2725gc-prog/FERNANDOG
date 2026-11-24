@@ -1,0 +1,21 @@
+# Fuentes de «Rusia» (cifras y fechas del guion)
+
+- Superficie de Rusia hoy (17,1 millones de km², 11 husos horarios): CIA World Factbook, «Russia» — https://www.cia.gov/the-world-factbook/countries/russia/
+- Superficie de Plutón (~16,6-16,7 millones de km²): NASA, «Pluto: Facts» — https://science.nasa.gov/dwarf-planets/pluto/facts/
+- 862, Rúrik invitado a Nóvgorod; 882, Oleg toma Kiev; 988, bautismo de Vladimir y la frase «beber es la alegría de los rus»: Crónica de Néstor (Povest' vremennykh let); Encyclopaedia Britannica, «Kievan Rus» y «Vladimir I» — https://www.britannica.com/topic/Kyivan-Rus
+- 1054, muerte de Yaroslav el Sabio y división en principados: Britannica, «Yaroslav the Wise».
+- 1237-1240, invasión de Batu y saqueo de Kiev (diciembre de 1240); Horda de Oro hasta 1480 (gran parada del río Ugrá): Britannica, «Golden Horde»; Wikipedia, «Great Stand on the Ugra River».
+- Iván III triplica el territorio de Moscovia: Britannica, «Ivan III».
+- 1547, Iván IV coronado zar con 16 años; Kazán (1552) y Astracán (1556); Yermak en Siberia (1581-1582); opríchnina; muerte de su hijo Iván (1581): Britannica, «Ivan the Terrible».
+- 1598-1613 Período Tumultuoso, polacos en el Kremlin (1610-1612); 1613, Miguel Románov (16 años) elegido por el Zemski Sobor; Románov 1613-1917 (304 años): Britannica, «Time of Troubles», «Romanov dynasty».
+- 1639, Iván Moskvitin llega al Pacífico (mar de Ojotsk): Wikipedia, «Ivan Moskvitin».
+- Pedro I (2,03 m), Gran Embajada 1697-1698 y astillero de Zaandam/Ámsterdam, impuesto de la barba, San Petersburgo 1703, Poltava 1709, emperador 1721: Britannica, «Peter I».
+- Catalina II (princesa de Anhalt-Zerbst), reina desde 1762; Crimea 1783; repartos de Polonia: Britannica, «Catherine the Great».
+- 1812: Napoleón cruza el Niemen con más de medio millón de hombres (estimaciones 450.000-690.000), Borodinó, incendio de Moscú; vuelven menos de 100.000: Wikipedia, «French invasion of Russia»; World History Encyclopedia, «Napoleon's Invasion of Russia» — https://www.worldhistory.org/Napoleon%27s_Invasion_of_Russia/
+- Imperio ruso en su máxima extensión, ~22,8 millones de km²: Wikipedia, «Russian Empire» (ficha) — https://en.wikipedia.org/wiki/Russian_Empire
+- 1861, abolición de la servidumbre por Alejandro II; 1867, venta de Alaska por 7,2 millones de dólares: Britannica, «Emancipation Manifesto»; US Office of the Historian, «Purchase of Alaska, 1867» — https://history.state.gov/milestones/1866-1898/alaska-purchase
+- 1917, revolución de febrero y abdicación de Nicolás II; octubre, toma del poder bolchevique en Petrogrado; julio de 1918, fusilamiento de la familia en Ekaterimburgo: Britannica, «Russian Revolution of 1917».
+- 30 de diciembre de 1922, fundación de la URSS; 1924 muerte de Lenin; colectivización, hambrunas de 1932-1933 y Gulag: Britannica, «Union of Soviet Socialist Republics», «Gulag».
+- 22 de junio de 1941, invasión alemana; Stalingrado 1942-1943; ~27 millones de muertos soviéticos; mayo de 1945, Berlín: Britannica, «Battle of Stalingrad»; Wikipedia, «World War II casualties of the Soviet Union».
+- 4 de octubre de 1957 Sputnik; 12 de abril de 1961 Gagarin: NASA History.
+- 1985 Gorbachov; 26 de abril de 1986 Chernóbil; 9 de noviembre de 1989 muro de Berlín; 25 de diciembre de 1991 dimisión de Gorbachov, 26 de diciembre disolución de la URSS en 15 repúblicas: Britannica, «Collapse of the Soviet Union».

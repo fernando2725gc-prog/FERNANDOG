@@ -1,0 +1,41 @@
+HISTORIA ANIMADA
+================
+
+Haz vídeos de historia animados de 8 a 12 minutos con Claude, al estilo de los grandes canales de historia:
+mapas de satélite donde los países se pintan, ponen caras y se rompen en trozos, un cronista que lo cuenta,
+escenas con muñecos que dialogan, retratos de verdad y un pergamino con los capítulos.
+
+Trae 3 historias listas (los vikingos, Rusia y Japón) y puedes pedirle a Claude CUALQUIER otra historia:
+él la investiga, escribe el guion y prepara el vídeo. Ideas infinitas.
+
+
+LO QUE NECESITAS
+----------------
+- Claude (plan Pro o superior) con la app de escritorio (pestaña «Code»).
+- Una cuenta de ElevenLabs para la voz: https://try.elevenlabs.io/bq5hae0ltogp
+- Un ordenador Mac o Windows con internet y unos 5 GB libres.
+
+
+CÓMO SE USA
+-----------
+1. Abre la app de Claude → pestaña «Code» → elige esta carpeta («Historia Animada»).
+   Si Claude pregunta si confías en la carpeta, di que SÍ.
+2. Escribe:   Empezar
+
+Claude instala lo que falta él solo (la primera vez, unos 15 minutos), te enseña las historias
+y te guía para hacer la voz. No tienes que abrir ningún instalador, ni tocar la seguridad del Mac,
+ni desactivar el antivirus de Windows.
+
+Tus vídeos aparecen en la carpeta «Vídeos listos», cada uno con su título, su descripción,
+sus capítulos y los créditos que hay que poner en YouTube.
+
+
+¿Y SI QUISIERAS AUTOMATIZAR CUALQUIER CANAL?
+--------------------------------------------
+Esta plantilla hace este estilo. Dentro de la comunidad Club Creadores IA tienes el AGENTE MONTADOR:
+un agente de IA que te automatiza cualquier canal, del estilo que sea, en vídeo largo o en corto.
+Le pegas el enlace de un vídeo que te guste y lo hace igual.
+
+Y además aprendes a escalar los ingresos de tu canal, crecer en suscriptores y hacer miniaturas que se clican.
+
+Entra aquí: https://www.skool.com/ccia

@@ -1,0 +1,19 @@
+{
+  "name": "historia-animada",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Historia Animada: vídeos de historia animados con Claude (plantilla gratis)",
+  "scripts": {
+    "estudio": "remotion studio src/index.ts"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.507",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.507"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.12",
+    "typescript": "5.6.3"
+  }
+}

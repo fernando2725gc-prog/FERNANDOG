@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+cd "$(dirname "$0")"
+[ -d node/bin ] && export PATH="$PWD/node/bin:$PATH"
+exec .venv/bin/python herramientas/historia.py "$@"

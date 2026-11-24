@@ -1,0 +1,5297 @@
+{
+ "cola": 2,
+ "capitulos": [
+  "300|El emperador del sol|sol",
+  "1180|Los samuráis|espada",
+  "1467|Los Estados en guerra|castillo",
+  "1603|El país cerrado|pagoda",
+  "1853|Los barcos negros|barco_vapor",
+  "1895|Imperio y guerra|bandera_japon",
+  "1945|El Japón de hoy|tren"
+ ],
+ "musica": [
+  {
+   "desde": 0,
+   "pista": "epica--call-to-adventure.mp3"
+  },
+  {
+   "desde": "Hacia el año 300",
+   "pista": "antigua--teller-of-the-tales.mp3"
+  },
+  {
+   "desde": "En 1180",
+   "pista": "guerra--crusade-heavy-industry.mp3"
+  },
+  {
+   "desde": "Desde Edo",
+   "pista": "medieval--village-consort.mp3"
+  },
+  {
+   "desde": "Hasta que en 1853",
+   "pista": "industrial--americana.mp3"
+  },
+  {
+   "desde": "En 1895",
+   "pista": "guerra--impending-boom.mp3"
+  },
+  {
+   "desde": "Y llegaron los crímenes",
+   "pista": "triste--heavy-heart.mp3"
+  },
+  {
+   "desde": "Y entonces llegó el milagro",
+   "pista": "epica--rising-tide.mp3"
+  }
+ ],
+ "planos": [
+  {
+   "en": 0,
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 139.5,
+    "lat": 35.0,
+    "grados": 13
+   },
+   "hasta": {
+    "lon": 139.9,
+    "lat": 34.8,
+    "grados": 10
+   },
+   "fecha": "1853",
+   "encuadre": false,
+   "guia": {
+    "lado": "izquierda"
+   },
+   "capas": [
+    {
+     "en": 0,
+     "id": "japon_centro",
+     "color": "rojo",
+     "op": 0.55
+    }
+   ],
+   "barcos": [
+    {
+     "en": "cuatro",
+     "de": [
+      143.6,
+      31.6
+     ],
+     "a": [
+      140.2,
+      34.5
+     ],
+     "d": 4.0,
+     "flota": 4,
+     "color": "#1e1e1e",
+     "curva": 0.08
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "cuatro",
+     "texto": "4 barcos",
+     "x": 560,
+     "y": 300,
+     "tam": 80,
+     "rojo": true
+    }
+   ],
+   "iconos": [
+    {
+     "en": "humo",
+     "lon": 142.4,
+     "lat": 32.6,
+     "cosa": "barco_vapor",
+     "tam": 0.6
+    }
+   ]
+  },
+  {
+   "en": "aparecieron",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 140.2,
+    "lat": 34.6,
+    "grados": 7
+   },
+   "hasta": {
+    "lon": 139.8,
+    "lat": 35.2,
+    "grados": 5.5
+   },
+   "fecha": "1853",
+   "guia": {
+    "lado": "izquierda"
+   },
+   "capas": [
+    {
+     "en": 0,
+     "id": "japon_centro",
+     "color": "rojo",
+     "op": 0.55,
+     "cara": "susto",
+     "cara_en": "ciudad",
+     "cara_lugar": [
+      139.3,
+      35.9
+     ]
+    }
+   ],
+   "barcos": [
+    {
+     "en": "aparecieron",
+     "de": [
+      140.4,
+      34.4
+     ],
+     "a": [
+      139.78,
+      35.2
+     ],
+     "d": 2.5,
+     "flota": 4,
+     "color": "#1e1e1e"
+    }
+   ],
+   "pins": [
+    {
+     "en": "frente",
+     "lon": 139.76,
+     "lat": 35.69,
+     "nombre": "Edo",
+     "aro": true
+    }
+   ]
+  },
+  {
+   "en": "Nadie allí",
+   "tipo": "escena",
+   "decorado": "puerto",
+   "actores": [
+    {
+     "q": "pescador",
+     "traje": "japones",
+     "x": 640,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "Nadie",
+       "hace": "susto"
+      }
+     ]
+    },
+    {
+     "q": "samurai",
+     "traje": "samurai",
+     "x": 1180,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "visto",
+       "hace": "susto"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "Nadie",
+     "a": "pescador",
+     "texto": "¿Un volcán con velas?",
+     "ancho": 400
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Edo, 1853"
+    }
+   ]
+  },
+  {
+   "en": "Llevaban más",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 136.5,
+    "lat": 36.5,
+    "grados": 24
+   },
+   "hasta": {
+    "lon": 136.5,
+    "lat": 36.5,
+    "grados": 21
+   },
+   "fecha": "1639-1853",
+   "capas": [
+    {
+     "en": 0,
+     "id": "japon_centro",
+     "color": "rojo",
+     "modo": "dibuja",
+     "etiqueta": "Japón"
+    }
+   ],
+   "foco": {
+    "en": "encerrados",
+    "capa": "japon_centro"
+   },
+   "iconos": [
+    {
+     "en": "encerrados",
+     "lon": 141.8,
+     "lat": 33.0,
+     "cosa": "cadenas",
+     "tam": 0.7
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "doscientos",
+     "texto": "+200 años",
+     "x": 560,
+     "y": 300,
+     "tam": 90,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "sin dejar",
+   "tipo": "escena",
+   "decorado": "puerto",
+   "actores": [
+    {
+     "q": "mercader",
+     "traje": "mercader",
+     "x": 650,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "sin",
+       "hace": "quita_sombrero"
+      }
+     ]
+    },
+    {
+     "q": "guardia",
+     "traje": "samurai",
+     "x": 1200,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "entrar",
+       "hace": "niega"
+      }
+     ],
+     "lleva": "espada"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": "sin",
+     "a": "guardia",
+     "texto": "Hoy no. Ni mañana.",
+     "ancho": 380
+    }
+   ]
+  },
+  {
+   "en": "Y eso que",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Y eso",
+     "tarjeta": "Ha sobrevivido a todo",
+     "cosa": "escudo"
+    },
+    {
+     "en": "todo",
+     "palabra": "Todo",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "dos flotas",
+   "tipo": "escena",
+   "decorado": "mar",
+   "actores": [],
+   "paisaje": true,
+   "barco": "junco",
+   "tormenta": true,
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "1274 y 1281"
+    }
+   ],
+   "cosas": [
+    {
+     "en": "mongolas",
+     "cosa": "junco",
+     "x": 1400,
+     "y": 500,
+     "salta": -60
+    },
+    {
+     "en": "tormentas",
+     "cosa": "calavera",
+     "x": 520,
+     "y": 420,
+     "salta": -60
+    }
+   ]
+  },
+  {
+   "en": "y un siglo",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "rojo",
+     "traje": "samurai",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "siglo",
+       "hace": "ataca"
+      },
+      {
+       "en": "matándose",
+       "hace": "golpeado"
+      }
+     ],
+     "lleva": "espada",
+     "colores": {
+      "color": "#9b1d20"
+     }
+    },
+    {
+     "q": "azul",
+     "traje": "samurai",
+     "x": 1200,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "samuráis",
+       "hace": "ataca"
+      },
+      {
+       "en": "ellos",
+       "hace": "celebra"
+      }
+     ],
+     "lleva": "espada",
+     "colores": {
+      "color": "#1d3f8a"
+     }
+    }
+   ],
+   "humo": true,
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "1467-1590"
+    }
+   ]
+  },
+  {
+   "en": "Y después llegarían",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "dos",
+     "cifra": "2",
+     "sub": "bombas atómicas",
+     "icono": "bomba"
+    }
+   ]
+  },
+  {
+   "en": "lanzadas en una",
+   "tipo": "archivo",
+   "imagen": "archivo/hiroshima.jpg",
+   "pie": "Hiroshima, 1945",
+   "modo": "pantalla"
+  },
+  {
+   "en": "¿Cómo pasó",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "espadas",
+     "tarjeta": "Espadas",
+     "cosa": "espada"
+    },
+    {
+     "en": "castillos",
+     "tarjeta": "Castillos",
+     "cosa": "castillo"
+    }
+   ]
+  },
+  {
+   "en": "más ricos",
+   "tipo": "papel",
+   "titulo": "En poco más de un siglo",
+   "cosas": [
+    {
+     "en": "más ricos",
+     "cosa": "espada",
+     "pie": "Antes"
+    },
+    {
+     "en": "planeta",
+     "cosa": "fabrica",
+     "pie": "Después"
+    },
+    {
+     "en": "siglo",
+     "cosa": "monton_monedas",
+     "pie": "Riqueza"
+    }
+   ]
+  },
+  {
+   "en": "Para entenderlo",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 137,
+    "lat": 36,
+    "grados": 30
+   },
+   "hasta": {
+    "lon": 136.5,
+    "lat": 35.5,
+    "grados": 24
+   },
+   "fecha": "Hace 2.000 años",
+   "capas": [
+    {
+     "en": "islas",
+     "id": "japon_centro",
+     "color": "naranja",
+     "etiqueta": "Japón"
+    }
+   ],
+   "pins": [
+    {
+     "en": "atrás",
+     "lon": 135.8,
+     "lat": 34.68,
+     "nombre": "Yamato",
+     "aro": true
+    }
+   ]
+  },
+  {
+   "en": "según la leyenda",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "emperador",
+     "cosa": "corona",
+     "pie": "El primer emperador"
+    }
+   ]
+  },
+  {
+   "en": "descendía del mismísimo",
+   "tipo": "escena",
+   "decorado": "palacio",
+   "actores": [
+    {
+     "q": "emperador",
+     "traje": "japones",
+     "x": 1150,
+     "s": 1.45,
+     "mira": -0.2,
+     "acciones": [
+      {
+       "en": "descendía",
+       "hace": "orgulloso"
+      },
+      {
+       "en": "sol",
+       "hace": "mira_arriba"
+      }
+     ],
+     "colores": {
+      "color": "#f4efe2",
+      "capa": "#8a1c24"
+     }
+    }
+   ],
+   "cosas": [
+    {
+     "en": "mismísimo",
+     "cosa": "sol",
+     "x": 700,
+     "y": 330,
+     "salta": -60
+    }
+   ]
+  },
+  {
+   "en": "Esta es la historia",
+   "tipo": "capitulo",
+   "numero": 0
+  },
+  {
+   "en": "Hacia el año 300",
+   "tipo": "capitulo",
+   "numero": 1
+  },
+  {
+   "en": "en Yamato",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 136.5,
+    "lat": 35.2,
+    "grados": 11
+   },
+   "hasta": {
+    "lon": 135.7,
+    "lat": 34.8,
+    "grados": 6.5
+   },
+   "fecha": "Año 300",
+   "capas": [
+    {
+     "en": "Yamato",
+     "id": "yamato",
+     "color": "amarillo",
+     "etiqueta": "Yamato"
+    }
+   ],
+   "foco": {
+    "en": "centro",
+    "capa": "yamato"
+   },
+   "pins": [
+    {
+     "en": "centro",
+     "lon": 135.8,
+     "lat": 34.68,
+     "nombre": "Nara"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "jefes",
+     "lon": 136.4,
+     "lat": 34.3,
+     "cosa": "corona",
+     "tam": 0.5
+    }
+   ]
+  },
+  {
+   "en": "empezaron a enterrarse",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "jefe",
+     "traje": "japones",
+     "x": 760,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "tumbas",
+       "hace": "senala"
+      },
+      {
+       "en": "cerradura",
+       "hace": "orgulloso"
+      }
+     ],
+     "colores": {
+      "color": "#6b3d1e"
+     }
+    },
+    {
+     "q": "obrero",
+     "traje": "campesino",
+     "x": 1250,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "gigantes",
+       "hace": "susto"
+      },
+      {
+       "en": "cerradura",
+       "hace": "encoge"
+      }
+     ],
+     "lleva": "pico"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.2,
+     "a": "jefe",
+     "texto": "Grande. MÁS grande.",
+     "ancho": 360
+    }
+   ]
+  },
+  {
+   "en": "La más grande",
+   "tipo": "papel",
+   "titulo": "La tumba de Daisen",
+   "cosas": [
+    {
+     "en": "486",
+     "cifra": "486 m"
+    }
+   ]
+  },
+  {
+   "en": "más que cuatro",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "cuatro",
+     "tarjeta": "4 campos de fútbol",
+     "cosa": "islote"
+    },
+    {
+     "en": "fila",
+     "palabra": "en fila",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "De esos jefes",
+   "tipo": "escena",
+   "decorado": "palacio",
+   "actores": [
+    {
+     "q": "jefe",
+     "traje": "japones",
+     "x": 1150,
+     "s": 1.4,
+     "mira": -0.3,
+     "acciones": [
+      {
+       "en": "familia",
+       "hace": "orgulloso"
+      }
+     ],
+     "colores": {
+      "color": "#f4efe2",
+      "capa": "#8a1c24"
+     }
+    },
+    {
+     "q": "cortesano",
+     "traje": "noble",
+     "x": 650,
+     "s": 1.3,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "jefes",
+       "hace": "agacha"
+      }
+     ]
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Yamato"
+    }
+   ]
+  },
+  {
+   "en": "Según la leyenda",
+   "tipo": "escena",
+   "decorado": "palacio",
+   "actores": [
+    {
+     "q": "Jimmu",
+     "traje": "japones",
+     "x": 1100,
+     "s": 1.45,
+     "mira": -0.2,
+     "acciones": [
+      {
+       "en": "subió",
+       "hace": "orgulloso"
+      },
+      {
+       "en": "Cristo",
+       "hace": "mira_camara"
+      }
+     ],
+     "colores": {
+      "color": "#f4efe2",
+      "capa": "#8a1c24"
+     },
+     "lleva": "espada"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "660 a. C. (leyenda)"
+    },
+    {
+     "en": "Jimmu",
+     "texto": "Jimmu",
+     "x": 560,
+     "y": 300,
+     "tam": 90
+    }
+   ]
+  },
+  {
+   "en": "y descendía",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Amaterasu",
+     "tarjeta": "Amaterasu",
+     "cosa": "sol"
+    },
+    {
+     "en": "diosa",
+     "palabra": "Diosa del sol"
+    }
+   ]
+  },
+  {
+   "en": "Los japoneses llaman",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Nihon",
+     "palabra": "Nihon"
+    },
+    {
+     "en": "origen",
+     "tarjeta": "El origen del sol",
+     "cosa": "sol"
+    },
+    {
+     "en": "bandera",
+     "cosa": "bandera_japon",
+     "pie": "Hinomaru"
+    }
+   ]
+  },
+  {
+   "en": "En el siglo seis",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 131.5,
+    "lat": 35.5,
+    "grados": 15
+   },
+   "hasta": {
+    "lon": 132.5,
+    "lat": 35.2,
+    "grados": 13
+   },
+   "fecha": "Siglo VI",
+   "capas": [
+    {
+     "en": 0,
+     "id": "corea",
+     "color": "verde",
+     "etiqueta": "Corea"
+    },
+    {
+     "en": 0,
+     "id": "japon_centro",
+     "color": "naranja",
+     "op": 0.5
+    }
+   ],
+   "flechas": [
+    {
+     "en": "llegó",
+     "de": [
+      127.4,
+      36.3
+     ],
+     "a": [
+      135.6,
+      34.7
+     ],
+     "curva": 0.15
+    }
+   ],
+   "iconos": [
+    {
+     "en": "budismo",
+     "lon": 135.8,
+     "lat": 35.3,
+     "cosa": "templo",
+     "tam": 0.8
+    }
+   ]
+  },
+  {
+   "en": "En 710",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 135.6,
+    "lat": 34.9,
+    "grados": 8
+   },
+   "hasta": {
+    "lon": 135.8,
+    "lat": 34.7,
+    "grados": 6
+   },
+   "fecha": "710",
+   "capas": [
+    {
+     "en": 0,
+     "id": "yamato",
+     "color": "amarillo",
+     "op": 0.6
+    }
+   ],
+   "pins": [
+    {
+     "en": "Nara",
+     "lon": 135.8,
+     "lat": 34.68,
+     "nombre": "Nara",
+     "aro": true
+    }
+   ],
+   "iconos": [
+    {
+     "en": "capital",
+     "lon": 136.4,
+     "lat": 34.4,
+     "cosa": "corona",
+     "tam": 0.5
+    },
+    {
+     "en": "copiada",
+     "lon": 135.1,
+     "lat": 34.3,
+     "cosa": "pagoda",
+     "tam": 0.6
+    }
+   ]
+  },
+  {
+   "en": "con un Buda",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Buda",
+     "cifra": "15 m",
+     "sub": "Buda de bronce de Nara",
+     "icono": "templo"
+    }
+   ]
+  },
+  {
+   "en": "Y en 794",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 135.8,
+    "lat": 34.9,
+    "grados": 7
+   },
+   "hasta": {
+    "lon": 135.8,
+    "lat": 34.9,
+    "grados": 6
+   },
+   "fecha": "794",
+   "pins": [
+    {
+     "en": 0,
+     "lon": 135.8,
+     "lat": 34.68,
+     "nombre": "Nara"
+    },
+    {
+     "en": "Heian",
+     "lon": 135.77,
+     "lat": 35.01,
+     "nombre": "Kioto (Heian)",
+     "aro": true
+    }
+   ],
+   "flechas": [
+    {
+     "en": "mudó",
+     "de": [
+      135.8,
+      34.7
+     ],
+     "a": [
+      135.77,
+      34.98
+     ],
+     "curva": 0.3
+    }
+   ],
+   "iconos": [
+    {
+     "en": "capital",
+     "lon": 136.5,
+     "lat": 35.4,
+     "cosa": "corona",
+     "tam": 0.5
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "mil años",
+     "texto": "+1.000 años",
+     "x": 560,
+     "y": 300,
+     "tam": 90,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Allí los nobles",
+   "tipo": "escena",
+   "decorado": "palacio",
+   "actores": [
+    {
+     "q": "dama",
+     "traje": "civil_mujer",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "poemas",
+       "hace": "piensa"
+      },
+      {
+       "en": "perfumes",
+       "hace": "orgulloso"
+      }
+     ],
+     "colores": {
+      "color": "#c05a8a"
+     }
+    },
+    {
+     "q": "noble",
+     "traje": "noble",
+     "x": 1200,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "belleza",
+       "hace": "saluda"
+      },
+      {
+       "en": "dientes",
+       "hace": "rie"
+      }
+     ],
+     "colores": {
+      "color": "#4a2a6a"
+     }
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.2,
+     "a": "noble",
+     "texto": "Negro: lo más elegante.",
+     "ancho": 400
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Kioto, año 1000"
+    }
+   ]
+  },
+  {
+   "en": "Hacia el año 1000",
+   "tipo": "escena",
+   "decorado": "interior",
+   "actores": [
+    {
+     "q": "Murasaki",
+     "traje": "civil_mujer",
+     "x": 960,
+     "s": 1.4,
+     "mira": 0.2,
+     "acciones": [
+      {
+       "en": "escribió",
+       "hace": "piensa"
+      },
+      {
+       "en": "Genji",
+       "hace": "orgulloso"
+      }
+     ],
+     "colores": {
+      "color": "#c05a8a"
+     },
+     "lleva": "pluma"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Kioto, año 1000"
+    },
+    {
+     "en": "Murasaki",
+     "texto": "Murasaki Shikibu",
+     "x": 960,
+     "y": 220,
+     "tam": 70
+    }
+   ]
+  },
+  {
+   "en": "para muchos",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "primera",
+     "tarjeta": "Historia de Genji",
+     "cosa": "libro"
+    },
+    {
+     "en": "novela",
+     "palabra": "1.ª novela",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Pero mientras los",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "noble",
+     "traje": "noble",
+     "x": 560,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "poemas",
+       "hace": "piensa"
+      },
+      {
+       "en": "espada",
+       "hace": "susto"
+      }
+     ],
+     "colores": {
+      "color": "#4a2a6a"
+     },
+     "lleva": "pluma"
+    },
+    {
+     "q": "guerrero",
+     "traje": "samurai",
+     "x": 1250,
+     "s": 1.1,
+     "mira": -0.3,
+     "acciones": [
+      {
+       "en": "provincias",
+       "hace": "ataca"
+      },
+      {
+       "en": "aprendiendo",
+       "hace": "orgulloso"
+      }
+     ],
+     "lleva": "espada"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "guerrero",
+     "texto": "Yo rimo con esto.",
+     "ancho": 360
+    }
+   ]
+  },
+  {
+   "en": "En 1180",
+   "tipo": "capitulo",
+   "numero": 2
+  },
+  {
+   "en": "dos clanes",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 137,
+    "lat": 35.2,
+    "grados": 13
+   },
+   "hasta": {
+    "lon": 137.2,
+    "lat": 35.3,
+    "grados": 11.5
+   },
+   "fecha": "1180",
+   "pins": [
+    {
+     "en": "Taira",
+     "lon": 135.77,
+     "lat": 35.01,
+     "nombre": "Taira",
+     "izquierda": true
+    },
+    {
+     "en": "Minamoto",
+     "lon": 139.55,
+     "lat": 35.32,
+     "nombre": "Minamoto"
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "guerra",
+     "de": [
+      139.4,
+      35.4
+     ],
+     "a": [
+      136.6,
+      35.2
+     ],
+     "d": 2.5,
+     "color": "blanco"
+    },
+    {
+     "en": "guerra",
+     "de": [
+      135.3,
+      34.8
+     ],
+     "a": [
+      136.2,
+      35.0
+     ],
+     "d": 2.0,
+     "color": "rojo"
+    }
+   ],
+   "guia": {
+    "lado": "izquierda"
+   }
+  },
+  {
+   "en": "En 1185",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 131.3,
+    "lat": 33.9,
+    "grados": 6
+   },
+   "hasta": {
+    "lon": 131.0,
+    "lat": 33.95,
+    "grados": 5
+   },
+   "fecha": "1185",
+   "capas": [
+    {
+     "en": 0,
+     "id": "kyushu",
+     "color": "rojo",
+     "op": 0.4
+    }
+   ],
+   "pins": [
+    {
+     "en": "Dan",
+     "lon": 130.95,
+     "lat": 33.96,
+     "nombre": "Dan no Ura",
+     "aro": true,
+     "mar": true
+    }
+   ],
+   "barcos": [
+    {
+     "en": "batalla",
+     "de": [
+      129.9,
+      34.1
+     ],
+     "a": [
+      130.85,
+      33.95
+     ],
+     "d": 2.5,
+     "flota": 3,
+     "color": "rojo"
+    },
+    {
+     "en": "naval",
+     "de": [
+      132.2,
+      33.8
+     ],
+     "a": [
+      131.05,
+      33.96
+     ],
+     "d": 2.5,
+     "flota": 3,
+     "color": "#f4f4f4",
+     "curva": -0.1
+    }
+   ],
+   "iconos": [
+    {
+     "en": "ganaron",
+     "lon": 131.5,
+     "lat": 34.5,
+     "cosa": "bandera",
+     "tam": 0.6
+    }
+   ]
+  },
+  {
+   "en": "Los Taira",
+   "tipo": "escena",
+   "decorado": "mar",
+   "actores": [],
+   "paisaje": true,
+   "noche": true,
+   "cosas": [
+    {
+     "en": "rendirse",
+     "cosa": "bandera_blanca",
+     "x": 1400,
+     "y": 480,
+     "salta": -60
+    },
+    {
+     "en": "mar",
+     "cosa": "espada",
+     "x": 600,
+     "y": 520,
+     "salta": -60
+    },
+    {
+     "en": "Antoku",
+     "cosa": "corona",
+     "x": 960,
+     "y": 520,
+     "salta": -90
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Dan no Ura, 1185"
+    }
+   ]
+  },
+  {
+   "en": "El vencedor",
+   "tipo": "escena",
+   "decorado": "campamento",
+   "actores": [
+    {
+     "q": "Yoritomo",
+     "traje": "samurai",
+     "x": 960,
+     "s": 1.2,
+     "mira": 0,
+     "acciones": [
+      {
+       "en": "vencedor",
+       "hace": "orgulloso"
+      },
+      {
+       "en": "Yoritomo",
+       "hace": "mira_camara"
+      }
+     ]
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "Minamoto",
+     "texto": "Minamoto no Yoritomo",
+     "x": 960,
+     "y": 220,
+     "tam": 70
+    }
+   ]
+  },
+  {
+   "en": "recibió en 1192",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "1192",
+     "cifra": "1192",
+     "sub": "Shogun",
+     "icono": "espada"
+    },
+    {
+     "en": "jefe",
+     "tarjeta": "Jefe militar",
+     "cosa": "escudo"
+    }
+   ]
+  },
+  {
+   "en": "El emperador seguía",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 137.8,
+    "lat": 35.4,
+    "grados": 8
+   },
+   "hasta": {
+    "lon": 137.8,
+    "lat": 35.3,
+    "grados": 7
+   },
+   "fecha": "1192",
+   "pins": [
+    {
+     "en": "Kioto",
+     "lon": 135.77,
+     "lat": 35.01,
+     "nombre": "Kioto: emperador"
+    },
+    {
+     "en": "Kamakura",
+     "lon": 139.55,
+     "lat": 35.32,
+     "nombre": "Kamakura: shogun"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "emperador",
+     "lon": 135.77,
+     "lat": 35.6,
+     "cosa": "corona",
+     "tam": 0.6
+    },
+    {
+     "en": "mandaba",
+     "lon": 139.55,
+     "lat": 35.95,
+     "cosa": "espada",
+     "tam": 0.6
+    }
+   ],
+   "guia": false
+  },
+  {
+   "en": "Era como tener",
+   "tipo": "escena",
+   "decorado": "palacio",
+   "actores": [
+    {
+     "q": "emperador",
+     "traje": "japones",
+     "x": 1210,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "adorno",
+       "hace": "encoge"
+      }
+     ],
+     "sentado": true,
+     "colores": {
+      "color": "#f4efe2",
+      "capa": "#8a1c24"
+     },
+     "y": 710
+    },
+    {
+     "q": "shogun",
+     "traje": "samurai",
+     "x": 760,
+     "s": 1.15,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "general",
+       "hace": "orgulloso"
+      }
+     ],
+     "lleva": "pergamino"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.2,
+     "a": "shogun",
+     "texto": "Usted salude, majestad.",
+     "ancho": 380
+    }
+   ]
+  },
+  {
+   "en": "Mandaban los samuráis",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "jinete",
+     "traje": "samurai",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "caballo",
+       "hace": "orgulloso"
+      }
+     ],
+     "montado": true,
+     "lleva": "arco"
+    },
+    {
+     "q": "vasallo",
+     "traje": "samurai",
+     "x": 1250,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "lealtad",
+       "hace": "agacha"
+      },
+      {
+       "en": "muerte",
+       "hace": "saluda"
+      }
+     ]
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Japón, siglo XIII"
+    }
+   ]
+  },
+  {
+   "en": "Y en 1274",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 116,
+    "lat": 40,
+    "grados": 44
+   },
+   "hasta": {
+    "lon": 119,
+    "lat": 39,
+    "grados": 40
+   },
+   "fecha": "1274",
+   "encuadre": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "yuan",
+     "color": "rojo",
+     "cara": "malo",
+     "cara_en": "amenaza",
+     "cara_lugar": [
+      112,
+      41
+     ]
+    },
+    {
+     "en": "mayor",
+     "id": "japon_centro",
+     "color": "amarillo"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "1274",
+     "texto": "Imperio mongol",
+     "x": 560,
+     "y": 300,
+     "tam": 80,
+     "rojo": true
+    }
+   ],
+   "iconos": [
+    {
+     "en": "llegó",
+     "lon": 116,
+     "lat": 45,
+     "cosa": "caballo",
+     "tam": 0.7
+    }
+   ],
+   "guia": {
+    "lado": "derecha"
+   }
+  },
+  {
+   "en": "Kublai Kan",
+   "tipo": "escena",
+   "decorado": "palacio",
+   "actores": [
+    {
+     "q": "Kublai",
+     "traje": "emperador_chino",
+     "x": 1210,
+     "s": 1.1,
+     "mira": -0.3,
+     "acciones": [
+      {
+       "en": "Gengis",
+       "hace": "orgulloso"
+      },
+      {
+       "en": "China",
+       "hace": "senala"
+      }
+     ],
+     "sentado": true,
+     "y": 710
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "Kublai",
+     "texto": "Que se rinda Japón.",
+     "ancho": 360
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "Kublai",
+     "texto": "Kublai Kan",
+     "x": 560,
+     "y": 260,
+     "tam": 70
+    }
+   ]
+  },
+  {
+   "en": "cientos de barcos",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 129.6,
+    "lat": 34.6,
+    "grados": 7
+   },
+   "hasta": {
+    "lon": 130.0,
+    "lat": 34.0,
+    "grados": 6
+   },
+   "fecha": "1274",
+   "capas": [
+    {
+     "en": "Kyushu",
+     "id": "kyushu",
+     "color": "naranja",
+     "etiqueta": "Kyushu"
+    }
+   ],
+   "barcos": [
+    {
+     "en": "cientos",
+     "de": [
+      128.5,
+      35.05
+     ],
+     "a": [
+      130.3,
+      33.7
+     ],
+     "d": 3.5,
+     "flota": 5,
+     "color": "rojo",
+     "curva": 0.05
+    }
+   ],
+   "pins": [
+    {
+     "en": "barcos",
+     "lon": 129.33,
+     "lat": 34.42,
+     "nombre": "Tsushima",
+     "izquierda": true
+    }
+   ],
+   "guia": {
+    "lado": "izquierda"
+   }
+  },
+  {
+   "en": "Los samuráis nunca",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "samurai",
+     "traje": "samurai",
+     "x": 680,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "visto",
+       "hace": "susto"
+      }
+     ]
+    },
+    {
+     "q": "mongol",
+     "traje": "mongol",
+     "x": 1260,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "nunca",
+       "hace": "rie"
+      }
+     ],
+     "lleva": "bomba"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.2,
+     "a": "samurai",
+     "texto": "¿Eso explota?",
+     "ancho": 300
+    }
+   ],
+   "humo": true,
+   "cosas": [
+    {
+     "en": "bombas",
+     "cosa": "fuego",
+     "x": 960,
+     "y": 900,
+     "salta": -60
+    }
+   ]
+  },
+  {
+   "en": "Pero tras un día",
+   "tipo": "escena",
+   "decorado": "mar",
+   "actores": [],
+   "paisaje": true,
+   "barco": "junco",
+   "tormenta": true,
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Bahía de Hakata, 1274"
+    }
+   ],
+   "cosas": [
+    {
+     "en": "volvieron",
+     "cosa": "junco",
+     "x": 1450,
+     "y": 480,
+     "salta": -50
+    },
+    {
+     "en": "tormenta",
+     "cosa": "calavera",
+     "x": 520,
+     "y": 440,
+     "salta": -60
+    }
+   ]
+  },
+  {
+   "en": "En 1281",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 125,
+    "lat": 32.5,
+    "grados": 16
+   },
+   "hasta": {
+    "lon": 126.5,
+    "lat": 33,
+    "grados": 14
+   },
+   "fecha": "1281",
+   "capas": [
+    {
+     "en": 0,
+     "id": "kyushu",
+     "color": "naranja",
+     "etiqueta": "Kyushu"
+    }
+   ],
+   "barcos": [
+    {
+     "en": "Kublai",
+     "de": [
+      128.6,
+      35.1
+     ],
+     "a": [
+      129.9,
+      33.7
+     ],
+     "d": 3,
+     "flota": 5,
+     "color": "rojo"
+    },
+    {
+     "en": "flota",
+     "de": [
+      122.2,
+      29.9
+     ],
+     "a": [
+      129.6,
+      33.4
+     ],
+     "d": 3.5,
+     "flota": 7,
+     "color": "rojo",
+     "curva": -0.12
+    }
+   ],
+   "pins": [
+    {
+     "en": "volvió",
+     "lon": 121.55,
+     "lat": 29.87,
+     "nombre": "China"
+    },
+    {
+     "en": "flota",
+     "lon": 128.6,
+     "lat": 35.2,
+     "nombre": "Corea"
+    }
+   ],
+   "guia": false
+  },
+  {
+   "en": "Esta vez",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 130.5,
+    "lat": 33.8,
+    "grados": 6
+   },
+   "hasta": {
+    "lon": 130.4,
+    "lat": 33.65,
+    "grados": 5
+   },
+   "fecha": "1281",
+   "capas": [
+    {
+     "en": 0,
+     "id": "kyushu",
+     "color": "naranja",
+     "op": 0.6
+    }
+   ],
+   "pins": [
+    {
+     "en": "Hakata",
+     "lon": 130.4,
+     "lat": 33.6,
+     "nombre": "Hakata",
+     "aro": true
+    }
+   ],
+   "iconos": [
+    {
+     "en": "muro",
+     "lon": 130.3,
+     "lat": 33.8,
+     "cosa": "muralla",
+     "tam": 0.8
+    }
+   ]
+  },
+  {
+   "en": "Durante semanas",
+   "tipo": "escena",
+   "decorado": "mar",
+   "actores": [],
+   "paisaje": true,
+   "barco": "junco",
+   "tormenta": true,
+   "noche": true,
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Agosto de 1281"
+    }
+   ],
+   "cosas": [
+    {
+     "en": "desembarcar",
+     "cosa": "junco",
+     "x": 1450,
+     "y": 480,
+     "salta": -50
+    },
+    {
+     "en": "tifón",
+     "cosa": "calavera",
+     "x": 560,
+     "y": 440,
+     "salta": -60
+    }
+   ]
+  },
+  {
+   "en": "Los japoneses lo llamaron",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "kamikaze",
+     "palabra": "Kamikaze",
+     "rojo": true
+    },
+    {
+     "en": "divino",
+     "tarjeta": "El viento divino",
+     "cosa": "junco",
+     "tachar_en": "divino"
+    }
+   ]
+  },
+  {
+   "en": "En 1467",
+   "tipo": "capitulo",
+   "numero": 3
+  },
+  {
+   "en": "en Kioto la",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 135.9,
+    "lat": 35.1,
+    "grados": 7
+   },
+   "hasta": {
+    "lon": 135.8,
+    "lat": 35.0,
+    "grados": 6
+   },
+   "fecha": "1467",
+   "pins": [
+    {
+     "en": "Kioto",
+     "lon": 135.77,
+     "lat": 35.01,
+     "nombre": "Kioto",
+     "aro": true
+    }
+   ],
+   "fuegos": [
+    {
+     "en": "guerra",
+     "lon": 135.77,
+     "lat": 35.03
+    },
+    {
+     "en": "Onin",
+     "lon": 135.9,
+     "lat": 34.95
+    }
+   ]
+  },
+  {
+   "en": "Empezó más de",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 136.5,
+    "lat": 36,
+    "grados": 20
+   },
+   "hasta": {
+    "lon": 136.5,
+    "lat": 36,
+    "grados": 18
+   },
+   "fecha": "1467-1590",
+   "capas": [
+    {
+     "en": 0,
+     "id": "japon_centro",
+     "color": "naranja",
+     "cara": "enfado",
+     "cara_en": "caos",
+     "rompe_en": "señor"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "siglo",
+     "lon": 141.5,
+     "lat": 33.2,
+     "cosa": "espada",
+     "tam": 0.6
+    },
+    {
+     "en": "daimio",
+     "lon": 131.5,
+     "lat": 38.5,
+     "cosa": "castillo",
+     "tam": 0.6
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "siglo",
+     "texto": "+100 años",
+     "x": 560,
+     "y": 300,
+     "tam": 80,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Japón era como",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "a",
+     "traje": "samurai",
+     "x": 520,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "tablero",
+       "hace": "senala"
+      }
+     ],
+     "lleva": "espada",
+     "colores": {
+      "color": "#9b1d20"
+     }
+    },
+    {
+     "q": "b",
+     "traje": "samurai",
+     "x": 960,
+     "s": 1.1,
+     "mira": -0.2,
+     "acciones": [
+      {
+       "en": "ajedrez",
+       "hace": "enfada"
+      }
+     ],
+     "lleva": "espada",
+     "colores": {
+      "color": "#2f6b2f"
+     }
+    },
+    {
+     "q": "c",
+     "traje": "samurai",
+     "x": 1400,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "jugadores",
+       "hace": "ataca"
+      }
+     ],
+     "lleva": "espada",
+     "colores": {
+      "color": "#1d3f8a"
+     }
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.1,
+     "a": "a",
+     "texto": "¡Esto es mío!",
+     "ancho": 300
+    },
+    {
+     "en": 2.2,
+     "a": "c",
+     "texto": "¡Y esto!",
+     "ancho": 260
+    }
+   ]
+  },
+  {
+   "en": "En 1543",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 128,
+    "lat": 28.5,
+    "grados": 14
+   },
+   "hasta": {
+    "lon": 130.0,
+    "lat": 30.0,
+    "grados": 8
+   },
+   "fecha": "1543",
+   "capas": [
+    {
+     "en": 0,
+     "id": "kyushu",
+     "color": "naranja",
+     "op": 0.5
+    }
+   ],
+   "barcos": [
+    {
+     "en": "barco",
+     "de": [
+      121.5,
+      23.8
+     ],
+     "a": [
+      130.85,
+      30.55
+     ],
+     "d": 3.5,
+     "flota": 1,
+     "color": "#f4f4f4",
+     "curva": 0.1
+    }
+   ],
+   "iconos": [
+    {
+     "en": "portugueses",
+     "lon": 124.5,
+     "lat": 26.5,
+     "cosa": "carabela",
+     "tam": 0.6
+    }
+   ],
+   "pins": [
+    {
+     "en": "Tanegashima",
+     "lon": 130.98,
+     "lat": 30.62,
+     "nombre": "Tanegashima",
+     "aro": true,
+     "mar": true
+    }
+   ]
+  },
+  {
+   "en": "Traían arcabuces",
+   "tipo": "escena",
+   "decorado": "puerto",
+   "actores": [
+    {
+     "q": "portugues",
+     "traje": "conquistador",
+     "x": 1250,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "arcabuces",
+       "hace": "orgulloso"
+      }
+     ],
+     "lleva": "fusil"
+    },
+    {
+     "q": "señor",
+     "traje": "samurai",
+     "x": 680,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "compró",
+       "hace": "senala"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "señor",
+     "texto": "Me llevo dos.",
+     "ancho": 300
+    }
+   ]
+  },
+  {
+   "en": "en pocos años",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "herreros",
+     "cosa": "fusil",
+     "pie": "Hechos en Japón"
+    },
+    {
+     "en": "miles",
+     "palabra": "Miles",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Detrás llegaron",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "misionero",
+     "traje": "monje",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "misioneros",
+       "hace": "saluda"
+      }
+     ],
+     "lleva": "cruz"
+    },
+    {
+     "q": "campesino",
+     "traje": "campesino",
+     "x": 1150,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "cientos",
+       "hace": "asiente"
+      }
+     ]
+    },
+    {
+     "q": "campesina",
+     "traje": "campesina",
+     "x": 1450,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "bautizaron",
+       "hace": "asiente"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "Tres hombres",
+   "tipo": "papel",
+   "titulo": "Los tres unificadores",
+   "cosas": [
+    {
+     "en": "Tres",
+     "imagen": "archivo/nobunaga.jpg",
+     "pie": "Nobunaga"
+    },
+    {
+     "en": "unieron",
+     "imagen": "archivo/hideyoshi.jpg",
+     "pie": "Hideyoshi"
+    },
+    {
+     "en": "país",
+     "imagen": "archivo/ieyasu.jpg",
+     "pie": "Ieyasu"
+    }
+   ]
+  },
+  {
+   "en": "un señor despiadado",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "Nobunaga",
+     "traje": "samurai",
+     "x": 560,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "despiadado",
+       "hace": "senala"
+      }
+     ],
+     "colores": {
+      "color": "#1b1b1b"
+     }
+    },
+    {
+     "q": "tirador1",
+     "traje": "samurai",
+     "x": 1050,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "arcabuces",
+       "hace": "ataca"
+      }
+     ],
+     "lleva": "fusil"
+    },
+    {
+     "q": "tirador2",
+     "traje": "samurai",
+     "x": 1400,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "nadie",
+       "hace": "ataca"
+      }
+     ],
+     "lleva": "fusil"
+    }
+   ],
+   "humo": true,
+   "rotulos": [
+    {
+     "en": "despiadado",
+     "texto": "Oda Nobunaga",
+     "x": 560,
+     "y": 220,
+     "tam": 70
+    }
+   ]
+  },
+  {
+   "en": "conquistó el centro",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 136.5,
+    "lat": 35.3,
+    "grados": 9
+   },
+   "hasta": {
+    "lon": 136.2,
+    "lat": 35.2,
+    "grados": 7
+   },
+   "fecha": "1560-1582",
+   "capas": [
+    {
+     "en": "conquistó",
+     "id": "nobunaga",
+     "color": "rojo",
+     "modo": "crece",
+     "etiqueta": "Nobunaga"
+    }
+   ],
+   "pins": [
+    {
+     "en": "templo",
+     "lon": 135.77,
+     "lat": 35.01,
+     "nombre": "Honnoji",
+     "aro": true
+    }
+   ],
+   "iconos": [
+    {
+     "en": "generales",
+     "lon": 135.2,
+     "lat": 35.6,
+     "cosa": "espada",
+     "tam": 0.6
+    }
+   ],
+   "fuegos": [
+    {
+     "en": "traicionó",
+     "lon": 135.77,
+     "lat": 35.0
+    }
+   ]
+  },
+  {
+   "en": "Su sucesor",
+   "tipo": "archivo",
+   "imagen": "archivo/hideyoshi.jpg",
+   "pie": "Toyotomi Hideyoshi",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "terminó la unificación",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 136.5,
+    "lat": 36,
+    "grados": 20
+   },
+   "hasta": {
+    "lon": 136.5,
+    "lat": 36,
+    "grados": 18
+   },
+   "fecha": "1590",
+   "capas": [
+    {
+     "en": "unificación",
+     "id": "japon_centro",
+     "color": "amarillo",
+     "modo": "crece",
+     "etiqueta": "Japón unido",
+     "cara": "feliz",
+     "cara_en": "1590"
+    }
+   ]
+  },
+  {
+   "en": "Y no contento",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 128.5,
+    "lat": 35.5,
+    "grados": 10
+   },
+   "hasta": {
+    "lon": 128.2,
+    "lat": 36,
+    "grados": 9
+   },
+   "fecha": "1592-1598",
+   "capas": [
+    {
+     "en": 0,
+     "id": "corea",
+     "color": "verde",
+     "etiqueta": "Corea",
+     "cara": "susto",
+     "cara_en": "Corea"
+    },
+    {
+     "en": 0,
+     "id": "kyushu",
+     "color": "amarillo",
+     "op": 0.6
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "invadió",
+     "de": [
+      129.9,
+      33.5
+     ],
+     "a": [
+      129.05,
+      35.15
+     ],
+     "d": 1.8,
+     "color": "rojo"
+    },
+    {
+     "en": "veces",
+     "de": [
+      129.05,
+      35.15
+     ],
+     "a": [
+      127.0,
+      37.5
+     ],
+     "d": 2,
+     "color": "rojo"
+    }
+   ],
+   "fuegos": [
+    {
+     "en": "arrasada",
+     "lon": 127.0,
+     "lat": 37.55
+    },
+    {
+     "en": "península",
+     "lon": 128.6,
+     "lat": 35.9
+    }
+   ],
+   "guia": {
+    "lado": "izquierda"
+   }
+  },
+  {
+   "en": "Después, el más",
+   "tipo": "archivo",
+   "imagen": "archivo/ieyasu.jpg",
+   "pie": "Tokugawa Ieyasu",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "ganó la batalla",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 137.3,
+    "lat": 35.4,
+    "grados": 8
+   },
+   "hasta": {
+    "lon": 137.0,
+    "lat": 35.4,
+    "grados": 7
+   },
+   "fecha": "1600",
+   "pins": [
+    {
+     "en": "Sekigahara",
+     "lon": 136.47,
+     "lat": 35.36,
+     "nombre": "Sekigahara",
+     "aro": true
+    },
+    {
+     "en": "1603",
+     "lon": 139.76,
+     "lat": 35.69,
+     "nombre": "Edo"
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "batalla",
+     "de": [
+      139.5,
+      35.6
+     ],
+     "a": [
+      136.6,
+      35.38
+     ],
+     "d": 2.2,
+     "color": "amarillo"
+    },
+    {
+     "en": "batalla",
+     "de": [
+      135.5,
+      34.7
+     ],
+     "a": [
+      136.35,
+      35.33
+     ],
+     "d": 2.0,
+     "color": "morado"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "shogun",
+     "lon": 139.76,
+     "lat": 36.2,
+     "cosa": "corona",
+     "tam": 0.6
+    }
+   ],
+   "guia": false
+  },
+  {
+   "en": "Por eso se dice",
+   "tipo": "escena",
+   "decorado": "interior",
+   "actores": [
+    {
+     "q": "Nobunaga",
+     "traje": "samurai",
+     "x": 520,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "amasó",
+       "hace": "sujeta"
+      }
+     ],
+     "colores": {
+      "color": "#1b1b1b"
+     }
+    },
+    {
+     "q": "Hideyoshi",
+     "traje": "samurai",
+     "x": 960,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "horneó",
+       "hace": "senala"
+      }
+     ],
+     "colores": {
+      "color": "#b07a1e"
+     }
+    },
+    {
+     "q": "Ieyasu",
+     "traje": "samurai",
+     "x": 1400,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "dice",
+       "hace": "mira_camara"
+      },
+      {
+       "en": "comió",
+       "hace": "rie"
+      }
+     ],
+     "colores": {
+      "color": "#2f4f2f"
+     },
+     "lleva": "cuenco"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 4.5,
+     "a": "Ieyasu",
+     "texto": "Paciencia, chicos.",
+     "ancho": 320
+    }
+   ]
+  },
+  {
+   "en": "Desde Edo",
+   "tipo": "capitulo",
+   "numero": 4
+  },
+  {
+   "en": "los Tokugawa",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 139.4,
+    "lat": 35.6,
+    "grados": 8
+   },
+   "hasta": {
+    "lon": 139.7,
+    "lat": 35.65,
+    "grados": 6.5
+   },
+   "fecha": "1603",
+   "capas": [
+    {
+     "en": 0,
+     "id": "kanto",
+     "color": "amarillo",
+     "op": 0.6
+    }
+   ],
+   "pins": [
+    {
+     "en": 0,
+     "lon": 139.76,
+     "lat": 35.69,
+     "nombre": "Edo (Tokio)",
+     "aro": true
+    }
+   ],
+   "iconos": [
+    {
+     "en": "Tokugawa",
+     "lon": 139.1,
+     "lat": 36.3,
+     "cosa": "corona",
+     "tam": 0.5
+    },
+    {
+     "en": "cambiar",
+     "lon": 140.4,
+     "lat": 35.0,
+     "cosa": "reloj",
+     "tam": 0.6
+    }
+   ]
+  },
+  {
+   "en": "Prohibieron el cristianismo",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Prohibieron",
+     "tarjeta": "Cristianismo",
+     "cosa": "cruz",
+     "tachar_en": "cristianismo"
+    }
+   ]
+  },
+  {
+   "en": "en 1639 expulsaron",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 129.2,
+    "lat": 32.0,
+    "grados": 9
+   },
+   "hasta": {
+    "lon": 128.5,
+    "lat": 31.5,
+    "grados": 10
+   },
+   "fecha": "1639",
+   "capas": [
+    {
+     "en": 0,
+     "id": "kyushu",
+     "color": "naranja",
+     "op": 0.5
+    }
+   ],
+   "barcos": [
+    {
+     "en": "expulsaron",
+     "de": [
+      129.8,
+      32.7
+     ],
+     "a": [
+      124.5,
+      29.5
+     ],
+     "d": 3,
+     "flota": 1,
+     "color": "#f4f4f4"
+    }
+   ],
+   "pins": [
+    {
+     "en": "1639",
+     "lon": 129.87,
+     "lat": 32.75,
+     "nombre": "Nagasaki"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "portugueses",
+     "texto": "Adiós, portugueses",
+     "x": 600,
+     "y": 300,
+     "tam": 64,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Japón se cerró",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 136.5,
+    "lat": 36,
+    "grados": 22
+   },
+   "hasta": {
+    "lon": 136.5,
+    "lat": 36,
+    "grados": 19
+   },
+   "fecha": "1639",
+   "encuadre": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "japon_centro",
+     "color": "rojo",
+     "cara": "enfado",
+     "cara_en": "cerró"
+    }
+   ],
+   "foco": {
+    "en": "cerró",
+    "capa": "japon_centro"
+   },
+   "iconos": [
+    {
+     "en": "cerró",
+     "lon": 141.5,
+     "lat": 33.0,
+     "cosa": "cadenas",
+     "tam": 0.8
+    }
+   ]
+  },
+  {
+   "en": "Ningún japonés",
+   "tipo": "escena",
+   "decorado": "puerto",
+   "actores": [
+    {
+     "q": "viajero",
+     "traje": "japones",
+     "x": 1250,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "salir",
+       "hace": "camina"
+      }
+     ],
+     "lleva": "saco"
+    },
+    {
+     "q": "guardia",
+     "traje": "samurai",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "muerte",
+       "hace": "niega"
+      }
+     ],
+     "lleva": "espada"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.4,
+     "a": "guardia",
+     "texto": "Ni lo pienses.",
+     "ancho": 300
+    }
+   ]
+  },
+  {
+   "en": "Solo los holandeses",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 129.6,
+    "lat": 32.8,
+    "grados": 7
+   },
+   "hasta": {
+    "lon": 129.85,
+    "lat": 32.75,
+    "grados": 5
+   },
+   "fecha": "1641-1853",
+   "capas": [
+    {
+     "en": 0,
+     "id": "kyushu",
+     "color": "naranja",
+     "op": 0.5
+    }
+   ],
+   "barcos": [
+    {
+     "en": "holandeses",
+     "de": [
+      125.5,
+      31.2
+     ],
+     "a": [
+      129.82,
+      32.73
+     ],
+     "d": 3,
+     "flota": 1,
+     "color": "naranja"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "comerciar",
+     "lon": 128.0,
+     "lat": 32.0,
+     "cosa": "monton_monedas",
+     "tam": 0.5
+    }
+   ],
+   "pins": [
+    {
+     "en": "Dejima",
+     "lon": 129.87,
+     "lat": 32.75,
+     "nombre": "Dejima (Nagasaki)",
+     "aro": true
+    }
+   ]
+  },
+  {
+   "en": "una islita artificial",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "islita",
+     "tarjeta": "Dejima",
+     "cosa": "islote"
+    },
+    {
+     "en": "campo",
+     "palabra": "≈ 1 campo de fútbol"
+    }
+   ]
+  },
+  {
+   "en": "Y funcionó",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "doscientos",
+     "cifra": "+200 años",
+     "sub": "sin guerras"
+    },
+    {
+     "en": "millón",
+     "tarjeta": "Edo: 1 millón",
+     "cosa": "castillo"
+    }
+   ]
+  },
+  {
+   "en": "Hubo teatro",
+   "tipo": "archivo",
+   "imagen": "archivo/gran_ola.jpg",
+   "pie": "La Gran Ola, Hokusai",
+   "modo": "pantalla"
+  },
+  {
+   "en": "y samuráis sin",
+   "tipo": "escena",
+   "decorado": "despacho",
+   "actores": [
+    {
+     "q": "samurai",
+     "traje": "samurai",
+     "x": 960,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "pelear",
+       "hace": "triste"
+      },
+      {
+       "en": "papeles",
+       "hace": "se_mira"
+      }
+     ],
+     "sentado": true,
+     "lleva": "pergamino"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.2,
+     "a": "samurai",
+     "texto": "Formulario 27... otra vez.",
+     "ancho": 380
+    }
+   ]
+  },
+  {
+   "en": "Hasta que en 1853",
+   "tipo": "capitulo",
+   "numero": 5
+  },
+  {
+   "en": "los barcos negros",
+   "tipo": "escena",
+   "decorado": "mar",
+   "actores": [],
+   "paisaje": true,
+   "barco": "barco_vapor",
+   "humo": true,
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Bahía de Edo, 1853"
+    }
+   ],
+   "cosas": [
+    {
+     "en": "negros",
+     "cosa": "barco_vapor",
+     "x": 1450,
+     "y": 500,
+     "salta": -40
+    }
+   ]
+  },
+  {
+   "en": "El comodoro",
+   "tipo": "archivo",
+   "imagen": "archivo/perry.jpg",
+   "pie": "Matthew Perry",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "entró en la bahía",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 140.2,
+    "lat": 34.6,
+    "grados": 7
+   },
+   "hasta": {
+    "lon": 139.8,
+    "lat": 35.15,
+    "grados": 5
+   },
+   "fecha": "8 de julio de 1853",
+   "capas": [
+    {
+     "en": 0,
+     "id": "kanto",
+     "color": "amarillo",
+     "op": 0.5,
+     "cara": "susto",
+     "cara_en": "puertos",
+     "cara_lugar": [
+      139.5,
+      35.85
+     ]
+    }
+   ],
+   "barcos": [
+    {
+     "en": "cuatro",
+     "de": [
+      141.2,
+      33.6
+     ],
+     "a": [
+      139.73,
+      35.22
+     ],
+     "d": 3.5,
+     "flota": 4,
+     "color": "#1e1e1e"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "vapor",
+     "lon": 140.6,
+     "lat": 34.2,
+     "cosa": "barco_vapor",
+     "tam": 0.5
+    },
+    {
+     "en": "mensaje",
+     "lon": 139.0,
+     "lat": 34.9,
+     "cosa": "pergamino",
+     "tam": 0.5
+    }
+   ],
+   "pins": [
+    {
+     "en": "bahía",
+     "lon": 139.72,
+     "lat": 35.24,
+     "nombre": "Uraga",
+     "izquierda": true
+    }
+   ]
+  },
+  {
+   "en": "Al año siguiente",
+   "tipo": "escena",
+   "decorado": "puerto",
+   "actores": [
+    {
+     "q": "Perry",
+     "traje": "general",
+     "x": 1560,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "barcos",
+       "hace": "senala"
+      }
+     ],
+     "colores": {
+      "color": "#1d2b4f"
+     },
+     "lleva": "pergamino"
+    },
+    {
+     "q": "enviado",
+     "traje": "samurai",
+     "x": 420,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "siguiente",
+       "hace": "susto"
+      },
+      {
+       "en": "firmó",
+       "hace": "asiente"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.2,
+     "a": "Perry",
+     "texto": "Firme aquí, por favor.",
+     "ancho": 360
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Kanagawa, 1854"
+    }
+   ]
+  },
+  {
+   "en": "Muchos samuráis sintieron",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "s1",
+     "traje": "samurai",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "sintieron",
+       "hace": "enfada"
+      }
+     ]
+    },
+    {
+     "q": "s2",
+     "traje": "samurai",
+     "x": 1200,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "arrodillado",
+       "hace": "enfada"
+      }
+     ],
+     "lleva": "espada"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.2,
+     "a": "s1",
+     "texto": "¡Qué vergüenza!",
+     "ancho": 320
+    }
+   ]
+  },
+  {
+   "en": "Se rebelaron",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 134,
+    "lat": 34.8,
+    "grados": 13
+   },
+   "hasta": {
+    "lon": 135,
+    "lat": 35,
+    "grados": 12
+   },
+   "fecha": "1868",
+   "capas": [
+    {
+     "en": 0,
+     "id": "kanto",
+     "color": "morado",
+     "etiqueta": "Shogun",
+     "cara": "muerto",
+     "cara_en": "cayó"
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "rebelaron",
+     "de": [
+      130.6,
+      31.7
+     ],
+     "a": [
+      135.6,
+      34.95
+     ],
+     "d": 2.5,
+     "color": "rojo"
+    },
+    {
+     "en": "emperador",
+     "de": [
+      131.5,
+      34.2
+     ],
+     "a": [
+      135.7,
+      35.05
+     ],
+     "d": 2.2,
+     "color": "rojo"
+    }
+   ],
+   "pins": [
+    {
+     "en": "emperador",
+     "lon": 135.77,
+     "lat": 35.01,
+     "nombre": "Kioto"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "1868",
+     "lon": 135.77,
+     "lat": 35.6,
+     "cosa": "corona",
+     "tam": 0.6
+    }
+   ]
+  },
+  {
+   "en": "El emperador Meiji",
+   "tipo": "archivo",
+   "imagen": "archivo/meiji.jpg",
+   "pie": "Emperador Meiji",
+   "modo": "tarjeta"
+  },
+  {
+   "en": "y la corte",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 137.6,
+    "lat": 35.3,
+    "grados": 8
+   },
+   "hasta": {
+    "lon": 138.5,
+    "lat": 35.5,
+    "grados": 7
+   },
+   "fecha": "1868",
+   "flechas": [
+    {
+     "en": "trasladó",
+     "de": [
+      135.77,
+      35.01
+     ],
+     "a": [
+      139.7,
+      35.65
+     ],
+     "curva": 0.2
+    }
+   ],
+   "pins": [
+    {
+     "en": 0,
+     "lon": 135.77,
+     "lat": 35.01,
+     "nombre": "Kioto"
+    },
+    {
+     "en": "Tokio",
+     "lon": 139.76,
+     "lat": 35.69,
+     "nombre": "Tokio",
+     "aro": true
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "capital",
+     "texto": "Tokio = capital del este",
+     "x": 640,
+     "y": 300,
+     "tam": 64
+    }
+   ],
+   "guia": false
+  },
+  {
+   "en": "Entonces empezó",
+   "tipo": "escena",
+   "decorado": "calle",
+   "actores": [
+    {
+     "q": "moderno",
+     "traje": "politico",
+     "x": 1200,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "transformación",
+       "hace": "quita_sombrero"
+      }
+     ]
+    },
+    {
+     "q": "samurai",
+     "traje": "samurai",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "velocidad",
+       "hace": "encoge"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.2,
+     "a": "samurai",
+     "texto": "¿Sombrero? ¿En serio?",
+     "ancho": 360
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Tokio, 1870"
+    }
+   ]
+  },
+  {
+   "en": "Japón copió",
+   "tipo": "papel",
+   "titulo": "Copiado de Occidente",
+   "cosas": [
+    {
+     "en": "fábricas",
+     "cosa": "fabrica",
+     "pie": "Fábricas"
+    },
+    {
+     "en": "escuelas",
+     "cosa": "libro",
+     "pie": "Escuelas"
+    },
+    {
+     "en": "alemán",
+     "cosa": "fusil",
+     "pie": "Ejército alemán"
+    },
+    {
+     "en": "británica",
+     "cosa": "acorazado",
+     "pie": "Marina británica"
+    }
+   ]
+  },
+  {
+   "en": "En 1872",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 139.7,
+    "lat": 35.6,
+    "grados": 6
+   },
+   "hasta": {
+    "lon": 139.7,
+    "lat": 35.55,
+    "grados": 5
+   },
+   "fecha": "1872",
+   "pins": [
+    {
+     "en": "Tokio",
+     "lon": 139.76,
+     "lat": 35.69,
+     "nombre": "Tokio"
+    },
+    {
+     "en": "Yokohama",
+     "lon": 139.64,
+     "lat": 35.45,
+     "nombre": "Yokohama",
+     "izquierda": true
+    }
+   ],
+   "flechas": [
+    {
+     "en": "tren",
+     "de": [
+      139.76,
+      35.66
+     ],
+     "a": [
+      139.64,
+      35.47
+     ],
+     "curva": 0.1
+    }
+   ],
+   "iconos": [
+    {
+     "en": "primer",
+     "lon": 140.1,
+     "lat": 35.3,
+     "cosa": "tren",
+     "tam": 0.7
+    }
+   ]
+  },
+  {
+   "en": "Y se quedó",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 140,
+    "lat": 40,
+    "grados": 16
+   },
+   "hasta": {
+    "lon": 141.5,
+    "lat": 41.5,
+    "grados": 13
+   },
+   "fecha": "1869",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "japon_centro",
+     "color": "rojo"
+    },
+    {
+     "en": "Hokkaido",
+     "id": "hokkaido",
+     "color": "naranja",
+     "modo": "crece",
+     "etiqueta": "Hokkaido"
+    }
+   ],
+   "pins": [
+    {
+     "en": "ainu",
+     "lon": 141.35,
+     "lat": 43.06,
+     "nombre": "Tierra de los ainu"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "quedó",
+     "lon": 139.2,
+     "lat": 38.8,
+     "cosa": "bandera_japon",
+     "tam": 0.5
+    }
+   ]
+  },
+  {
+   "en": "y con el reino",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 129,
+    "lat": 28.5,
+    "grados": 12
+   },
+   "hasta": {
+    "lon": 128.2,
+    "lat": 27.2,
+    "grados": 9
+   },
+   "fecha": "1879",
+   "capas": [
+    {
+     "en": 0,
+     "id": "kyushu",
+     "color": "rojo",
+     "op": 0.6
+    },
+    {
+     "en": "Ryukyu",
+     "id": "okinawa",
+     "color": "naranja",
+     "modo": "crece"
+    }
+   ],
+   "pins": [
+    {
+     "en": "Okinawa",
+     "lon": 127.68,
+     "lat": 26.21,
+     "nombre": "Okinawa",
+     "aro": true
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "reino",
+     "texto": "Reino de Ryukyu",
+     "x": 560,
+     "y": 300,
+     "tam": 70
+    }
+   ]
+  },
+  {
+   "en": "¿Y los samuráis?",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "1876",
+     "palabra": "1876",
+     "rojo": true
+    },
+    {
+     "en": "prohibió",
+     "tarjeta": "Espada",
+     "cosa": "espada",
+     "tachar_en": "espada"
+    }
+   ]
+  },
+  {
+   "en": "En 1877, Saigo",
+   "tipo": "escena",
+   "decorado": "campamento",
+   "actores": [
+    {
+     "q": "Saigo",
+     "traje": "samurai",
+     "x": 960,
+     "s": 1.25,
+     "mira": 0,
+     "acciones": [
+      {
+       "en": "Saigo",
+       "hace": "orgulloso"
+      },
+      {
+       "en": "rebelión",
+       "hace": "senala"
+      }
+     ],
+     "lleva": "espada"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "1877"
+    },
+    {
+     "en": "Saigo",
+     "texto": "Saigo Takamori",
+     "x": 960,
+     "y": 220,
+     "tam": 70
+    }
+   ]
+  },
+  {
+   "en": "en Satsuma",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 130.8,
+    "lat": 32.2,
+    "grados": 6
+   },
+   "hasta": {
+    "lon": 130.6,
+    "lat": 31.8,
+    "grados": 5
+   },
+   "fecha": "1877",
+   "capas": [
+    {
+     "en": "Satsuma",
+     "id": "satsuma",
+     "color": "rojo",
+     "etiqueta": "Satsuma"
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "ejército",
+     "de": [
+      131.0,
+      33.3
+     ],
+     "a": [
+      130.6,
+      31.85
+     ],
+     "d": 2,
+     "color": "azul"
+    }
+   ]
+  },
+  {
+   "en": "con fusiles",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "Saigo",
+     "traje": "samurai",
+     "x": 700,
+     "s": 1.2,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "fusiles",
+       "hace": "cae"
+      }
+     ],
+     "lleva": "espada"
+    },
+    {
+     "q": "soldado1",
+     "traje": "soldado_japones",
+     "x": 1200,
+     "s": 1.1,
+     "mira": -0.5,
+     "lleva": "fusil"
+    },
+    {
+     "q": "soldado2",
+     "traje": "soldado_japones",
+     "x": 1450,
+     "s": 1.1,
+     "mira": -0.5,
+     "lleva": "fusil"
+    }
+   ],
+   "humo": true
+  },
+  {
+   "en": "En 1895",
+   "tipo": "capitulo",
+   "numero": 6
+  },
+  {
+   "en": "derrotó a China",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 125,
+    "lat": 29,
+    "grados": 28
+   },
+   "hasta": {
+    "lon": 124,
+    "lat": 28,
+    "grados": 27
+   },
+   "fecha": "1895",
+   "guia": false,
+   "encuadre": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "japon",
+     "color": "rojo"
+    },
+    {
+     "en": 0,
+     "id": "china",
+     "color": "amarillo",
+     "op": 0.5,
+     "cara": "susto",
+     "cara_en": "derrotó",
+     "cara_lugar": [
+      116.5,
+      33
+     ]
+    },
+    {
+     "en": "Taiwán",
+     "id": "taiwan",
+     "color": "rojo",
+     "modo": "crece",
+     "etiqueta": "Taiwán"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "derrotó",
+     "lon": 123,
+     "lat": 37,
+     "cosa": "espada",
+     "tam": 0.6
+    }
+   ]
+  },
+  {
+   "en": "En 1905",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 128.5,
+    "lat": 32.5,
+    "grados": 10
+   },
+   "hasta": {
+    "lon": 129.4,
+    "lat": 34.0,
+    "grados": 7
+   },
+   "fecha": "1905",
+   "barcos": [
+    {
+     "en": "flota",
+     "de": [
+      125.5,
+      29.5
+     ],
+     "a": [
+      129.3,
+      34.0
+     ],
+     "d": 3.5,
+     "flota": 6,
+     "color": "#5a5a5a"
+    },
+    {
+     "en": "hundió",
+     "de": [
+      129.7,
+      33.15
+     ],
+     "a": [
+      129.5,
+      34.1
+     ],
+     "d": 2.0,
+     "flota": 4,
+     "color": "rojo",
+     "curva": 0.2
+    }
+   ],
+   "pins": [
+    {
+     "en": 0,
+     "lon": 129.33,
+     "lat": 34.42,
+     "nombre": "Tsushima",
+     "aro": true
+    },
+    {
+     "en": "esperaba",
+     "lon": 125.6,
+     "lat": 29.6,
+     "nombre": "Flota rusa",
+     "mar": true
+    }
+   ],
+   "fuegos": [
+    {
+     "en": "estrecho",
+     "lon": 129.2,
+     "lat": 34.05
+    }
+   ]
+  },
+  {
+   "en": "Por primera vez",
+   "tipo": "escena",
+   "decorado": "puerto",
+   "actores": [
+    {
+     "q": "almirante",
+     "traje": "almirante_jp",
+     "x": 640,
+     "s": 1.2,
+     "mira": 0,
+     "acciones": [
+      {
+       "en": "vez",
+       "hace": "celebra"
+      },
+      {
+       "en": "potencia",
+       "hace": "orgulloso"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "almirante",
+     "texto": "¿Alguien más?",
+     "ancho": 300
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Tsushima, 1905"
+    }
+   ]
+  },
+  {
+   "en": "Y en 1910",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 131,
+    "lat": 36,
+    "grados": 22
+   },
+   "hasta": {
+    "lon": 131,
+    "lat": 37,
+    "grados": 20
+   },
+   "fecha": "1910",
+   "capas": [
+    {
+     "en": 0,
+     "id": "japon",
+     "color": "rojo",
+     "cara": "malo",
+     "cara_en": "anexionó",
+     "cara_lugar": [
+      138,
+      37
+     ]
+    },
+    {
+     "en": 0,
+     "id": "taiwan",
+     "color": "rojo"
+    },
+    {
+     "en": "Corea",
+     "id": "corea",
+     "color": "rojo",
+     "modo": "crece",
+     "etiqueta": "Corea"
+    }
+   ]
+  },
+  {
+   "en": "Pero el éxito",
+   "tipo": "escena",
+   "decorado": "despacho",
+   "actores": [
+    {
+     "q": "general",
+     "traje": "general",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "cabeza",
+       "hace": "jarras"
+      },
+      {
+       "en": "militares",
+       "hace": "senala"
+      }
+     ]
+    },
+    {
+     "q": "politico",
+     "traje": "politico",
+     "x": 1250,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "poder",
+       "hace": "susto"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.2,
+     "a": "general",
+     "texto": "Ahora mando yo.",
+     "ancho": 320
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Tokio, años 30"
+    }
+   ]
+  },
+  {
+   "en": "Japón invadió Manchuria",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 129,
+    "lat": 41,
+    "grados": 30
+   },
+   "hasta": {
+    "lon": 128,
+    "lat": 41,
+    "grados": 28
+   },
+   "fecha": "1931",
+   "capas": [
+    {
+     "en": 0,
+     "id": "japon",
+     "color": "rojo"
+    },
+    {
+     "en": 0,
+     "id": "corea",
+     "color": "rojo",
+     "op": 0.6
+    },
+    {
+     "en": "Manchuria",
+     "id": "manchuria",
+     "color": "naranja",
+     "modo": "crece",
+     "etiqueta": "Manchuria"
+    }
+   ],
+   "copias": [
+    {
+     "en": "tres veces",
+     "capa": "japon",
+     "puntos": [
+      [
+       119.5,
+       50.5
+      ],
+      [
+       124.5,
+       46
+      ],
+      [
+       130,
+       43
+      ]
+     ],
+     "color": "amarillo",
+     "d": 1.5
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "tres veces",
+     "texto": "×3",
+     "x": 1500,
+     "y": 300,
+     "tam": 110,
+     "rojo": true
+    }
+   ],
+   "guia": false
+  },
+  {
+   "en": "En 1937 empezó",
+   "tipo": "mapa",
+   "mapa": "asia-pacifico",
+   "cam": {
+    "lon": 118,
+    "lat": 35,
+    "grados": 40
+   },
+   "hasta": {
+    "lon": 117,
+    "lat": 34,
+    "grados": 34
+   },
+   "fecha": "1937",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "imperio_1938",
+     "color": "rojo"
+    },
+    {
+     "en": 0,
+     "id": "china",
+     "color": "amarillo",
+     "op": 0.6,
+     "cara": "susto",
+     "cara_en": "contra",
+     "cara_lugar": [
+      108,
+      33
+     ]
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "guerra",
+     "de": [
+      121,
+      41
+     ],
+     "a": [
+      116.4,
+      39.6
+     ],
+     "d": 2,
+     "color": "rojo"
+    },
+    {
+     "en": "total",
+     "de": [
+      122,
+      33
+     ],
+     "a": [
+      118.9,
+      32.1
+     ],
+     "d": 2,
+     "color": "rojo"
+    }
+   ],
+   "pins": [
+    {
+     "en": "China",
+     "lon": 116.4,
+     "lat": 39.9,
+     "nombre": "Pekín"
+    }
+   ]
+  },
+  {
+   "en": "Y llegaron los crímenes",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "crímenes",
+     "palabra": "Crímenes de guerra",
+     "rojo": true
+    },
+    {
+     "en": "llegaron",
+     "cosa": "calavera"
+    }
+   ]
+  },
+  {
+   "en": "En diciembre de 1937",
+   "tipo": "mapa",
+   "mapa": "asia-pacifico",
+   "cam": {
+    "lon": 119,
+    "lat": 33,
+    "grados": 30
+   },
+   "hasta": {
+    "lon": 118.8,
+    "lat": 32.2,
+    "grados": 26
+   },
+   "fecha": "Diciembre de 1937",
+   "capas": [
+    {
+     "en": 0,
+     "id": "imperio_1938",
+     "color": "rojo",
+     "op": 0.5
+    }
+   ],
+   "foco": {
+    "en": "Nankín",
+    "lon": 118.78,
+    "lat": 32.06,
+    "radio": 2.5
+   },
+   "pins": [
+    {
+     "en": 0,
+     "lon": 118.78,
+     "lat": 32.06,
+     "nombre": "Nankín",
+     "aro": true
+    }
+   ],
+   "fuegos": [
+    {
+     "en": "asesinaron",
+     "lon": 118.78,
+     "lat": 32.06
+    },
+    {
+     "en": "prisioneros",
+     "lon": 118.6,
+     "lat": 32.2,
+     "tam": 0.8
+    }
+   ]
+  },
+  {
+   "en": "y miles de mujeres",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "mujeres",
+     "tarjeta": "Nankín, 1937",
+     "cosa": "calavera"
+    },
+    {
+     "en": "cien mil",
+     "cifra": "+100.000",
+     "sub": "muertos, según muchos historiadores",
+     "negro": true
+    }
+   ]
+  },
+  {
+   "en": "Por toda Asia",
+   "tipo": "mapa",
+   "mapa": "asia-pacifico",
+   "cam": {
+    "lon": 115,
+    "lat": 25,
+    "grados": 60
+   },
+   "hasta": {
+    "lon": 118,
+    "lat": 25,
+    "grados": 55
+   },
+   "fecha": "1937-1945",
+   "capas": [
+    {
+     "en": 0,
+     "id": "imperio_1938",
+     "color": "rojo"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "millones",
+     "lon": 113,
+     "lat": 30,
+     "cosa": "cadenas",
+     "tam": 0.7
+    },
+    {
+     "en": "obligadas",
+     "lon": 127,
+     "lat": 37,
+     "cosa": "cadenas",
+     "tam": 0.7
+    },
+    {
+     "en": "esclavas",
+     "lon": 104,
+     "lat": 15,
+     "cosa": "cadenas",
+     "tam": 0.7
+    }
+   ]
+  },
+  {
+   "en": "y decenas de miles de mujeres",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "decenas",
+     "tarjeta": "«Mujeres de consuelo»",
+     "cosa": "cadenas"
+    }
+   ]
+  },
+  {
+   "en": "El 7 de diciembre",
+   "tipo": "escena",
+   "decorado": "mar",
+   "actores": [],
+   "paisaje": true,
+   "barco": "acorazado",
+   "humo": true,
+   "cosas": [
+    {
+     "en": "atacó",
+     "cosa": "avion",
+     "x": 520,
+     "y": 260,
+     "salta": -40
+    },
+    {
+     "en": "sorpresa",
+     "cosa": "avion",
+     "x": 1320,
+     "y": 220,
+     "salta": -40
+    },
+    {
+     "en": "base",
+     "cosa": "bomba",
+     "x": 900,
+     "y": 420,
+     "salta": -80
+    },
+    {
+     "en": "Hawái",
+     "cosa": "fuego",
+     "x": 1150,
+     "y": 640,
+     "salta": -40
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Pearl Harbor, 7 de diciembre de 1941"
+    }
+   ]
+  },
+  {
+   "en": "y mató a",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "mató",
+     "cifra": "+2.400",
+     "sub": "muertos en Pearl Harbor"
+    }
+   ]
+  },
+  {
+   "en": "En pocos meses",
+   "tipo": "mapa",
+   "mapa": "asia-pacifico",
+   "cam": {
+    "lon": 125,
+    "lat": 15,
+    "grados": 85
+   },
+   "hasta": {
+    "lon": 125,
+    "lat": 15,
+    "grados": 80
+   },
+   "fecha": "1942",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "imperio_1942",
+     "color": "rojo",
+     "modo": "crece",
+     "cara": "malo",
+     "cara_en": "dominaba",
+     "cara_lugar": [
+      118,
+      34
+     ]
+    }
+   ],
+   "pins": [
+    {
+     "en": "Birmania",
+     "lon": 96.0,
+     "lat": 21.0,
+     "nombre": "Birmania",
+     "izquierda": true
+    }
+   ],
+   "iconos": [
+    {
+     "en": "Pacífico",
+     "lon": 160,
+     "lat": 7,
+     "cosa": "isla",
+     "tam": 0.8
+    }
+   ]
+  },
+  {
+   "en": "Pero en 1942",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Midway",
+     "cifra": "4",
+     "sub": "portaaviones perdidos en Midway",
+     "icono": "portaaviones"
+    }
+   ]
+  },
+  {
+   "en": "Isla a isla",
+   "tipo": "mapa",
+   "mapa": "asia-pacifico",
+   "cam": {
+    "lon": 145,
+    "lat": 12,
+    "grados": 60
+   },
+   "hasta": {
+    "lon": 138,
+    "lat": 20,
+    "grados": 50
+   },
+   "fecha": "1942-1945",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "imperio_1942",
+     "color": "rojo",
+     "op": 0.6
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "Isla a",
+     "de": [
+      160,
+      -9.5
+     ],
+     "a": [
+      145.7,
+      15.2
+     ],
+     "d": 2.0,
+     "color": "azul"
+    },
+    {
+     "en": "estadounidenses",
+     "de": [
+      145.7,
+      15.2
+     ],
+     "a": [
+      141.3,
+      24.8
+     ],
+     "d": 1.6,
+     "color": "azul"
+    },
+    {
+     "en": "acercaron",
+     "de": [
+      141.3,
+      24.8
+     ],
+     "a": [
+      128.0,
+      26.4
+     ],
+     "d": 1.4,
+     "color": "azul"
+    }
+   ]
+  },
+  {
+   "en": "En marzo de 1945",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 140.2,
+    "lat": 35.3,
+    "grados": 7
+   },
+   "hasta": {
+    "lon": 139.8,
+    "lat": 35.65,
+    "grados": 5
+   },
+   "fecha": "Marzo de 1945",
+   "capas": [
+    {
+     "en": 0,
+     "id": "kanto",
+     "color": "rojo",
+     "op": 0.4
+    }
+   ],
+   "pins": [
+    {
+     "en": 0,
+     "lon": 139.76,
+     "lat": 35.69,
+     "nombre": "Tokio",
+     "aro": true
+    }
+   ],
+   "iconos": [
+    {
+     "en": "bombardeo",
+     "lon": 140.6,
+     "lat": 35.0,
+     "cosa": "avion",
+     "tam": 0.7
+    }
+   ],
+   "fuegos": [
+    {
+     "en": "fuego",
+     "lon": 139.78,
+     "lat": 35.7
+    },
+    {
+     "en": "Tokio",
+     "lon": 139.7,
+     "lat": 35.62,
+     "tam": 0.8
+    },
+    {
+     "en": "mató",
+     "lon": 139.85,
+     "lat": 35.66,
+     "tam": 0.8
+    }
+   ]
+  },
+  {
+   "en": "a cerca de",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "cien mil",
+     "cifra": "~100.000",
+     "sub": "muertos en una sola noche"
+    }
+   ]
+  },
+  {
+   "en": "El 6 de agosto",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 133,
+    "lat": 34.3,
+    "grados": 7
+   },
+   "hasta": {
+    "lon": 132.5,
+    "lat": 34.4,
+    "grados": 5
+   },
+   "fecha": "6 de agosto de 1945",
+   "capas": [
+    {
+     "en": 0,
+     "id": "japon_centro",
+     "color": "rojo",
+     "op": 0.35
+    }
+   ],
+   "pins": [
+    {
+     "en": "agosto",
+     "lon": 132.46,
+     "lat": 34.39,
+     "nombre": "Hiroshima",
+     "aro": true
+    }
+   ],
+   "iconos": [
+    {
+     "en": "mañana",
+     "lon": 133.2,
+     "lat": 34.9,
+     "cosa": "avion",
+     "tam": 0.6
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "ocho",
+     "texto": "8:15",
+     "x": 560,
+     "y": 300,
+     "tam": 100,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "una bomba atómica",
+   "tipo": "archivo",
+   "imagen": "archivo/hiroshima.jpg",
+   "pie": "Hiroshima, 6 de agosto de 1945",
+   "modo": "pantalla"
+  },
+  {
+   "en": "Tres días después",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 131.3,
+    "lat": 33.6,
+    "grados": 8
+   },
+   "hasta": {
+    "lon": 130.6,
+    "lat": 33.3,
+    "grados": 6.5
+   },
+   "fecha": "9 de agosto de 1945",
+   "capas": [
+    {
+     "en": 0,
+     "id": "japon_centro",
+     "color": "rojo",
+     "op": 0.35
+    }
+   ],
+   "pins": [
+    {
+     "en": 0,
+     "lon": 132.46,
+     "lat": 34.39,
+     "nombre": "Hiroshima"
+    },
+    {
+     "en": "Nagasaki",
+     "lon": 129.87,
+     "lat": 32.75,
+     "nombre": "Nagasaki",
+     "aro": true,
+     "izquierda": true
+    }
+   ],
+   "fuegos": [
+    {
+     "en": 0,
+     "lon": 132.46,
+     "lat": 34.39
+    },
+    {
+     "en": "Nagasaki",
+     "lon": 129.87,
+     "lat": 32.75
+    }
+   ]
+  },
+  {
+   "en": "A finales de",
+   "tipo": "papel",
+   "titulo": "Muertos a finales de 1945",
+   "cosas": [
+    {
+     "en": "personas en Hiroshima",
+     "cifra": "140.000",
+     "sub": "Hiroshima"
+    }
+   ]
+  },
+  {
+   "en": "y unas",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Nagasaki",
+     "cifra": "74.000",
+     "sub": "Nagasaki"
+    }
+   ]
+  },
+  {
+   "en": "Muchos supervivientes",
+   "tipo": "escena",
+   "decorado": "calle",
+   "actores": [
+    {
+     "q": "madre",
+     "traje": "civil_mujer",
+     "x": 700,
+     "s": 1.4,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "supervivientes",
+       "hace": "triste"
+      }
+     ]
+    },
+    {
+     "q": "nino",
+     "traje": "nino",
+     "x": 980,
+     "s": 0.85,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "décadas",
+       "hace": "agacha"
+      }
+     ]
+    },
+    {
+     "q": "anciano",
+     "traje": "anciano",
+     "x": 1320,
+     "s": 1.4,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "radiación",
+       "hace": "triste"
+      }
+     ]
+    }
+   ],
+   "humo": true,
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Hiroshima, años después"
+    }
+   ]
+  },
+  {
+   "en": "El 15 de agosto",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Hirohito",
+     "tarjeta": "Hirohito",
+     "cosa": "corona"
+    },
+    {
+     "en": "radio",
+     "cifra": "15/8/1945",
+     "sub": "Discurso por la radio",
+     "icono": "bandera_japon"
+    }
+   ]
+  },
+  {
+   "en": "Era la primera",
+   "tipo": "escena",
+   "decorado": "interior",
+   "actores": [
+    {
+     "q": "padre",
+     "traje": "civil",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "primera",
+       "hace": "agacha"
+      }
+     ]
+    },
+    {
+     "q": "madre",
+     "traje": "civil_mujer",
+     "x": 1000,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "voz",
+       "hace": "triste"
+      }
+     ]
+    },
+    {
+     "q": "abuelo",
+     "traje": "anciano",
+     "x": 1350,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "rendía",
+       "hace": "triste"
+      }
+     ]
+    }
+   ],
+   "cosas": [
+    {
+     "en": "rendía",
+     "cosa": "bandera_blanca",
+     "x": 1500,
+     "y": 430,
+     "salta": -60
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "15 de agosto de 1945"
+    }
+   ]
+  },
+  {
+   "en": "Japón quedó en",
+   "tipo": "capitulo",
+   "numero": 7
+  },
+  {
+   "en": "ocupado por los",
+   "tipo": "escena",
+   "decorado": "calle",
+   "actores": [
+    {
+     "q": "MacArthur",
+     "traje": "general",
+     "x": 1200,
+     "s": 1.35,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "estadounidenses",
+       "hace": "orgulloso"
+      }
+     ],
+     "colores": {
+      "color": "#8a7a52"
+     }
+    },
+    {
+     "q": "soldado",
+     "traje": "soldado_usa",
+     "x": 1550,
+     "s": 1.35,
+     "mira": -0.4,
+     "lleva": "fusil"
+    },
+    {
+     "q": "vecino",
+     "traje": "civil",
+     "x": 600,
+     "s": 1.35,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "ocupado",
+       "hace": "susto"
+      },
+      {
+       "en": "MacArthur",
+       "hace": "triste"
+      }
+     ]
+    }
+   ],
+   "humo": true,
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Tokio, 1945"
+    },
+    {
+     "en": "MacArthur",
+     "texto": "MacArthur",
+     "x": 1250,
+     "y": 260,
+     "tam": 64
+    }
+   ]
+  },
+  {
+   "en": "En 1947 estrenó",
+   "tipo": "papel",
+   "titulo": "Constitución de 1947",
+   "cosas": [
+    {
+     "en": "1947",
+     "cosa": "pergamino",
+     "pie": "1947"
+    },
+    {
+     "en": "constitución",
+     "palabra": "Nueva"
+    }
+   ]
+  },
+  {
+   "en": "el emperador pasó",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "símbolo",
+     "tarjeta": "Emperador: un símbolo",
+     "cosa": "corona"
+    },
+    {
+     "en": "renunció",
+     "tarjeta": "Guerra",
+     "cosa": "espada",
+     "tachar_en": "guerra"
+    }
+   ]
+  },
+  {
+   "en": "Y entonces llegó",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "milagro",
+     "palabra": "Milagro",
+     "rojo": true
+    },
+    {
+     "en": "coches",
+     "cosa": "fabrica",
+     "pie": "Coches"
+    },
+    {
+     "en": "televisores",
+     "cosa": "monton_monedas",
+     "pie": "Radios y televisores"
+    }
+   ]
+  },
+  {
+   "en": "En 1964 Tokio",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Olímpicos",
+     "cosa": "anillos",
+     "pie": "Tokio 1964"
+    },
+    {
+     "en": "Shinkansen",
+     "tarjeta": "Shinkansen",
+     "cosa": "tren"
+    }
+   ]
+  },
+  {
+   "en": "a más de",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 137.8,
+    "lat": 35.2,
+    "grados": 8
+   },
+   "hasta": {
+    "lon": 137.6,
+    "lat": 35.1,
+    "grados": 7
+   },
+   "fecha": "1964",
+   "pins": [
+    {
+     "en": "más",
+     "lon": 139.76,
+     "lat": 35.69,
+     "nombre": "Tokio"
+    },
+    {
+     "en": "doscientos",
+     "lon": 135.5,
+     "lat": 34.69,
+     "nombre": "Osaka",
+     "izquierda": true
+    }
+   ],
+   "flechas": [
+    {
+     "en": "doscientos",
+     "de": [
+      139.7,
+      35.65
+     ],
+     "a": [
+      135.55,
+      34.72
+     ],
+     "curva": 0.12
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "kilómetros",
+     "texto": "+200 km/h",
+     "x": 560,
+     "y": 300,
+     "tam": 90,
+     "rojo": true
+    }
+   ],
+   "guia": false
+  },
+  {
+   "en": "En 1968 Japón",
+   "tipo": "papel",
+   "titulo": "Las mayores economías (1968)",
+   "cosas": [
+    {
+     "en": "segunda",
+     "tarjeta": "2.º Japón",
+     "cosa": "bandera_japon"
+    },
+    {
+     "en": "Estados Unidos",
+     "tarjeta": "1.º EE. UU.",
+     "cosa": "bandera_eeuu"
+    },
+    {
+     "en": "mundo",
+     "cosa": "fabrica",
+     "pie": "Made in Japan"
+    }
+   ]
+  },
+  {
+   "en": "En los años ochenta",
+   "tipo": "escena",
+   "decorado": "despacho",
+   "actores": [
+    {
+     "q": "ejecutivo",
+     "traje": "banquero",
+     "x": 960,
+     "s": 1.15,
+     "mira": 0.2,
+     "acciones": [
+      {
+       "en": "ochenta",
+       "hace": "celebra"
+      },
+      {
+       "en": "todo",
+       "hace": "rie"
+      }
+     ],
+     "lleva": "monton_monedas"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.2,
+     "a": "ejecutivo",
+     "texto": "¿Cuánto vale Nueva York?",
+     "ancho": 400
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Tokio, años 80"
+    }
+   ]
+  },
+  {
+   "en": "Se decía que",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "palacio",
+     "tarjeta": "Palacio imperial",
+     "cosa": "pagoda"
+    },
+    {
+     "en": "California",
+     "tarjeta": "California",
+     "cosa": "sol"
+    }
+   ]
+  },
+  {
+   "en": "Pero en 1990",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "1990",
+     "cifra": "1990",
+     "sub": "Estalla la burbuja",
+     "icono": "monton_monedas"
+    },
+    {
+     "en": "nulo",
+     "cosa": "monton_monedas",
+     "pie": "Crecimiento",
+     "tachar_en": "nulo"
+    }
+   ]
+  },
+  {
+   "en": "En 2011",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 141.5,
+    "lat": 38.5,
+    "grados": 9
+   },
+   "hasta": {
+    "lon": 141.0,
+    "lat": 38.0,
+    "grados": 7.5
+   },
+   "fecha": "11 de marzo de 2011",
+   "capas": [
+    {
+     "en": "noreste",
+     "id": "tohoku",
+     "color": "rojo",
+     "etiqueta": "Tohoku",
+     "cara": "susto",
+     "cara_en": "tsunami"
+    }
+   ],
+   "pins": [
+    {
+     "en": "magnitud",
+     "lon": 142.4,
+     "lat": 38.3,
+     "nombre": "Epicentro",
+     "aro": true,
+     "mar": true
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "magnitud",
+     "texto": "Magnitud 9",
+     "x": 560,
+     "y": 300,
+     "tam": 80,
+     "rojo": true
+    }
+   ],
+   "guia": {
+    "lado": "izquierda"
+   }
+  },
+  {
+   "en": "Más de dieciocho",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "dieciocho",
+     "cifra": "+18.000",
+     "sub": "muertos y desaparecidos"
+    },
+    {
+     "en": "Fukushima",
+     "tarjeta": "Fukushima",
+     "cosa": "fabrica"
+    },
+    {
+     "en": "Chernóbil",
+     "palabra": "Accidente nuclear",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Hoy Japón tiene",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 137,
+    "lat": 36.5,
+    "grados": 26
+   },
+   "hasta": {
+    "lon": 137,
+    "lat": 36.5,
+    "grados": 23
+   },
+   "fecha": "Hoy",
+   "capas": [
+    {
+     "en": 0,
+     "id": "japon",
+     "color": "rojo",
+     "etiqueta": "Japón",
+     "cara": "feliz",
+     "cara_en": "habitantes"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "120",
+     "texto": "+120 millones",
+     "x": 560,
+     "y": 300,
+     "tam": 90
+    }
+   ],
+   "iconos": [
+    {
+     "en": "trono",
+     "lon": 139.76,
+     "lat": 36.5,
+     "cosa": "corona",
+     "tam": 0.6
+    }
+   ]
+  },
+  {
+   "en": "El emperador Naruhito",
+   "tipo": "escena",
+   "decorado": "palacio",
+   "actores": [
+    {
+     "q": "Naruhito",
+     "traje": "japones",
+     "x": 1210,
+     "s": 1.1,
+     "mira": -0.2,
+     "acciones": [
+      {
+       "en": "2019",
+       "hace": "saluda"
+      },
+      {
+       "en": "tradición",
+       "hace": "orgulloso"
+      }
+     ],
+     "sentado": true,
+     "y": 710,
+     "colores": {
+      "color": "#2a2a2a"
+     }
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.2,
+     "a": "Naruhito",
+     "texto": "Número 126. Y seguimos.",
+     "ancho": 360
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Tokio, hoy"
+    }
+   ]
+  },
+  {
+   "en": "la monarquía hereditaria",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "monarquía",
+     "cifra": "126",
+     "sub": "emperadores, según la tradición",
+     "icono": "corona"
+    },
+    {
+     "en": "antigua",
+     "palabra": "La más antigua",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Los samuráis desaparecieron",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "samurai",
+     "traje": "samurai",
+     "x": 760,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "desaparecieron",
+       "hace": "sale"
+      }
+     ]
+    },
+    {
+     "q": "shogun",
+     "traje": "samurai",
+     "x": 1250,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "también",
+       "hace": "sale"
+      }
+     ],
+     "colores": {
+      "color": "#2b2b2b",
+      "capa": "#5a3a1a"
+     }
+    }
+   ],
+   "atardecer": true
+  },
+  {
+   "en": "Pero aquel sol",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "sol",
+     "cosa": "bandera_japon",
+     "pie": "Hinomaru"
+    },
+    {
+     "en": "bandera",
+     "palabra": "Sigue ahí"
+    }
+   ]
+  },
+  {
+   "en": "Y Japón sigue",
+   "tipo": "mapa",
+   "mapa": "japon",
+   "cam": {
+    "lon": 137,
+    "lat": 36.5,
+    "grados": 22
+   },
+   "hasta": {
+    "lon": 137,
+    "lat": 36.5,
+    "grados": 30
+   },
+   "fecha": "Hoy",
+   "capas": [
+    {
+     "en": 0,
+     "id": "japon",
+     "color": "rojo",
+     "etiqueta": "Japón",
+     "cara": "feliz",
+     "cara_en": "levantarse"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "tumban",
+     "lon": 141.8,
+     "lat": 31.5,
+     "cosa": "sol",
+     "tam": 1.0
+    }
+   ]
+  }
+ ]
+}

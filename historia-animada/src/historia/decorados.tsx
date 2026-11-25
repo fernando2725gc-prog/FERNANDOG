@@ -10,9 +10,9 @@ import { Ciudad } from "./ciudad";
 import { MEDIDA, PERSONA } from "./medidas";
 import { H, Tema, W } from "./tema";
 
-export const DECORADOS = ["mina", "despacho", "sala_trono", "puerto", "mar", "campo", "desierto", "nieve", "ciudad", "campamento", "interior", "canales", "laguna", "estepa", "foro", "palacio", "selva", "fabrica", "calle", "trinchera", "montana", "calzada", "rio"] as const;
+export const DECORADOS = ["mina", "despacho", "sala_trono", "puerto", "mar", "campo", "desierto", "nieve", "ciudad", "campamento", "interior", "canales", "laguna", "estepa", "foro", "palacio", "selva", "fabrica", "calle", "trinchera", "montana", "calzada", "rio", "tenochtitlan"] as const;
 export type DecoradoId = (typeof DECORADOS)[number];
-export const SUELO_DE: Record<string, number> = { mina: 1000, despacho: 1000, sala_trono: 1000, puerto: 1010, mar: 900, campo: 1000, desierto: 1000, nieve: 1000, ciudad: 1010, campamento: 1000, interior: 1000, canales: 1020, laguna: 1000, estepa: 1000, foro: 1000, palacio: 1000, selva: 1000, fabrica: 1010, calle: 1010, trinchera: 1000, montana: 1000, calzada: 1000, rio: 1000 };
+export const SUELO_DE: Record<string, number> = { mina: 1000, despacho: 1000, sala_trono: 1000, puerto: 1010, mar: 900, campo: 1000, desierto: 1000, nieve: 1000, ciudad: 1010, campamento: 1000, interior: 1000, canales: 1020, laguna: 1000, estepa: 1000, foro: 1000, palacio: 1000, selva: 1000, fabrica: 1010, calle: 1010, trinchera: 1000, montana: 1000, calzada: 1000, rio: 1000, tenochtitlan: 1000 };
 
 const Cielo: React.FC<{ tema: Tema; noche?: boolean; atardecer?: boolean; frame: number; nubes?: boolean }> = ({ tema, noche, atardecer, frame, nubes = true }) => {
   const [a, b] = noche ? ["#1d2748", "#3a4a78"] : atardecer ? ["#f2a35e", "#f7dca0"] : tema.dibujo === "tinta" ? ["#c8d6d0", "#eee4c8"] : ["#79b8e8", "#cfe7f5"];
@@ -352,6 +352,68 @@ const DecoradoBase: React.FC<PropsDecorado> = ({ id, tema, frame, noche, atardec
           {/* la isla de barro delante */}
           <Forma tema={tema} fill="#a8946a" d={`M -40 ${H} L -40 930 Q 400 880 960 890 Q 1500 880 ${W + 40} 930 L ${W + 40} ${H} Z`} />
           {Array.from({ length: 18 }).map((_, i) => { const x = (i * 211) % 1880 + 20; return <path key={`c${i}`} d={`M ${x} 940 Q ${x + 6} 880 ${x + 14} ${850 - (i % 3) * 20}`} stroke="#6f8a3e" strokeWidth={5} fill="none" strokeLinecap="round" />; })}
+        </g>
+      );
+    }
+    case "tenochtitlan": {
+      // Tenochtitlan (añadido para la historia 4): los volcanes al fondo, el lago, la ciudad blanca de azoteas planas,
+      // el Templo Mayor con sus dos santuarios (rojo, Huitzilopochtli; azul, Tláloc), canoas y la calzada de piedra delante
+      const agua = noche ? "#2a4a6e" : "#6fa8bf";
+      const piedra = "#c9bfa6";
+      const casas = [[40, 120, 46], [170, 90, 60], [270, 140, 40], [420, 100, 56], [530, 130, 44], [670, 90, 64], [770, 150, 42],
+        [1560, 110, 50], [1680, 140, 42], [1830, 120, 58]];
+      return (
+        <g>
+          <Cielo tema={tema} frame={frame} noche={noche} atardecer={atardecer} />
+          {/* volcanes: Popocatépetl e Iztaccíhuatl */}
+          <Forma tema={tema} fill="#8d9fbd" d="M 1300 600 L 1560 330 L 1640 320 L 1900 600 Z" grosor={0.6} />
+          <Forma tema={tema} fill="#f4f6fa" d="M 1500 392 L 1560 330 L 1640 320 L 1700 386 L 1650 372 L 1600 392 L 1550 376 Z" grosor={0.5} />
+          <Forma tema={tema} fill="#9aabc6" d="M 0 600 L 160 470 L 300 440 L 420 470 L 560 420 L 700 600 Z" grosor={0.6} />
+          <Forma tema={tema} fill="#f4f6fa" d="M 250 452 L 300 440 L 360 456 L 330 462 Z" grosor={0.4} />
+          <rect x={0} y={600} width={W} height={H - 600} fill={agua} />
+          {[650, 720, 800, 860].map((y, i) => <path key={y} d={`M ${-100 + ((frame * (0.3 + i * 0.1)) % 200)} ${y} q 40 -6 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0 t 80 0`} stroke={tono(agua, 0.25)} strokeWidth={2.5} fill="none" opacity={0.6} />)}
+          {/* la isla de la ciudad */}
+          <Forma tema={tema} fill="#b9a982" d={`M 0 640 L 0 600 L ${W} 600 L ${W} 640 Z`} grosor={0.5} />
+          {casas.map(([x, w, h], i) => (
+            <g key={`c${i}`}>
+              <Forma tema={tema} fill={i % 3 === 1 ? "#efe6d2" : "#f7f2e6"} x={x} y={612 - h} w={w} h={h} esq={1} grosor={0.6} />
+              <rect x={x + w * 0.35} y={612 - h * 0.55} width={w * 0.3} height={h * 0.55} fill="#6b4425" opacity={0.75} />
+              <rect x={x - 3} y={612 - h - 6} width={w + 6} height={8} fill={i % 2 ? "#c0392b" : "#d9b26a"} />
+            </g>
+          ))}
+          {/* el Templo Mayor: cinco cuerpos, doble escalinata y dos santuarios */}
+          {Array.from({ length: 5 }).map((_, i) => <Forma key={`tm${i}`} tema={tema} fill={tono(piedra, -0.04 * (i % 2))} x={900 + i * 44} y={612 - (i + 1) * 62} w={560 - i * 88} h={64} esq={2} grosor={0.8} />)}
+          <Forma tema={tema} fill={tono(piedra, 0.08)} d="M 1120 612 L 1146 302 L 1214 302 L 1240 612 Z" grosor={0.7} />
+          <path d="M 1180 612 L 1180 302" stroke={tono(piedra, -0.35)} strokeWidth={4} />
+          {Array.from({ length: 14 }).map((_, i) => <path key={`es${i}`} d={`M ${1124 + i * 1.8} ${590 - i * 21} L ${1236 - i * 1.8} ${590 - i * 21}`} stroke={tono(piedra, -0.2)} strokeWidth={2.5} />)}
+          <Forma tema={tema} fill="#c0392b" x={1086} y={232} w={84} h={72} esq={2} grosor={0.8} />
+          <Forma tema={tema} fill="#8e2a20" d="M 1078 236 L 1128 196 L 1178 236 Z" grosor={0.7} />
+          <rect x={1112} y={262} width={32} height={42} fill="#2a1d14" />
+          <Forma tema={tema} fill="#3c7fd0" x={1190} y={232} w={84} h={72} esq={2} grosor={0.8} />
+          <Forma tema={tema} fill="#2a5a9a" x={1184} y={214} w={96} h={22} esq={2} grosor={0.7} />
+          <rect x={1216} y={262} width={32} height={42} fill="#2a1d14" />
+          {/* chinampas */}
+          {[[120, 690, 260], [1500, 700, 300]].map(([x, y, w], i) => (
+            <g key={`ch${i}`}>
+              <Forma tema={tema} fill="#7a9a4a" x={x} y={y} w={w} h={26} esq={6} grosor={0.5} />
+              {Array.from({ length: 6 }).map((_, k) => <path key={k} d={`M ${x + 20 + k * (w - 40) / 5} ${y + 2} q 4 -26 10 -34`} stroke="#4f7a2e" strokeWidth={4} fill="none" strokeLinecap="round" />)}
+            </g>
+          ))}
+          {/* canoas */}
+          {[[0, 760, 0.9], [1, 820, 1.1]].map(([i, y, k]) => { const x = ((frame * (0.9 + i * 0.4) + i * 900) % 2300) - 200; return (
+            <g key={`ca${i}`} transform={`translate(${x}, ${y}) scale(${k})`}>
+              <Forma tema={tema} fill="#7a4a24" d="M -90 0 Q 0 26 90 0 L 76 -12 L -76 -12 Z" grosor={0.6} />
+              <circle cx={10} cy={-30} r={11} fill="#e8c39e" stroke={tinta} strokeWidth={2} />
+              <path d="M 10 -19 L 10 -12" stroke={tinta} strokeWidth={6} />
+              <path d={`M 40 -40 L ${-20} 16`} stroke="#6b4425" strokeWidth={4} />
+            </g>
+          ); })}
+          {/* pájaros */}
+          {[0, 1].map((i) => { const x = ((frame * 1.8 + i * 120) % 2200) - 140, y = 220 + i * 30 + Math.sin(frame * 0.2 + i) * 5; const a = Math.sin(frame * 0.5 + i) * 6; return <path key={`b${i}`} d={`M ${x - 14} ${y - a} Q ${x - 6} ${y - 8} ${x} ${y} Q ${x + 6} ${y - 8} ${x + 14} ${y - a}`} stroke={tinta} strokeWidth={3} fill="none" strokeLinecap="round" />; })}
+          {/* la calzada de piedra delante, donde están los muñecos */}
+          <Forma tema={tema} fill={piedra} d={`M -40 ${H} L -40 920 Q 960 900 ${W + 40} 920 L ${W + 40} ${H} Z`} />
+          {Array.from({ length: 12 }).map((_, i) => <path key={`lo${i}`} d={`M ${i * 170 + 40} ${930 + (i % 2) * 40} l 0 ${60 - (i % 2) * 20}`} stroke={tono(piedra, -0.2)} strokeWidth={3} />)}
+          <path d={`M -40 990 L ${W + 40} 990`} stroke={tono(piedra, -0.15)} strokeWidth={3} />
         </g>
       );
     }

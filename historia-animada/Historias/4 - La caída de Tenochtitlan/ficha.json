@@ -1,7 +1,12 @@
 {
  "titulo": "La caída de Tenochtitlan",
- "subir": "La caída de Tenochtitlan",
- "descripcion": "",
- "tags": "#historia #documental",
- "mapas": []
+ "subir": "Cómo cayó el IMPERIO AZTECA en solo 2 años | La caída de Tenochtitlan en {minutos} minutos",
+ "descripcion": "Tenochtitlan era una de las ciudades más grandes del mundo: una ciudad sobre un lago, con canales, calzadas y el mercado más grande que los españoles habían visto. En solo dos años cayó. Moctezuma, Hernán Cortés, la Malinche, Tlaxcala, la Noche Triste, la viruela y el asedio de 1521, contados con mapas animados.",
+ "tags": "#historia #aztecas #tenochtitlan #mexico #moctezuma #hernancortes #documental",
+ "mapas": [
+  ["--nombre", "mesoamerica", "--zona", "-121", "34", "-72", "10", "--grados-min", "3",
+   "--hist", "1500:Aztec Empire=imperio,Maya city-states=mayas",
+   "--paises", "CUB=cuba,MEX=mexico_hoy",
+   "--regiones", "MEX:Tlaxcala=tlaxcala"]
+ ]
 }

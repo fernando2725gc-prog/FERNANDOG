@@ -1,0 +1,3624 @@
+{
+ "cola": 2,
+ "capitulos": [
+  "1325|Un islote que nadie quería|islote",
+  "1428|El imperio|corona",
+  "1500|La Venecia de América|piramide",
+  "1519|Llegan los españoles|carabela",
+  "1519|Moctezuma, prisionero|cadenas",
+  "1520|La Noche Triste|calavera",
+  "1521|La caída|fuego"
+ ],
+ "musica": [
+  {
+   "desde": 0,
+   "pista": "epica--call-to-adventure.mp3"
+  },
+  {
+   "desde": "Valle de México, hacia",
+   "pista": "antigua--teller-of-the-tales.mp3"
+  },
+  {
+   "desde": "Ahora, entremos",
+   "pista": "curiosidad--investigations.mp3"
+  },
+  {
+   "desde": "Año 1519. Un capitán",
+   "pista": "epica--rising-tide.mp3"
+  },
+  {
+   "desde": "Ahora vuelve al principio",
+   "pista": "misterio--hidden-past.mp3"
+  },
+  {
+   "desde": "Primavera de 1520",
+   "pista": "guerra--impending-boom.mp3"
+  },
+  {
+   "desde": "Entre los españoles venía",
+   "pista": "triste--heavy-heart.mp3"
+  },
+  {
+   "desde": "Mayo de 1521",
+   "pista": "guerra--undaunted.mp3"
+  },
+  {
+   "desde": "Sobre sus ruinas",
+   "pista": "reflexion--rumination.mp3"
+  }
+ ],
+ "planos": [
+  {
+   "en": 0,
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -99.5,
+    "lat": 19.6,
+    "grados": 14
+   },
+   "hasta": {
+    "lon": -99.2,
+    "lat": 19.5,
+    "grados": 9
+   },
+   "fecha": "1519",
+   "encuadre": false,
+   "capas": [
+    {
+     "en": "noviembre",
+     "id": "imperio",
+     "color": "rojo",
+     "op": 0.45
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "1519",
+     "texto": "8 de noviembre",
+     "x": 560,
+     "y": 300,
+     "tam": 80
+    }
+   ]
+  },
+  {
+   "en": "avanzaron",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -99.0,
+    "lat": 19.45,
+    "grados": 7
+   },
+   "hasta": {
+    "lon": -99.12,
+    "lat": 19.43,
+    "grados": 4.5
+   },
+   "fecha": "1519",
+   "encuadre": false,
+   "pins": [
+    {
+     "en": "camino",
+     "lon": -99.13,
+     "lat": 19.43,
+     "nombre": "Tenochtitlan",
+     "aro": true
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "camino",
+     "de": [
+      -98.75,
+      19.15
+     ],
+     "a": [
+      -99.1,
+      19.4
+     ],
+     "d": 3,
+     "color": "blanco"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "lago",
+     "texto": "Un camino sobre un lago",
+     "x": 560,
+     "y": 300,
+     "tam": 70,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Al fondo",
+   "tipo": "escena",
+   "decorado": "tenochtitlan",
+   "actores": [
+    {
+     "q": "soldado",
+     "traje": "conquistador",
+     "x": 620,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "fondo",
+       "hace": "susto"
+      }
+     ],
+     "lleva": "espada"
+    },
+    {
+     "q": "capitan",
+     "traje": "conquistador",
+     "x": 900,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "ciudad",
+       "hace": "senala"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "soldado",
+     "texto": "¿Eso es de verdad?",
+     "ancho": 340
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Calzada de Iztapalapa, 1519"
+    }
+   ]
+  },
+  {
+   "en": "Templos, palacios",
+   "tipo": "escena",
+   "decorado": "tenochtitlan",
+   "actores": [
+    {
+     "q": "remero",
+     "traje": "azteca",
+     "x": 760,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "canales",
+       "hace": "saluda"
+      }
+     ]
+    },
+    {
+     "q": "mercader",
+     "traje": "indigena",
+     "x": 1180,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "canoas",
+       "hace": "asiente"
+      }
+     ],
+     "lleva": "especias"
+    }
+   ]
+  },
+  {
+   "en": "Uno de ellos escribió",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "escribió",
+     "tarjeta": "Bernal Díaz del Castillo",
+     "cosa": "libro"
+    },
+    {
+     "en": "encantamiento",
+     "palabra": "«Cosa de encantamiento»",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Era Tenochtitlan",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -99.4,
+    "lat": 19.6,
+    "grados": 12
+   },
+   "hasta": {
+    "lon": -99.2,
+    "lat": 19.5,
+    "grados": 9
+   },
+   "fecha": "1519",
+   "capas": [
+    {
+     "en": "Imperio",
+     "id": "imperio",
+     "color": "rojo",
+     "etiqueta": "Imperio azteca"
+    }
+   ],
+   "pins": [
+    {
+     "en": "capital",
+     "lon": -99.13,
+     "lat": 19.43,
+     "nombre": "Tenochtitlan",
+     "aro": true
+    }
+   ]
+  },
+  {
+   "en": "Una de las ciudades",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "ciudades",
+     "tarjeta": "Una de las más grandes del mundo",
+     "cosa": "corona"
+    }
+   ]
+  },
+  {
+   "en": "Dos años después",
+   "tipo": "escena",
+   "decorado": "tenochtitlan",
+   "actores": [],
+   "paisaje": true,
+   "noche": true,
+   "humo": true,
+   "cosas": [
+    {
+     "en": "ruinas",
+     "cosa": "fuego",
+     "x": 960,
+     "y": 520,
+     "salta": -60
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "1521"
+    }
+   ]
+  },
+  {
+   "en": "Un emperador prisionero",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "Moctezuma",
+     "traje": "azteca",
+     "x": 1210,
+     "s": 1.1,
+     "mira": -0.3,
+     "acciones": [
+      {
+       "en": "prisionero",
+       "hace": "triste"
+      }
+     ],
+     "sentado": true,
+     "y": 710,
+     "colores": {
+      "color": "#2fa35a",
+      "capa": "#1f6f8a",
+      "sombreroColor": "#2fa35a"
+     }
+    },
+    {
+     "q": "guardia",
+     "traje": "conquistador",
+     "x": 760,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "palacio",
+       "hace": "jarras"
+      }
+     ],
+     "lleva": "espada"
+    }
+   ],
+   "cosas": [
+    {
+     "en": "palacio",
+     "cosa": "cadenas",
+     "x": 1210,
+     "y": 520,
+     "salta": -60
+    }
+   ]
+  },
+  {
+   "en": "Una huida en plena",
+   "tipo": "escena",
+   "decorado": "laguna",
+   "actores": [
+    {
+     "q": "s1",
+     "traje": "conquistador",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.6,
+     "acciones": [
+      {
+       "en": "huida",
+       "hace": "camina"
+      }
+     ],
+     "lleva": "saco"
+    },
+    {
+     "q": "s2",
+     "traje": "conquistador",
+     "x": 1050,
+     "s": 1.1,
+     "mira": 0.6,
+     "acciones": [
+      {
+       "en": "noche",
+       "hace": "susto"
+      }
+     ],
+     "lleva": "oro"
+    }
+   ],
+   "noche": true,
+   "cosas": [
+    {
+     "en": "oro",
+     "cosa": "oro",
+     "x": 1350,
+     "y": 700,
+     "salta": -60
+    }
+   ]
+  },
+  {
+   "en": "Una enfermedad que",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "enfermedad",
+     "cosa": "calavera",
+     "pie": "Una enfermedad desconocida"
+    }
+   ]
+  },
+  {
+   "en": "Y unos barcos de guerra",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "barcos",
+     "cosa": "galera",
+     "pie": "Barcos de guerra…"
+    },
+    {
+     "en": "montañas",
+     "palabra": "¡En las montañas!",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Cómo cayó el imperio",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Cómo",
+     "palabra": "¿Cómo?",
+     "rojo": true
+    },
+    {
+     "en": "dos años",
+     "cifra": "2",
+     "sub": "años",
+     "icono": "reloj"
+    }
+   ]
+  },
+  {
+   "en": "Esta es la historia",
+   "tipo": "capitulo",
+   "numero": 0
+  },
+  {
+   "en": "Valle de México, hacia",
+   "tipo": "capitulo",
+   "numero": 1
+  },
+  {
+   "en": "Un pueblo llega",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -102.5,
+    "lat": 24,
+    "grados": 20
+   },
+   "hasta": {
+    "lon": -100.5,
+    "lat": 21.5,
+    "grados": 14
+   },
+   "fecha": "1325",
+   "ejercitos": [
+    {
+     "en": "norte",
+     "de": [
+      -106,
+      28
+     ],
+     "a": [
+      -99.3,
+      19.7
+     ],
+     "d": 3.5,
+     "color": "amarillo"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "siglos",
+     "texto": "≈200 años caminando",
+     "x": 560,
+     "y": 300,
+     "tam": 70,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Se llaman a sí mismos",
+   "tipo": "escena",
+   "decorado": "montana",
+   "actores": [
+    {
+     "q": "m1",
+     "traje": "indigena",
+     "x": 600,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "llaman",
+       "hace": "orgulloso"
+      }
+     ],
+     "lleva": "saco"
+    },
+    {
+     "q": "m2",
+     "traje": "indigena",
+     "x": 850,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "mexicas",
+       "hace": "saluda"
+      }
+     ]
+    },
+    {
+     "q": "vecino",
+     "traje": "azteca",
+     "x": 1400,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "nadie",
+       "hace": "jarras"
+      }
+     ],
+     "colores": {
+      "color": "#7a5230"
+     }
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "vecino",
+     "texto": "¿Y estos quiénes son?",
+     "ancho": 340
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "mexicas",
+     "texto": "Los mexicas",
+     "x": 720,
+     "y": 230,
+     "tam": 80
+    }
+   ]
+  },
+  {
+   "en": "Los pueblos del valle",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -98.9,
+    "lat": 19.5,
+    "grados": 6
+   },
+   "hasta": {
+    "lon": -99.05,
+    "lat": 19.45,
+    "grados": 4
+   },
+   "fecha": "1325",
+   "pins": [
+    {
+     "en": "lago",
+     "lon": -98.98,
+     "lat": 19.5,
+     "nombre": "Lago de Texcoco",
+     "mar": true
+    }
+   ],
+   "foco": {
+    "en": "islote",
+    "lon": -99.13,
+    "lat": 19.43,
+    "radio": 220
+   },
+   "iconos": [
+    {
+     "en": "islote",
+     "lon": -99.13,
+     "lat": 19.23,
+     "cosa": "islote",
+     "tam": 0.5
+    }
+   ]
+  },
+  {
+   "en": "Lleno de serpientes",
+   "tipo": "escena",
+   "decorado": "laguna",
+   "actores": [
+    {
+     "q": "m1",
+     "traje": "indigena",
+     "x": 760,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "serpientes",
+       "hace": "susto"
+      }
+     ]
+    },
+    {
+     "q": "m2",
+     "traje": "indigena",
+     "x": 1150,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "mosquitos",
+       "hace": "enfada"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.1,
+     "a": "m2",
+     "texto": "¿Aquí? ¿Seguro?",
+     "ancho": 340
+    }
+   ]
+  },
+  {
+   "en": "Pero según la leyenda",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "señal",
+     "tarjeta": "La señal prometida",
+     "cosa": "sol"
+    },
+    {
+     "en": "águila",
+     "palabra": "Águila"
+    },
+    {
+     "en": "nopal",
+     "palabra": "Nopal"
+    },
+    {
+     "en": "serpiente",
+     "palabra": "Serpiente",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Si la imagen te suena",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "bandera",
+     "cosa": "escudo",
+     "pie": "El escudo de la bandera de México"
+    }
+   ]
+  },
+  {
+   "en": "En ese islote",
+   "tipo": "escena",
+   "decorado": "laguna",
+   "actores": [
+    {
+     "q": "m1",
+     "traje": "indigena",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "fundan",
+       "hace": "levanta"
+      }
+     ],
+     "lleva": "pico"
+    },
+    {
+     "q": "m2",
+     "traje": "azteca",
+     "x": 1150,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "Tenochtitlan",
+       "hace": "celebra"
+      }
+     ]
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Tenochtitlan, 1325"
+    }
+   ]
+  },
+  {
+   "en": "Es como si te dieran",
+   "tipo": "escena",
+   "decorado": "laguna",
+   "actores": [
+    {
+     "q": "m1",
+     "traje": "azteca",
+     "x": 960,
+     "s": 1.1,
+     "mira": 0.2,
+     "acciones": [
+      {
+       "en": "terreno",
+       "hace": "encoge"
+      },
+      {
+       "en": "impresionante",
+       "hace": "orgulloso"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "m1",
+     "texto": "Vista al lago, ¿eh?",
+     "ancho": 340
+    }
+   ]
+  },
+  {
+   "en": "Año 1428",
+   "tipo": "capitulo",
+   "numero": 2
+  },
+  {
+   "en": "Se alían con otras",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -98.95,
+    "lat": 19.5,
+    "grados": 5
+   },
+   "hasta": {
+    "lon": -99.0,
+    "lat": 19.48,
+    "grados": 4
+   },
+   "fecha": "1428",
+   "guia": {
+    "lado": "izquierda"
+   },
+   "pins": [
+    {
+     "en": "ciudades",
+     "lon": -99.13,
+     "lat": 19.43,
+     "nombre": "Tenochtitlan",
+     "izquierda": true
+    },
+    {
+     "en": "Texcoco",
+     "lon": -98.88,
+     "lat": 19.51,
+     "nombre": "Texcoco"
+    }
+   ]
+  },
+  {
+   "en": "y forman la Triple",
+   "tipo": "papel",
+   "titulo": "La Triple Alianza",
+   "cosas": [
+    {
+     "en": "forman",
+     "cosa": "piramide",
+     "pie": "Tenochtitlan"
+    },
+    {
+     "en": "Triple",
+     "cosa": "templo",
+     "pie": "Texcoco"
+    },
+    {
+     "en": "Alianza",
+     "cosa": "escudo",
+     "pie": "Tlacopan"
+    }
+   ]
+  },
+  {
+   "en": "En menos de un siglo",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -98,
+    "lat": 19.5,
+    "grados": 22
+   },
+   "hasta": {
+    "lon": -98.5,
+    "lat": 19,
+    "grados": 17
+   },
+   "fecha": "1428-1519",
+   "capas": [
+    {
+     "en": "dominan",
+     "id": "imperio",
+     "color": "rojo",
+     "modo": "crece",
+     "etiqueta": "Imperio azteca",
+     "cara": "malo",
+     "cara_en": "Pacífico"
+    }
+   ],
+   "pins": [
+    {
+     "en": "golfo",
+     "lon": -94.5,
+     "lat": 21.5,
+     "nombre": "Golfo de México",
+     "mar": true
+    },
+    {
+     "en": "Pacífico",
+     "lon": -102,
+     "lat": 16,
+     "nombre": "Océano Pacífico",
+     "mar": true
+    }
+   ]
+  },
+  {
+   "en": "Cientos de pueblos",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "tlatoani",
+     "traje": "azteca",
+     "x": 1210,
+     "s": 1.1,
+     "mira": -0.3,
+     "acciones": [
+      {
+       "en": "tributo",
+       "hace": "orgulloso"
+      }
+     ],
+     "sentado": true,
+     "y": 710,
+     "colores": {
+      "color": "#2fa35a",
+      "capa": "#1f6f8a",
+      "sombreroColor": "#2fa35a"
+     }
+    },
+    {
+     "q": "v1",
+     "traje": "indigena",
+     "x": 620,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "pagan",
+       "hace": "agacha"
+      }
+     ],
+     "lleva": "saco"
+    },
+    {
+     "q": "v2",
+     "traje": "indigena",
+     "x": 860,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "algodón",
+       "hace": "agacha"
+      }
+     ],
+     "lleva": "especias"
+    }
+   ],
+   "cosas": [
+    {
+     "en": "maíz",
+     "cosa": "trigo",
+     "x": 980,
+     "y": 640,
+     "salta": -60
+    },
+    {
+     "en": "plumas",
+     "cosa": "pluma",
+     "x": 1450,
+     "y": 600,
+     "salta": -60
+    },
+    {
+     "en": "oro",
+     "cosa": "oro",
+     "x": 1500,
+     "y": 760,
+     "salta": -60
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "tlatoani",
+     "texto": "Póngalo ahí, gracias.",
+     "ancho": 340
+    }
+   ]
+  },
+  {
+   "en": "El cacao era tan valioso",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "cacao",
+     "tarjeta": "Cacao",
+     "cosa": "cuenco"
+    },
+    {
+     "en": "dinero",
+     "cosa": "moneda",
+     "pie": "Se usaba como dinero"
+    },
+    {
+     "en": "árboles",
+     "palabra": "El dinero crecía en los árboles",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Pero el imperio tiene",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "oscuro",
+     "palabra": "El lado oscuro",
+     "rojo": true
+    },
+    {
+     "en": "imperio",
+     "cosa": "calavera",
+     "pie": "Guerra y sacrificios"
+    }
+   ]
+  },
+  {
+   "en": "Los mexicas hacen la guerra",
+   "tipo": "escena",
+   "decorado": "campo",
+   "actores": [
+    {
+     "q": "guerrero",
+     "traje": "azteca",
+     "x": 1250,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "guerra",
+       "hace": "ataca"
+      },
+      {
+       "en": "prisioneros",
+       "hace": "orgulloso"
+      }
+     ],
+     "lleva": "escudo"
+    },
+    {
+     "q": "cautivo",
+     "traje": "indigena",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "conseguir",
+       "hace": "cae"
+      },
+      {
+       "en": "prisioneros",
+       "hace": "triste"
+      }
+     ]
+    }
+   ],
+   "cosas": [
+    {
+     "en": "prisioneros",
+     "cosa": "cadenas",
+     "x": 700,
+     "y": 560,
+     "salta": -60
+    }
+   ]
+  },
+  {
+   "en": "y muchos de ellos",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "sacrificados",
+     "cosa": "templo",
+     "pie": "Sacrificios en lo alto de los templos"
+    },
+    {
+     "en": "dioses",
+     "tarjeta": "Para alimentar a los dioses",
+     "cosa": "sol"
+    }
+   ]
+  },
+  {
+   "en": "Los pueblos sometidos",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -99,
+    "lat": 19,
+    "grados": 16
+   },
+   "hasta": {
+    "lon": -98.8,
+    "lat": 19,
+    "grados": 13
+   },
+   "fecha": "1500",
+   "capas": [
+    {
+     "en": 0,
+     "id": "imperio",
+     "color": "rojo",
+     "op": 0.55,
+     "etiqueta": "Imperio azteca",
+     "cara": "malo",
+     "cara_en": "odian"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "pagan",
+     "lon": -97.2,
+     "lat": 17.8,
+     "cosa": "monton_monedas",
+     "tam": 0.6
+    }
+   ]
+  },
+  {
+   "en": "Y hay uno que",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -98.5,
+    "lat": 19.4,
+    "grados": 8
+   },
+   "hasta": {
+    "lon": -98.4,
+    "lat": 19.35,
+    "grados": 6
+   },
+   "fecha": "1500",
+   "capas": [
+    {
+     "en": 0,
+     "id": "imperio",
+     "color": "rojo",
+     "op": 0.5
+    },
+    {
+     "en": "Tlaxcala",
+     "id": "tlaxcala",
+     "color": "verde",
+     "etiqueta": "Tlaxcala",
+     "cara": "enfado",
+     "cara_en": "jamás"
+    }
+   ],
+   "foco": {
+    "en": "conquistada",
+    "capa": "tlaxcala"
+   }
+  },
+  {
+   "en": "Recuerda ese nombre",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Recuerda",
+     "tarjeta": "Tlaxcala",
+     "cosa": "escudo"
+    },
+    {
+     "en": "nombre",
+     "palabra": "¡Recuérdalo!",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Ahora, entremos",
+   "tipo": "capitulo",
+   "numero": 3
+  },
+  {
+   "en": "Tenochtitlan, hacia el",
+   "tipo": "papel",
+   "titulo": "Una ciudad sobre el lago",
+   "cosas": [
+    {
+     "en": "1500",
+     "cosa": "isla",
+     "pie": "Tenochtitlan"
+    },
+    {
+     "en": "calzadas",
+     "cosa": "muro",
+     "pie": "3 calzadas a tierra firme"
+    }
+   ]
+  },
+  {
+   "en": "Un acueducto trae",
+   "tipo": "escena",
+   "decorado": "tenochtitlan",
+   "actores": [
+    {
+     "q": "aguador",
+     "traje": "indigena",
+     "x": 800,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "agua",
+       "hace": "levanta"
+      }
+     ],
+     "lleva": "cuenco"
+    },
+    {
+     "q": "vecino",
+     "traje": "azteca",
+     "x": 1200,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "Chapultepec",
+       "hace": "asiente"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "aguador",
+     "texto": "Agua del bosque, recién llegada.",
+     "ancho": 380
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "Chapultepec",
+     "texto": "Acueducto de Chapultepec",
+     "x": 960,
+     "y": 230,
+     "tam": 64
+    }
+   ]
+  },
+  {
+   "en": "Alrededor, los mexicas",
+   "tipo": "escena",
+   "decorado": "tenochtitlan",
+   "actores": [
+    {
+     "q": "c1",
+     "traje": "indigena",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "chinampas",
+       "hace": "agacha"
+      }
+     ],
+     "lleva": "pico"
+    },
+    {
+     "q": "c2",
+     "traje": "campesina",
+     "x": 1150,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "cosechan",
+       "hace": "celebra"
+      }
+     ]
+    }
+   ],
+   "cosas": [
+    {
+     "en": "maíz",
+     "cosa": "trigo",
+     "x": 960,
+     "y": 760,
+     "salta": -60
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "c1",
+     "texto": "Huerto con vista al lago.",
+     "ancho": 340
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "chinampas",
+     "texto": "Chinampas",
+     "x": 960,
+     "y": 230,
+     "tam": 80
+    }
+   ]
+  },
+  {
+   "en": "En el centro se alza",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Templo Mayor",
+     "cosa": "piramide",
+     "pie": "El Templo Mayor"
+    },
+    {
+     "en": "santuarios",
+     "tarjeta": "2 santuarios en lo alto",
+     "cosa": "templo"
+    }
+   ]
+  },
+  {
+   "en": "uno para Huitzilopochtli",
+   "tipo": "papel",
+   "titulo": "Los dos dioses del Templo Mayor",
+   "cosas": [
+    {
+     "en": "Huitzilopochtli",
+     "cosa": "espada",
+     "pie": "Huitzilopochtli: la guerra"
+    },
+    {
+     "en": "Tláloc",
+     "cosa": "cuenco",
+     "pie": "Tláloc: la lluvia"
+    }
+   ]
+  },
+  {
+   "en": "Y al lado, en Tlatelolco",
+   "tipo": "escena",
+   "decorado": "tenochtitlan",
+   "actores": [
+    {
+     "q": "vendedora",
+     "traje": "indigena",
+     "x": 620,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "mercado",
+       "hace": "saluda"
+      }
+     ],
+     "lleva": "trigo",
+     "colores": {
+      "color": "#f4efe3",
+      "ribete": "#2fa35a",
+      "sombreroColor": "#2fa35a"
+     }
+    },
+    {
+     "q": "vendedor",
+     "traje": "azteca",
+     "x": 940,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "grande",
+       "hace": "orgulloso"
+      }
+     ],
+     "lleva": "pluma"
+    },
+    {
+     "q": "soldado",
+     "traje": "conquistador",
+     "x": 1350,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "nunca",
+       "hace": "susto"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "soldado",
+     "texto": "¡Ni en Sevilla!",
+     "ancho": 340
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Mercado de Tlatelolco"
+    }
+   ]
+  },
+  {
+   "en": "Algunos soldados que",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Roma",
+     "tarjeta": "Roma",
+     "cosa": "cupula"
+    },
+    {
+     "en": "Constantinopla",
+     "tarjeta": "Constantinopla",
+     "cosa": "muralla"
+    },
+    {
+     "en": "igual",
+     "palabra": "Ninguna como esta",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "En la ciudad vivían",
+   "tipo": "papel",
+   "titulo": "Tenochtitlan contra Europa",
+   "cosas": [
+    {
+     "en": "personas",
+     "cosa": "piramide",
+     "pie": "Tenochtitlan"
+    },
+    {
+     "en": "Europa",
+     "cosa": "castillo",
+     "pie": "Casi cualquier ciudad europea"
+    }
+   ]
+  },
+  {
+   "en": "Y era muy limpia",
+   "tipo": "escena",
+   "decorado": "tenochtitlan",
+   "actores": [
+    {
+     "q": "b1",
+     "traje": "indigena",
+     "x": 760,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "limpia",
+       "hace": "agacha"
+      }
+     ]
+    },
+    {
+     "q": "b2",
+     "traje": "azteca",
+     "x": 1150,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "barrían",
+       "hace": "orgulloso"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "b2",
+     "texto": "Aquí no se tira nada.",
+     "ancho": 340
+    }
+   ]
+  },
+  {
+   "en": "La llamaron la Venecia",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Venecia",
+     "tarjeta": "La Venecia de América",
+     "cosa": "isla"
+    }
+   ]
+  },
+  {
+   "en": "Y en 1502",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "Moctezuma",
+     "traje": "azteca",
+     "x": 1210,
+     "s": 1.1,
+     "mira": -0.2,
+     "acciones": [
+      {
+       "en": "trono",
+       "hace": "orgulloso"
+      },
+      {
+       "en": "Moctezuma",
+       "hace": "mira_camara"
+      }
+     ],
+     "sentado": true,
+     "y": 710,
+     "colores": {
+      "color": "#2fa35a",
+      "capa": "#1f6f8a",
+      "sombreroColor": "#2fa35a"
+     }
+    }
+   ],
+   "cosas": [
+    {
+     "en": "trono",
+     "cosa": "corona",
+     "x": 860,
+     "y": 520,
+     "salta": -90
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Tenochtitlan, 1502"
+    },
+    {
+     "en": "Moctezuma",
+     "texto": "Moctezuma",
+     "x": 620,
+     "y": 300,
+     "tam": 90
+    }
+   ]
+  },
+  {
+   "en": "Año 1519. Un capitán",
+   "tipo": "capitulo",
+   "numero": 4
+  },
+  {
+   "en": "Hernán Cortés, zarpa",
+   "tipo": "escena",
+   "decorado": "puerto",
+   "actores": [
+    {
+     "q": "Cortés",
+     "traje": "conquistador",
+     "x": 960,
+     "s": 1.25,
+     "mira": 0.2,
+     "acciones": [
+      {
+       "en": "Cortés",
+       "hace": "orgulloso"
+      },
+      {
+       "en": "zarpa",
+       "hace": "senala"
+      }
+     ]
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "Cortés",
+     "texto": "Hernán Cortés",
+     "x": 960,
+     "y": 220,
+     "tam": 76
+    },
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Cuba, 1519"
+    }
+   ]
+  },
+  {
+   "en": "once barcos",
+   "tipo": "papel",
+   "titulo": "La expedición de Cortés",
+   "cosas": [
+    {
+     "en": "once",
+     "cosa": "carabela",
+     "pie": "11 barcos"
+    },
+    {
+     "en": "quinientos",
+     "cosa": "espada",
+     "pie": "≈500 hombres"
+    },
+    {
+     "en": "dieciséis",
+     "cosa": "caballo",
+     "pie": "16 caballos"
+    }
+   ]
+  },
+  {
+   "en": "Desembarca en la costa",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -89,
+    "lat": 21,
+    "grados": 26
+   },
+   "hasta": {
+    "lon": -91,
+    "lat": 20.5,
+    "grados": 20
+   },
+   "fecha": "1519",
+   "guia": false,
+   "capas": [
+    {
+     "en": 0,
+     "id": "cuba",
+     "color": "amarillo",
+     "etiqueta": "Cuba"
+    },
+    {
+     "en": "costa",
+     "id": "imperio",
+     "color": "rojo",
+     "op": 0.5
+    }
+   ],
+   "barcos": [
+    {
+     "en": 0,
+     "de": [
+      -84.5,
+      21.9
+     ],
+     "a": [
+      -96.2,
+      19.6
+     ],
+     "d": 4,
+     "flota": 4,
+     "color": "rojo",
+     "curva": 0.1
+    }
+   ],
+   "pins": [
+    {
+     "en": "Veracruz",
+     "lon": -96.4,
+     "lat": 19.65,
+     "nombre": "Veracruz",
+     "aro": true
+    }
+   ]
+  },
+  {
+   "en": "Allí conoce a una joven",
+   "tipo": "escena",
+   "decorado": "puerto",
+   "actores": [
+    {
+     "q": "Malintzin",
+     "traje": "indigena",
+     "x": 1150,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "joven",
+       "hace": "saluda"
+      },
+      {
+       "en": "maya",
+       "hace": "orgulloso"
+      }
+     ],
+     "colores": {
+      "color": "#f4efe3",
+      "ribete": "#2fa35a",
+      "sombreroColor": "#2fa35a"
+     }
+    },
+    {
+     "q": "Cortés",
+     "traje": "conquistador",
+     "x": 650,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "náhuatl",
+       "hace": "susto"
+      },
+      {
+       "en": "Malinche",
+       "hace": "asiente"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "Malintzin",
+     "texto": "Yo les traduzco.",
+     "ancho": 340
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "Malintzin",
+     "texto": "Malintzin",
+     "x": 1150,
+     "y": 260,
+     "tam": 70
+    },
+    {
+     "en": "Malinche",
+     "texto": "«La Malinche»",
+     "x": 1150,
+     "y": 340,
+     "tam": 60,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Ella se convierte",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "intérprete",
+     "tarjeta": "Intérprete",
+     "cosa": "libro"
+    },
+    {
+     "en": "consejera",
+     "tarjeta": "Consejera",
+     "cosa": "pluma"
+    },
+    {
+     "en": "clave",
+     "palabra": "La pieza clave",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Sin ella, Cortés",
+   "tipo": "escena",
+   "decorado": "campamento",
+   "actores": [
+    {
+     "q": "guerrero",
+     "traje": "azteca",
+     "x": 1200,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "Sin",
+       "hace": "senala"
+      }
+     ]
+    },
+    {
+     "q": "Cortés",
+     "traje": "conquistador",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "perdido",
+       "hace": "encoge"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.1,
+     "a": "guerrero",
+     "texto": "¿Tlein?",
+     "ancho": 340
+    },
+    {
+     "en": 1.9,
+     "a": "Cortés",
+     "texto": "¿Perdón?",
+     "ancho": 340
+    }
+   ]
+  },
+  {
+   "en": "Los españoles traen cosas",
+   "tipo": "escena",
+   "decorado": "selva",
+   "actores": [
+    {
+     "q": "jinete",
+     "traje": "conquistador",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "caballos",
+       "hace": "orgulloso"
+      }
+     ],
+     "montado": true
+    },
+    {
+     "q": "guerrero",
+     "traje": "azteca",
+     "x": 1300,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "animal",
+       "hace": "susto"
+      }
+     ]
+    }
+   ],
+   "cosas": [
+    {
+     "en": "cañones",
+     "cosa": "canon",
+     "x": 1000,
+     "y": 900,
+     "salta": -40
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "guerrero",
+     "texto": "¿Qué bicho es ese?",
+     "ancho": 340
+    }
+   ]
+  },
+  {
+   "en": "Pero eran muy pocos",
+   "tipo": "papel",
+   "titulo": "Las cuentas no salen",
+   "cosas": [
+    {
+     "en": "Quinientos",
+     "cosa": "espada",
+     "pie": "500 españoles"
+    },
+    {
+     "en": "millones",
+     "cosa": "corona",
+     "pie": "Un imperio de millones"
+    }
+   ]
+  },
+  {
+   "en": "Para que nadie pueda",
+   "tipo": "escena",
+   "decorado": "puerto",
+   "actores": [
+    {
+     "q": "Cortés",
+     "traje": "conquistador",
+     "x": 1250,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "hundir",
+       "hace": "senala"
+      }
+     ]
+    },
+    {
+     "q": "soldado",
+     "traje": "conquistador",
+     "x": 650,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "barcos",
+       "hace": "susto"
+      }
+     ],
+     "lleva": "espada"
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "soldado",
+     "texto": "¿Y cómo volvemos?",
+     "ancho": 340
+    }
+   ]
+  },
+  {
+   "en": "En el camino hacia",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -97.4,
+    "lat": 19.5,
+    "grados": 6
+   },
+   "hasta": {
+    "lon": -97.8,
+    "lat": 19.4,
+    "grados": 5
+   },
+   "fecha": "1519",
+   "capas": [
+    {
+     "en": "Tlaxcala",
+     "id": "tlaxcala",
+     "color": "verde",
+     "etiqueta": "Tlaxcala"
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "camino",
+     "de": [
+      -96.4,
+      19.65
+     ],
+     "a": [
+      -98.15,
+      19.36
+     ],
+     "d": 3,
+     "color": "blanco"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "batallas",
+     "lon": -97.9,
+     "lat": 19.65,
+     "cosa": "espada",
+     "tam": 0.6
+    }
+   ]
+  },
+  {
+   "en": "y al final los tlaxcaltecas",
+   "tipo": "escena",
+   "decorado": "campamento",
+   "actores": [
+    {
+     "q": "jefe",
+     "traje": "azteca",
+     "x": 1200,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "cuentas",
+       "hace": "piensa"
+      },
+      {
+       "en": "amigo",
+       "hace": "asiente"
+      }
+     ],
+     "colores": {
+      "color": "#2f6b2f",
+      "ribete": "#f4efe3",
+      "sombreroColor": "#f4efe3"
+     }
+    },
+    {
+     "q": "Cortés",
+     "traje": "conquistador",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "enemigo",
+       "hace": "saluda"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "jefe",
+     "texto": "¿Contra los mexicas? Trato hecho.",
+     "ancho": 420
+    }
+   ]
+  },
+  {
+   "en": "Se unen a los españoles",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -98.6,
+    "lat": 19.45,
+    "grados": 5
+   },
+   "hasta": {
+    "lon": -98.8,
+    "lat": 19.45,
+    "grados": 4
+   },
+   "fecha": "1519",
+   "capas": [
+    {
+     "en": 0,
+     "id": "tlaxcala",
+     "color": "verde",
+     "op": 0.6
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "Miles",
+     "de": [
+      -98.2,
+      19.3
+     ],
+     "a": [
+      -99.05,
+      19.4
+     ],
+     "d": 3,
+     "color": "verde"
+    },
+    {
+     "en": "unen",
+     "de": [
+      -98.25,
+      19.4
+     ],
+     "a": [
+      -99.05,
+      19.45
+     ],
+     "d": 3,
+     "color": "blanco"
+    }
+   ],
+   "pins": [
+    {
+     "en": "Tenochtitlan",
+     "lon": -99.13,
+     "lat": 19.43,
+     "nombre": "Tenochtitlan",
+     "aro": true
+    }
+   ]
+  },
+  {
+   "en": "Ahora vuelve al principio",
+   "tipo": "capitulo",
+   "numero": 5
+  },
+  {
+   "en": "Noviembre de 1519. Los",
+   "tipo": "escena",
+   "decorado": "tenochtitlan",
+   "actores": [
+    {
+     "q": "Moctezuma",
+     "traje": "azteca",
+     "x": 1250,
+     "s": 1.2,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "recibirlos",
+       "hace": "saluda"
+      }
+     ],
+     "colores": {
+      "color": "#2fa35a",
+      "capa": "#1f6f8a",
+      "sombreroColor": "#2fa35a"
+     }
+    },
+    {
+     "q": "Cortés",
+     "traje": "conquistador",
+     "x": 650,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "calzada",
+       "hace": "camina"
+      },
+      {
+       "en": "persona",
+       "hace": "quita_sombrero"
+      }
+     ]
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Tenochtitlan, 8 de noviembre de 1519"
+    }
+   ]
+  },
+  {
+   "en": "Les regala collares",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "Moctezuma",
+     "traje": "azteca",
+     "x": 1210,
+     "s": 1.1,
+     "mira": -0.3,
+     "acciones": [
+      {
+       "en": "regala",
+       "hace": "saluda"
+      }
+     ],
+     "sentado": true,
+     "y": 710,
+     "colores": {
+      "color": "#2fa35a",
+      "capa": "#1f6f8a",
+      "sombreroColor": "#2fa35a"
+     }
+    },
+    {
+     "q": "Cortés",
+     "traje": "conquistador",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "collares",
+       "hace": "celebra"
+      }
+     ]
+    }
+   ],
+   "cosas": [
+    {
+     "en": "collares",
+     "cosa": "oro",
+     "x": 950,
+     "y": 640,
+     "salta": -60
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "Moctezuma",
+     "texto": "Bienvenidos... supongo.",
+     "ancho": 340
+    }
+   ]
+  },
+  {
+   "en": "Por qué? Nadie",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Por qué",
+     "palabra": "¿Por qué?",
+     "rojo": true
+    },
+    {
+     "en": "certeza",
+     "cosa": "pergamino",
+     "pie": "Nadie lo sabe con certeza"
+    }
+   ]
+  },
+  {
+   "en": "Quizá curiosidad",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "curiosidad",
+     "tarjeta": "¿Curiosidad?",
+     "cosa": "libro"
+    },
+    {
+     "en": "prudencia",
+     "tarjeta": "¿Prudencia?",
+     "cosa": "escudo"
+    },
+    {
+     "en": "estudiar",
+     "tarjeta": "¿Estudiarlos?",
+     "cosa": "mapa_abierto"
+    }
+   ]
+  },
+  {
+   "en": "Pero los invitados no",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "Moctezuma",
+     "traje": "azteca",
+     "x": 1210,
+     "s": 1.1,
+     "mira": -0.3,
+     "acciones": [
+      {
+       "en": "rehén",
+       "hace": "susto"
+      }
+     ],
+     "sentado": true,
+     "y": 710,
+     "colores": {
+      "color": "#2fa35a",
+      "capa": "#1f6f8a",
+      "sombreroColor": "#2fa35a"
+     }
+    },
+    {
+     "q": "s1",
+     "traje": "conquistador",
+     "x": 760,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "portan",
+       "hace": "jarras"
+      }
+     ],
+     "lleva": "espada"
+    },
+    {
+     "q": "Cortés",
+     "traje": "conquistador",
+     "x": 1550,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "rehén",
+       "hace": "senala"
+      }
+     ]
+    }
+   ],
+   "cosas": [
+    {
+     "en": "palacio",
+     "cosa": "cadenas",
+     "x": 1210,
+     "y": 520,
+     "salta": -60
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "Cortés",
+     "texto": "Usted se queda aquí.",
+     "ancho": 340
+    }
+   ]
+  },
+  {
+   "en": "El hombre más poderoso",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "poderoso",
+     "cosa": "corona",
+     "pie": "Prisionero en su casa",
+     "tachar_en": "prisionero"
+    }
+   ]
+  },
+  {
+   "en": "Primavera de 1520",
+   "tipo": "capitulo",
+   "numero": 6
+  },
+  {
+   "en": "Cortés tiene que salir",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -97.8,
+    "lat": 19.6,
+    "grados": 8
+   },
+   "hasta": {
+    "lon": -97.5,
+    "lat": 19.6,
+    "grados": 7
+   },
+   "fecha": "1520",
+   "capas": [
+    {
+     "en": 0,
+     "id": "imperio",
+     "color": "rojo",
+     "op": 0.5
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "salir",
+     "de": [
+      -99.13,
+      19.43
+     ],
+     "a": [
+      -96.41,
+      19.44
+     ],
+     "d": 3,
+     "color": "blanco"
+    }
+   ],
+   "barcos": [
+    {
+     "en": "otros",
+     "de": [
+      -93,
+      21
+     ],
+     "a": [
+      -96.25,
+      19.5
+     ],
+     "d": 3,
+     "flota": 5,
+     "color": "#1e1e1e"
+    }
+   ],
+   "pins": [
+    {
+     "en": "salir",
+     "lon": -99.13,
+     "lat": 19.43,
+     "nombre": "Tenochtitlan"
+    },
+    {
+     "en": "enfrentarse",
+     "lon": -96.41,
+     "lat": 19.44,
+     "nombre": "Cempoala"
+    }
+   ]
+  },
+  {
+   "en": "Deja al mando",
+   "tipo": "escena",
+   "decorado": "campamento",
+   "actores": [
+    {
+     "q": "Cortés",
+     "traje": "conquistador",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "Deja",
+       "hace": "senala"
+      }
+     ]
+    },
+    {
+     "q": "Alvarado",
+     "traje": "conquistador",
+     "x": 1200,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "Alvarado",
+       "hace": "orgulloso"
+      }
+     ],
+     "lleva": "espada",
+     "colores": {
+      "color": "#b07a1e"
+     }
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "Cortés",
+     "texto": "Nada de locuras, ¿eh?",
+     "ancho": 340
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "Alvarado",
+     "texto": "Pedro de Alvarado",
+     "x": 1200,
+     "y": 230,
+     "tam": 66
+    }
+   ]
+  },
+  {
+   "en": "Durante una gran fiesta",
+   "tipo": "escena",
+   "decorado": "tenochtitlan",
+   "actores": [
+    {
+     "q": "n1",
+     "traje": "azteca",
+     "x": 600,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "bailaban",
+       "hace": "celebra"
+      },
+      {
+       "en": "matanza",
+       "hace": "cae"
+      }
+     ]
+    },
+    {
+     "q": "n2",
+     "traje": "azteca",
+     "x": 880,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "fiesta",
+       "hace": "celebra"
+      },
+      {
+       "en": "desarmados",
+       "hace": "susto"
+      }
+     ]
+    },
+    {
+     "q": "Alvarado",
+     "traje": "conquistador",
+     "x": 1350,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "atacan",
+       "hace": "ataca"
+      }
+     ],
+     "lleva": "espada"
+    }
+   ],
+   "humo": true,
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Templo Mayor, mayo de 1520"
+    }
+   ]
+  },
+  {
+   "en": "La ciudad entera se levanta",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -99.05,
+    "lat": 19.45,
+    "grados": 5
+   },
+   "hasta": {
+    "lon": -99.12,
+    "lat": 19.43,
+    "grados": 4
+   },
+   "fecha": "1520",
+   "capas": [
+    {
+     "en": 0,
+     "id": "imperio",
+     "color": "rojo",
+     "op": 0.5
+    }
+   ],
+   "pins": [
+    {
+     "en": 0,
+     "lon": -99.13,
+     "lat": 19.43,
+     "nombre": "Tenochtitlan",
+     "aro": true
+    }
+   ],
+   "fuegos": [
+    {
+     "en": "armas",
+     "lon": -99.13,
+     "lat": 19.43
+    }
+   ],
+   "iconos": [
+    {
+     "en": "sitiados",
+     "lon": -98.78,
+     "lat": 19.68,
+     "cosa": "espada",
+     "tam": 0.5
+    }
+   ]
+  },
+  {
+   "en": "Moctezuma muere en esos",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Moctezuma",
+     "cosa": "corona",
+     "pie": "Muere Moctezuma",
+     "tachar_en": "días"
+    }
+   ]
+  },
+  {
+   "en": "Cómo murió",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "piedras",
+     "tarjeta": "¿Las piedras de su pueblo?",
+     "cosa": "calavera"
+    },
+    {
+     "en": "manos",
+     "tarjeta": "¿Los españoles?",
+     "cosa": "espada"
+    },
+    {
+     "en": "discutiéndose",
+     "palabra": "Todavía se discute",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "La noche del 30",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -99.1,
+    "lat": 19.45,
+    "grados": 4.5
+   },
+   "hasta": {
+    "lon": -99.2,
+    "lat": 19.47,
+    "grados": 3.5
+   },
+   "fecha": "30 de junio de 1520",
+   "pins": [
+    {
+     "en": 0,
+     "lon": -99.13,
+     "lat": 19.43,
+     "nombre": "Tenochtitlan"
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "huir",
+     "de": [
+      -99.13,
+      19.43
+     ],
+     "a": [
+      -99.45,
+      19.5
+     ],
+     "d": 3,
+     "color": "blanco"
+    }
+   ]
+  },
+  {
+   "en": "Los descubren",
+   "tipo": "escena",
+   "decorado": "laguna",
+   "actores": [
+    {
+     "q": "g1",
+     "traje": "azteca",
+     "x": 1300,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "descubren",
+       "hace": "ataca"
+      }
+     ],
+     "lleva": "escudo"
+    },
+    {
+     "q": "g2",
+     "traje": "azteca",
+     "x": 1550,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "canoas",
+       "hace": "ataca"
+      }
+     ]
+    },
+    {
+     "q": "s1",
+     "traje": "conquistador",
+     "x": 650,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "descubren",
+       "hace": "susto"
+      }
+     ],
+     "lleva": "saco"
+    }
+   ],
+   "noche": true
+  },
+  {
+   "en": "Muchos soldados se ahogan",
+   "tipo": "escena",
+   "decorado": "laguna",
+   "actores": [
+    {
+     "q": "s1",
+     "traje": "conquistador",
+     "x": 900,
+     "s": 1.1,
+     "mira": 0.3,
+     "acciones": [
+      {
+       "en": "ahogan",
+       "hace": "cae"
+      }
+     ],
+     "lleva": "oro"
+    }
+   ],
+   "noche": true,
+   "cosas": [
+    {
+     "en": "oro",
+     "cosa": "oro",
+     "x": 1250,
+     "y": 760,
+     "salta": -60
+    },
+    {
+     "en": "peso",
+     "cosa": "lingote",
+     "x": 650,
+     "y": 760,
+     "salta": -60
+    }
+   ]
+  },
+  {
+   "en": "Los españoles la llamaron",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Noche Triste",
+     "palabra": "La Noche Triste",
+     "rojo": true
+    },
+    {
+     "en": "llamaron",
+     "cosa": "calavera",
+     "pie": "30 de junio de 1520"
+    }
+   ]
+  },
+  {
+   "en": "Cuenta la leyenda que Cortés",
+   "tipo": "escena",
+   "decorado": "selva",
+   "actores": [
+    {
+     "q": "Cortés",
+     "traje": "conquistador",
+     "x": 960,
+     "s": 1.1,
+     "mira": 0.1,
+     "acciones": [
+      {
+       "en": "lloró",
+       "hace": "triste"
+      }
+     ],
+     "sentado": true
+    }
+   ],
+   "noche": true,
+   "rotulos": [
+    {
+     "en": "leyenda",
+     "texto": "Según la leyenda",
+     "x": 960,
+     "y": 230,
+     "tam": 64
+    }
+   ]
+  },
+  {
+   "en": "Los mexicas han ganado",
+   "tipo": "escena",
+   "decorado": "tenochtitlan",
+   "actores": [
+    {
+     "q": "g1",
+     "traje": "azteca",
+     "x": 760,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "ganado",
+       "hace": "celebra"
+      }
+     ],
+     "lleva": "escudo"
+    },
+    {
+     "q": "g2",
+     "traje": "azteca",
+     "x": 1150,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "mexicas",
+       "hace": "celebra"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "Pero entonces llega un",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "invisible",
+     "palabra": "Un enemigo invisible",
+     "rojo": true
+    },
+    {
+     "en": "entonces",
+     "cosa": "calavera",
+     "pie": "Nadie podía verlo"
+    }
+   ]
+  },
+  {
+   "en": "Entre los españoles venía",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -98.5,
+    "lat": 19.3,
+    "grados": 16
+   },
+   "hasta": {
+    "lon": -98.8,
+    "lat": 19.3,
+    "grados": 13
+   },
+   "fecha": "1520",
+   "capas": [
+    {
+     "en": 0,
+     "id": "imperio",
+     "color": "rojo",
+     "op": 0.55,
+     "cara": "susto",
+     "cara_en": "viruela"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "viruela",
+     "texto": "Viruela",
+     "x": 560,
+     "y": 300,
+     "tam": 90,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "En pocos meses",
+   "tipo": "escena",
+   "decorado": "laguna",
+   "actores": [
+    {
+     "q": "e1",
+     "traje": "indigena",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "meses",
+       "hace": "triste"
+      }
+     ]
+    },
+    {
+     "q": "e2",
+     "traje": "campesina",
+     "x": 1000,
+     "s": 1.1,
+     "mira": 0.2,
+     "acciones": [
+      {
+       "en": "población",
+       "hace": "agacha"
+      }
+     ]
+    },
+    {
+     "q": "e3",
+     "traje": "anciano",
+     "x": 1300,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "parte",
+       "hace": "triste"
+      }
+     ]
+    }
+   ],
+   "humo": true,
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Tenochtitlan, 1520"
+    }
+   ]
+  },
+  {
+   "en": "Entre los muertos está",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Cuitláhuac",
+     "cosa": "corona",
+     "pie": "Cuitláhuac"
+    },
+    {
+     "en": "ochenta",
+     "tarjeta": "80 días de reinado",
+     "cosa": "reloj"
+    }
+   ]
+  },
+  {
+   "en": "El último emperador",
+   "tipo": "escena",
+   "decorado": "sala_trono",
+   "actores": [
+    {
+     "q": "Cuauhtémoc",
+     "traje": "azteca",
+     "x": 960,
+     "s": 1.3,
+     "mira": 0.1,
+     "acciones": [
+      {
+       "en": "guerrero",
+       "hace": "orgulloso"
+      },
+      {
+       "en": "Cuauhtémoc",
+       "hace": "mira_camara"
+      }
+     ],
+     "lleva": "espada",
+     "colores": {
+      "color": "#8a1c24",
+      "sombreroColor": "#f2c230"
+     }
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "Cuauhtémoc",
+     "texto": "Cuauhtémoc",
+     "x": 960,
+     "y": 220,
+     "tam": 84
+    }
+   ]
+  },
+  {
+   "en": "Mayo de 1521",
+   "tipo": "capitulo",
+   "numero": 7
+  },
+  {
+   "en": "Cortés regresa",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -98.6,
+    "lat": 19.4,
+    "grados": 5
+   },
+   "hasta": {
+    "lon": -98.8,
+    "lat": 19.4,
+    "grados": 4.5
+   },
+   "fecha": "1521",
+   "capas": [
+    {
+     "en": 0,
+     "id": "tlaxcala",
+     "color": "verde",
+     "op": 0.5
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "regresa",
+     "de": [
+      -98.2,
+      19.32
+     ],
+     "a": [
+      -98.95,
+      19.45
+     ],
+     "d": 3,
+     "color": "blanco"
+    }
+   ],
+   "pins": [
+    {
+     "en": 0,
+     "lon": -99.13,
+     "lat": 19.43,
+     "nombre": "Tenochtitlan"
+    }
+   ]
+  },
+  {
+   "en": "En Tlaxcala ha mandado",
+   "tipo": "escena",
+   "decorado": "campamento",
+   "actores": [
+    {
+     "q": "carpintero",
+     "traje": "indigena",
+     "x": 650,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "construir",
+       "hace": "levanta"
+      }
+     ],
+     "lleva": "pico",
+     "colores": {
+      "color": "#2f6b2f",
+      "ribete": "#f4efe3",
+      "sombreroColor": "#f4efe3"
+     }
+    },
+    {
+     "q": "Cortés",
+     "traje": "conquistador",
+     "x": 1300,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "bergantines",
+       "hace": "orgulloso"
+      }
+     ]
+    }
+   ],
+   "cosas": [
+    {
+     "en": "bergantines",
+     "cosa": "ancla",
+     "x": 960,
+     "y": 700,
+     "salta": -60
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "trece",
+     "texto": "13 bergantines",
+     "x": 960,
+     "y": 230,
+     "tam": 80,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Los desmontan pieza",
+   "tipo": "escena",
+   "decorado": "montana",
+   "actores": [
+    {
+     "q": "p1",
+     "traje": "indigena",
+     "x": 520,
+     "s": 1.1,
+     "mira": 0.6,
+     "acciones": [
+      {
+       "en": "cargan",
+       "hace": "camina"
+      }
+     ],
+     "lleva": "saco",
+     "colores": {
+      "color": "#2f6b2f",
+      "ribete": "#f4efe3",
+      "sombreroColor": "#f4efe3"
+     }
+    },
+    {
+     "q": "p2",
+     "traje": "indigena",
+     "x": 860,
+     "s": 1.1,
+     "mira": 0.6,
+     "acciones": [
+      {
+       "en": "hombros",
+       "hace": "camina"
+      }
+     ],
+     "lleva": "barril",
+     "colores": {
+      "color": "#2f6b2f",
+      "ribete": "#f4efe3",
+      "sombreroColor": "#f4efe3"
+     }
+    },
+    {
+     "q": "p3",
+     "traje": "indigena",
+     "x": 1200,
+     "s": 1.1,
+     "mira": 0.6,
+     "acciones": [
+      {
+       "en": "montañas",
+       "hace": "camina"
+      }
+     ],
+     "lleva": "saco",
+     "colores": {
+      "color": "#2f6b2f",
+      "ribete": "#f4efe3",
+      "sombreroColor": "#f4efe3"
+     }
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "p1",
+     "texto": "¿Falta mucho?",
+     "ancho": 340
+    }
+   ]
+  },
+  {
+   "en": "Barcos de guerra viajando",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "tierra",
+     "cosa": "galera",
+     "pie": "Barcos de guerra… por tierra"
+    },
+    {
+     "en": "mochila",
+     "palabra": "En la mochila",
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Con ellos, y con",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -99.0,
+    "lat": 19.45,
+    "grados": 4.5
+   },
+   "hasta": {
+    "lon": -99.08,
+    "lat": 19.44,
+    "grados": 3.5
+   },
+   "fecha": "1521",
+   "pins": [
+    {
+     "en": 0,
+     "lon": -99.13,
+     "lat": 19.43,
+     "nombre": "Tenochtitlan",
+     "aro": true
+    }
+   ],
+   "barcos": [
+    {
+     "en": "Con ellos",
+     "de": [
+      -98.9,
+      19.5
+     ],
+     "a": [
+      -99.07,
+      19.44
+     ],
+     "d": 2.5,
+     "flota": 4,
+     "color": "rojo"
+    }
+   ],
+   "ejercitos": [
+    {
+     "en": "decenas",
+     "de": [
+      -99.45,
+      19.5
+     ],
+     "a": [
+      -99.18,
+      19.45
+     ],
+     "d": 2.5,
+     "color": "verde"
+    },
+    {
+     "en": "rodean",
+     "de": [
+      -99.05,
+      19.15
+     ],
+     "a": [
+      -99.12,
+      19.38
+     ],
+     "d": 2.5,
+     "color": "blanco"
+    },
+    {
+     "en": "rodean",
+     "de": [
+      -99.1,
+      19.75
+     ],
+     "a": [
+      -99.13,
+      19.48
+     ],
+     "d": 2.5,
+     "color": "verde"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "rodean",
+     "texto": "Tenochtitlan rodeada",
+     "x": 560,
+     "y": 300,
+     "tam": 70,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Cortan el acueducto",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -99.15,
+    "lat": 19.43,
+    "grados": 4
+   },
+   "hasta": {
+    "lon": -99.15,
+    "lat": 19.43,
+    "grados": 3.2
+   },
+   "fecha": "1521",
+   "pins": [
+    {
+     "en": 0,
+     "lon": -99.13,
+     "lat": 19.43,
+     "nombre": "Tenochtitlan"
+    },
+    {
+     "en": "Chapultepec",
+     "lon": -99.19,
+     "lat": 19.42,
+     "nombre": "Chapultepec",
+     "izquierda": true
+    }
+   ],
+   "flechas": [
+    {
+     "en": "acueducto",
+     "de": [
+      -99.19,
+      19.42
+     ],
+     "a": [
+      -99.135,
+      19.43
+     ],
+     "color": "#3c7fd0"
+    }
+   ],
+   "iconos": [
+    {
+     "en": "Cortan",
+     "lon": -99.16,
+     "lat": 19.5,
+     "cosa": "cuenco",
+     "tam": 0.5
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "acueducto",
+     "texto": "Sin agua dulce",
+     "x": 560,
+     "y": 300,
+     "tam": 80,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Sin agua dulce, sin",
+   "tipo": "escena",
+   "decorado": "tenochtitlan",
+   "actores": [
+    {
+     "q": "g1",
+     "traje": "azteca",
+     "x": 650,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "resiste",
+       "hace": "ataca"
+      }
+     ],
+     "lleva": "escudo"
+    },
+    {
+     "q": "s1",
+     "traje": "conquistador",
+     "x": 1200,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "calle",
+       "hace": "ataca"
+      }
+     ],
+     "lleva": "espada"
+    },
+    {
+     "q": "t1",
+     "traje": "azteca",
+     "x": 1500,
+     "s": 1.1,
+     "mira": -0.5,
+     "acciones": [
+      {
+       "en": "casa",
+       "hace": "ataca"
+      }
+     ],
+     "colores": {
+      "color": "#2f6b2f",
+      "ribete": "#f4efe3",
+      "sombreroColor": "#f4efe3"
+     }
+    }
+   ],
+   "humo": true,
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Asedio de Tenochtitlan, 1521"
+    }
+   ]
+  },
+  {
+   "en": "casa por casa",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "casa",
+     "cifra": "3 meses",
+     "sub": "de asedio",
+     "icono": "reloj"
+    }
+   ]
+  },
+  {
+   "en": "El 13 de agosto",
+   "tipo": "escena",
+   "decorado": "laguna",
+   "actores": [
+    {
+     "q": "Cuauhtémoc",
+     "traje": "azteca",
+     "x": 1100,
+     "s": 1.1,
+     "mira": -0.3,
+     "acciones": [
+      {
+       "en": "capturado",
+       "hace": "agacha"
+      }
+     ],
+     "colores": {
+      "color": "#8a1c24",
+      "sombreroColor": "#f2c230"
+     }
+    },
+    {
+     "q": "captor",
+     "traje": "conquistador",
+     "x": 650,
+     "s": 1.1,
+     "mira": 0.5,
+     "acciones": [
+      {
+       "en": "capturado",
+       "hace": "senala"
+      }
+     ],
+     "lleva": "espada"
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Tlatelolco, 13 de agosto de 1521"
+    }
+   ]
+  },
+  {
+   "en": "Tenochtitlan ha caído",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -99.2,
+    "lat": 19.5,
+    "grados": 9
+   },
+   "hasta": {
+    "lon": -99.15,
+    "lat": 19.45,
+    "grados": 6
+   },
+   "fecha": "13 de agosto de 1521",
+   "capas": [
+    {
+     "en": 0,
+     "id": "imperio",
+     "color": "rojo",
+     "op": 0.6,
+     "cara": "muerto",
+     "cara_en": "caído"
+    }
+   ],
+   "fuegos": [
+    {
+     "en": 0,
+     "lon": -99.13,
+     "lat": 19.43,
+     "tam": 1.3
+    }
+   ]
+  },
+  {
+   "en": "Sobre sus ruinas",
+   "tipo": "escena",
+   "decorado": "ciudad",
+   "actores": [
+    {
+     "q": "fraile",
+     "traje": "monje",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "construyeron",
+       "hace": "senala"
+      }
+     ],
+     "lleva": "cruz"
+    },
+    {
+     "q": "albañil",
+     "traje": "campesino",
+     "x": 1200,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "piedras",
+       "hace": "agacha"
+      }
+     ],
+     "lleva": "pico"
+    }
+   ],
+   "cosas": [
+    {
+     "en": "iglesias",
+     "cosa": "cruz",
+     "x": 960,
+     "y": 520,
+     "salta": -60
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Ciudad de México, siglo XVI"
+    }
+   ]
+  },
+  {
+   "en": "Y el lago, poco",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -99.05,
+    "lat": 19.45,
+    "grados": 5
+   },
+   "hasta": {
+    "lon": -99.1,
+    "lat": 19.43,
+    "grados": 4
+   },
+   "fecha": "Hoy",
+   "pins": [
+    {
+     "en": 0,
+     "lon": -99.13,
+     "lat": 19.43,
+     "nombre": "Ciudad de México",
+     "aro": true
+    }
+   ],
+   "rotulos": [
+    {
+     "en": "desecado",
+     "texto": "El lago desapareció",
+     "x": 560,
+     "y": 300,
+     "tam": 70,
+     "rojo": true
+    }
+   ]
+  },
+  {
+   "en": "Pero Tenochtitlan nunca",
+   "tipo": "escena",
+   "decorado": "calle",
+   "actores": [
+    {
+     "q": "o1",
+     "traje": "obrero",
+     "x": 700,
+     "s": 1.1,
+     "mira": 0.4,
+     "acciones": [
+      {
+       "en": "cavaban",
+       "hace": "agacha"
+      },
+      {
+       "en": "piedra",
+       "hace": "susto"
+      }
+     ],
+     "lleva": "pico"
+    },
+    {
+     "q": "o2",
+     "traje": "obrero",
+     "x": 1150,
+     "s": 1.1,
+     "mira": -0.4,
+     "acciones": [
+      {
+       "en": "tallada",
+       "hace": "senala"
+      }
+     ]
+    }
+   ],
+   "bocadillos": [
+    {
+     "en": 0.3,
+     "a": "o2",
+     "texto": "Jefe... venga a ver esto.",
+     "ancho": 380
+    }
+   ],
+   "rotulos": [
+    {
+     "en": 0,
+     "tipo": "fecha",
+     "texto": "Ciudad de México, 1978"
+    }
+   ]
+  },
+  {
+   "en": "Debajo estaba el Templo",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "Templo Mayor",
+     "cosa": "piramide",
+     "pie": "¡El Templo Mayor!"
+    }
+   ]
+  },
+  {
+   "en": "Y cada vez que dices",
+   "tipo": "narrador",
+   "cosas": [
+    {
+     "en": "tomate",
+     "palabra": "Tomate"
+    },
+    {
+     "en": "aguacate",
+     "palabra": "Aguacate"
+    },
+    {
+     "en": "chile",
+     "palabra": "Chile"
+    },
+    {
+     "en": "náhuatl",
+     "tarjeta": "Náhuatl",
+     "cosa": "libro"
+    }
+   ]
+  },
+  {
+   "en": "El imperio cayó en dos",
+   "tipo": "mapa",
+   "mapa": "mesoamerica",
+   "cam": {
+    "lon": -100,
+    "lat": 22,
+    "grados": 24
+   },
+   "hasta": {
+    "lon": -100.5,
+    "lat": 22.5,
+    "grados": 21
+   },
+   "fecha": "Hoy",
+   "capas": [
+    {
+     "en": 0,
+     "id": "imperio",
+     "color": "rojo",
+     "op": 0.5
+    },
+    {
+     "en": "México",
+     "id": "mexico_hoy",
+     "color": "verde",
+     "modo": "crece",
+     "etiqueta": "México",
+     "cara": "feliz",
+     "cara_en": "México"
+    }
+   ]
+  }
+ ]
+}
